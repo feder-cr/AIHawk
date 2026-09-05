@@ -32,10 +32,12 @@ which is where `pip` comes from.
 ### 1. From your assistant, over MCP
 
 Your assistant brings the model. You add this browser to it, and nothing
-changes about how you work. Install the browser server:
+changes about how you work. Install the browser server, then the browser
+itself: about 250 MB, once, where you can watch it come down.
 
 ```bash
 pip install invisible-playwright-mcp
+invisible-playwright fetch
 ```
 
 Then tell your assistant it exists.
