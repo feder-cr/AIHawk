@@ -84,23 +84,6 @@ over MCP, exactly as your assistant would.
 
 ---
 
-## Setup details
-
-**What you need:** Python 3.11 or newer, on **Windows (x86_64)** or **Linux
-(x86_64 or arm64)**. macOS is not supported: the last engine build for it was
-`firefox-20`.
-
-**The browser is a separate download of about 250 MB** that happens by itself
-the first time either way starts: the server fetches it as soon as your
-assistant launches it, and `aihawk ui` shows it coming down before it opens
-the port. Nothing to run.
-
-If your assistant reports that it cannot find `invisible-playwright-mcp`, pip
-put the script somewhere your PATH does not reach; register
-`python -m invisible_playwright_mcp` instead.
-
----
-
 ## What to ask a web browsing agent
 
 Anything that needs real web automation: a browser rather than an API, and a
