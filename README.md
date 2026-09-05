@@ -87,35 +87,22 @@ over MCP, exactly as your assistant would.
 ## Setup details
 
 **What you need:** Python 3.11 or newer, on **Windows (x86_64)** or **Linux
-(x86_64 or arm64)**. macOS is not supported, and that is the browser's limit
-rather than a packaging gap: the last macOS engine build was `firefox-20`.
+(x86_64 or arm64)**. macOS is not supported: the last engine build for it was
+`firefox-20`.
 
-**Download the browser before your first task.** AIHawk drives a patched
-Firefox that is not inside the package: about 250 MB, and it downloads on the
-first instruction that needs a page. That makes your first instruction sit
-there for a long time, and on a slow connection it can fail with an error that
-never mentions a download. Get it out of the way now, where you can watch it:
+**The browser is a separate download of about 250 MB**, and it does not arrive
+with the package. It arrives on the first instruction that needs a page, so
+that instruction sits there for a while and a slow connection can fail with an
+error that never mentions a download. Get it over with first, where you can
+watch it:
 
 ```bash
 invisible-playwright fetch
 ```
 
-It prints the path to the browser when it finishes, and it is safe to run
-again: if the engine is already there it says so and downloads nothing.
-
-**If your assistant reports that it cannot find the command**, pip put the
-script somewhere that is not on your PATH. Register the module form instead,
-which does not depend on PATH at all:
-
-```bash
-claude mcp add --scope user stealth -- python -m invisible_playwright_mcp
-```
-
-**If you would rather install nothing permanently**, [uv](https://docs.astral.sh/uv/)
-runs both from a throwaway environment: `uvx invisible-playwright-mcp` in the
-registration above, and `uvx aihawk ui --openrouter-key sk-or-...` for the
-interface. Same code either way; pip is the shorter path when Python is
-already there.
+If your assistant reports that it cannot find `invisible-playwright-mcp`, pip
+put the script somewhere your PATH does not reach; register
+`python -m invisible_playwright_mcp` instead.
 
 ---
 
