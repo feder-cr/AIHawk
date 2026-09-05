@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aihawk"
-version = "0.6.0"
+version = "0.7.0"
 description = "Drive a stealth browser with an LLM from one command"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -42,7 +42,12 @@ dependencies = [
     # test_the_table_names_no_tool_that_does_not_exist refuses. CI resolves
     # this from the INDEX, not from a checkout, so the floor is the only
     # thing that can say which server this interface goes with.
-    "invisible-playwright-mcp>=0.11.0",
+    # 0.13.0: the server fetches the engine the moment it starts instead of
+    # inside the first tool call, and the README stopped telling people to
+    # run `invisible-playwright fetch` on the strength of that. Against an
+    # older server the README would promise a download that does not happen
+    # until the first page is asked for.
+    "invisible-playwright-mcp>=0.13.0",
     "mcp>=1.2",
     # Declared rather than inherited. It arrives transitively through mcp today,
     # and a transitive dependency is one somebody else can drop in a minor

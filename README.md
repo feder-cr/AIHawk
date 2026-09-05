@@ -90,15 +90,10 @@ over MCP, exactly as your assistant would.
 (x86_64 or arm64)**. macOS is not supported: the last engine build for it was
 `firefox-20`.
 
-**The browser is a separate download of about 250 MB**, and it does not arrive
-with the package. It arrives on the first instruction that needs a page, so
-that instruction sits there for a while and a slow connection can fail with an
-error that never mentions a download. Get it over with first, where you can
-watch it:
-
-```bash
-invisible-playwright fetch
-```
+**The browser is a separate download of about 250 MB** that happens by itself
+the first time either way starts: the server fetches it as soon as your
+assistant launches it, and `aihawk ui` shows it coming down before it opens
+the port. Nothing to run.
 
 If your assistant reports that it cannot find `invisible-playwright-mcp`, pip
 put the script somewhere your PATH does not reach; register
