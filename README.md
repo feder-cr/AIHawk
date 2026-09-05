@@ -32,11 +32,12 @@ which is where `pip` comes from.
 ### 1. From your assistant, over MCP
 
 Your assistant brings the model. You add this browser to it, and nothing
-changes about how you work. Install the browser server, then the browser
-itself: about 250 MB, once, where you can watch it come down.
+changes about how you work. Install AIHawk, which brings the browser server
+with it, then the browser itself: about 250 MB, once, where you can watch it
+come down.
 
 ```bash
-pip install invisible-playwright-mcp
+pip install aihawk
 invisible-playwright fetch
 ```
 
@@ -76,6 +77,7 @@ Chat on the left, the live browser on the right.
 
 ```bash
 pip install aihawk
+invisible-playwright fetch
 aihawk ui --openrouter-key sk-or-...
 ```
 
