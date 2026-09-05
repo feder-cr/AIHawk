@@ -111,6 +111,26 @@ def link(monkeypatch):
     return rec
 
 
+class EngineRecorder:
+    """Stands in for `engine_on_disk`: records the binary it was handed."""
+
+    def __init__(self):
+        self.calls: list = []
+
+    def __call__(self, binary, **kwargs):
+        self.calls.append(binary)
+
+
+@pytest.fixture(autouse=True)
+def engine(monkeypatch):
+    """No test here may download an engine, and none needs one on disk: the
+    step that puts it there is recorded instead, which is also how its place
+    in the sequence is asserted below."""
+    rec = EngineRecorder()
+    monkeypatch.setattr(climod, "engine_on_disk", rec)
+    return rec
+
+
 def run(*args, **kwargs):
     return CliRunner().invoke(climod.main, list(args), **kwargs)
 
@@ -118,6 +138,30 @@ def run(*args, **kwargs):
 def stopped_at_link(result) -> bool:
     """The command got as far as connecting, which is as far as we let it."""
     return isinstance(result.exception, _Stop)
+
+
+# --------------------------------------------------------------------------
+# the engine: on disk before anything else
+# --------------------------------------------------------------------------
+
+def test_the_engine_is_on_disk_before_the_link_opens(link, engine):
+    """The link is where a browser would be launched, and the recorder stops
+    the command there, so an engine step that ran after it would never be
+    seen: "called at all" is the ordering assertion. And --binary must reach
+    it unchanged, because a given binary is what tells it not to download."""
+    result = run("ui", "--openrouter-key", FAKE_KEY, "--binary", "C:/engines/firefox.exe")
+
+    assert stopped_at_link(result)
+    assert engine.calls == ["C:/engines/firefox.exe"]
+
+
+def test_no_key_means_no_download_either(link, engine):
+    """A refusal that came after a quarter-gigabyte download would be a
+    refusal with a bill attached."""
+    result = run("ui")
+
+    assert result.exit_code != 0
+    assert engine.calls == [], "the engine was fetched before the key refusal"
 
 
 # --------------------------------------------------------------------------
