@@ -30,27 +30,49 @@ README = pathlib.Path(__file__).resolve().parents[1] / "README.md"
 #: The literal command for each path. Literal on purpose: this is what a reader
 #: copies, and a paraphrase in the README is not a way in.
 #:
-#: These lost their `uvx ` prefix on 2026-09-05, when the page moved to pip as
-#: the route it shows first. Without the prefix they match either phrasing, so
-#: the test measures the offer rather than the tool that happens to launch it,
-#: which is the requirement this file was written for. The uv commands are
-#: still on the page, further down, and still match.
+#: Bare on purpose, without the `uvx ` the page puts in front of them today:
+#: they matched the pip form the page showed for one day (2026-09-05 to
+#: 2026-09-06) and they match the uv form it shows now, so the test measures
+#: the offer and not the launcher that happens to start it.
 MCP_WAY = "invisible-playwright-mcp"
 UI_WAY = "aihawk ui"
 
 
-def _sections():
+def _headings(text):
+    """(line number, heading) for every H1 and H2, in order.
+
+    H1 and H2 only. A page may split the choice into "### 1." and "### 2."
+    under one heading - that is the same choice, presented well, and an
+    earlier version of this file called it two sections and went red on it.
+
+    Fenced code is skipped, and it was not until 2026-09-06. A bash comment
+    starts with `# ` too, and the line `# then, in a new terminal:` inside the
+    install block was read as an H1, which split the offer in two and turned a
+    correct page red. The parser was wrong, not the page.
+    """
+    heads, fenced = [], False
+    for number, line in enumerate(text.split(chr(10)), 1):
+        if line.lstrip().startswith("```"):
+            fenced = not fenced
+        elif not fenced and re.match(r"#{1,2} ", line):
+            heads.append((number, line.strip()))
+    return heads
+
+
+def _sections_of(text):
     """(heading, body) pairs, in order. The lead-in before the first heading is
     returned under an empty heading, because a logo block is not a section."""
-    text = README.read_text(encoding="utf-8")
-    # H1 and H2 only. A page may split the choice into "### 1." and "### 2."
-    # under one heading - that is the same choice, presented well, and an
-    # earlier version of this file called it two sections and went red on it.
-    parts = re.split(r"^(#{1,2} .*)$", text, flags=re.M)
-    out = [("", parts[0])]
-    for i in range(1, len(parts), 2):
-        out.append((parts[i].strip(), parts[i + 1]))
+    lines = text.split(chr(10))
+    out, start, heading = [], 1, ""
+    for number, next_heading in _headings(text):
+        out.append((heading, chr(10).join(lines[start - 1:number - 1])))
+        start, heading = number + 1, next_heading
+    out.append((heading, chr(10).join(lines[start - 1:])))
     return out
+
+
+def _sections():
+    return _sections_of(README.read_text(encoding="utf-8"))
 
 
 def test_the_sections_parse():
@@ -83,12 +105,12 @@ FIRST_SCREEN = 45
 def _where_the_offer_starts(text):
     """(line number, heading) of the section that carries BOTH commands."""
     lines = text.split(chr(10))
-    heads = [(i, l) for i, l in enumerate(lines, 1) if re.match(r"#{1,2} ", l)]
+    heads = _headings(text)
     for pos, (line, heading) in enumerate(heads):
         end = heads[pos + 1][0] if pos + 1 < len(heads) else len(lines) + 1
         body = chr(10).join(lines[line - 1:end - 1])
         if MCP_WAY in body and UI_WAY in body:
-            return line, heading.strip()
+            return line, heading
     return None, None
 
 def test_the_offer_comes_within_the_first_screen():
@@ -135,6 +157,38 @@ def test_the_check_fails_on_the_pages_as_they_used_to_be():
     assert line is not None, "the helper cannot even find the offer"
     assert line > FIRST_SCREEN, (
         "a page with the offer %d lines down passes, so this check is blind" % line)
+
+
+def test_a_comment_inside_a_fence_is_not_a_heading():
+    """The known-bad for the parser itself, and it is the page of 2026-09-06.
+
+    Both install blocks opened with `# uv, once. Windows:` and carried
+    `# then, in a new terminal:` before the fetch. Read as headings, those
+    lines put the two ways under two different "sections", and the check went
+    red on a page that offered both ways in one place, as required.
+    """
+    page = chr(10).join([
+        "# A project",
+        "",
+        "## Two ways",
+        "",
+        "```bash",
+        "# uv, once. Windows:",
+        "install uv",
+        "# then, in a new terminal:",
+        MCP_WAY,
+        "```",
+        "",
+        "```bash",
+        "# Linux:",
+        UI_WAY,
+        "```",
+    ])
+    line, heading = _where_the_offer_starts(page)
+    assert (line, heading) == (3, "## Two ways"), (
+        "a fenced comment was read as a heading; the offer is now at %r under %r"
+        % (line, heading))
+    assert [h for h, _ in _sections_of(page) if h] == ["# A project", "## Two ways"]
 
 
 def test_the_two_ways_are_offered_as_one_choice():
