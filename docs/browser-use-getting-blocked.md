@@ -113,7 +113,7 @@ The route that does accept a different engine is MCP, where the browser is a set
 tools rather than a CDP endpoint. Microsoft's
 [Playwright MCP server](https://playwright.dev/docs/getting-started-mcp) takes
 `--browser=firefox` (checked 2026-09-03), and
-[invisible-playwright-mcp](https://github.com/feder-cr/invisible-playwright-mcp)
+[the MCP server](mcp-server.md)
 goes further: it ships a Firefox patched at the C++ level as the engine behind its
 tools, so an MCP-speaking assistant - Claude Code, Claude Desktop, Cursor - drives a
 browser whose fingerprint is set in its own source. Disclosure: that server and

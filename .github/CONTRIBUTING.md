@@ -6,10 +6,10 @@ one minute whether your change belongs here or in one of the packages below.
 ## What lives here
 
 The `aihawk` package: the two-pane interface, the loop that turns a sentence into
-browser actions, and the command line around both. If you are changing what a
+browser actions, the command line around both, and, under `aihawk.mcp`, the MCP server the interface drives. If you are changing what a
 person sees, or how the model decides what to do next, it is here.
 
-What is NOT here is the browser. AIHawk does not drive Firefox directly - it
+What is NOT here is the browser engine. AIHawk does not drive Firefox directly - it
 talks to an MCP server over MCP, using the same tools any other client
 gets. That is deliberate and it is the thing to understand before changing
 anything: this interface has no privileged path to the page, so a browser
@@ -22,15 +22,14 @@ only documentation. The package moved in the same day.
 
 | Repository | What it holds |
 |---|---|
-| **this one** | the interface, the agent loop, the CLI |
-| [invisible-playwright-mcp](https://github.com/feder-cr/invisible-playwright-mcp) | the MCP server: the tools, and nothing with a face |
+| **this one** | the interface, the agent loop, the CLI, and the MCP server (`src/aihawk/mcp`: the tools, and nothing with a face) |
 | [invisible_playwright](https://github.com/feder-cr/invisible_playwright) | the Python wrapper, the launcher, and the patched browser it pins |
 | [invisible_core](https://github.com/feder-cr/invisible_core) | seed to fingerprint to preferences, proxy and geolocation |
 
 Where things go:
 
 - the page, the conversation, the step list, the model's behaviour: **here**
-- a tool that returns the wrong thing, or a click that does not land: **the MCP server**
+- a tool that returns the wrong thing, or a click that does not land: **the MCP server, `src/aihawk/mcp` here**
 - the browser failing to start, a proxy not used, a timezone that does not match
   the exit country: **the wrapper or the core**
 - a detector spotting the browser: almost always the engine, not this repository
@@ -56,9 +55,10 @@ browser through the real server and is how most of this was tested.
 ```bash
 pytest                 # the default selection, no browser, seconds
 pytest -m ui           # drives a REAL browser through a REAL server
+pytest -m e2e tests/mcp_server   # the server's own browser tests, engine fetched on first use
 ```
 
-The `ui` tests are deselected by default because they are slow and they must run
+The server's browser tests carry the `e2e` marker and run with `pytest -m e2e tests/mcp_server`, against an engine that is downloaded on first use. The `ui` tests are deselected by default because they are slow and they must run
 serially: they launch a browser, and two browser benches on one machine produce
 results that are noise with numbers on them. Run them one at a time, on a machine
 that is not doing anything else.

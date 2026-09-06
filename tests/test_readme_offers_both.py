@@ -232,10 +232,7 @@ def test_no_tool_name_that_does_not_exist():
     """
     import asyncio
 
-    try:
-        from invisible_playwright_mcp import server
-    except ImportError:  # pragma: no cover
-        pytest.skip("invisible-playwright-mcp is not installed")
+    from aihawk.mcp import server
 
     real = {t.name for t in asyncio.run(server.mcp.list_tools())}
     named = set(re.findall(r"`((?:browser|session)_\w+)`",

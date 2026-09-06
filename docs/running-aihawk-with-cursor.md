@@ -12,7 +12,7 @@ Cursor reads MCP servers from a JSON file, at one of two levels its docs
 define: `.cursor/mcp.json` inside a project, for tools scoped to that project,
 or `~/.cursor/mcp.json` in your home directory, for tools available everywhere.
 The block to paste is the same either way and it lives in the
-[server's README](https://github.com/feder-cr/invisible-playwright-mcp), which
+[MCP server page](mcp-server.md), which
 this page links rather than copies. What belongs here is the Cursor-side story:
 what a browser is actually for inside an editor, how Cursor runs the tools,
 what to try first, and the first-run issues.
@@ -105,8 +105,7 @@ sessions where mistakes are free.
 The browser is headless by default, so the agent's screenshots
 (`browser_take_screenshot`) are your view of what happened. When you would
 rather watch it drive your app, the server reads `STEALTHFOX_HEADLESS=0` from
-its environment, set in the same config block; the README documents the rest
-of the environment variables (a persistent profile directory and a fixed
+its environment, set in the same config block; the [MCP server page](mcp-server.md) documents the rest of the environment variables (a persistent profile directory and a fixed
 identity seed are the two most useful for repeated testing).
 
 ## Common first-run issues
@@ -144,7 +143,7 @@ identity seed are the two most useful for repeated testing).
 ## Short answers to the questions that lead here
 
 **How do I add AIHawk's browser to Cursor?** Paste the block from the
-[server README](https://github.com/feder-cr/invisible-playwright-mcp) into
+[MCP server page](mcp-server.md) into
 `.cursor/mcp.json` in a project or `~/.cursor/mcp.json` globally, both
 locations per Cursor's own MCP docs. No key, no signup; Cursor's model does
 the thinking.
@@ -180,8 +179,7 @@ All retrieved 2026-09-03.
 - [Cursor docs: Model Context Protocol](https://cursor.com/docs/context/mcp),
   for the two config locations, automatic tool use with default approval, and
   server toggling.
-- [feder-cr/invisible-playwright-mcp](https://github.com/feder-cr/invisible-playwright-mcp),
-  the server's README, for the config block, tool list, environment variables
+- [The MCP server page](mcp-server.md), for the config block, tool list, environment variables
   and engine-download behavior.
 - [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README in
   this repository, for platform support, the real-input-events behavior and

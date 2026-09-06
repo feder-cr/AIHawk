@@ -11,8 +11,8 @@ nav_order: 8
 Claude Desktop does not take the one-line command that Claude Code does; it
 reads its MCP servers from a JSON settings file. The exact block to paste and
 the file it goes in are documented once, in the
-[server's README](https://github.com/feder-cr/invisible-playwright-mcp), and
-this page deliberately does not duplicate them - configs copied into wikis rot.
+[MCP server page](mcp-server.md), and
+this page deliberately does not duplicate them: one copy, on that page, is the one kept current.
 What this page covers is everything around that block: what actually changes in
 Desktop once the server is in, what to try first, what the tool calls look like
 while Claude works, and the first-run issues that generate most of the
@@ -127,8 +127,7 @@ In the order people hit them:
    means [uv](https://docs.astral.sh/uv/) must be installed, and installed
    where a GUI application can see it. A shell that finds `uvx` does not
    guarantee Desktop does, since GUI apps do not always inherit your shell's
-   PATH; if the per-server log shows a not-found error, the server README's
-   troubleshooting is the place to start.
+   PATH; if the per-server log shows a not-found error, the paragraph "Added is not connected" on the [MCP server page](mcp-server.md) is the place to start.
 
 4. **It is a Mac.** No engine build, per the boundary at the top. Nothing to
    debug.
@@ -141,9 +140,9 @@ In the order people hit them:
 ## Short answers to the questions that lead here
 
 **How do I add AIHawk's browser to Claude Desktop?** Paste the server block
-from the [server README](https://github.com/feder-cr/invisible-playwright-mcp)
+from the [MCP server page](mcp-server.md)
 into Desktop's MCP config (Settings, Developer, Edit Config), then fully quit
-and restart Desktop. The block and file path live in that README on purpose.
+and restart Desktop. The block and the file path live on that page on purpose.
 
 **Do I need an API key for this?** No. Your Claude subscription is the model;
 the server only adds the browser, and its config block contains no secret. The
@@ -173,8 +172,7 @@ clients).
 
 All retrieved 2026-09-03.
 
-- [feder-cr/invisible-playwright-mcp](https://github.com/feder-cr/invisible-playwright-mcp),
-  the server's README, for the config block, the tool list, the environment
+- [The MCP server page](mcp-server.md), for the config block, the tool list, the environment
   variables and the engine-download behavior.
 - [Connect to local MCP servers (modelcontextprotocol.io)](https://modelcontextprotocol.io/quickstart/user),
   for Desktop's Edit Config flow, the restart requirement, per-action
@@ -191,6 +189,4 @@ the rest of [Using the Agent](guides-using-the-agent.md).
 ---
 
 *From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The config block
-lives in one README and is linked from here rather than copied, because a
-config duplicated into a wiki is a config that will one day be wrong in one of
-the two places.*
+lives on one page and is linked from here rather than copied, because a config duplicated across two pages is a config that will one day be wrong in one of the two places.*

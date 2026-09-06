@@ -11,7 +11,7 @@ nav_order: 4
 If you already use Claude Code, you do not need AIHawk's interface, its CLI, or
 an OpenRouter key. Claude Code brings the model; you add the browser to it. The
 browser is the same MCP server AIHawk itself talks to -
-[invisible-playwright-mcp](https://github.com/feder-cr/invisible-playwright-mcp) -
+[the MCP server](mcp-server.md) -
 so anything AIHawk's own interface can do, your assistant can do too, and that
 is by construction: the interface holds no privileged access, it calls the same
 tools over the same protocol as any other client.
@@ -20,7 +20,7 @@ This page is Claude Code specifically. Claude Desktop and Cursor take a config
 file instead of a command, and have their own pages:
 [Claude Desktop](running-aihawk-with-claude-desktop.md) and
 [Cursor](running-aihawk-with-cursor.md). The config blocks themselves live in
-the [server's README](https://github.com/feder-cr/invisible-playwright-mcp),
+the [MCP server page](mcp-server.md),
 which is the one place they are kept current.
 
 ## The one line
@@ -122,7 +122,7 @@ results, and short steps keep its context small and its mistakes cheap.
   [their own checklist](why-does-my-ai-agent-get-blocked.md).
 - **You want a proxy, a fixed identity, or a persistent profile.** Those are
   server-side options, configured where the server is configured; the
-  [server's README](https://github.com/feder-cr/invisible-playwright-mcp)
+  [MCP server page](mcp-server.md)
   documents them. This page deliberately does not duplicate that reference.
 
 ## Short answers to the questions that lead here
@@ -160,8 +160,8 @@ All retrieved 2026-09-03.
   can do too") and source: `src/aihawk/link.py` and `src/aihawk/web.py` (the
   interface reaching the browser over MCP as an ordinary client),
   `src/aihawk/actions_help.py` (the tool names above), and `pyproject.toml`
-  (the server version floor and why `browser_select_option` is in it).
-- [feder-cr/invisible-playwright-mcp](https://github.com/feder-cr/invisible-playwright-mcp),
+  (the engine version floor, and the server that ships inside the package since 0.10.0).
+- [The MCP server page](mcp-server.md),
   the server itself: config blocks for other clients, server-side options, and
   the current tool list.
 

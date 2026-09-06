@@ -47,6 +47,44 @@ jobs:
           pip install -e ".[test]"
           python -m pytest -q
 
+  # Every version on the index has a GitHub release page. Carried over from the
+  # server's own CI when it moved in here: the guard was one version wide until
+  # 2026-08-02 on the sibling packages, and the whole index is walked since.
+  releases:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: every published version has a release page
+        env:
+          AIHAWK_CHECK_RELEASES: "1"
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python -m pip install --upgrade pip pytest
+          python -m pytest -q tests/test_release_pages.py
+
+  # The server's browser tests: they start a real engine, downloaded into the
+  # runner's cache on first use, and drive it through the tools. Deselected by
+  # default because of the download and the time; this job runs them the way
+  # the server's own CI did before the merge, on one platform.
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: the tools drive a real engine
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[test]"
+          # The tests that spawn the server as a subprocess and drive it
+          # through a real engine skip unless the engine is named to them.
+          export STEALTHFOX_BINARY="$(invisible-playwright fetch | tail -n 1)"
+          python -m pytest -q -m e2e tests/mcp_server
+
   # This package is published, so the thing that must work is the WHEEL, not the
   # checkout. An editable install can pass every test while the built artifact is
   # missing a module: the tests import from src/ either way, and only a clean
@@ -66,7 +104,9 @@ jobs:
           python -m venv /tmp/clean
           /tmp/clean/bin/pip install dist/*.whl
           /tmp/clean/bin/aihawk --help
-          /tmp/clean/bin/python -c "import aihawk.web, aihawk.brain, aihawk.link, aihawk.cli"
+          /tmp/clean/bin/python -c "import aihawk.web, aihawk.brain, aihawk.link, aihawk.cli, aihawk.mcp.server"
+          test -x /tmp/clean/bin/invisible-playwright-mcp
+          unzip -l dist/*.whl | grep -q "aihawk/mcp/server.py"
 
   # 2026-09-04: aihawk 0.4.0 went to the index, then main gained two more
   # changes while pyproject still said 0.4.0. A release from there would have

@@ -33,3 +33,5 @@ and what to expect before you spend model tokens finding out.
 - [Posting to X with an AI agent](ai-agent-post-to-x.md)
 - [Automating LinkedIn posts: read this first](automating-linkedin-posts-read-this-first.md)
 - [Appointment bots: what they are and what an agent can legitimately do](appointment-bots-explained.md)
+- [The MCP server: config blocks, settings, tools](mcp-server.md)
+- [How the tools are shaped, and why](mcp-tool-design.md)

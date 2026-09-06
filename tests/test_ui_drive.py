@@ -1,7 +1,7 @@
 """UI-level drive: a real local page, a real MCP server, a real browser.
 
 Every test here serves its own page over http from 127.0.0.1, spawns
-`invisible_playwright_mcp` exactly the way `aihawk.runner.drive` spawns it
+`aihawk.mcp` exactly the way `aihawk.runner.drive` spawns it
 (same `child_env`, same `StdioServerParameters`), and then checks what
 happened INSIDE the page rather than what the tool said about itself. A tool
 that answers "clicked #go" while nothing moved is the failure this file exists
@@ -338,7 +338,7 @@ class _McpDriver:
         self._stopped = asyncio.Event()
         params = StdioServerParameters(
             command=sys.executable,
-            args=["-m", "invisible_playwright_mcp"],
+            args=["-m", "aihawk.mcp"],
             env=self._env,
         )
         async with stdio_client(params) as (read, write):

@@ -40,7 +40,7 @@ tolerance is the whole game.
 Now the part to get straight before building anything. AIHawk's browser is
 driven through a fixed set of tools - navigate, read, click, type, screenshot,
 and their session-management siblings, the full list in the
-[server's README](https://github.com/feder-cr/invisible-playwright-mcp) - and
+[MCP server page](mcp-server.md) - and
 that list contains no download tool and no save-file tool. The agent's
 deliverable is its answer, as text. Checked against the tool list as of this
 writing, an instruction ending in "and download the PDF" is asking for
@@ -172,8 +172,7 @@ All retrieved 2026-09-03.
 - [Skyvern's invoice-automation guide](https://www.skyvern.com/blog/how-to-automate-downloading-invoices-september-2025/),
   for the portal-heterogeneity quote and the vendor claims about
   authentication flows, quoted attributively.
-- [feder-cr/invisible-playwright-mcp](https://github.com/feder-cr/invisible-playwright-mcp),
-  the server's README, for the complete tool list this page's "no download
+- [The MCP server page](mcp-server.md), for the complete tool list this page's "no download
   tool" statement is checked against.
 - [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README and
   source in this repository, for `--profile-dir`, `--seed`, `--headed` and

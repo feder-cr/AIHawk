@@ -1,7 +1,7 @@
 """The OpenRouter key must never reach the browser child process.
 
 `runner.child_env` builds the environment handed to the stdio child that runs
-`invisible_playwright_mcp`, which in turn launches Firefox. The key belongs to
+`aihawk.mcp`, which in turn launches Firefox. The key belongs to
 the parent only: the parent talks to OpenRouter, the child talks to a browser.
 A commit in this repository calls the removal a security fix, and the history
 carries a PR titled "Replace the committed API key", so the guarantee is not
@@ -406,7 +406,7 @@ async def test_the_link_hands_the_child_the_scrubbed_environment(monkeypatch):
     try:
         params = captured["params"]
         assert params.command == sys.executable
-        assert params.args == ["-m", "invisible_playwright_mcp"]
+        assert params.args == ["-m", "aihawk.mcp"]
 
         child = params.env
         assert child is not None, "an explicit environment is what carries the options"

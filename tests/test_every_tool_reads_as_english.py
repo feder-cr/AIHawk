@@ -49,10 +49,7 @@ def test_every_tool_the_server_offers_has_a_verb():
     """
     import asyncio
 
-    try:
-        from invisible_playwright_mcp import server
-    except ImportError:  # pragma: no cover
-        pytest.skip("invisible-playwright-mcp is not installed")
+    from aihawk.mcp import server
 
     offered = {t.name for t in asyncio.run(server.mcp.list_tools())}
     assert offered, "the server registered no tools at all"
@@ -71,10 +68,7 @@ def test_the_table_names_no_tool_that_does_not_exist():
     """
     import asyncio
 
-    try:
-        from invisible_playwright_mcp import server
-    except ImportError:  # pragma: no cover
-        pytest.skip("invisible-playwright-mcp is not installed")
+    from aihawk.mcp import server
 
     offered = {t.name for t in asyncio.run(server.mcp.list_tools())}
     stale = sorted(set(_verbs_in_the_page()) - offered)

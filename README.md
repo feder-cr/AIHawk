@@ -147,10 +147,13 @@ and [what happened to OpenAI Operator](https://github.com/feder-cr/AIHawk/wiki/i
 among others. Worked examples, transcripts and their outputs live in
 [articles/](https://github.com/feder-cr/AIHawk/tree/main/articles).
 
-## The rest of the family: browser MCP server, engine, core
+## The rest of the family: engine, core
 
-- **[invisible-playwright-mcp](https://github.com/feder-cr/invisible-playwright-mcp)**
-  The MCP server from option 1. Tools only, no interface.
+The MCP server from option 1 ships inside this package: the command
+`invisible-playwright-mcp`, the module `aihawk.mcp`. Its config blocks for
+clients that take a file, its settings and its tools are on the wiki page
+[The MCP server](https://github.com/feder-cr/AIHawk/wiki/mcp-server).
+
 - **[invisible_playwright](https://github.com/feder-cr/invisible_playwright)**
   The engine, as a Python library, for writing code instead of prompts. The API
   is Playwright's.

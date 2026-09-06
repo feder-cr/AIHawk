@@ -59,7 +59,7 @@ class Link:
     async def open(self) -> "Link":
         params = StdioServerParameters(
             command=sys.executable,
-            args=["-m", "invisible_playwright_mcp"],
+            args=["-m", "aihawk.mcp"],
             env=child_env(self._opts, os.environ, key=self._key),
         )
         self._ctx = stdio_client(params)

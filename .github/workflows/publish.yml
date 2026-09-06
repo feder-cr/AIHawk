@@ -69,57 +69,36 @@ jobs:
             echo "tag v$TAG does not name the version in pyproject.toml ($HAVE)" >&2
             exit 1
           fi
-      - name: the MCP server floor is SATISFIABLE on the index
-        # The ordering rule, as a gate instead of a sentence in a runbook, and it
-        # is here because the rule was broken the day it was written: aihawk was
-        # committed using `browser_select_option`, a tool that existed only in an
-        # unpublished server. Locally everything was green - the checkout is an
-        # editable install and cannot see this class of failure at all - while a
-        # runner resolving from the index got a server without the tool.
-        #
-        # Measured that day, in a venv built to resolve the way CI does: the index
-        # served 14 tools, the checkout offered 15, and the aihawk suite failed on
-        # exactly the difference.
-        #
-        # A FLOOR, not an exact pin, so the question is not "is this version there"
-        # but "does the index serve anything that satisfies it". That is a
-        # different check from the wrapper's, and writing the wrapper's would pass
-        # on a floor no release can meet.
+      - name: the engine floor is SATISFIABLE on the index
+        # The ordering rule as a gate: a floor on a dependency that the index
+        # cannot serve installs broken for everyone, while a checkout, being an
+        # editable install, never sees it. The MCP server used to be that
+        # dependency; since 0.10.0 it ships in this package and the floor that
+        # matters is the engine's.
         shell: bash
         run: |
           set -euo pipefail
-          # Read the floor from the dependency itself. A number typed here would be
-          # a second place to update, and the second place is the one that rots.
           FLOOR=$(python - <<'PY'
           import re, tomllib
           with open("pyproject.toml", "rb") as fh:
               deps = tomllib.load(fh)["project"]["dependencies"]
-          # PEP 503: `invisible-playwright-mcp` and `invisible_playwright_mcp` are
-          # the same project, so both spellings are accepted rather than assumed.
-          want = [d for d in deps if re.match(r"invisible[-_]playwright[-_]mcp", d)]
+          want = [d for d in deps if re.match(r"invisible[-_]playwright\s*>=", d)]
           if len(want) != 1:
-              raise SystemExit("expected exactly one MCP dependency, found %r" % want)
-          m = re.search(r">=\s*([0-9]+(?:\.[0-9]+)*)", want[0])
-          if not m:
-              raise SystemExit("no >= floor on the MCP dependency: %r" % want[0])
-          print(m.group(1))
+              raise SystemExit("expected exactly one engine dependency with a floor, found %r" % want)
+          print(re.search(r">=\s*([0-9]+(?:\.[0-9]+)*)", want[0]).group(1))
           PY
           )
           echo "floor: $FLOOR"
-          BEST=$(curl -sf "https://pypi.org/pypi/invisible-playwright-mcp/json" \
+          BEST=$(curl -sf "https://pypi.org/pypi/invisible-playwright/json" \
                  | python -c 'import json,sys; print(json.load(sys.stdin)["info"]["version"])')
           echo "index serves: $BEST"
           python - "$FLOOR" "$BEST" <<'PY'
-          import sys
+          import re, sys
           def key(v):
-              return tuple(int(p) for p in v.split("."))
+              return tuple(int(p) for p in re.findall(r"[0-9]+", v))
           floor, best = sys.argv[1], sys.argv[2]
           if key(best) < key(floor):
-              sys.exit(
-                  "the index serves invisible-playwright-mcp %s and this release "
-                  "needs >=%s, so pip could not resolve it on any runner and the "
-                  "package would install broken for everyone. Publish the server "
-                  "first, then release this." % (best, floor))
+              sys.exit("the index serves invisible-playwright %s and this release needs >=%s" % (best, floor))
           print("resolvable: %s satisfies >=%s" % (best, floor))
           PY
       - name: install and run the suite
@@ -130,6 +109,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[test]"
           python -m pytest -q
+          # The server's browser tests are deselected by default (marker e2e);
+          # a release must drive the tools against a real engine, as the
+          # server's own gate did before it moved in here. The engine is
+          # fetched into the runner's cache and named to the tests that spawn
+          # the server as a subprocess, which otherwise skip.
+          export STEALTHFOX_BINARY="$(invisible-playwright fetch | tail -n 1)"
+          python -m pytest -q -m e2e tests/mcp_server
       - name: the wheel installs into an empty environment and answers
         # The published artifact is a wheel, and the suite above imports from
         # src/ either way. Only a clean install can tell you that the thing
@@ -140,6 +126,9 @@ jobs:
           python -m venv /tmp/clean
           /tmp/clean/bin/pip install dist/*.whl
           /tmp/clean/bin/aihawk --help
+          test -x /tmp/clean/bin/invisible-playwright-mcp
+          /tmp/clean/bin/python -c "import aihawk.mcp.server"
+          unzip -l dist/*.whl | grep -q "aihawk/mcp/server.py"
 
   upload:
     needs: [already-published, gate]

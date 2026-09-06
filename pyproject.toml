@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aihawk"
-version = "0.9.2"
+version = "0.10.0"
 description = "Drive a stealth browser with an LLM from one command"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -23,39 +23,28 @@ classifiers = [
 ]
 authors = [{ name = "feder-cr", email = "85809106+feder-cr@users.noreply.github.com" }]
 dependencies = [
-    # The floor is 0.10.0 and not "any", for two reasons that arrived in that
-    # order. 0.9.0 made `session_list_pages` return id, title, url and active
-    # instead of ids alone, which is what the tab strip reads; against 0.8.1
-    # the strip stays empty and nothing else breaks, which is quiet in the
-    # wrong way. 0.10.0 added `browser_select_option`, and its absence is not
-    # quiet at all: with no tool for a dropdown a model clicks it, presses
-    # arrow keys, and ends up setting the value through browser_evaluate -
-    # script, no keystroke, an untrusted event, the one thing this stack is
-    # for avoiding.
-    #
-    # Set only after 0.10.0 is on the index, never before: a floor no published
-    # version satisfies is a package nobody can install. publish.yml refuses
-    # the release rather than trusting this comment to be read.
-    # ⛔ 0.11.0, not 0.10.0, and the floor is what makes the pairing true.
-    # The VERB table below names session_start and session_status, and a
-    # table naming tools the server does not offer is exactly what
-    # test_the_table_names_no_tool_that_does_not_exist refuses. CI resolves
-    # this from the INDEX, not from a checkout, so the floor is the only
-    # thing that can say which server this interface goes with.
-    # 0.14.0: the server fetches the engine when the first page needs it and
-    # not before, and the README says to run `invisible-playwright fetch`
-    # first. 0.13.0 fetched it on its own at process start, a behaviour the
-    # owner withdrew on 2026-09-06 so that the download is a thing a person
-    # runs and watches; this interface stopped fetching before the port opens
-    # for the same reason, in the same release.
-    # 0.15.0: `browser_watch`, the window capture the live pane is built on
-    # since 2026-09-06 - tab strip, address bar, page and the pointer, which a
-    # page screenshot can never contain. Against 0.14.0 the pane would answer
-    # 503 on every frame with "unknown tool", so the floor is the pane.
-    # 0.15.0 was on the index before this line was written, as the rule above
-    # requires.
-    "invisible-playwright-mcp>=0.15.0",
-    "mcp>=1.2",
+    # The MCP server is part of this package since 0.10.0: the module
+    # `aihawk.mcp`, started by the `invisible-playwright-mcp` command or by
+    # `python -m aihawk.mcp`. It was the separate package
+    # invisible-playwright-mcp until 0.15.2; that name lives on as a shim
+    # that depends on this one, so every registered client keeps working.
+    # >=1.8, because main() offers the streamable HTTP transport and the SDK
+    # gained it in 1.8.0 (measured on the wheels: 1.7.1 has no streamable_http
+    # module, 1.8.0 does). <2 because the server constructs FastMCP directly.
+    "mcp>=1.8,<2",
+    # >=0.9.0 and not lower, because the server's own behaviour depends on
+    # the fix in it: browser_click_at holds a button down with
+    # wait_for_timeout, and in every earlier version that wait returned
+    # instantly, so hold_seconds never held. >=0.13.0 because browser_watch
+    # and the live pane are built on page.screencast, which arrived there.
+    "invisible-playwright>=0.13.0",
+    # HTML parsing for browser_read_html. Chosen over lxml by measurement: on
+    # six real pages both found byte-identical sets of interactive elements,
+    # so correctness did not separate them, and selectolax then parsed 3-5x
+    # faster and needs no second package for CSS selection (lxml wants
+    # cssselect). Its engine, lexbor, implements the spec HTML5 parsing
+    # algorithm, the same one a browser runs on the same malformed markup.
+    "selectolax>=0.3.21",
     # Declared rather than inherited. It arrives transitively through mcp today,
     # and a transitive dependency is one somebody else can drop in a minor
     # release without telling us.
@@ -75,6 +64,7 @@ test = ["pytest>=8", "pytest-asyncio>=0.23"]
 
 [project.scripts]
 aihawk = "aihawk.cli:main"
+invisible-playwright-mcp = "aihawk.mcp.server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/aihawk"]
@@ -95,5 +85,6 @@ asyncio_mode = "auto"
 #     pytest -m ui -q tests/test_ui_drive.py
 markers = [
     "ui: drives a real browser through a real MCP server (slow, serial, opt-in)",
+    "e2e: the server's tests that start a real engine, downloading it when the cache is empty (slow, opt-in: pytest -m e2e tests/mcp_server)",
 ]
-addopts = "-m 'not ui'"
+addopts = "-m 'not ui and not e2e'"

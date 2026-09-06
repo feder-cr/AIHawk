@@ -15,10 +15,9 @@ tab, then the Configure MCP Servers button, which opens the settings file for
 editing. That path, and the field names an entry takes, are from Cline's own
 MCP documentation. The block to paste is the same one every JSON-configured
 client uses and it lives in the
-[server's README](https://github.com/feder-cr/invisible-playwright-mcp),
+[MCP server page](mcp-server.md),
 which this page links rather than copies, for the reason the
-[Claude Desktop page](running-aihawk-with-claude-desktop.md) gives: a config
-duplicated into a wiki is a config that rots in one of the two places.
+[Claude Desktop page](running-aihawk-with-claude-desktop.md) gives: a config duplicated across two pages is a config that rots in one of the two places.
 
 The platform boundary, stated before you spend time: AIHawk's engine ships
 for Windows (x86_64) and Linux (x86_64, arm64), with no macOS build. VS Code
@@ -27,7 +26,7 @@ engine to run. This combination works on Windows and Linux today.
 
 ## What changes after the server is added
 
-Paste the README's block under `mcpServers` in the file the Configure tab
+Paste the block from the [MCP server page](mcp-server.md) under `mcpServers` in the file the Configure tab
 opens, and Cline gains the browser as a set of tools. A server entry in that
 file carries a `command` and `args` (here: `uvx` running
 `invisible-playwright-mcp`), an optional `env` map, and two Cline-side
@@ -96,8 +95,7 @@ the observation and the code review happen in one context.
 The browser is headless by default; the agent's screenshots
 (`browser_take_screenshot`) are your window. To watch it drive - worth doing
 at least once against your own app - set `STEALTHFOX_HEADLESS=0` in the
-server entry's `env` map. The README documents the rest of the environment
-variables; a persistent profile directory and a fixed identity seed are the
+server entry's `env` map. the [MCP server page](mcp-server.md) documents the rest of the environment variables; a persistent profile directory and a fixed identity seed are the
 two most useful for repeated testing sessions.
 
 ## Common first-run issues
@@ -141,7 +139,7 @@ two most useful for repeated testing sessions.
 
 **How do I add AIHawk's browser to Cline?** MCP Servers icon in Cline's
 toolbar, Configure tab, Configure MCP Servers, then paste the block from the
-[server README](https://github.com/feder-cr/invisible-playwright-mcp) under
+[MCP server page](mcp-server.md) under
 `mcpServers` and save. No key, no signup; Cline's model does the thinking.
 
 **Does Cline use the browser automatically?** It picks tools it judges
@@ -174,8 +172,7 @@ All retrieved 2026-09-03.
   and `autoApprove` fields, and the limit-autoApprove security advice, with
   [the MCP overview](https://docs.cline.bot/mcp/mcp-overview) for the
   transport picture.
-- [feder-cr/invisible-playwright-mcp](https://github.com/feder-cr/invisible-playwright-mcp),
-  the server's README, for the config block, the tool list, the environment
+- [The MCP server page](mcp-server.md), for the config block, the tool list, the environment
   variables and the engine-download behavior.
 - [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README in
   this repository, for the platform boundary and the shared engine cache.
