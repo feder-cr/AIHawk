@@ -22,9 +22,6 @@
 
 ## Two ways to use this browser agent
 
-The only question is where the model comes from. If you already use Claude
-Code, Codex or Gemini CLI, take the first. If you do not, take the second.
-
 ### 1. From your assistant, over MCP
 
 ```bash
