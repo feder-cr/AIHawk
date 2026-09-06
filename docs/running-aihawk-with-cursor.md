@@ -55,7 +55,9 @@ at length.
 
 ## Config: project or global, and how Cursor runs the tools
 
-Choose the level by audience. Global (`~/.cursor/mcp.json`) makes the browser
+Two terminal steps come first, `pip install aihawk` and
+`invisible-playwright fetch`; the JSON only tells Cursor how to start what they
+installed. Choose the level by audience. Global (`~/.cursor/mcp.json`) makes the browser
 available in every project, which fits a personal research tool. Project-level
 (`.cursor/mcp.json`) travels with the repository, which fits a team that wants
 "the agent can drive our staging app" to be part of the checkout. The server's
@@ -118,16 +120,19 @@ identity seed are the two most useful for repeated testing).
    download. Prefetch it once, in a terminal where you can watch:
 
    ```bash
-   uvx invisible-playwright fetch
+   invisible-playwright fetch
    ```
 
    The engine is cached and shared with every other way into AIHawk.
 
 2. **The server does not appear in Cursor's MCP list.** Check the JSON, check
-   the file is at one of the two documented locations, and check that `uvx`
-   resolves for Cursor: the config launches the server with `uvx`, so
-   [uv](https://docs.astral.sh/uv/) must be installed where the editor can
-   find it, which is not guaranteed by it working in one particular shell.
+   the file is at one of the two documented locations, and check that
+   `invisible-playwright-mcp` resolves for Cursor: `pip install aihawk` put it
+   on your PATH, but an editor does not always inherit your shell's PATH, so
+   one working terminal is no guarantee. If it is not found, give `command`
+   the absolute path to the script (`where invisible-playwright-mcp` on
+   Windows, `which` elsewhere), or your Python's absolute path with
+   `["-m", "invisible_playwright_mcp"]` as the arguments.
 
 3. **Tools exist but every step asks permission.** That is the documented
    default, and while you are learning what the browser does, leave it on.
@@ -143,7 +148,8 @@ identity seed are the two most useful for repeated testing).
 
 ## Short answers to the questions that lead here
 
-**How do I add AIHawk's browser to Cursor?** Paste the block from the
+**How do I add AIHawk's browser to Cursor?** `pip install aihawk` and
+`invisible-playwright fetch` in a terminal, then paste the block from the
 [server README](https://github.com/feder-cr/invisible-playwright-mcp) into
 `.cursor/mcp.json` in a project or `~/.cursor/mcp.json` globally, both
 locations per Cursor's own MCP docs. No key, no signup; Cursor's model does
@@ -165,7 +171,7 @@ browser.
 
 **Why is the first instruction so slow?** Engine download: a quarter of a
 gigabyte on the first call that needs a page, silent from the editor's side.
-`uvx invisible-playwright fetch` in a terminal moves that cost to a moment you
+`invisible-playwright fetch` in a terminal moves that cost to a moment you
 choose.
 
 **Can I watch the browser work?** By default no, it is headless and the

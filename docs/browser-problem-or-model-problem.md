@@ -74,7 +74,7 @@ These appear with any model, and with no model:
   failure's own page.
 - **The very first instruction ever hangs for minutes.** Probably not a
   failure at all: the browser engine, roughly a quarter of a gigabyte, downloads
-  on the first request that needs a page. `uvx invisible-playwright fetch` in a
+  on the first request that needs a page. `invisible-playwright fetch` in a
   terminal gets it over with where you can watch it.
 
 ## Symptoms that point at the model side

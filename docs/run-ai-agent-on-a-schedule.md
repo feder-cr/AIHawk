@@ -8,14 +8,14 @@ nav_order: 24
 
 # Run an AI browser agent on a schedule
 
-AIHawk's own interface has no headless mode: since 0.3.0 it is `uvx aihawk ui`, a chat
+AIHawk's own interface has no headless mode: since 0.3.0 it is `aihawk ui`, a chat
 window for a person watching, not a cron target. A scheduled run means one of two
 routes instead: a non-interactive assistant command that still spends tokens, or the
 invisible_playwright library driving fixed steps with no model at all.
 
 ## Why the interactive UI is the wrong shape for a cron job
 
-`uvx aihawk ui` serves a small local web app, chat on the left, a live browser pane on
+`aihawk ui` serves a small local web app, chat on the left, a live browser pane on
 the right, and it refuses to start without an OpenRouter key. That's a reasonable
 design for a person typing an instruction and watching the pointer move, and the
 wrong shape for a job starting at three in the morning with nobody at the keyboard.
@@ -148,7 +148,7 @@ Retrieved 2026-09-05.
 
 - [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), this repo's README and
   `src/aihawk/cli.py`: the `ui` subcommand, its OpenRouter-key requirement, its
-  run-until-interrupted server loop, and the `uvx invisible-playwright fetch`
+  run-until-interrupted server loop, and the `invisible-playwright fetch`
   prefetch command.
 
 ---

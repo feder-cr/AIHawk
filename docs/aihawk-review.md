@@ -37,10 +37,10 @@ wiki documents; that earlier use is not covered here.
 There are two ways to run it, and they share one browser:
 
 - **Inside an assistant you already use.** One command
-  (`claude mcp add --scope user stealth -- uvx invisible-playwright-mcp`)
+  (`claude mcp add --scope user stealth -- invisible-playwright-mcp`)
   registers the browser as an MCP server in Claude Code, Claude Desktop or
   Cursor, and your assistant's model does the thinking.
-- **Standalone.** `uvx aihawk ui` serves a local page with chat on the
+- **Standalone.** `aihawk ui` serves a local page with chat on the
   left and the live browser on the right. It takes an
   [OpenRouter](https://openrouter.ai) key, defaults to `z-ai/glm-4.6`,
   and accepts `--model` for anything OpenRouter serves. Since 0.3.0 this
@@ -98,12 +98,12 @@ it is what the product is.
 - **No macOS.** Windows x86_64 and Linux x86_64/arm64 only; the last
   macOS engine build was `firefox-20`, and support ended. A Mac user
   cannot run the standalone product today.
-- **There is no free mode.** Since 0.4.0 `uvx aihawk ui` refuses to start
+- **There is no free mode.** Since 0.4.0 `aihawk ui` refuses to start
   without an OpenRouter key: an agent is a model with a browser, and tokens
   cost money. Driving the browser by hand without a model is the
   invisible_playwright library's job, not this product's.
 - **The browser is a quarter-gigabyte separate download** that arrives on
-  first use unless you pre-fetch it (`uvx invisible-playwright fetch`),
+  first use unless you pre-fetch it (`invisible-playwright fetch`),
   and a slow connection can time out confusingly on the first task.
 - **The model is not included, and results track the model.** A weak
   model drives the good browser badly;
@@ -172,7 +172,7 @@ zero-setup product, or the largest possible community -
 adopters, and the [alternatives hub](guides-alternatives-and-comparisons.md)
 compares the field with the same disclosure this page opens with. And
 whatever this page just told you, it was the project grading its own
-exam: run `uvx aihawk ui` against a real task of yours, which costs an
+exam: run `aihawk ui` against a real task of yours, which costs an
 afternoon and answers the only question that matters.
 
 ## Short answers to the questions that lead here

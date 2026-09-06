@@ -27,10 +27,11 @@ engine to run. This combination works on Windows and Linux today.
 
 ## What changes after the server is added
 
-Paste the README's block under `mcpServers` in the file the Configure tab
+After `pip install aihawk` and `invisible-playwright fetch` in a terminal,
+paste the README's block under `mcpServers` in the file the Configure tab
 opens, and Cline gains the browser as a set of tools. A server entry in that
-file carries a `command` and `args` (here: `uvx` running
-`invisible-playwright-mcp`), an optional `env` map, and two Cline-side
+file carries a `command` and `args` (here: `invisible-playwright-mcp`, which
+the install put on your PATH, and no arguments), an optional `env` map, and two Cline-side
 fields worth knowing from day one: `disabled`, which switches a server off
 without deleting its entry, and `autoApprove`, a list of tool names allowed
 to run without asking you each time.
@@ -110,17 +111,20 @@ two most useful for repeated testing sessions.
    where you can watch:
 
    ```bash
-   uvx invisible-playwright fetch
+   invisible-playwright fetch
    ```
 
    The engine is cached and shared with every other way into AIHawk.
 
 2. **The server never appears.** Check the JSON you pasted (a trailing comma
-   is the classic), and check that `uvx` resolves for the process VS Code
-   runs: the block launches the server with `uvx`, so
-   [uv](https://docs.astral.sh/uv/) must be installed where the editor finds
-   it, which one working shell does not guarantee. The `disabled` field is
-   also worth a glance before deeper debugging.
+   is the classic), and check that `invisible-playwright-mcp` resolves for
+   the process VS Code runs: `pip install aihawk` put it on your PATH, but an
+   editor does not always inherit your shell's PATH, so one working terminal
+   is no guarantee. If it is not found, give `command` the absolute path to
+   the script (`where invisible-playwright-mcp` on Windows, `which`
+   elsewhere), or your Python's absolute path with
+   `["-m", "invisible_playwright_mcp"]` as the arguments. The `disabled`
+   field is also worth a glance before deeper debugging.
 
 3. **Every step asks permission.** That is the design default, and while you
    are learning what the browser does, keep it. Loosen deliberately by
@@ -139,7 +143,8 @@ two most useful for repeated testing sessions.
 
 ## Short answers to the questions that lead here
 
-**How do I add AIHawk's browser to Cline?** MCP Servers icon in Cline's
+**How do I add AIHawk's browser to Cline?** `pip install aihawk` and
+`invisible-playwright fetch` in a terminal; then MCP Servers icon in Cline's
 toolbar, Configure tab, Configure MCP Servers, then paste the block from the
 [server README](https://github.com/feder-cr/invisible-playwright-mcp) under
 `mcpServers` and save. No key, no signup; Cline's model does the thinking.
@@ -151,11 +156,11 @@ chosen tools run unasked; keep it to reading tools while the browser is new.
 **Do I need an API key for the browser?** No. The server's block carries no
 secret and there is nothing to sign up for; your existing Cline model setup
 is untouched. The OpenRouter key belongs to AIHawk's own interface
-(`uvx aihawk ui`), a different way in, and that one requires it.
+(`aihawk ui`), a different way in, and that one requires it.
 
 **Why is the first instruction so slow?** Engine download: about a quarter
 of a gigabyte on the first call that needs a page, silent from the editor's
-side. `uvx invisible-playwright fetch` in a terminal moves that wait to a
+side. `invisible-playwright fetch` in a terminal moves that wait to a
 moment you choose.
 
 **Can I watch it drive?** Headless by default, screenshots as the window.

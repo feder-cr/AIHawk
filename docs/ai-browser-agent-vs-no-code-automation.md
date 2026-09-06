@@ -88,7 +88,7 @@ spends the agent's more expensive reasoning only where a connector
 genuinely does not exist. In practice that call-out is usually an HTTP
 request to whatever endpoint fronts the agent, or an MCP client talking to
 a server the agent exposes; AIHawk runs through
-`uvx invisible-playwright-mcp` for exactly this kind of hookup. n8n's own
+`invisible-playwright-mcp` for exactly this kind of hookup. n8n's own
 documentation describes the generic route in one line: the HTTP Request
 node "allows you to make HTTP requests to query data from any app or
 service with a REST API", and calls it one of the most versatile nodes

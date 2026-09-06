@@ -69,7 +69,7 @@ next section shows, costs no model at all.
 
 ## Scheduling it: a script, as of aihawk 0.3.0
 
-Since 0.3.0 AIHawk itself is interactive-only (`uvx aihawk ui`): there is no
+Since 0.3.0 AIHawk itself is interactive-only (`aihawk ui`): there is no
 headless subcommand to put in cron anymore. That is less of a loss than it
 sounds, because the scheduled half of monitoring is deliberately mechanical -
 fetch the page, extract one signal, save it - and mechanical work belongs in
@@ -110,7 +110,7 @@ A real crontab line, deliberately not on the hour:
 17 8 * * *  python $HOME/hawk-mon/check_page.py >> $HOME/hawk-mon/$(date +\%F).txt 2>&1
 ```
 
-The interface (`uvx aihawk ui`) has no scheduler; the recurring path is this
+The interface (`aihawk ui`) has no scheduler; the recurring path is this
 script plus whatever scheduler your system already has.
 
 ## What to store between runs
@@ -132,7 +132,7 @@ means the memory of the monitor is yours to keep. Two files do it:
 
 - **The dated archive.** Keep every line with its timestamp. When the diff
   fires and the question becomes "does this change MATTER", that is the
-  judgment half - open `uvx aihawk ui` (or your assistant with this browser
+  judgment half - open `aihawk ui` (or your assistant with this browser
   attached) and ask exactly that, with the two saved lines pasted in. The
   agent earns its per-session cost only on the days something actually moved,
   which is the whole economics of the hybrid this page keeps arguing for.

@@ -100,7 +100,7 @@ them. This is the general agent-timing problem, and it has
    screenshotting a whole desktop, Claude Code, Claude Desktop or Cursor can drive a
    Firefox patched at the C++ level as a set of tools, via
    [invisible-playwright-mcp](https://github.com/feder-cr/invisible-playwright-mcp) -
-   one line for Claude Code: `claude mcp add --scope user stealth -- uvx
+   one line for Claude Code: `claude mcp add --scope user stealth --
    invisible-playwright-mcp`. Disclosure: that server and this wiki have the same
    maintainer, and it is the route [AIHawk](https://github.com/feder-cr/AIHawk)
    itself uses. For staying with the screenshot loop instead, the engine wiki shows

@@ -26,7 +26,8 @@ combination is a Windows setup today.
 
 ## What changes after the server is added
 
-Mechanically: you edit the config (Desktop's Settings, under Developer, has an
+Mechanically: `pip install aihawk` and `invisible-playwright fetch` in a
+terminal, then you edit the config (Desktop's Settings, under Developer, has an
 Edit Config button that opens the right file), paste the server block from the
 README, then quit Desktop completely and restart it. The full restart is not
 superstition; Desktop loads MCP servers at startup, and the official MCP
@@ -111,7 +112,7 @@ In the order people hit them:
    a terminal where you can watch progress:
 
    ```bash
-   uvx invisible-playwright fetch
+   invisible-playwright fetch
    ```
 
    The engine is cached afterwards and shared with every other way into
@@ -123,12 +124,13 @@ In the order people hit them:
    own errors - and the MCP quickstart documents where they live on each
    platform. Read the per-server log before guessing.
 
-3. **`uvx` is not found.** The config launches the server with `uvx`, which
-   means [uv](https://docs.astral.sh/uv/) must be installed, and installed
-   where a GUI application can see it. A shell that finds `uvx` does not
-   guarantee Desktop does, since GUI apps do not always inherit your shell's
-   PATH; if the per-server log shows a not-found error, the server README's
-   troubleshooting is the place to start.
+3. **The command is not found.** The config launches
+   `invisible-playwright-mcp`, which `pip install aihawk` put on your PATH, and
+   a GUI application does not always inherit your shell's PATH: a terminal
+   that finds it does not guarantee Desktop does. If the per-server log shows
+   a not-found error, give `command` the absolute path to the script
+   (`where invisible-playwright-mcp` on Windows), or your Python's absolute
+   path with `["-m", "invisible_playwright_mcp"]` as the arguments.
 
 4. **It is a Mac.** No engine build, per the boundary at the top. Nothing to
    debug.
@@ -140,19 +142,20 @@ In the order people hit them:
 
 ## Short answers to the questions that lead here
 
-**How do I add AIHawk's browser to Claude Desktop?** Paste the server block
-from the [server README](https://github.com/feder-cr/invisible-playwright-mcp)
-into Desktop's MCP config (Settings, Developer, Edit Config), then fully quit
-and restart Desktop. The block and file path live in that README on purpose.
+**How do I add AIHawk's browser to Claude Desktop?** `pip install aihawk` and
+`invisible-playwright fetch` in a terminal, then paste the server block from
+the [server README](https://github.com/feder-cr/invisible-playwright-mcp) into
+Desktop's MCP config (Settings, Developer, Edit Config), then fully quit and
+restart Desktop. The block and file path live in that README on purpose.
 
 **Do I need an API key for this?** No. Your Claude subscription is the model;
 the server only adds the browser, and its config block contains no secret. The
 OpenRouter key belongs to a different way in, AIHawk's own interface
-(`uvx aihawk ui`), which requires one.
+(`aihawk ui`), which requires one.
 
 **Why does the first instruction take so long?** The engine downloads on the
 first call that needs a page, about a quarter of a gigabyte, and nothing warns
-you. Prefetch it with `uvx invisible-playwright fetch` and the first
+you. Prefetch it with `invisible-playwright fetch` and the first
 instruction behaves like every later one.
 
 **Why can I not see the browser?** It runs headless by default; screenshots

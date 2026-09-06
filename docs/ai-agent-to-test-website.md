@@ -39,7 +39,7 @@ code open - or from the terminal:
 > with placeholder data. Report every field, every validation message, and
 > whether registration succeeded.
 
-Typed into `uvx aihawk ui`, which runs the task with the live page beside the
+Typed into `aihawk ui`, which runs the task with the live page beside the
 chat - and for testing the watching is worth having: seeing the agent
 hesitate on your form is itself a finding. Two properties of
 this browser matter specifically for testing. It fills forms through real key

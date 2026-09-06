@@ -66,7 +66,7 @@ Three lines, and each is a different kind of risk:
 
 Rows come from pages an organization already published to be read: a
 company's own about or contact page, a business directory, a conference's
-exhibitor list. Typed into `uvx aihawk ui`, or handed to your assistant with
+exhibitor list. Typed into `aihawk ui`, or handed to your assistant with
 AIHawk's browser attached:
 
 > Go to `<the exhibitor list page>`. For each exhibitor, open its entry and
@@ -148,7 +148,7 @@ generally on
 Retrieved 2026-09-05.
 
 - [AIHawk README](https://github.com/feder-cr/AIHawk#readme), for the
-  `uvx aihawk ui` interface and the MCP path for assistants that can already
+  `aihawk ui` interface and the MCP path for assistants that can already
   run tools.
 
 ---

@@ -87,7 +87,7 @@ scripted, one question per run:
 > the three most common price bands you observe. Ground every number in what
 > the pages show; do not estimate.
 
-(Typed into `uvx aihawk ui`, or handed to your assistant with AIHawk's
+(Typed into `aihawk ui`, or handed to your assistant with AIHawk's
 browser attached - research is judgment work, and since aihawk 0.3.0 the
 judgment paths are those two.)
 

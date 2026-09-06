@@ -105,7 +105,7 @@ the session survives restarts - the README describes `--profile-dir` as a
 directory that keeps logins and cookies across runs:
 
 ```bash
-uvx aihawk ui --profile-dir ~/.aihawk-facebook
+aihawk ui --profile-dir ~/.aihawk-facebook
 ```
 
 Log in by hand in that first session. A login page is where a site's

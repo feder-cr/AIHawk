@@ -16,7 +16,7 @@ uses.
 
 ## The two routes, and the one that is not actually local
 
-`uvx aihawk ui --openrouter-key ...` reaches OpenRouter and nowhere else. That is not
+`aihawk ui --openrouter-key ...` reaches OpenRouter and nowhere else. That is not
 a default that can be pointed elsewhere with a flag: `src/aihawk/llm.py` hardcodes the
 OpenRouter base URL, and the `ui` command refuses to start at all without a key. If
 you came here hoping for `--ollama`, it does not exist in the current source.
@@ -41,7 +41,7 @@ The attachment mechanics do not change based on where the model lives. The
 shape, even though Claude Code's own model is hosted rather than local:
 
 ```bash
-claude mcp add --scope user stealth -- uvx invisible-playwright-mcp
+claude mcp add --scope user stealth -- invisible-playwright-mcp
 ```
 
 One command, once, and the browser's tools show up in that client from then on. A
@@ -107,7 +107,7 @@ the whole local approach is the wrong fit.
 
 ## Short answers to the questions that lead here
 
-**Can I use a local model with AIHawk's own interface?** No. `uvx aihawk ui` only
+**Can I use a local model with AIHawk's own interface?** No. `aihawk ui` only
 ever calls OpenRouter, hardcoded in the source. A local model means attaching this
 browser to a different client over MCP instead.
 

@@ -23,41 +23,37 @@ file instead of a command, and have their own pages:
 the [server's README](https://github.com/feder-cr/invisible-playwright-mcp),
 which is the one place they are kept current.
 
-## The one line
+## The three lines
 
-Two prerequisites, same as everywhere in this project: Python 3.11 or newer on
-Windows (x86_64) or Linux (x86_64, arm64) - macOS is not supported, the last
-engine build for it was `firefox-20` - and [uv](https://docs.astral.sh/uv/),
-because the command runs the server with `uvx`. Then, once:
-
-```bash
-claude mcp add --scope user stealth -- uvx invisible-playwright-mcp
-```
-
-Reading it left to right: `--scope user` registers the server at user scope, so it
-is available in every project rather than only the directory you happened to be
-in; `stealth` is the name it appears under; everything after `--` is the
-command Claude Code will run to start the server, and `uvx` fetches and runs
-the published package, so there is nothing to clone or pip-install first. Start
-a fresh Claude Code session afterwards if one was already open, and `/mcp`
-should list `stealth` among the connected servers.
-
-## First run: the download nobody warns you about
-
-Installing the server does not install the browser. The engine is a patched
-Firefox of roughly a quarter of a gigabyte, and it downloads on the first
-request that needs a page - which, from inside a chat, looks like your first
-browsing prompt sitting there doing nothing, and on a slow connection can end
-in a timeout message that says nothing about a download.
-
-Get it over with first, in a terminal where you can watch the progress:
+One prerequisite, the same as everywhere in this project: Python 3.11 or newer
+on Windows (x86_64) or Linux (x86_64, arm64) - macOS is not supported, the last
+engine build for it was `firefox-20`. Then, once:
 
 ```bash
-uvx invisible-playwright fetch
+pip install aihawk
+invisible-playwright fetch
+claude mcp add --scope user stealth -- invisible-playwright-mcp
 ```
 
-It is cached afterwards and shared by every way into the engine, including
-AIHawk's own interface if you later run that too.
+The first line installs AIHawk and, with it, the MCP server. The second
+downloads the browser itself, a patched Firefox of roughly a quarter of a
+gigabyte, once, in a terminal where you can watch it. Reading the third left to
+right: `--scope user` registers the server at user scope, so it is available in
+every project rather than only the directory you happened to be in; `stealth`
+is the name it appears under; everything after `--` is the command Claude Code
+will run to start the server, which the first line put on your PATH. Start a
+fresh Claude Code session afterwards if one was already open, and `/mcp` should
+list `stealth` among the connected servers.
+
+## First run, if you skipped the fetch
+
+Installing the server does not install the browser; the second line above
+does. Skip it and the engine downloads on the first request that needs a page,
+which, from inside a chat, looks like your first browsing prompt sitting there
+doing nothing, and on a slow connection can end in a timeout message that says
+nothing about a download. Run `invisible-playwright fetch` in a terminal
+instead; it is cached afterwards and shared by every way into the engine,
+including AIHawk's own interface if you later run that too.
 
 ## What Claude actually gains
 
@@ -109,9 +105,10 @@ results, and short steps keep its context small and its mistakes cheap.
 - **`stealth` is not listed in `/mcp`.** Run `claude mcp list` in a terminal
   to see what is registered and at which scope. If the add command was run
   while a session was open, the running session may not know it yet; start a
-  new one. If `uvx` is not on your PATH, the server can be registered and
-  still fail to start - install uv and try `uvx invisible-playwright-mcp` by
-  hand, which surfaces the real error.
+  new one. If `invisible-playwright-mcp` is not on your PATH, the server can
+  be registered and still fail to start: run it by hand in a terminal, which
+  surfaces the real error, or register it as
+  `python -m invisible_playwright_mcp` instead of the bare name.
 - **The first browsing prompt hangs or times out.** Almost always the engine
   download. Run the prefetch command above and retry; afterwards a first page
   load is seconds, not minutes.
@@ -128,8 +125,9 @@ results, and short steps keep its context small and its mistakes cheap.
 ## Short answers to the questions that lead here
 
 **How do I add AIHawk's browser to Claude Code?**
-`claude mcp add --scope user stealth -- uvx invisible-playwright-mcp`, once, with uv
-installed. New sessions then have the browser tools in `/mcp`.
+`pip install aihawk`, `invisible-playwright fetch`, then
+`claude mcp add --scope user stealth -- invisible-playwright-mcp`, once. New
+sessions then have the browser tools in `/mcp`.
 
 **Do I need an OpenRouter key for this?** No. The key is only for AIHawk's own
 interface and CLI, where AIHawk must bring a model. In Claude Code, Claude is
@@ -137,7 +135,7 @@ the model.
 
 **Why does the first browsing request take so long?** The engine, about a
 quarter of a gigabyte, downloads on the first request that needs a page. Run
-`uvx invisible-playwright fetch` once in a terminal to do it up front.
+`invisible-playwright fetch` once in a terminal to do it up front.
 
 **Is this different from what AIHawk's own UI drives?** No - same server, same
 engine, same tools. The interface is just another MCP client of it, with no
@@ -155,9 +153,8 @@ client starts its own - so a page open in one is not visible in the other.
 All retrieved 2026-09-03.
 
 - [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), this repository's
-  README (the verbatim add command, the prerequisites and platforms, the
-  engine download and prefetch, "anything the interface can do, your assistant
-  can do too") and source: `src/aihawk/link.py` and `src/aihawk/web.py` (the
+  README (the verbatim install, fetch and add commands, "anything the
+  interface can do, your assistant can do too") and source: `src/aihawk/link.py` and `src/aihawk/web.py` (the
   interface reaching the browser over MCP as an ordinary client),
   `src/aihawk/actions_help.py` (the tool names above), and `pyproject.toml`
   (the server version floor and why `browser_select_option` is in it).
@@ -174,5 +171,5 @@ and [browser problem or model problem?](browser-problem-or-model-problem.md).
 
 *From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. Claude Code is
 the shortest route into this browser - one command, against a config file
-everywhere else - and the README calls the engine fetch "the download nobody
-warns you about", so consider yourself warned.*
+everywhere else - and the README puts the engine fetch right after the install,
+so consider yourself warned.*

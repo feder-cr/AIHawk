@@ -82,7 +82,7 @@ minutes is a bill and a signature.
 ## The workflow, concretely
 
 Reading listings against criteria is judgment work, so it runs where the
-model is: `uvx aihawk ui`, or your assistant with AIHawk's browser attached.
+model is: `aihawk ui`, or your assistant with AIHawk's browser attached.
 A worked instruction to paste, with the portal URL being whatever
 search-results page you have already set up by hand:
 
@@ -107,7 +107,7 @@ scheduled script on the same engine captures the listing count or the newest
 title each morning, and when that signal moves you bring the judgment prompt
 above to the agent. Once a day, or twice in a genuinely fast market. For
 interactive sessions - "open the third FIT and tell me what
-the photos show about the kitchen" - `uvx aihawk ui` gives you the same
+the photos show about the kitchen" - `aihawk ui` gives you the same
 agent beside a live browser view, and if you already use Claude Code or
 Claude Desktop, the same browser attaches to your assistant instead
 ([the setup page](running-aihawk-with-claude-code.md) has the one-liner).
@@ -172,7 +172,7 @@ binding, human reviews and submits. See
 All retrieved 2026-09-03.
 
 - The [AIHawk README](https://github.com/feder-cr/AIHawk#readme), for the
-  `uvx aihawk ui` command, the MCP path for assistants, and the profile and
+  `aihawk ui` command, the MCP path for assistants, and the profile and
   proxy behavior (updated for aihawk 0.3.0, which removed the `do`
   subcommand).
 - [Rightmove's terms-of-use page](https://www.rightmove.co.uk/this-site/terms-of-use.html),

@@ -117,7 +117,7 @@ Where this project sits, stated once and with its boundary: AIHawk is a local,
 open-source, structure-reading agent whose browser is a Firefox patched at the C++
 level rather than a stock automation build, which addresses the fingerprint layer
 of blocking and does nothing for the IP, volume or pacing layers. Two ways in, an
-MCP server for assistants like Claude Code, or `uvx aihawk ui` with an OpenRouter
+MCP server for assistants like Claude Code, or `aihawk ui` with an OpenRouter
 key. This is AIHawk's wiki, so weigh that paragraph as a maintainer describing his
 own tool.
 

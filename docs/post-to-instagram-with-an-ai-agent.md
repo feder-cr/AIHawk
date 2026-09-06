@@ -70,7 +70,7 @@ What works instead is a division of labor that is honest about who does
 what. Run headed, so the browser is a normal window on your desktop:
 
 ```bash
-uvx aihawk ui --profile-dir ~/.aihawk-instagram --headed
+aihawk ui --profile-dir ~/.aihawk-instagram --headed
 ```
 
 Log in yourself once; the profile directory keeps the session for later

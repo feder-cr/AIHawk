@@ -81,7 +81,7 @@ What runs well today, per portal:
    persistent profile and a visible window:
 
    ```bash
-   uvx aihawk ui --headed --profile-dir ~/.hawk-invoices
+   aihawk ui --headed --profile-dir ~/.hawk-invoices
    ```
 
    Ask the agent to open the portal's login page, then sign in yourself in
