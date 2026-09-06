@@ -18,9 +18,7 @@ a Firefox patched at the C++ source. The server ships inside the `aihawk`
 package and is what `aihawk` runs with no subcommand: `uvx aihawk` is what a
 client registers, `python -m aihawk` is what the interface spawns. Every tool
 below is a thin wrapper over the engine, and the interface (`aihawk ui`) is a
-client of it like any other. The PyPI name `invisible-playwright-mcp` lives on
-as a shim over `aihawk`, so a client that registered
-`uvx invisible-playwright-mcp` before 0.11.0 keeps working unchanged.
+client of it like any other.
 
 **How to install this, and the two ways to use it, are in
 [AIHawk's README](https://github.com/feder-cr/AIHawk#readme).** This page keeps

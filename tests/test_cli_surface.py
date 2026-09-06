@@ -10,22 +10,6 @@ buffer, a CI log and a screen recording. FAKE_KEY below carries the marker
 CANARY on purpose so any echo of it, whole or truncated after the prefix, is
 recognisable; test_the_key_detector_is_not_vacuous proves the detector can
 actually see a leak instead of always printing PASS.
-
-⛔ THIS FILE USED TO DRIVE `aihawk do`, WHICH NO LONGER EXISTS. The subcommand
-was removed on 2026-09-03: one way in, and it is `ui`. Most of what was here
-tested the option surface and the key handling, and both are still real, so
-those tests moved onto `ui` rather than being deleted with the command. Four
-guarantees genuinely died with it and are recorded here so nobody hunts for
-them later:
-
-  * "no key anywhere exits 1 and names both ways to supply one" - dead with
-    `do`, reborn with 0.4.0: the literal-command placeholder was removed, so
-    `ui` now refuses without a key too, and the refusal must also point at
-    the invisible_playwright library as the model-free way to drive the
-    engine (tested below);
-  * "the TASK argument is required", "the task reaches drive verbatim" and "the
-    result is printed verbatim with one trailing newline" - `ui` takes no task
-    and prints no result.
 """
 from __future__ import annotations
 

@@ -1,9 +1,9 @@
 """UI-level drive: a real local page, a real MCP server, a real browser.
 
-Every test here serves its own page over http from 127.0.0.1, spawns
-`aihawk.mcp` exactly the way `aihawk.runner.drive` spawns it
-(same `child_env`, same `StdioServerParameters`), and then checks what
-happened INSIDE the page rather than what the tool said about itself. A tool
+Every test here serves its own page over http from 127.0.0.1, spawns the
+server the same way `Link` does (`python -m aihawk`, same `child_env`, same
+`StdioServerParameters`), and then checks what happened INSIDE the page
+rather than what the tool said about itself. A tool
 that answers "clicked #go" while nothing moved is the failure this file exists
 to catch, so the tool's own success string is never the assertion.
 
@@ -14,7 +14,7 @@ what they actually do to a page.
 
 RUN THEM WITH (they are deselected by default, see `addopts` in pyproject):
 
-    C:/tmp/venv_aihawk/Scripts/python -m pytest -m ui -q C:/src/firefox-stealth/release/aihawk/pkg-cli/tests/test_ui_drive.py
+    C:/tmp/venv_aihawk/Scripts/python -m pytest -m ui -q C:/src/firefox-stealth/release/aihawk/tests/test_ui_drive.py
 
 Serially, and on a machine with no other browser bench running: they launch ONE
 browser for the whole module and reuse it, which is also why each test starts

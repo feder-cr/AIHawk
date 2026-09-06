@@ -9,8 +9,7 @@ hand it over.
 Spawning is `Link`'s. This module used to build its own StdioServerParameters as
 well, which meant two places knew the command, the arguments and the environment
 of the child - and a change to how the server is launched had to be made twice
-or be wrong once. It also held `drive`, the one-task-then-close half of an
-`aihawk do` subcommand, removed on 2026-09-03 along with it.
+or be wrong once.
 """
 from __future__ import annotations
 

@@ -1,13 +1,9 @@
 """A real browser, a real model, and one factual question about a page.
 
-⛔ THIS USED TO INVOKE `aihawk do`, removed on 2026-09-03. What it was actually
-proving was never the subcommand: it was that the loop, given a real browser and
-a real model, reads a page and answers what is on it. That is the whole product
-in one assertion, and it survives the command that used to carry it.
-
-So it now opens the same `Link` the interface opens and runs the same loop the
-interface runs. What is lost with `do` is the CLI wiring around it, and that is
-covered without a browser or a key in test_cli_surface.py.
+The loop, given a real browser and a real model, reads a page and answers
+what is on it - the whole product in one assertion. It opens the same `Link`
+the interface opens and runs the same loop the interface runs; the CLI wiring
+around that is covered without a browser or a key in test_cli_surface.py.
 
 Skipped unless both a real binary and a real key are present, because it spends
 money and launches Firefox.

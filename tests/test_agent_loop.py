@@ -30,7 +30,7 @@ REAL SHAPES COPIED, AND WHERE THEY WERE READ
   The scripted client mirrors the surface `llm.make_client` returns, which is
   `openai.OpenAI`: the loop only ever touches `client.chat.completions.create`.
 
-  The scripted MCP session mirrors `mcp.ClientSession` as `runner.drive` uses
+  The scripted MCP session mirrors `mcp.ClientSession` as `Link` uses
   it: `await mcp.list_tools()` returning a ListToolsResult, and
   `await mcp.call_tool(name, args)` returning a CallToolResult.
 

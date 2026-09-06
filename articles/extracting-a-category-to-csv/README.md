@@ -78,19 +78,6 @@ The screenshots above are the browser's own captures from the run, returned
 by `browser_take_screenshot` at steps 4 and 5. The session ran headless, as
 MCP sessions do; the browser's screenshots are the visual record.
 
-## Recorded against
-
-| Piece | Version |
-|---|---|
-| invisible-playwright-mcp | 0.3.0 (the locally installed server that drove this run; releases have moved well past it, so your tool names may differ) |
-| invisible_playwright | 0.8.3 |
-| invisible_core | 26.17.0 |
-| Engine | firefox-26 |
-
-Run date: 2026-09-03. The tool names and response shapes above are this
-version's; if yours differ, check your versions before assuming the page
-changed.
-
 ## Reproducing it
 
 Attach the browser to your assistant (from the

@@ -381,11 +381,6 @@ async def test_the_link_hands_the_child_the_scrubbed_environment(monkeypatch):
     of which leave every child_env test above green while the key ships to the
     child (the first) or every STEALTHFOX_* option silently stops working (the
     second).
-
-    ⛔ It used to run through `runner.drive`, behind the `aihawk do` subcommand
-    removed on 2026-09-03. `drive` was only ever a Link opened and closed around
-    one task, so the guarantee never belonged to it: it belongs to `Link`, which
-    is what the interface uses, and that is where it is asserted now.
     """
     monkeypatch.setenv(KEY_NAME, KEY)
     captured = {}

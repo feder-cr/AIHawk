@@ -3,13 +3,12 @@
 ONE loop. There were briefly two, which is how a README sentence saying "same
 machinery" becomes false without anybody editing it: the second copy gets a fix,
 the first does not, and the two answers diverge for a task that looks identical
-from outside. They were merged, and later the second CALLER went too - the
-`aihawk do` subcommand, removed on 2026-09-03 - so this loop now has exactly one
-consumer in the product and one in the tests.
+from outside. They were merged, so this loop now has exactly one consumer in
+the product (the interface, via `brain.py`) and one in the tests (`run_task`).
 
-The narration is a parameter rather than a mode. `do` passes a sink that drops
-everything, `ui` passes the thing that pushes events to the page, and neither
-appears in here. A loop that knows whether it is being watched is a loop with two
+The narration is a parameter rather than a mode. The interface passes the
+callback that pushes events to the page; `run_task` passes nothing and gets
+silence. A loop that knows whether it is being watched is a loop with two
 behaviours to test.
 """
 from __future__ import annotations
@@ -31,7 +30,8 @@ Say = Callable[[str, str], Awaitable[None]]
 
 
 async def _silent(_kind: str, _text: str) -> None:
-    """The default narrator: says nothing, so `do` prints only its answer."""
+    """The default narrator: says nothing, which is what `run_task` wants -
+    an answer, not a transcript."""
 
 
 def mcp_tools_to_openai(tools) -> List[dict]:
@@ -165,11 +165,10 @@ async def run_task(mcp, task: str, *, client, model: str, max_turns: int = 25,
                    max_tokens: int = Conversation.MAX_TOKENS) -> str:
     """One instruction, one answer, no narration.
 
-    Four lines over `Conversation`, and no longer called by the product: the
-    `aihawk do` subcommand it was written for was removed on 2026-09-03. It is
-    kept because the suite drives the loop through it - about twenty-five tests
-    in test_agent_loop.py - and rewriting all of them onto `Conversation`
-    directly would move a lot of code to delete four lines.
+    Four lines over `Conversation`, not called by the product - kept because
+    the suite drives the loop through it, about twenty-five tests in
+    test_agent_loop.py, and rewriting all of them onto `Conversation` directly
+    would move a lot of code to delete four lines.
     """
     tools = (await mcp.list_tools()).tools
     convo = Conversation(client, model, max_turns=max_turns, max_tokens=max_tokens)
