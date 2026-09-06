@@ -46,7 +46,7 @@ claude mcp add --scope user stealth -- uvx aihawk
 
 One command, once, and the browser's tools show up in that client from then on. A
 client built around a local model takes the equivalent command or config screen for
-adding an MCP server; the package on the other end, `invisible-playwright-mcp`, the
+adding an MCP server; the package on the other end, `aihawk`, the
 tool names it exposes, and the roughly quarter-gigabyte engine it downloads on first
 use are identical regardless of what is asking. The server has no idea whether the
 model calling it runs on your GPU or on someone else's, and that is by design: it

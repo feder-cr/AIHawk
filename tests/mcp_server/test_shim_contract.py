@@ -1,14 +1,17 @@
-"""`aihawk` with no subcommand is the server, and the old name is a shim over it.
+"""`aihawk` is the one command this package declares, and the old name is a
+shim over it.
+
+New registrations use `uvx aihawk`, and the interface spawns `python -m aihawk`:
+the group with no subcommand serves over stdio, `aihawk ui` is the interface,
+and there is no second script and no `aihawk.mcp` command - pinned here.
 
 The PyPI package invisible-playwright-mcp ships, since its 0.16.0, three files
 that re-export `aihawk.mcp.server` and a console script that points at
-`aihawk.mcp.server:main`; every client that registered
-`uvx invisible-playwright-mcp` runs through those names. The shim lives in an
-archived repository and cannot follow a rename, so the names are pinned here.
-
-New registrations use `uvx aihawk`, and the interface spawns `python -m aihawk`:
-the group with no subcommand serves over stdio, which is the second contract
-pinned here. It is the one command this package declares.
+`aihawk.mcp.server:main` (a module path, not a command); every client that
+registered `uvx invisible-playwright-mcp` before this package went to one
+command still runs through those names. The shim lives in an archived
+repository and cannot follow a rename, so the names it binds are pinned here
+too.
 """
 import tomllib
 from pathlib import Path

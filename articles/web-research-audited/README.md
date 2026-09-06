@@ -104,7 +104,7 @@ the same pages.
 ## Reproducing it
 
 Attach the browser to your assistant
-([README, option 1](../../README.md#1-you-already-use-an-assistant-that-can-run-tools)),
+([README, option 1](../../README.md#1-from-your-assistant-over-mcp)),
 paste the prompt, then run `python ground_truth.py` (needs
 `pip install invisible-playwright`) and compare. The reading companion for
 this task shape is

@@ -101,7 +101,7 @@ them. This is the general agent-timing problem, and it has
    Firefox patched at the C++ level as a set of tools, via
    [the MCP server](mcp-server.md) that ships with AIHawk -
    one line for Claude Code: `claude mcp add --scope user stealth -- uvx
-   invisible-playwright-mcp`. Disclosure: that server and this wiki have the same maintainer, and it is the route AIHawk's own interface uses. For staying with the screenshot loop instead, the engine wiki shows
+   aihawk`. Disclosure: that server and this wiki have the same maintainer, and it is the route AIHawk's own interface uses. For staying with the screenshot loop instead, the engine wiki shows
    [how to back a computer-use agent with a real browser engine](https://github.com/feder-cr/invisible_playwright/wiki/back-computer-use-agent-real-browser).
 2. **Fix the exit.** A clean, residential-quality address, with the browser's
    timezone and locale agreeing with it. A perfect machine on a distrusted address

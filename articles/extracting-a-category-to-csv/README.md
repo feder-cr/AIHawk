@@ -94,10 +94,10 @@ changed.
 ## Reproducing it
 
 Attach the browser to your assistant (from the
-[README](../../README.md#1-you-already-use-an-assistant-that-can-run-tools)):
+[README](../../README.md#1-from-your-assistant-over-mcp)):
 
 ```bash
-claude mcp add -s user stealth -- uvx invisible-playwright-mcp
+claude mcp add -s user stealth -- uvx aihawk
 ```
 
 Then paste the prompt. The reading companion for this task shape, including

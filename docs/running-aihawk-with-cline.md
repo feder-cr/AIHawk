@@ -29,7 +29,7 @@ engine to run. This combination works on Windows and Linux today.
 Paste the block from the [MCP server page](mcp-server.md) under `mcpServers` in the file the Configure tab
 opens, and Cline gains the browser as a set of tools. A server entry in that
 file carries a `command` and `args` (here: `uvx` running
-`invisible-playwright-mcp`), an optional `env` map, and two Cline-side
+`aihawk`), an optional `env` map, and two Cline-side
 fields worth knowing from day one: `disabled`, which switches a server off
 without deleting its entry, and `autoApprove`, a list of tool names allowed
 to run without asking you each time.
