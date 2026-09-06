@@ -28,8 +28,6 @@ Both need Python 3.11 or newer.
 
 ### 1. From your assistant, over MCP
 
-Install AIHawk and fetch the browser:
-
 ```bash
 pip install aihawk
 invisible-playwright fetch
