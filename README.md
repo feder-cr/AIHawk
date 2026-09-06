@@ -121,12 +121,6 @@ Passing `--openrouter-key` puts the key in your shell history, and on Linux in
 the process list. `OPENROUTER_API_KEY` in the environment or in a `.env` avoids
 both.
 
-Either way it does not reach the browser process: it is removed from the
-environment the engine starts with, by name and by value, so a copy under a
-second name goes too.
-[`tests/test_key_isolation.py`](https://github.com/feder-cr/AIHawk/blob/main/tests/test_key_isolation.py)
-fails if that stops being true.
-
 ## The wiki: AI browser-agent guides
 
 The reading room around the agent lives in the
@@ -147,16 +141,6 @@ among others. Worked examples, transcripts and their outputs live in
   is Playwright's.
 - **[invisible_core](https://github.com/feder-cr/invisible_core)**
   Seed to fingerprint to preferences, proxy and geolocation.
-
-## Contributing
-
-Issues and pull requests welcome on whichever of those the problem lives in. If
-you are not sure, open it here. See
-[CONTRIBUTING](https://github.com/feder-cr/AIHawk/blob/main/.github/CONTRIBUTING.md).
-
-When something fails on a page, say which step, what the page did, what the tool
-returned and which exit country you were on. "It got blocked" is not something
-anyone can act on.
 
 ## Using it responsibly
 
