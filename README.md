@@ -55,15 +55,6 @@ codex mcp add stealth -- invisible-playwright-mcp
 gemini mcp add --scope user stealth invisible-playwright-mcp
 ```
 
-Then ask your assistant, in the window you already have open:
-
-> Go to news.ycombinator.com and give me the top five titles.
-
-Claude Desktop, Cursor, VS Code, Windsurf, Zed and Cline take a config file
-instead, and the file is not the same shape for all of them. Each one is
-written out in the
-[server's README](https://github.com/feder-cr/invisible-playwright-mcp#adding-it-to-your-client).
-
 ### 2. Standalone: the web UI
 
 We bring the interface, you bring an [OpenRouter](https://openrouter.ai) key.
