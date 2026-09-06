@@ -1,0 +1,72 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "invisible-playwright-mcp"
+version = "0.15.2"
+description = "Stealth Firefox browser as an MCP server for AI agents"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "feder-cr", email = "85809106+feder-cr@users.noreply.github.com" }]
+keywords = ["mcp", "playwright", "firefox", "stealth", "anti-detect", "browser-automation", "ai-agent"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    # NOT OS Independent, and the difference is visible on the PyPI page.
+    # The engine publishes binaries for these two only - macOS has had none
+    # since firefox-21 - so a mac reader was being told on the index that this
+    # package supported them, and found out at the first browser call.
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: Internet :: WWW/HTTP :: Browsers",
+    "Topic :: Software Development :: Testing",
+]
+dependencies = [
+    "mcp>=1.2,<2",
+    # >=0.9.0 and not lower, because this package's own behaviour depends on the
+    # fix in it. browser_click_at holds a button down with wait_for_timeout, and
+    # in every earlier version that wait returned instantly: hold_seconds never
+    # held, so the one tool built for sliders and press-and-hold challenges
+    # pressed and released in the same frame. The screenshot it returns was
+    # taken before the click had any effect, for the same reason.
+    "invisible-playwright>=0.13.0",
+    # HTML parsing for browser_read_html. Chosen over lxml by measurement: on
+    # six real pages both found byte-identical sets of interactive elements, so
+    # correctness did not separate them, and selectolax then parsed 3-5x faster
+    # and needs no second package for CSS selection (lxml wants cssselect). Its
+    # engine, lexbor, implements the spec HTML5 parsing algorithm - the same one
+    # a browser runs on the same malformed markup.
+    "selectolax>=0.3.21",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8", "pytest-asyncio>=0.23"]
+
+[project.scripts]
+invisible-playwright-mcp = "invisible_playwright_mcp.server:main"
+
+[project.urls]
+Homepage = "https://github.com/feder-cr/invisible-playwright-mcp"
+Repository = "https://github.com/feder-cr/invisible-playwright-mcp"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/invisible_playwright_mcp"]
+
+[tool.pytest.ini_options]
+# ⛔ SO A CHECKOUT GATES ITSELF. Without this, pytest imports whatever the
+# interpreter's installation points at, which is not necessarily this tree:
+# measured 2026-08-29 on a sibling package, an editable install resolved to a
+# SECOND working copy of the same repository on an older branch, and a fix
+# just written did not move the test exercising it because the code under test
+# was somewhere else. The cost that day was low by luck - the two copies
+# differed by a whole subpackage, so collection exploded instead of running
+# green on code nobody had written there.
+#
+# Resolved against this pyproject.toml, so every checkout points at itself.
+# The two older packages took this remedy then; these two never did.
+pythonpath = ["src"]
+testpaths = ["tests"]
+markers = ["e2e: starts real processes (a server and a browser); skipped when no server is listening"]
+asyncio_mode = "auto"
