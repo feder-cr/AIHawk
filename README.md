@@ -75,9 +75,7 @@ person's judgement about what is on the page.
 > widget, so click the days rather than typing them. If a date has no
 > availability, say so. Do not guess a number.
 
-It drives the page the way a person would: the pointer moves, keys are pressed,
-and it refuses to set a form field from JavaScript even when that would be
-quicker, because a page can tell the difference.
+It drives the page the way a person would: the pointer moves, keys are pressed.
 
 ## Options: proxy, profile, seed
 
