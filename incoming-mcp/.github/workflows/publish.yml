@@ -1,0 +1,96 @@
+name: publish
+
+# Publish invisible-playwright-mcp from a tag via PyPI Trusted Publishing (OIDC),
+# with no long-lived token anywhere. The trust lives in the `pypi` GitHub
+# Environment, minted per run and valid for minutes. Only the `upload` job names
+# that environment, and it declares `needs: gate`, so a red gate means the only
+# job that can authenticate never starts.
+#
+# BEFORE THE FIRST RUN, on PyPI: create a pending publisher (Your projects is
+# empty for a brand-new name, so use Account -> Publishing -> Add a pending
+# publisher) with:
+#   PyPI Project Name: invisible-playwright-mcp
+#   Owner:             feder-cr
+#   Repository name:   invisible-playwright-mcp
+#   Workflow name:     publish.yml
+#   Environment name:  pypi
+# Until that exists the upload fails with `invalid-publisher`, which is the
+# correct failure: nothing has said this workflow may speak for this project.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  already-published:
+    runs-on: ubuntu-latest
+    outputs:
+      present: ${{ steps.probe.outputs.present }}
+      version: ${{ steps.probe.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: probe
+        shell: bash
+        run: |
+          VERSION="$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' "https://pypi.org/pypi/invisible-playwright-mcp/$VERSION/json")
+          case "$CODE" in
+            200) echo "present=yes" >> "$GITHUB_OUTPUT"
+                 echo "::notice::invisible-playwright-mcp $VERSION is already on the index. No-op, not a failure." ;;
+            404) echo "present=no"  >> "$GITHUB_OUTPUT" ;;
+            *)   echo "the index answered $CODE for $VERSION, which is neither present nor absent. Refusing rather than guessing." >&2
+                 exit 1 ;;
+          esac
+
+  gate:
+    needs: already-published
+    if: needs.already-published.outputs.present != 'yes'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: the tag names the version being built
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          HAVE="${{ needs.already-published.outputs.version }}"
+          if [ "$TAG" != "$HAVE" ]; then
+            echo "tag v$TAG does not name the version in pyproject.toml ($HAVE)" >&2
+            exit 1
+          fi
+      - name: install and run the suite
+        # A tag push does not trigger the ordinary test workflow (branches/PRs),
+        # so without this a tag could publish code no job has run.
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[test]"
+          python -m pytest -q
+
+  upload:
+    needs: [already-published, gate]
+    if: needs.already-published.outputs.present != 'yes'
+    runs-on: ubuntu-latest
+    environment: pypi          # the OIDC trust relationship lives HERE, behind the gate
+    permissions:
+      id-token: write          # trusted publishing; no token in a secret anywhere
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip build
+      - run: python -m build
+      - name: twine check
+        run: |
+          pip install twine
+          twine check dist/*
+      - uses: pypa/gh-action-pypi-publish@release/v1
