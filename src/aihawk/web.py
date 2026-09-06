@@ -383,6 +383,7 @@ const VERB = {
   browser_press_key:['Pressing','Pressed'],    browser_read_text:['Reading','Read'],
   browser_read_html:['Reading','Read'],        browser_snapshot:['Inspecting','Inspected'],
   browser_evaluate:['Evaluating','Evaluated'], browser_take_screenshot:['Capturing','Captured'],
+  browser_watch:['Watching','Watched'],
   browser_select_option:['Choosing','Chose'],
   session_new_page:['Opening tab','Opened tab'],   session_select_page:['Switching tab','Switched tab'],
   session_close_page:['Closing tab','Closed tab'], session_list_pages:['Listing tabs','Listed tabs'],
