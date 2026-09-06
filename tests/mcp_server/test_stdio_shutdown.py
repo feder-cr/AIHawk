@@ -50,7 +50,7 @@ def test_closing_stdin_with_a_page_open_ends_the_server_and_its_browser():
     env["STEALTHFOX_BINARY"] = BINARY
     before = _profiles()
     p = subprocess.Popen(
-        [sys.executable, "-m", "aihawk.mcp"],
+        [sys.executable, "-m", "aihawk"],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
         text=True, bufsize=1, env=env)
     try:

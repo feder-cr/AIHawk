@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aihawk"
-version = "0.10.0"
+version = "0.11.0"
 description = "Drive a stealth browser with an LLM from one command"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -23,9 +23,9 @@ classifiers = [
 ]
 authors = [{ name = "feder-cr", email = "85809106+feder-cr@users.noreply.github.com" }]
 dependencies = [
-    # The MCP server is part of this package since 0.10.0: the module
-    # `aihawk.mcp`, started by the `invisible-playwright-mcp` command or by
-    # `python -m aihawk.mcp`. It was the separate package
+    # The MCP server is part of this package since 0.10.0, and since 0.11.0 it
+    # is what `aihawk` runs with no subcommand: `uvx aihawk` for a client,
+    # `python -m aihawk` from a checkout. It was the separate package
     # invisible-playwright-mcp until 0.15.2; that name lives on as a shim
     # that depends on this one, so every registered client keeps working.
     # >=1.8, because main() offers the streamable HTTP transport and the SDK
@@ -64,7 +64,6 @@ test = ["pytest>=8", "pytest-asyncio>=0.23"]
 
 [project.scripts]
 aihawk = "aihawk.cli:main"
-invisible-playwright-mcp = "aihawk.mcp.server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/aihawk"]

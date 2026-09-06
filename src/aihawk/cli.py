@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import sys
 
 import click
 
@@ -67,9 +68,14 @@ def browser_options(fn):
     return fn
 
 
-@click.group()
-def main() -> None:
+@click.group(invoke_without_command=True)
+@click.pass_context
+def main(ctx) -> None:
     """Drive a stealth browser with an LLM.
+
+    Without a subcommand this is the MCP server over stdio: `uvx aihawk` is
+    what an assistant registers, `python -m aihawk` is what the interface
+    spawns. `aihawk ui` is the interface, which brings a model.
 
     The model comes from OpenRouter and nowhere else: pass --openrouter-key or
     set OPENROUTER_API_KEY. Without one the interface refuses to start - an
@@ -89,7 +95,25 @@ def main() -> None:
     if applied:
         # Names, never values: this line exists so a reader knows the file was
         # found, and printing what was in it would put the key on the terminal.
-        click.echo("env      %s: %s" % (ENV_FILE, ", ".join(sorted(applied))))
+        # On stderr when serving, because stdout is then the protocol channel.
+        click.echo("env      %s: %s" % (ENV_FILE, ", ".join(sorted(applied))),
+                   err=ctx.invoked_subcommand is None)
+    if ctx.invoked_subcommand is None:
+        _serve()
+
+
+def _serve() -> None:
+    """The MCP server over stdio: the whole of `aihawk` with no subcommand.
+
+    stdout is the protocol channel, so nothing is printed there. A person at a
+    terminal gets one line on stderr saying what is waiting; a client gets the
+    protocol and nothing else.
+    """
+    if sys.stdin.isatty():
+        click.echo("aihawk: MCP server over stdio, waiting for a client. "
+                   "For the interface: aihawk ui --openrouter-key ...", err=True)
+    from .mcp.server import main as serve
+    serve()
 
 
 @main.command()

@@ -1,14 +1,19 @@
-"""The PyPI package invisible-playwright-mcp is a shim over this module.
+"""`aihawk` with no subcommand is the server, and the old name is a shim over it.
 
-Since 0.16.0 it ships three files that re-export `aihawk.mcp.server`, and its
-console script points at `aihawk.mcp.server:main`; every client registered
-with `uvx invisible-playwright-mcp` runs through those names. The shim lives
-in an archived repository and cannot follow a rename, so the names are pinned
-here: a rename that breaks them breaks every registered client at once.
+The PyPI package invisible-playwright-mcp ships, since its 0.16.0, three files
+that re-export `aihawk.mcp.server` and a console script that points at
+`aihawk.mcp.server:main`; every client that registered
+`uvx invisible-playwright-mcp` runs through those names. The shim lives in an
+archived repository and cannot follow a rename, so the names are pinned here.
+
+New registrations use `uvx aihawk`, and the interface spawns `python -m aihawk`:
+the group with no subcommand serves over stdio, which is the second contract
+pinned here. It is the one command this package declares.
 """
-import importlib.metadata
 import tomllib
 from pathlib import Path
+
+from click.testing import CliRunner
 
 
 def test_the_names_the_shim_binds_exist():
@@ -19,14 +24,35 @@ def test_the_names_the_shim_binds_exist():
     assert hasattr(server.registry, "close_all")
 
 
-def test_the_console_script_target_is_the_one_the_shim_declares():
+def test_aihawk_is_the_only_command_this_package_declares():
     root = Path(__file__).resolve().parents[2]
     with open(root / "pyproject.toml", "rb") as fh:
         scripts = tomllib.load(fh)["project"]["scripts"]
-    assert scripts["invisible-playwright-mcp"] == "aihawk.mcp.server:main"
+    assert scripts == {"aihawk": "aihawk.cli:main"}
 
 
-def test_python_m_aihawk_mcp_is_the_entry_the_interface_spawns():
-    import aihawk.mcp.__main__ as entry
+def test_aihawk_without_a_subcommand_serves_over_stdio(monkeypatch):
+    from aihawk import cli
 
-    assert entry.main is importlib.import_module("aihawk.mcp.server").main
+    called = []
+    monkeypatch.setattr(cli, "_serve", lambda: called.append(True))
+    result = CliRunner().invoke(cli.main, [])
+    assert result.exit_code == 0, result.output
+    assert called == [True]
+
+
+def test_aihawk_ui_does_not_start_the_server(monkeypatch):
+    from aihawk import cli
+
+    called = []
+    monkeypatch.setattr(cli, "_serve", lambda: called.append(True))
+    result = CliRunner().invoke(cli.main, ["ui", "--help"])
+    assert result.exit_code == 0, result.output
+    assert called == []
+
+
+def test_python_m_aihawk_is_the_cli():
+    import aihawk.__main__ as entry
+    from aihawk import cli
+
+    assert entry.main is cli.main

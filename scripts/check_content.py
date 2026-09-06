@@ -18,8 +18,9 @@ real incident rather than a hypothetical:
      in every fence that installs uv (one per system), the run from the
      installer line through the fetch line, PATH line included; and the first
      fetch line names the launcher in front of every command (`uvx` today).
-     A page that carries the uv installer carries those lines verbatim, every code block runs `aihawk ui`, the server and
-     the fetch with the README's launcher, and no page teaches a way in that
+     A page that carries the uv installer carries those lines verbatim,
+     every code block runs `aihawk` (the server, or `aihawk ui`) and the fetch
+     with the README's launcher, and no page teaches a way in that
      the README does not (`pip install aihawk`). On 2026-09-06 the route went
      uv, pip, uv in one day, and each flip touched the README plus twenty-odd
      wiki pages by hand.
@@ -65,14 +66,16 @@ PNG_OK = {b"IHDR", b"PLTE", b"IDAT", b"IEND", b"tRNS", b"gAMA", b"cHRM",
 
 # `aihawk <token>` counts as a command reference only in code-shaped contexts:
 # after `uvx `, inside backticks, or in a quoted argv list.
-CMD_RE = re.compile(r"(?:uvx\s+|[\"'`])aihawk[\"',\s]+([a-z][a-z-]*)")
+CMD_RE = re.compile(r"(?:uvx[ \t]+|[\"'`])aihawk[\"', \t]+([a-z][a-z-]*)")
 
 
 # The way in is written once, in the README: the install block, and the
 # launcher in front of every command. A page repeats them verbatim or not at
 # all. Born 2026-09-06, when the route went uv, pip, uv in one day and each
 # flip touched the README plus twenty-odd wiki pages by hand.
-WAY_IN = ("aihawk ui", "invisible-playwright-mcp", "invisible-playwright fetch")
+# `aihawk` alone is the server, `aihawk ui` the interface: one token covers
+# both, matched as a whole word (never inside aihawk.mcp or a path).
+WAY_IN = ("aihawk", "invisible-playwright fetch")
 INSTALLER = "astral.sh/uv/install"
 OTHER_WAYS = ("pip install aihawk", "pip install invisible-playwright-mcp",
               "pipx install aihawk", "pipx run aihawk")
@@ -144,7 +147,8 @@ def check_way_in(rel, text, launcher, block, readme_text):
         joined = chr(10).join(lines)
         for line in lines:
             for cmd in WAY_IN:
-                for m in re.finditer(re.escape(cmd), line):
+                pattern = r"(?<![\w./-])" + re.escape(cmd) + r"(?![\w./-])"
+                for m in re.finditer(pattern, line):
                     before = line[:m.start()]
                     if before.endswith("/"):
                         continue                      # a URL or a path
@@ -324,7 +328,7 @@ def selftest():
             "config block with another launcher": (
                 "docs/cfg.md",
                 b'```json\n{"command": "python", '
-                b'"args": ["invisible-playwright-mcp"]}\n```\n'),
+                b'"args": ["aihawk"]}\n```\n'),
         }
         for label, (rel, content) in bad.items():
             p = root / rel
@@ -368,7 +372,7 @@ def selftest():
             "config block with the README's launcher": (
                 "docs/okcfg.md",
                 b'```json\n{\n  "command": "uvx",\n'
-                b'  "args": ["invisible-playwright-mcp"]\n}\n```\n'),
+                b'  "args": ["aihawk"]\n}\n```\n'),
             "a unit file with a full path to the launcher": (
                 "docs/unit.md",
                 b"```ini\nExecStart=/usr/bin/uvx aihawk ui\n```\n"),

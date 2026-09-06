@@ -71,7 +71,7 @@ async def test_stdio_drive_screenshot_is_image_content():
     env = dict(os.environ)
     env["STEALTHFOX_BINARY"] = BINARY
     params = StdioServerParameters(
-        command=sys.executable, args=["-m", "aihawk.mcp"], env=env,
+        command=sys.executable, args=["-m", "aihawk"], env=env,
     )
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as client:

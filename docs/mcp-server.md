@@ -14,13 +14,13 @@ reader, on a Firefox whose fingerprint is set inside the engine rather than
 bolted onto the page.
 
 The engine is [`invisible-playwright`](https://github.com/feder-cr/invisible_playwright),
-a Firefox patched at the C++ source. Since aihawk 0.10.0 the server ships
-inside the `aihawk` package, as the module `aihawk.mcp` and the command
-`invisible-playwright-mcp`: every tool below is a thin wrapper over the engine,
-and the interface the rest of this wiki describes is a client of it like any
-other. The PyPI name `invisible-playwright-mcp` lives on as a shim over
-`aihawk`, so `uvx invisible-playwright-mcp` keeps starting it and nothing
-changes in a client that already has it registered.
+a Firefox patched at the C++ source. The server ships inside the `aihawk`
+package and is what `aihawk` runs with no subcommand: `uvx aihawk` is what a
+client registers, `python -m aihawk` is what the interface spawns. Every tool
+below is a thin wrapper over the engine, and the interface (`aihawk ui`) is a
+client of it like any other. The PyPI name `invisible-playwright-mcp` lives on
+as a shim over `aihawk`, so a client that registered
+`uvx invisible-playwright-mcp` before 0.11.0 keeps working unchanged.
 
 **How to install this, and the two ways to use it, are in
 [AIHawk's README](https://github.com/feder-cr/AIHawk#readme).** This page keeps
@@ -45,7 +45,7 @@ shows.
   "mcpServers": {
     "stealth": {
       "command": "uvx",
-      "args": ["invisible-playwright-mcp"]
+      "args": ["aihawk"]
     }
   }
 }
@@ -67,7 +67,7 @@ shows.
   "context_servers": {
     "stealth": {
       "command": "uvx",
-      "args": ["invisible-playwright-mcp"]
+      "args": ["aihawk"]
     }
   }
 }
@@ -81,7 +81,7 @@ shows.
     "stealth": {
       "type": "stdio",
       "command": "uvx",
-      "args": ["invisible-playwright-mcp"]
+      "args": ["aihawk"]
     }
   }
 }
@@ -92,7 +92,7 @@ shows.
 ```toml
 [mcp_servers.stealth]
 command = "uvx"
-args = ["invisible-playwright-mcp"]
+args = ["aihawk"]
 ```
 
 **Continue** uses YAML with its own block format, which changed recently enough
@@ -110,7 +110,7 @@ whatever shape your client uses:
   "mcpServers": {
     "stealth": {
       "command": "uvx",
-      "args": ["invisible-playwright-mcp"],
+      "args": ["aihawk"],
       "env": {
         "STEALTHFOX_PROXY": "http://user:pass@proxy.example.com:8080",
         "STEALTHFOX_SEED": "4242"
@@ -285,10 +285,10 @@ server, so a second client can attach to the browser the first one left open,
 and closing a client no longer kills the browser.
 
 ```bash
-STEALTHFOX_MCP_TRANSPORT=http uvx invisible-playwright-mcp        # Linux
+STEALTHFOX_MCP_TRANSPORT=http uvx aihawk        # Linux
 ```
 ```powershell
-$env:STEALTHFOX_MCP_TRANSPORT = "http"; uvx invisible-playwright-mcp   # Windows
+$env:STEALTHFOX_MCP_TRANSPORT = "http"; uvx aihawk   # Windows
 ```
 
 To SEE the browser rather than share it, [AIHawk](https://github.com/feder-cr/AIHawk)

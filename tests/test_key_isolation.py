@@ -406,7 +406,7 @@ async def test_the_link_hands_the_child_the_scrubbed_environment(monkeypatch):
     try:
         params = captured["params"]
         assert params.command == sys.executable
-        assert params.args == ["-m", "aihawk.mcp"]
+        assert params.args == ["-m", "aihawk"]
 
         child = params.env
         assert child is not None, "an explicit environment is what carries the options"

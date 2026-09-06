@@ -45,19 +45,19 @@ Then tell your assistant it exists.
 **Claude Code:**
 
 ```bash
-claude mcp add --scope user stealth -- uvx invisible-playwright-mcp
+claude mcp add --scope user stealth -- uvx aihawk
 ```
 
 **Codex:**
 
 ```bash
-codex mcp add stealth -- uvx invisible-playwright-mcp
+codex mcp add stealth -- uvx aihawk
 ```
 
 **Gemini CLI:**
 
 ```bash
-gemini mcp add --scope user stealth uvx invisible-playwright-mcp
+gemini mcp add --scope user stealth uvx aihawk
 ```
 
 ### 2. Standalone: the web UI
@@ -149,8 +149,8 @@ among others. Worked examples, transcripts and their outputs live in
 
 ## The rest of the family: engine, core
 
-The MCP server from option 1 ships inside this package: the command
-`invisible-playwright-mcp`, the module `aihawk.mcp`. Its config blocks for
+The MCP server from option 1 ships inside this package: `aihawk` with no
+subcommand is the server, `aihawk ui` the interface. Its config blocks for
 clients that take a file, its settings and its tools are on the wiki page
 [The MCP server](https://github.com/feder-cr/AIHawk/wiki/mcp-server).
 

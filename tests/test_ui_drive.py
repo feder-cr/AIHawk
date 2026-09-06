@@ -338,7 +338,7 @@ class _McpDriver:
         self._stopped = asyncio.Event()
         params = StdioServerParameters(
             command=sys.executable,
-            args=["-m", "aihawk.mcp"],
+            args=["-m", "aihawk"],
             env=self._env,
         )
         async with stdio_client(params) as (read, write):

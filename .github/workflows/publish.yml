@@ -126,7 +126,7 @@ jobs:
           python -m venv /tmp/clean
           /tmp/clean/bin/pip install dist/*.whl
           /tmp/clean/bin/aihawk --help
-          test -x /tmp/clean/bin/invisible-playwright-mcp
+          /tmp/clean/bin/python -m aihawk --help > /dev/null
           /tmp/clean/bin/python -c "import aihawk.mcp.server"
           unzip -l dist/*.whl | grep -q "aihawk/mcp/server.py"
 

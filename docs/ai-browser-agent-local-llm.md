@@ -41,7 +41,7 @@ The attachment mechanics do not change based on where the model lives. The
 shape, even though Claude Code's own model is hosted rather than local:
 
 ```bash
-claude mcp add --scope user stealth -- uvx invisible-playwright-mcp
+claude mcp add --scope user stealth -- uvx aihawk
 ```
 
 One command, once, and the browser's tools show up in that client from then on. A

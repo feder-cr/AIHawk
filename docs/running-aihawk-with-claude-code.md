@@ -31,7 +31,7 @@ engine build for it was `firefox-20` - and [uv](https://docs.astral.sh/uv/),
 because the command runs the server with `uvx`. Then, once:
 
 ```bash
-claude mcp add --scope user stealth -- uvx invisible-playwright-mcp
+claude mcp add --scope user stealth -- uvx aihawk
 ```
 
 Reading it left to right: `--scope user` registers the server at user scope, so it
@@ -110,7 +110,7 @@ results, and short steps keep its context small and its mistakes cheap.
   to see what is registered and at which scope. If the add command was run
   while a session was open, the running session may not know it yet; start a
   new one. If `uvx` is not on your PATH, the server can be registered and
-  still fail to start - install uv and try `uvx invisible-playwright-mcp` by
+  still fail to start - install uv and try `uvx aihawk` by
   hand, which surfaces the real error.
 - **The first browsing prompt hangs or times out.** Almost always the engine
   download. Run the prefetch command above and retry; afterwards a first page
@@ -128,7 +128,7 @@ results, and short steps keep its context small and its mistakes cheap.
 ## Short answers to the questions that lead here
 
 **How do I add AIHawk's browser to Claude Code?**
-`claude mcp add --scope user stealth -- uvx invisible-playwright-mcp`, once, with uv
+`claude mcp add --scope user stealth -- uvx aihawk`, once, with uv
 installed. New sessions then have the browser tools in `/mcp`.
 
 **Do I need an OpenRouter key for this?** No. The key is only for AIHawk's own

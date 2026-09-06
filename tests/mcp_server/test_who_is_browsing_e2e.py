@@ -81,7 +81,7 @@ def _server():
     src = str(pathlib.Path(__file__).resolve().parents[2] / "src")
     env["PYTHONPATH"] = src + os.pathsep + env.get("PYTHONPATH", "")
     return StdioServerParameters(
-        command=sys.executable, args=["-m", "aihawk.mcp"], env=env)
+        command=sys.executable, args=["-m", "aihawk"], env=env)
 
 
 async def test_the_seed_decides_what_the_page_sees():

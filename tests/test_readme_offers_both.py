@@ -30,11 +30,12 @@ README = pathlib.Path(__file__).resolve().parents[1] / "README.md"
 #: The literal command for each path. Literal on purpose: this is what a reader
 #: copies, and a paraphrase in the README is not a way in.
 #:
-#: Bare on purpose, without the `uvx ` the page puts in front of them today:
-#: they matched the pip form the page showed for one day (2026-09-05 to
-#: 2026-09-06) and they match the uv form it shows now, so the test measures
-#: the offer and not the launcher that happens to start it.
-MCP_WAY = "invisible-playwright-mcp"
+#: The MCP way is the registration command a reader copies, not the server's
+#: name: since 0.11.0 the server is `uvx aihawk` with no subcommand, and
+#: `aihawk` alone is also the start of `aihawk ui`, so the server name could
+#: not tell the two ways apart. The UI way stays bare, without the `uvx `, so
+#: the test measures the offer and not the launcher that starts it.
+MCP_WAY = "claude mcp add"
 UI_WAY = "aihawk ui"
 
 

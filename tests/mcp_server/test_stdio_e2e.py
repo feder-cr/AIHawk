@@ -7,7 +7,7 @@ from mcp.client.stdio import stdio_client
 @pytest.mark.asyncio
 async def test_stdio_lists_tools():
     params = StdioServerParameters(
-        command=sys.executable, args=["-m", "aihawk.mcp"],
+        command=sys.executable, args=["-m", "aihawk"],
     )
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as mcp:

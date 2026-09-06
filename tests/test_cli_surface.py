@@ -359,11 +359,18 @@ def test_ui_help_names_openrouter_and_the_environment_variables():
         assert option in result.output, "the help never names %s" % option
 
 
-def test_bare_invocation_shows_the_ui_command():
-    """`aihawk` with no arguments lists what it can do rather than failing."""
-    result = run()
+def test_bare_invocation_is_the_server_and_the_help_names_the_interface(monkeypatch):
+    """`aihawk` with no arguments is the MCP server over stdio: that is what a
+    client registers as `uvx aihawk` and what the interface spawns as
+    `python -m aihawk`. The help still says so and still lists `ui`."""
+    called = []
+    monkeypatch.setattr(climod, "_serve", lambda: called.append(True))
 
-    assert "ui" in result.output
+    assert run().exit_code == 0
+    assert called == [True]
+    rendered = run("--help").output
+    assert "ui" in rendered
+    assert "MCP server" in rendered
 
 
 # --------------------------------------------------------------------------

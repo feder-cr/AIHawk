@@ -105,7 +105,7 @@ jobs:
           /tmp/clean/bin/pip install dist/*.whl
           /tmp/clean/bin/aihawk --help
           /tmp/clean/bin/python -c "import aihawk.web, aihawk.brain, aihawk.link, aihawk.cli, aihawk.mcp.server"
-          test -x /tmp/clean/bin/invisible-playwright-mcp
+          /tmp/clean/bin/python -m aihawk --help > /dev/null
           unzip -l dist/*.whl | grep -q "aihawk/mcp/server.py"
 
   # 2026-09-04: aihawk 0.4.0 went to the index, then main gained two more
