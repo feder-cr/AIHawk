@@ -17,11 +17,21 @@ Three consequences, each handled rather than hidden:
   `session_list_pages` calls `ensure`. `Link` remembers whether an instruction
   has been issued and the view stays quiet until then.
 
-  Screenshots and actions now share one pipe. They are serialised in `Link`, and
-  they would have been serialised by the browser anyway.
+  Frames and actions share one pipe. They are serialised in `Link`, and they
+  would have been serialised by the browser anyway.
 
   The page URL is no longer free. It is fetched on its own slower timer rather
   than with every frame, so watching costs one cheap call every two seconds.
+
+The picture on the right is `browser_watch`: the window as a person at the
+machine sees it - tab strip, address bar, the page and the pointer - from a
+capture the server keeps running on the active tab. It is not
+`browser_take_screenshot`, which the pane was built on until 2026-09-06. A
+screenshot is the page alone, and the engine draws the pointer outside the page
+on purpose so that no page can see it, so that pane could never show where the
+agent's hand was; and a page mid-load cannot be painted, so the pane went blank
+on every navigation. The window is always there to be captured, and a frame is
+one JPEG the server already holds rather than a paint it has to do.
 """
 from __future__ import annotations
 
@@ -35,7 +45,7 @@ from starlette.responses import HTMLResponse, JSONResponse, Response, StreamingR
 from starlette.routing import Route
 
 from .brain import Brain
-from .link import Link, image_of
+from .link import Link, image_of, text_of
 
 # A RAW string. The script below contains \n, \w and \s inside JavaScript
 # literals and regular expressions; in an ordinary triple-quoted string Python
@@ -54,7 +64,7 @@ PAGE = r"""<!doctype html>
   /* Surfaces as a ladder rather than two greys. The steps widen going up
      (5,7,7,8) because equal hex steps read as progressively smaller the lighter
      they get. */
-  --well:   #0b0d10;   /* recessed: behind the screenshot, the deepest thing here */
+  --well:   #0b0d10;   /* recessed: behind the frame, the deepest thing here */
   --base:   #101317;   /* the ground */
   --raised: #171b21;   /* composer, header, browser chrome, expanded output */
   --hover:  #1e232a;   /* row hover, and the user's own bubble */
@@ -286,7 +296,7 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
    before the first frame the whole browser collapsed to a 20px strip with the
    placeholder inside it, which reads as broken rather than as empty. Now the
    frame keeps a browser's shape from the first paint, and --arn moves it to the
-   real one as soon as a screenshot lands. */
+   real one as soon as a frame lands. */
 #shot{ aspect-ratio:var(--arn); min-height:0; position:relative;
        background:var(--well); display:grid; place-items:center }
 #frame{ width:100%; height:100%; object-fit:contain; object-position:top center;
@@ -558,7 +568,12 @@ const img = $('frame'), empty = $('empty'), right = $('right'), stateEl = $('sta
       browser = $('browser'), urlEl = $('url');
 let frozen = false;
 
-function say(s){ right.dataset.state = s; stateEl.textContent = s; }
+/* The second argument is the sentence behind a one-word state, shown on hover:
+   an "error" with no reason is a thing to restart, an "error" that says the
+   engine has no screencast is a thing to upgrade. */
+function say(s, why){ right.dataset.state = s; stateEl.textContent = s;
+                      stateEl.title = why || ''; }
+async function reason(r){ try { return (await r.json()).error || ''; } catch(err) { return ''; } }
 
 $('mode').onclick = (e) => {
   const b = e.target.closest('button'); if(!b) return;
@@ -579,16 +594,23 @@ async function tick(){
       if(img.naturalWidth) browser.style.setProperty(
         '--arn', (img.naturalWidth / img.naturalHeight).toFixed(4));
     }
-    /* Busy, not broken: a screenshot cannot be taken mid-navigation, and at this
-       rate an ordinary navigation produces several in a row. The last frame
-       stays on screen, because a stale picture of where the browser was beats a
-       red word about where it is going. */
-    else if(r.status === 503){ say('busy'); }
+    /* The capture could not answer, and the body says why: no frame within the
+       server's wait (a minimised window is captured as nothing), or an engine
+       without the screencast. While the pane was a screenshot this was "busy",
+       because a page mid-load cannot be painted and every navigation produced
+       a few; the window is always there to be captured, so a 503 now is a
+       thing to read. The last frame stays on screen either way: a stale
+       picture of where the browser was beats a blank pane. */
+    else if(r.status === 503){ say('error', await reason(r)); }
     else { say('error'); }
   } catch(err){ say('offline'); }
   /* Ask for the next frame only once this one has landed, or a browser slower
-     than the interval accumulates requests it can never serve. */
-  setTimeout(tick, 500);
+     than the interval accumulates requests it can never serve. A frame is one
+     JPEG the server already holds, not a paint, so five a second cost the pipe
+     almost nothing; the engine produces ten, and asking faster than that would
+     only show the same frame twice. Actions share this pipe and wait at most
+     one frame. */
+  setTimeout(tick, 200);
 }
 
 /* Built from elements with textContent and never innerHTML: this string comes
@@ -746,19 +768,41 @@ def build_app(link: Link, service: ChatService) -> Starlette:
                                  headers={"Cache-Control": "no-store"})
 
     async def frame(_request: Request) -> Response:
+        """The window the active tab lives in, as `browser_watch` captures it.
+
+        Not `browser_take_screenshot`: that is the page alone, and the engine
+        draws the pointer outside the page on purpose, so no screenshot can
+        show it. The window capture shows the pointer, the tab strip and the
+        address bar, keeps answering while a page loads, and costs one frame
+        the server already holds rather than a paint. The tool exists from
+        0.15.0 of the server, which is the floor pyproject declares.
+
+        The strip and the address in the picture are pixels; the ones the
+        page draws above it are the same facts as elements, and those can be
+        clicked and copied. Both stay.
+        """
         if not link.touched:
             # 204, not an error: nothing is wrong, there is simply nothing to
             # look at. Asking the server would START a browser, which is exactly
             # what a view is not allowed to cause.
             return Response(status_code=204)
         try:
-            got = image_of(await link.call("browser_take_screenshot"))
+            result = await link.call("browser_watch")
         except Exception as exc:
             return JSONResponse({"error": str(exc)[:200]}, status_code=503)
+        got = image_of(result)
         if got is None:
+            # A tool that raised reaches a client as an error RESULT with the
+            # reason as text, not as an exception: an engine without the
+            # screencast, or a window captured as nothing. That is a 503 with
+            # the reason, never a 204, which would read as "nothing to look at"
+            # in the one case where a person needs to read a sentence.
+            reason = text_of(result) if getattr(result, "isError", False) else ""
+            if reason:
+                return JSONResponse({"error": reason[:200]}, status_code=503)
             return Response(status_code=204)
-        png, mime = got
-        return Response(png, media_type=mime, headers={"Cache-Control": "no-store"})
+        jpeg, mime = got
+        return Response(jpeg, media_type=mime, headers={"Cache-Control": "no-store"})
 
     async def tabs(_request: Request) -> JSONResponse:
         """Every tab, and which one is current.

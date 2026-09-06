@@ -237,12 +237,18 @@ PAGES = {
     "noise.html": NOISE_HTML,
 }
 
-# The tools the README promises and the agent hands to the model. A rename
-# upstream has to fail here rather than in a prompt.
+# The tools the server at the floor in pyproject offers, which the agent hands
+# to the model. A rename upstream has to fail here rather than in a prompt.
+# Eighteen since invisible-playwright-mcp 0.15.0: session_start and
+# session_status arrived with 0.11.0 and browser_watch with 0.15.0, and this
+# set stood at fifteen through all three because it is opt-in and nothing in
+# CI runs it - measured 2026-09-06, the day the pane moved to browser_watch.
 EXPECTED_TOOLS = {
+    "session_start", "session_status",
     "session_new_page", "session_list_pages", "session_select_page",
     "session_close_page", "browser_navigate", "browser_read_text",
     "browser_snapshot", "browser_read_html", "browser_take_screenshot",
+    "browser_watch",
     "browser_click", "browser_click_at", "browser_type", "browser_press_key",
     "browser_evaluate", "browser_select_option",
 }
@@ -473,7 +479,7 @@ def _ids(snapshot):
 def test_the_live_server_exposes_exactly_the_documented_tools(browser):
     """The tool set the agent converts is the one the README promises.
 
-    Known-bad: rename `browser_read_text` upstream, or add a fifteenth tool,
+    Known-bad: rename `browser_read_text` upstream, or add a nineteenth tool,
     and this fails. It matters because the system prompt in `agent.py` names
     tools in prose ("Inspect pages with browser_read_text / browser_snapshot"),
     and prose does not break when a name moves.
@@ -888,3 +894,33 @@ def test_a_click_at_coordinates_lands_but_reaches_the_model_as_no_content(browse
     shot = browser.call_result("browser_take_screenshot", {}, timeout=60.0)
     assert not shot.isError, _result_text_all(shot)
     assert _result_text(shot) == "[non-text result]"
+
+
+# --- what the live pane receives --------------------------------------------
+
+@pytest.mark.ui
+def test_the_window_capture_is_a_jpeg_that_the_pane_can_show(browser, site):
+    """The live pane is `browser_watch` since 2026-09-06, so what the pane
+    receives is checked here against a real server and a real browser, not
+    against a double: one image part, JPEG by type and by its first bytes, of
+    a size that is a picture and not a placeholder, and the same call answers
+    twice, which is what a pane asking five times a second relies on.
+
+    The route itself is covered in test_web_service.py with a double; this is
+    the half a double cannot prove - that the server the floor names really
+    answers this tool with a frame.
+    """
+    import base64
+
+    browser.goto(site + "input.html")
+    first = browser.call_result("browser_watch", {}, timeout=60.0)
+    assert not first.isError, _result_text_all(first)
+    images = [c for c in first.content if getattr(c, "data", None) is not None]
+    assert len(images) == 1, "one picture, and nothing else in the result"
+    assert images[0].mimeType == "image/jpeg"
+    jpeg = base64.b64decode(images[0].data)
+    assert jpeg[:3] == b"\xff\xd8\xff", "not a JPEG by its first bytes"
+    assert len(jpeg) > 4000, "a window with a tab strip and a page is more than this"
+
+    second = browser.call_result("browser_watch", {}, timeout=60.0)
+    assert not second.isError, _result_text_all(second)

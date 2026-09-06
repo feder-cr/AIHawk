@@ -111,7 +111,7 @@ class Conversation:
         `call_tool(name, args)` performs a tool call and returns the MCP result;
         `tools` is the server's tool list. Both are passed rather than a session,
         so this has no opinion about how the browser is reached - which is what
-        lets the interface serialise its calls against the screenshot pump.
+        lets the interface serialise its calls against the frame pump.
         """
         if self.tool_defs is None:
             self.tool_defs = mcp_tools_to_openai(tools)

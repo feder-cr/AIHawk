@@ -1,8 +1,8 @@
 """One long-lived MCP connection, shared by the conversation and the live view.
 
 The connection outlives any single instruction, because the browser has to still
-be there when the next line is typed and the live pane has to keep photographing
-it in between. There was a second, shorter-lived form of this - `runner.drive`,
+be there when the next line is typed and the live pane has to keep watching it
+in between. There was a second, shorter-lived form of this - `runner.drive`,
 one task then close, behind an `aihawk do` subcommand - and both were removed on
 2026-09-03: one way in is the whole point of the page this serves.
 
@@ -115,11 +115,12 @@ def text_of(result) -> str:
 
 
 def image_of(result) -> "tuple[bytes, str] | None":
-    """The PNG bytes of a tool result that carries an image, or None.
+    """The image bytes of a tool result that carries one, with its MIME type, or None.
 
-    `browser_take_screenshot` answers with image content rather than text, and
-    over MCP that arrives base64-encoded. This is the only place that knows it,
-    so the live view never learns the wire format.
+    `browser_watch` and `browser_take_screenshot` answer with image content
+    rather than text, and over MCP that arrives base64-encoded with the type
+    beside it: JPEG for the window capture, PNG for a screenshot. This is the
+    only place that knows it, so the live view never learns the wire format.
     """
     import base64
 

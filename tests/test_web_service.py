@@ -13,6 +13,7 @@ tests is a claim rather than a feature.
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 
 import pytest
@@ -233,6 +234,108 @@ async def test_the_live_view_asks_for_nothing_until_an_instruction_has_been_give
     resp = await frame.endpoint(Req())
     assert resp.status_code == 204
     assert link.calls == [], "the view asked the server something before any instruction"
+
+
+# --------------------------------------------------------------------------
+# the picture: the window the server captures, never a page screenshot
+# --------------------------------------------------------------------------
+
+# Two signatures a decoder would recognise, so a swapped MIME type cannot pass
+# on the bytes alone.
+JPEG = b"\xff\xd8\xff\xe0" + b"\x00\x10JFIF" + b"\x00" * 20
+PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 20
+
+
+class Item:
+    """One part of a tool result's content, shaped like the mcp types: an
+    ImageContent has `data` and `mimeType` and no `text`; a TextContent has
+    `text` and no `data`."""
+
+    def __init__(self, **fields):
+        self.__dict__.update(fields)
+
+
+class Result:
+    def __init__(self, *content, isError=False):
+        self.content = list(content)
+        self.isError = isError
+
+
+class WatchingLink(FakeLink):
+    """Answers both picture tools the way the server does - `browser_watch`
+    with a JPEG, `browser_take_screenshot` with a PNG - so which one the view
+    asked for is visible in what came back and not only in the call log."""
+
+    def __init__(self):
+        super().__init__()
+        self.touched = True
+
+    async def call(self, name, arguments=None):
+        await super().call(name, arguments)
+        if name == "browser_watch":
+            return Result(Item(type="image", data=base64.b64encode(JPEG).decode(),
+                               mimeType="image/jpeg"))
+        if name == "browser_take_screenshot":
+            return Result(Item(type="image", data=base64.b64encode(PNG).decode(),
+                               mimeType="image/png"))
+        return Result()
+
+
+async def _frame_route(link):
+    app = build_app(link, ChatService(link, SilentBrain()))
+    return [r for r in app.routes if r.path == "/live/frame"][0].endpoint
+
+
+async def test_the_live_view_is_the_window_capture_and_never_a_screenshot():
+    """`browser_watch`, not `browser_take_screenshot`.
+
+    A screenshot is the page alone, and the engine draws the pointer outside
+    the page on purpose so that no page can see it: a view built on screenshots
+    could never show where the agent's hand is, and it went blank on every
+    navigation because a page mid-load cannot be painted. The window capture
+    shows the pointer, the tab strip and the address bar, keeps answering while
+    a page loads, and is one frame the server already holds rather than a paint.
+
+    Known-bad: the route as it stood until 2026-09-06 asked for the screenshot,
+    and fails every line below the status.
+    """
+    link = WatchingLink()
+    route = await _frame_route(link)
+
+    class Req: query_params = {}
+    resp = await route(Req())
+
+    assert resp.status_code == 200
+    assert resp.headers["content-type"] == "image/jpeg"
+    assert resp.body == JPEG
+    assert [n for n, _ in link.calls] == ["browser_watch"], (
+        "the picture is the window capture, and one call per frame")
+
+
+async def test_a_capture_that_cannot_answer_says_why_instead_of_looking_idle():
+    """A tool that raises reaches a client as an error RESULT carrying the
+    reason as text, not as an exception. Before this, such a result fell
+    through `image_of` into a 204, and the pane hid the picture and said "idle"
+    about an engine without the screencast - the one case where a person needs
+    to read a sentence. The reason now rides a 503, which the page shows.
+
+    Known-bad: the previous route answered 204 here.
+    """
+    class RefusingLink(WatchingLink):
+        async def call(self, name, arguments=None):
+            await FakeLink.call(self, name, arguments)
+            return Result(Item(type="text", text=(
+                "the live window view needs invisible-playwright with "
+                "page.screencast and an engine from firefox-28 on")), isError=True)
+
+    link = RefusingLink()
+    route = await _frame_route(link)
+
+    class Req: query_params = {}
+    resp = await route(Req())
+
+    assert resp.status_code == 503
+    assert "page.screencast" in json.loads(resp.body)["error"]
 
 
 # --------------------------------------------------------------------------

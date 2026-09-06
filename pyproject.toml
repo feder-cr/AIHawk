@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aihawk"
-version = "0.8.1"
+version = "0.9.0"
 description = "Drive a stealth browser with an LLM from one command"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -48,7 +48,13 @@ dependencies = [
     # owner withdrew on 2026-09-06 so that the download is a thing a person
     # runs and watches; this interface stopped fetching before the port opens
     # for the same reason, in the same release.
-    "invisible-playwright-mcp>=0.14.0",
+    # 0.15.0: `browser_watch`, the window capture the live pane is built on
+    # since 2026-09-06 - tab strip, address bar, page and the pointer, which a
+    # page screenshot can never contain. Against 0.14.0 the pane would answer
+    # 503 on every frame with "unknown tool", so the floor is the pane.
+    # 0.15.0 was on the index before this line was written, as the rule above
+    # requires.
+    "invisible-playwright-mcp>=0.15.0",
     "mcp>=1.2",
     # Declared rather than inherited. It arrives transitively through mcp today,
     # and a transitive dependency is one somebody else can drop in a minor
