@@ -1,6 +1,6 @@
 """Content gates for this repository's published surface.
 
-Four checks over docs/, articles/, assets/ and the README, each born from a
+Five checks over docs/, articles/, assets/ and the README, each born from a
 real incident rather than a hypothetical:
 
   1. Banned-topic scan. Pages on retired topics must not come back; a stale
@@ -14,6 +14,14 @@ real incident rather than a hypothetical:
      pages still taught it.
   4. Internal links. Every `](page.md)` in docs/ must point at a page that
      exists, and image assets must carry no metadata chunks.
+  5. The way in is written once. The README's first code block is the source
+     for the install block and for the launcher in front of every command
+     (`uvx` today): a page that carries the uv installer carries the README's
+     lines verbatim, every code block runs `aihawk ui`, the server and the
+     fetch with the README's launcher, and no page teaches a way in that the
+     README does not (`pip install aihawk`). On 2026-09-06 the route went uv,
+     pip, uv in one day, and each flip touched the README plus twenty-odd
+     wiki pages by hand.
 
 Run: python scripts/check_content.py            (from the repo root)
      python scripts/check_content.py --selftest (prove the gate on known-bad)
@@ -59,6 +67,87 @@ PNG_OK = {b"IHDR", b"PLTE", b"IDAT", b"IEND", b"tRNS", b"gAMA", b"cHRM",
 CMD_RE = re.compile(r"(?:uvx\s+|[\"'`])aihawk[\"',\s]+([a-z][a-z-]*)")
 
 
+# The way in is written once, in the README: the install block, and the
+# launcher in front of every command. A page repeats them verbatim or not at
+# all. Born 2026-09-06, when the route went uv, pip, uv in one day and each
+# flip touched the README plus twenty-odd wiki pages by hand.
+WAY_IN = ("aihawk ui", "invisible-playwright-mcp", "invisible-playwright fetch")
+INSTALLER = "astral.sh/uv/install"
+OTHER_WAYS = ("pip install aihawk", "pip install invisible-playwright-mcp",
+              "pipx install aihawk", "pipx run aihawk")
+FENCE = chr(96) * 3
+
+
+def fenced_blocks(text):
+    """The lines of every fenced code block, block by block, fences excluded."""
+    blocks, current = [], None
+    for line in text.split(chr(10)):
+        if line.lstrip().startswith(FENCE):
+            if current is None:
+                current = []
+            else:
+                blocks.append(current)
+                current = None
+            continue
+        if current is not None:
+            current.append(line)
+    return blocks
+
+
+def way_in(readme_text):
+    """(launcher, install block) as the README teaches them, read from the
+    first code block that fetches the engine. (None, None) without one."""
+    for block in fenced_blocks(readme_text):
+        for line in block:
+            if "invisible-playwright fetch" in line:
+                before = line.split("invisible-playwright fetch")[0].split()
+                launcher = before[-1] if before else ""
+                return launcher, [l.rstrip() for l in block if l.strip()]
+    return None, None
+
+
+def check_way_in(rel, text, launcher, block, readme_text):
+    """Findings for one page against the README's way in."""
+    out = []
+    for other in OTHER_WAYS:
+        if other in text and other not in readme_text:
+            out.append("%s: teaches `%s`, a way in that the README does not"
+                       % (rel, other))
+    if INSTALLER in text and rel != "README.md":
+        for want in block:
+            if want not in text:
+                out.append("%s: carries the uv installer but not the README's "
+                           "line `%s`" % (rel, want.strip()))
+    command_key = re.compile(r'command[\s"]*[:=]\s*"$')
+    launcher_key = re.compile(r'command[\s"]*[:=]\s*"%s"' % re.escape(launcher))
+    for lines in fenced_blocks(text):
+        joined = chr(10).join(lines)
+        for line in lines:
+            for cmd in WAY_IN:
+                for m in re.finditer(re.escape(cmd), line):
+                    before = line[:m.start()]
+                    if before.endswith("/"):
+                        continue                      # a URL or a path
+                    if command_key.search(before):
+                        # `"command": "aihawk"`: the command IS the launcher slot
+                        if launcher:
+                            out.append("%s: config block starts `%s` directly, the "
+                                       "README goes through `%s`" % (rel, cmd, launcher))
+                        continue
+                    if before.rstrip().endswith("[" + chr(34)):
+                        # a JSON or TOML argv: the launcher sits on the command line
+                        if launcher and not launcher_key.search(joined):
+                            out.append("%s: config block runs `%s` with a command "
+                                       "other than `%s`" % (rel, cmd, launcher))
+                        continue
+                    words = before.split()
+                    got = re.split(r"[/=]", words[-1])[-1] if words else ""
+                    if got != launcher:
+                        out.append("%s: code block runs `%s %s`, the README runs "
+                                   "`%s %s`" % (rel, got, cmd, launcher, cmd))
+    return out
+
+
 def cli_commands(cli_path):
     """Subcommands actually declared in cli.py (click's @main.command())."""
     src = cli_path.read_text(encoding="utf-8")
@@ -85,6 +174,9 @@ def check_tree(root):
         if (root / "src" / "aihawk" / "cli.py").exists() else None
 
     docs_names = {f.stem for f in (root / "docs").glob("*.md")} | {"Home"}
+    readme_text = (root / "README.md").read_text(encoding="utf-8") \
+        if (root / "README.md").exists() else ""
+    launcher, block = way_in(readme_text)
 
     for f in content_files(root):
         rel = f.relative_to(root).as_posix()
@@ -125,6 +217,9 @@ def check_tree(root):
                         and target not in docs_names:
                     findings.append("%s: dead link -> %s.md" % (rel, target))
 
+        if launcher is not None:
+            findings.extend(check_way_in(rel, text, launcher, block, readme_text))
+
     for img in sorted((root / "assets").glob("*.png")) if (root / "assets").exists() else []:
         raw = img.read_bytes()
         if raw[:8] != b"\x89PNG\r\n\x1a\n":
@@ -160,6 +255,14 @@ def selftest():
             b'@click.option("--model", default=None,\n'
             b'              help="Model id.")\n'
             b"def ui(model):\n    pass\n")
+        # The README is the source the fifth check reads: one block, one
+        # launcher, the same shape as the real page.
+        (root / "README.md").write_bytes(
+            b"# AIHawk\n\n```bash\n"
+            b"curl -LsSf https://astral.sh/uv/install.sh | sh   # Linux: uv, once\n"
+            b"uvx invisible-playwright fetch                    # in a new terminal\n"
+            b"uvx aihawk ui --openrouter-key sk-or-...\n"
+            b"```\n")
 
         bad = {
             "banned topic": ("docs/spam.md",
@@ -172,6 +275,18 @@ def selftest():
             "argv-list command": ("docs/argv.md",
                                   b'subprocess.run(["uvx", "aihawk", "do"])\n'),
             "dead link": ("docs/link.md", b"see [x](missing-page.md)\n"),
+            "bare launcher in a code block": (
+                "docs/bare.md", b"```bash\naihawk ui --openrouter-key x\n```\n"),
+            "a way in the README does not teach": (
+                "docs/pip.md", b"run `pip install aihawk` first\n"),
+            "installer without the README's block": (
+                "docs/inst.md",
+                b"```bash\ncurl -LsSf https://astral.sh/uv/install.sh | sh   "
+                b"# Linux: uv, once\n```\n"),
+            "config block with another launcher": (
+                "docs/cfg.md",
+                b'```json\n{"command": "python", '
+                b'"args": ["invisible-playwright-mcp"]}\n```\n'),
         }
         for label, (rel, content) in bad.items():
             p = root / rel
@@ -201,6 +316,20 @@ def selftest():
                                      b"it began as a job-application bot\n"),
             "prose verb": ("docs/verb.md",
                            b"what can AIHawk do for research\n"),
+            "the README's block, verbatim": (
+                "docs/same.md",
+                b"```bash\n"
+                b"curl -LsSf https://astral.sh/uv/install.sh | sh   # Linux: uv, once\n"
+                b"uvx invisible-playwright fetch                    # in a new terminal\n"
+                b"uvx aihawk ui --openrouter-key sk-or-...\n"
+                b"```\n"),
+            "config block with the README's launcher": (
+                "docs/okcfg.md",
+                b'```json\n{\n  "command": "uvx",\n'
+                b'  "args": ["invisible-playwright-mcp"]\n}\n```\n'),
+            "a unit file with a full path to the launcher": (
+                "docs/unit.md",
+                b"```ini\nExecStart=/usr/bin/uvx aihawk ui\n```\n"),
         }
         for label, (rel, content) in good.items():
             p = root / rel
@@ -214,7 +343,8 @@ def selftest():
         for f in failures:
             print("SELFTEST FAIL: " + f)
         return 1
-    print("selftest: 7 mutations caught, 3 clean cases pass")
+    print("selftest: %d mutations caught, %d clean cases pass"
+          % (len(bad) + 1, len(good)))
     return 0
 
 
