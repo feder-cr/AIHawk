@@ -25,8 +25,9 @@
 ### 1. From your assistant, over MCP
 
 ```bash
-pip install aihawk
-invisible-playwright fetch
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"   # Windows: uv, once
+curl -LsSf https://astral.sh/uv/install.sh | sh                                         # Linux: uv, once
+uvx invisible-playwright fetch                                                          # in a new terminal
 ```
 
 Then tell your assistant it exists.
@@ -34,19 +35,19 @@ Then tell your assistant it exists.
 **Claude Code:**
 
 ```bash
-claude mcp add --scope user stealth -- invisible-playwright-mcp
+claude mcp add --scope user stealth -- uvx invisible-playwright-mcp
 ```
 
 **Codex:**
 
 ```bash
-codex mcp add stealth -- invisible-playwright-mcp
+codex mcp add stealth -- uvx invisible-playwright-mcp
 ```
 
 **Gemini CLI:**
 
 ```bash
-gemini mcp add --scope user stealth invisible-playwright-mcp
+gemini mcp add --scope user stealth uvx invisible-playwright-mcp
 ```
 
 ### 2. Standalone: the web UI
@@ -55,9 +56,10 @@ We bring the interface, you bring an [OpenRouter](https://openrouter.ai) key.
 Chat on the left, the live browser on the right.
 
 ```bash
-pip install aihawk
-invisible-playwright fetch
-aihawk ui --openrouter-key sk-or-...
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"   # Windows: uv, once
+curl -LsSf https://astral.sh/uv/install.sh | sh                                         # Linux: uv, once
+uvx invisible-playwright fetch                                                          # in a new terminal
+uvx aihawk ui --openrouter-key sk-or-...
 ```
 
 Then open **http://127.0.0.1:8765** and type the same thing.
