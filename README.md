@@ -23,18 +23,12 @@
 ## Two ways to use this browser agent
 
 The only question is where the model comes from. If you already use Claude
-Code, Codex or Gemini CLI, take the first: your assistant has the model
-already and you need no new account. If you do not, take the second.
-
-Either way the only thing you need beforehand is **Python 3.11 or newer**,
-which is where `pip` comes from.
+Code, Codex or Gemini CLI, take the first. If you do not, take the second.
+Both need Python 3.11 or newer.
 
 ### 1. From your assistant, over MCP
 
-Your assistant brings the model. You add this browser to it, and nothing
-changes about how you work. Install AIHawk, which brings the browser server
-with it, then the browser itself: about 250 MB, once, where you can watch it
-come down.
+Install AIHawk and fetch the browser:
 
 ```bash
 pip install aihawk
