@@ -14,13 +14,14 @@ real incident rather than a hypothetical:
      pages still taught it.
   4. Internal links. Every `](page.md)` in docs/ must point at a page that
      exists, and image assets must carry no metadata chunks.
-  5. The way in is written once. The README's first code block is the source
-     for the install block and for the launcher in front of every command
-     (`uvx` today): a page that carries the uv installer carries the README's
-     lines verbatim, every code block runs `aihawk ui`, the server and the
-     fetch with the README's launcher, and no page teaches a way in that the
-     README does not (`pip install aihawk`). On 2026-09-06 the route went uv,
-     pip, uv in one day, and each flip touched the README plus twenty-odd
+  5. The way in is written once. The README's code blocks are the source:
+     the lines that install uv (one fence per system) and the line that
+     fetches the engine, whose leading word is the launcher in front of every
+     command (`uvx` today). A page that carries the uv installer carries
+     those lines verbatim, every code block runs `aihawk ui`, the server and
+     the fetch with the README's launcher, and no page teaches a way in that
+     the README does not (`pip install aihawk`). On 2026-09-06 the route went
+     uv, pip, uv in one day, and each flip touched the README plus twenty-odd
      wiki pages by hand.
 
 Run: python scripts/check_content.py            (from the repo root)
@@ -95,15 +96,24 @@ def fenced_blocks(text):
 
 
 def way_in(readme_text):
-    """(launcher, install block) as the README teaches them, read from the
-    first code block that fetches the engine. (None, None) without one."""
+    """(launcher, install lines) as the README teaches them: every fenced line
+    that installs uv, in order and once, plus the first fenced line that
+    fetches the engine, whose leading word is the launcher. The README keeps
+    one fence per system for the installer and a shared fence for the rest, so
+    the lines are collected across fences rather than read from one block.
+    (None, None) without a fetch line."""
+    installer, fetch, launcher = [], None, None
     for block in fenced_blocks(readme_text):
         for line in block:
-            if "invisible-playwright fetch" in line:
+            if INSTALLER in line and line.rstrip() not in installer:
+                installer.append(line.rstrip())
+            if fetch is None and "invisible-playwright fetch" in line:
                 before = line.split("invisible-playwright fetch")[0].split()
                 launcher = before[-1] if before else ""
-                return launcher, [l.rstrip() for l in block if l.strip()]
-    return None, None
+                fetch = line.rstrip()
+    if fetch is None:
+        return None, None
+    return launcher, installer + [fetch]
 
 
 def check_way_in(rel, text, launcher, block, readme_text):
@@ -258,9 +268,12 @@ def selftest():
         # The README is the source the fifth check reads: one block, one
         # launcher, the same shape as the real page.
         (root / "README.md").write_bytes(
-            b"# AIHawk\n\n```bash\n"
-            b"curl -LsSf https://astral.sh/uv/install.sh | sh   # Linux: uv, once\n"
-            b"uvx invisible-playwright fetch                    # in a new terminal\n"
+            b"# AIHawk\n\nWindows:\n\n```powershell\n"
+            b'powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"\n'
+            b"```\n\nLinux:\n\n```bash\n"
+            b"curl -LsSf https://astral.sh/uv/install.sh | sh\n"
+            b"```\n\nThen, in a new terminal, on either:\n\n```bash\n"
+            b"uvx invisible-playwright fetch\n"
             b"uvx aihawk ui --openrouter-key sk-or-...\n"
             b"```\n")
 
@@ -283,6 +296,9 @@ def selftest():
                 "docs/inst.md",
                 b"```bash\ncurl -LsSf https://astral.sh/uv/install.sh | sh   "
                 b"# Linux: uv, once\n```\n"),
+            "one system's installer line, exact, without the rest": (
+                "docs/onlyone.md",
+                b"```bash\ncurl -LsSf https://astral.sh/uv/install.sh | sh\n```\n"),
             "config block with another launcher": (
                 "docs/cfg.md",
                 b'```json\n{"command": "python", '
@@ -316,12 +332,14 @@ def selftest():
                                      b"it began as a job-application bot\n"),
             "prose verb": ("docs/verb.md",
                            b"what can AIHawk do for research\n"),
-            "the README's block, verbatim": (
+            "the README's install lines, verbatim": (
                 "docs/same.md",
-                b"```bash\n"
-                b"curl -LsSf https://astral.sh/uv/install.sh | sh   # Linux: uv, once\n"
-                b"uvx invisible-playwright fetch                    # in a new terminal\n"
-                b"uvx aihawk ui --openrouter-key sk-or-...\n"
+                b"```powershell\n"
+                b'powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"\n'
+                b"```\n```bash\n"
+                b"curl -LsSf https://astral.sh/uv/install.sh | sh\n"
+                b"```\n```bash\n"
+                b"uvx invisible-playwright fetch\n"
                 b"```\n"),
             "config block with the README's launcher": (
                 "docs/okcfg.md",
