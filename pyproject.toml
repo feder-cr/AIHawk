@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aihawk"
-version = "0.8.0"
+version = "0.8.1"
 description = "Drive a stealth browser with an LLM from one command"
 readme = "README.md"
 requires-python = ">=3.11"
