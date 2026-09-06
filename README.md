@@ -24,7 +24,6 @@
 
 The only question is where the model comes from. If you already use Claude
 Code, Codex or Gemini CLI, take the first. If you do not, take the second.
-Both need Python 3.11 or newer.
 
 ### 1. From your assistant, over MCP
 
