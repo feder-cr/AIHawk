@@ -83,9 +83,6 @@ aihawk ui --openrouter-key sk-or-...
 
 Then open **http://127.0.0.1:8765** and type the same thing.
 
-**Same patched Firefox behind both.** AIHawk reaches it through that MCP server,
-over MCP, exactly as your assistant would.
-
 ---
 
 ## What to ask a web browsing agent
