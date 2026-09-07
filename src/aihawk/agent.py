@@ -13,6 +13,7 @@ behaviours to test.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Any, Awaitable, Callable, List, Optional
 
@@ -79,11 +80,10 @@ class Conversation:
     #: one. Generous for that, sixteen times smaller than the default.
     MAX_TOKENS = 8192
 
-    def __init__(self, client, model: str, *, max_turns: int = 25,
+    def __init__(self, client, model: str, *,
                  max_tokens: int = MAX_TOKENS) -> None:
         self.client = client
         self.model = model
-        self.max_turns = max_turns
         self.max_tokens = max_tokens
         self.messages: List[dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
         self.tool_defs: Optional[List[dict]] = None
@@ -117,8 +117,35 @@ class Conversation:
             self.tool_defs = mcp_tools_to_openai(tools)
         self.messages.append({"role": "user", "content": task})
 
-        for _turn in range(self.max_turns):
-            resp = self.client.chat.completions.create(
+        # No turn ceiling. There was one, and what it did in practice was end
+        # long tasks that were going fine with "task did not finish within
+        # max_turns=25" - a task the person had watched work for twenty-five
+        # steps, thrown away one step before it might have answered, with the
+        # transcript at its largest and every one of those steps already paid
+        # for. A number cannot tell a loop that is stuck from a task that is
+        # simply long, and guessing wrong costs the whole run.
+        #
+        # What stops a run instead is the person watching it: the interface
+        # keeps the task handle and the send button becomes a stop button while
+        # work is in flight, so a cancel lands at the next tool call. That is a
+        # judgement about THIS run rather than a constant chosen in advance,
+        # and unlike the ceiling it can also stop a run on turn three.
+        while True:
+            # IN A THREAD, and that is what makes the stop button work. The
+            # client is synchronous, so called here it would occupy the event
+            # loop for the whole request: measured at zero scheduler slices
+            # during a 300 ms call, which means `/chat/stop` cannot be served,
+            # no event reaches the page and the live pane does not repaint -
+            # for the entire time the model is thinking, which is exactly when
+            # somebody reaches for stop.
+            #
+            # It is also a cancellation point, so a stop lands here rather than
+            # waiting for the turn to reach its next tool call. What it does
+            # NOT do is unsend the request: the thread runs to completion and
+            # its answer is dropped, so a run stopped mid-turn still pays for
+            # the reply it never used.
+            resp = await asyncio.to_thread(
+                self.client.chat.completions.create,
                 model=self.model, messages=self.messages,
                 tools=self.tool_defs, tool_choice="auto", temperature=0,
                 max_tokens=self.max_tokens,
@@ -158,10 +185,8 @@ class Conversation:
                 self.messages.append({"role": "tool", "tool_call_id": call.id,
                                       "content": text[:8000]})
 
-        raise RuntimeError(f"task did not finish within max_turns={self.max_turns}")
 
-
-async def run_task(mcp, task: str, *, client, model: str, max_turns: int = 25,
+async def run_task(mcp, task: str, *, client, model: str,
                    max_tokens: int = Conversation.MAX_TOKENS) -> str:
     """One instruction, one answer, no narration.
 
@@ -171,5 +196,5 @@ async def run_task(mcp, task: str, *, client, model: str, max_turns: int = 25,
     would move a lot of code to delete four lines.
     """
     tools = (await mcp.list_tools()).tools
-    convo = Conversation(client, model, max_turns=max_turns, max_tokens=max_tokens)
+    convo = Conversation(client, model, max_tokens=max_tokens)
     return await convo.run(task, mcp.call_tool, tools)

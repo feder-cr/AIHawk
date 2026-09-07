@@ -113,10 +113,11 @@ reliable than it looks.
 
 ### A limit on pages and time
 
-An unbounded task ("check every listing") can run until a turn budget stops
-it mid-thought, on a page the agent had no way to know was this large.
-Stating a cap, "the first three pages," "stop after ten minutes," turns an
-open-ended risk into a bounded one with a clean stopping point.
+An unbounded task ("check every listing") runs until it is done or until you
+stop it, on a page the agent had no way to know was this large - and nothing
+in the loop will end it for you. Stating a cap, "the first three pages,"
+"stop after ten minutes," turns an open-ended risk into a bounded one with a
+clean stopping point you did not have to sit and watch for.
 
 [AI agents for web research](ai-agent-web-research.md) bounds a walk the
 same way, one page range at a time, for exactly this reason.

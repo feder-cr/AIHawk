@@ -223,15 +223,17 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
     font:var(--t-body)/1.55 var(--sans); min-height:24px; max-height:200px;
     overflow-y:hidden; padding:0; caret-color:var(--accent) }
 #i::placeholder{ color:var(--fg-4) }
-#go{ width:32px; height:32px; flex:none; border:0; border-radius:50%; display:grid;
+#go, #halt{ width:32px; height:32px; flex:none; border:0; border-radius:50%; display:grid;
      place-items:center; cursor:pointer; background:var(--accent);
      box-shadow:inset 0 1px 0 rgba(255,255,255,.22);
      transition:background 120ms ease-out, transform 80ms ease-out }
-#go:active{ transform:scale(.92); box-shadow:none }
+#go:active, #halt:active{ transform:scale(.92); box-shadow:none }
 #go:disabled{ opacity:.3; cursor:default }
-#go[data-mode="stop"]{ background:#d94f45 }
-#go svg{ display:none }
-#go[data-mode="send"] .s-send, #go[data-mode="stop"] .s-stop{ display:block }
+/* Its own button, not a mode of the send button. As a mode it disappeared the
+   moment somebody typed, because the same control then meant "queue this for
+   the next turn" - and the loop has no turn ceiling, so this button is the only
+   thing that ends a run that will not converge. It follows the RUN. */
+#halt{ background:#d94f45 }
 #chip{ display:inline-flex; align-items:center; gap:6px; margin-bottom:var(--s2);
        background:var(--hover); border:1px solid var(--line-2); color:var(--fg-2);
        font-size:var(--t-label); padding:3px 9px; border-radius:var(--r-pill);
@@ -345,11 +347,13 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
     <span id="chip" hidden>1 message queued <span aria-hidden="true">&#9998;</span></span>
     <div class="composer">
       <textarea id="i" rows="1" placeholder="What should the agent do?"></textarea>
-      <button id="go" type="submit" data-mode="send" aria-label="Send" disabled>
-        <svg class="s-send" width="14" height="14" viewBox="0 0 14 14" fill="none"
+      <button id="go" type="submit" aria-label="Send" disabled>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
              stroke="#101317" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M7 12V2M2.5 6.5L7 2l4.5 4.5"/></svg>
-        <svg class="s-stop" width="12" height="12" viewBox="0 0 12 12">
+      </button>
+      <button id="halt" type="button" hidden aria-label="Stop">
+        <svg width="12" height="12" viewBox="0 0 12 12">
           <rect width="12" height="12" rx="2" fill="#fff"/></svg>
       </button>
     </div>
@@ -513,15 +517,16 @@ $('jump').onclick = () => anchor.scrollIntoView({block:'end', behavior:'smooth'}
 
 /* ---- the composer. It is never disabled: greying out the input the moment the
    run gets interesting is most of what reads as unfinished. ---- */
-const i = $('i'), go = $('go'), f = $('f'), chip = $('chip');
+const i = $('i'), go = $('go'), halt = $('halt'), f = $('f'), chip = $('chip');
 
 function paint(){
   const typed = i.value.trim().length > 0;
-  const stop = busyNow && !typed;
-  go.dataset.mode = stop ? 'stop' : 'send';
-  go.disabled = !stop && !typed;
-  go.setAttribute('aria-label', stop ? 'Stop'
-    : queued ? 'Replace queued message' : busyNow ? 'Queue for next turn' : 'Send');
+  /* Shown for as long as work is in flight and for no other reason: it is tied
+     to the run, never to what the composer happens to contain. */
+  halt.hidden = !busyNow;
+  go.disabled = !typed;
+  go.setAttribute('aria-label',
+    queued ? 'Replace queued message' : busyNow ? 'Queue for next turn' : 'Send');
   i.placeholder = queued ? 'Type to replace the queued message'
     : busyNow ? 'Type to queue a message' : 'What should the agent do?';
   chip.hidden = !queued;
@@ -544,10 +549,11 @@ function send(text){
   fetch('/chat/send', {method:'POST', headers:{'Content-Type':'application/json'},
                        body: JSON.stringify({text})});
 }
+halt.onclick = () => fetch('/chat/stop', {method:'POST'});
 f.onsubmit = (e) => {
   e.preventDefault();
   const t = i.value.trim();
-  if(!t){ if(busyNow) fetch('/chat/stop', {method:'POST'}); return; }
+  if(!t){ return; }
   i.value = ''; i.style.height = 'auto';
   if(busyNow){ queued = t; paint(); return; }
   send(t); paint();
@@ -719,10 +725,16 @@ class ChatService:
             try:
                 await self._brain.handle(text, self._link, self.emit)
             except asyncio.CancelledError:
-                # The cancellation lands at the next await, which is the next
-                # tool call: the request to the model itself is synchronous. So
-                # stop means "after the step in flight", and the page is told
-                # that rather than promising something faster.
+                # The cancellation lands at the next await, and since the model
+                # request runs in a thread that is either the request itself or
+                # the tool call after it - so stop is prompt rather than "after
+                # the step in flight", which is what this comment used to say
+                # and what the loop used to do.
+                #
+                # Prompt is not free: a model request already sent finishes in
+                # its thread and its answer is discarded, so a run stopped
+                # mid-turn is still billed for that reply. Stopping cuts what
+                # comes next, never what is already in the air.
                 await self.emit("err", "stopped")
                 raise
             except Exception as exc:

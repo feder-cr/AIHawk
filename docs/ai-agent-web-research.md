@@ -98,9 +98,9 @@ Prompt habits that separate usable research from confident noise:
   pushes it to report only what pages show; your instruction should pull the
   same direction.
 - **Bound the walk.** "The first three pages", "stop after five sources".
-  Unbounded research runs are where
-  [turn budgets](how-to-extract-data-to-csv-with-an-ai-agent.md) expire
-  mid-thought.
+  Nothing in the loop bounds it for you, so an unbounded research run keeps
+  reading, and [keeps costing more per source](how-to-extract-data-to-csv-with-an-ai-agent.md)
+  as the transcript grows, until it answers or you stop it.
 - **Separate gathering from judging.** Two passes - collect the claims, then
   evaluate them - beat one pass doing both, for the same reason it works with
   human researchers: the gatherer stops shading the evidence toward a thesis.

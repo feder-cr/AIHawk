@@ -23,9 +23,10 @@ Worth knowing before choosing, because the loop's shape decides the bill. The
 interface runs one fixed loop: the model receives the task and
 the browser tools, replies with one thought and usually one tool call, the tool
 runs, the result goes into the transcript, and the model is called again. In the
-current source the loop is capped at 25 turns per instruction, each reply is
-capped at 8,192 tokens, temperature is pinned to 0, and each tool result is
-clipped to 8,000 characters before it enters the transcript.
+current source nothing caps the number of turns - the loop runs until the model
+stops calling tools - while each reply is capped at 8,192 tokens, temperature is
+pinned to 0, and each tool result is clipped to 8,000 characters before it
+enters the transcript.
 
 Two consequences follow directly:
 
@@ -56,11 +57,15 @@ What the loop actually exercises:
   extracted page text. The model has to find the price in the noise, and notice
   when a click changed nothing.
 - **Knowing when it is done, and when it is stuck.** The worst outcome is not a
-  wrong answer, it is 25 turns of confident wandering: the loop then stops with
-  an error and you have paid for the whole journey with no answer at the end.
+  wrong answer, it is confident wandering, and nothing in the loop ends it. A
+  model that does not notice it is stuck keeps taking turns, each one resending
+  a bigger transcript than the last, until someone stops it. That is what makes
+  a model's self-awareness a cost question here, and it is why the run is worth
+  watching rather than starting and walking away.
 
-Speed matters more than in chat, too: a person watches the interface while up to
-25 round trips happen in sequence, so per-turn latency multiplies.
+Speed matters more than in chat, too: a person watches the interface while round
+trip follows round trip, so per-turn latency multiplies - and that person is
+also the thing that ends a run which will not converge.
 
 ## Real prices, and one worked comparison
 
@@ -76,15 +81,17 @@ and all of these move; check the model's page before relying on them.
 The default's range is that wide because two dozen providers serve it and
 OpenRouter picks one per request, so a task's bill depends on where it landed as
 well as on how long it ran. Sonnet's lower figures are the standard tier; above
-200,000 prompt tokens a higher tier applies ($6.00 / $22.50), which an agent
-transcript can in principle reach, though with this loop's 25-turn cap and
-clipped tool results it rarely will.
+200,000 prompt tokens a higher tier applies ($6.00 / $22.50), which a long agent
+transcript can reach, though clipped tool results keep an ordinary task well
+under it.
 
 One more number from the same page, because it changes what stops a run: the
 default's context window is 1,310,720 tokens, against 204,800 for `z-ai/glm-4.6`,
-the default before it. With a 25-turn cap and tool results clipped at 8,000
-characters, a transcript will not come near filling that window, so the ceiling
-you actually meet is the turn cap or the bill, not the model's context.
+the default before it. With tool results clipped at 8,000 characters an ordinary
+task stays far below either figure, so what you meet first is the bill, or your
+own decision to end the run - not the model's context. A run left to wander long
+enough does eventually meet the window, and meets it much sooner on the smaller
+one.
 
 Now the arithmetic, illustrative rather than measured: take a 20-turn task whose
 transcript averages 15,000 tokens per turn. That is about 300,000 input tokens,
@@ -104,11 +111,10 @@ fifty of them, or when a monitoring job runs one every hour.
 
 The table above assumes both models take the same 20 turns, and they do not. A
 weaker model clicks the wrong element and has to notice and recover, re-reads
-pages it already read, or wanders into the 25-turn ceiling - and a task that
-dies at the ceiling costs more than a task that succeeds, because the transcript
-was at its largest exactly when it was being resent most. Three failed cheap
-runs plus one successful one can overtake a single clean run on a model five
-times the price.
+pages it already read, or wanders without converging - and wandering is the
+expensive failure, because nothing ends it and the transcript is at its largest
+exactly while it is being resent most. Three failed cheap runs plus one
+successful one can overtake a single clean run on a model five times the price.
 
 That caveat applies to the default as much as to anything you might downgrade
 to. It is a fast, cheap model, and this wiki has no measurement of how it holds
@@ -131,7 +137,7 @@ you moved.
    challenge page is not a model problem, and no model spend fixes it; the
    [diagnostic page](browser-problem-or-model-problem.md) separates the two.
 3. **Upgrade on model-side symptoms only**: wrong elements, loops, premature
-   "done", turn-ceiling errors on tasks that ought to be short. Try a frontier
+   "done", long wandering runs on tasks that ought to be short. Try a frontier
    model on the same task and compare transcripts, not vibes.
 4. **Match the model to the task's stakes.** A nightly check that reads one
    number can live on the cheapest thing that works ([monitoring is exactly
@@ -169,10 +175,14 @@ OpenRouter API and stripped from the environment the browser engine starts
 with, by name and by value; the repository carries a test that fails if that
 stops being true.
 
-**Can I cap what a task spends?** There is no money cap in the current source.
-The structural caps are 25 turns per instruction and 8,192 tokens per reply,
-and the interface shows running token usage while a task runs, so a runaway is
-visible while it is still cheap.
+**Can I cap what a task spends?** There is no money cap in the current source,
+and no cap on turns either: the only structural one is 8,192 tokens per reply.
+What you get instead is visibility and a stop. The interface shows running token
+usage while a task runs, and while work is in flight the send button becomes a
+red stop button - as long as the message box is empty, since typing turns it
+back into a button that queues your message for the next turn. So a runaway is
+visible, and endable, while it is still cheap, but only by someone who is
+looking.
 
 ## Sources
 
@@ -186,9 +196,11 @@ All retrieved 2026-09-08.
   for the frontier comparison pricing and the long-context tier.
 - [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), this repository's
   source: `src/aihawk/llm.py` (default model, OpenRouter-only base URL, key and
-  model resolution), `src/aihawk/agent.py` (the loop, turn cap, token caps,
-  transcript resending, usage meter), and `src/aihawk/runner.py` with
-  `tests/test_key_isolation.py` (the key never reaching the browser process).
+  model resolution), `src/aihawk/agent.py` (the loop, its lack of a turn cap,
+  the per-reply token cap, transcript resending, usage meter),
+  `src/aihawk/web.py` (the token meter and the stop button), and
+  `src/aihawk/runner.py` with `tests/test_key_isolation.py` (the key never
+  reaching the browser process).
 
 **See also:** [browser problem or model problem?](browser-problem-or-model-problem.md),
 [agent retry loops and rate limits](agent-retry-loops-rate-limits.md), and the

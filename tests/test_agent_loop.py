@@ -44,9 +44,13 @@ No test in this file starts a browser or spawns the MCP server.
 """
 from __future__ import annotations
 
+import ast
+import asyncio
 import copy
 import inspect
 import json
+import pathlib
+import time
 
 import pytest
 
@@ -58,7 +62,14 @@ from openai.types.chat.chat_completion_message_function_tool_call import (
     Function,
 )
 
-from aihawk.agent import SYSTEM_PROMPT, _result_text, mcp_tools_to_openai, run_task
+from aihawk import agent as agent_module
+from aihawk.agent import (
+    SYSTEM_PROMPT,
+    Conversation,
+    _result_text,
+    mcp_tools_to_openai,
+    run_task,
+)
 
 
 # --------------------------------------------------------------------------
@@ -631,56 +642,127 @@ async def test_a_result_at_or_below_the_limit_is_sent_whole():
     assert len(sent) == 8000
 
 
-async def test_max_turns_is_enforced_and_the_error_names_the_limit():
-    """A model that keeps calling tools forever must stop costing money.
+async def test_a_long_task_runs_past_the_old_ceiling_and_still_returns():
+    """There is no turn ceiling, and this is the test that says so.
 
-    Known-bad: `while True`, which never returns; or an error message that does
-    not carry the number, leaving the operator with no idea what to raise."""
+    The loop used to stop at 25 and raise, which ended long tasks that were
+    going fine one step before they might have answered. This drives it well
+    past that number and expects the answer.
+
+    Known-bad: any `range(...)` back around the loop, or a re-added constant.
+    Either one makes this raise instead of returning, at whatever number it was
+    set to.
+    """
     mcp = ScriptedMCP(tools=tools_result(tool("browser_navigate")))
-    model = ScriptedModel(
-        [assistant_tool_calls(("c", "browser_navigate", '{"url": "http://127.0.0.1"}'))],
-        repeat_last=True,
-    )
+    steps = [assistant_tool_calls(("c%d" % i, "browser_navigate",
+                                   '{"url": "http://127.0.0.1"}'))
+             for i in range(40)]
+    model = ScriptedModel(steps + [assistant_answer("done after forty steps")])
 
-    with pytest.raises(RuntimeError) as excinfo:
-        await run_task(mcp, "loop forever", client=model, model="m", max_turns=3)
+    out = await run_task(mcp, "a long one", client=model, model="m")
 
-    assert "max_turns=3" in str(excinfo.value)
-    assert len(model.requests) == 3
-    assert len(mcp.calls) == 3
+    assert out == "done after forty steps"
+    assert len(model.requests) == 41
+    assert len(mcp.calls) == 40
 
 
-async def test_a_task_finishing_on_the_last_allowed_turn_still_returns():
-    """The boundary from the other side. Known-bad: `range(max_turns - 1)`, which
-    raises on a run that finished exactly within its budget."""
+async def test_the_model_call_does_not_hold_the_event_loop():
+    """A blocking call on the loop turns the stop button into a decoration.
+
+    The model request is a SYNCHRONOUS HTTP call. Run directly on the event
+    loop it holds the whole server for its duration: `/chat/stop` cannot be
+    served, no event reaches the page, and the live browser pane freezes. With
+    no turn ceiling that repeats on every turn of an arbitrarily long run, and
+    the stop button is the only thing that ends such a run - so it has to be
+    answerable while the model is thinking, which is exactly when a person
+    reaches for it.
+
+    Measured rather than reasoned about: a heartbeat counts how many slices the
+    loop hands out while one model call is in flight. On the loop the answer is
+    zero.
+
+    Known-bad: `self.client.chat.completions.create(...)` called directly in
+    `run` instead of being handed to a thread. This test then counts 0 ticks.
+    """
+    blocking_seconds = 0.30
+    tick_seconds = 0.01
+
+    class BlockingModel(ScriptedModel):
+        """Stands in for a real request: it occupies the caller, not an await."""
+
+        def _create(self, kwargs: dict):
+            time.sleep(blocking_seconds)
+            return super()._create(kwargs)
+
+    mcp = ScriptedMCP()
+    model = BlockingModel([assistant_answer("done")])
+
+    ticks = 0
+
+    async def heartbeat() -> None:
+        nonlocal ticks
+        while True:
+            await asyncio.sleep(tick_seconds)
+            ticks += 1
+
+    beat = asyncio.create_task(heartbeat())
+    try:
+        out = await run_task(mcp, "t", client=model, model="m")
+    finally:
+        beat.cancel()
+
+    assert out == "done"
+    assert ticks >= 5, (
+        "the loop got %d slices during a %.2fs model call, so the call is "
+        "running ON the event loop: while the model thinks, the stop route, "
+        "the event stream and the frame pump are all unreachable"
+        % (ticks, blocking_seconds))
+
+
+async def test_a_task_that_answers_on_its_second_turn_returns_there():
+    """The short case still works, which is the other half of removing a cap:
+    nothing about a run that finishes quickly changed.
+
+    Known-bad: a loop that keeps asking after the model stopped calling tools,
+    which would spend forever on a task that was already answered.
+    """
     mcp = ScriptedMCP(tools=tools_result(tool("browser_navigate")))
     model = ScriptedModel([
         assistant_tool_calls(("c1", "browser_navigate", '{"url": "http://127.0.0.1"}')),
         assistant_answer("finished on turn two"),
     ])
 
-    out = await run_task(mcp, "t", client=model, model="m", max_turns=2)
+    out = await run_task(mcp, "t", client=model, model="m")
     assert out == "finished on turn two"
 
 
-async def test_max_turns_zero_asks_the_model_nothing_and_raises():
-    """Known-bad: an off-by-one that grants one free turn to a caller who asked
-    for none."""
-    mcp = ScriptedMCP()
-    model = ScriptedModel([assistant_answer("should never be reached")])
+def test_no_turn_budget_is_exposed_anywhere_in_the_loop():
+    """Structural pin: the parameter is gone, not defaulted to something large.
 
-    with pytest.raises(RuntimeError) as excinfo:
-        await run_task(mcp, "t", client=model, model="m", max_turns=0)
+    Known-bad: `max_turns: int = 1000`, which reads as "no limit" to whoever
+    added it and is still a wall a long task can hit in front of a user.
 
-    assert "max_turns=0" in str(excinfo.value)
-    assert model.requests == []
+    Read from the AST and not from the text. The first version of this test
+    searched the source for the string and failed on the comment in agent.py
+    that quotes the error the ceiling used to raise - a check tripped by the
+    prose explaining the code rather than by the code, which is the defect this
+    project writes down most often.
+    """
+    assert "max_turns" not in inspect.signature(run_task).parameters
+    assert "max_turns" not in inspect.signature(Conversation.__init__).parameters
 
-
-def test_the_shipped_default_turn_budget_is_25():
-    """The CLI never passes max_turns, so this default is the cap every real run
-    gets. Known-bad: lowering it to a number that cannot finish a multi-page
-    task, which would only show up as a RuntimeError in front of a user."""
-    assert inspect.signature(run_task).parameters["max_turns"].default == 25
+    tree = ast.parse(pathlib.Path(agent_module.__file__).read_text(encoding="utf-8"))
+    named = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.arg):
+            named.add(node.arg)
+        elif isinstance(node, ast.Attribute):
+            named.add(node.attr)
+        elif isinstance(node, ast.Name):
+            named.add(node.id)
+        elif isinstance(node, ast.keyword) and node.arg:
+            named.add(node.arg)
+    assert "max_turns" not in named
 
 
 async def test_empty_tool_arguments_become_an_empty_dict():

@@ -94,10 +94,13 @@ handles fine:
 - **Misreading the task.** It did something coherent, just not what you asked.
   Usually fixable with a more explicit instruction before it is a reason to
   change models.
-- **The turn ceiling.** An error saying the task did not finish within
-  `max_turns=25` means the model spent 25 turns without converging. On a
-  genuinely long task, that is the task's problem; on a short one, it is the
-  model wandering.
+- **A run that never converges.** The loop has no turn ceiling: it takes turns
+  until the model stops calling tools, so a model going in circles goes in
+  circles until a person ends it. That person is you, watching the live pane.
+  Stop the run when the steps stop making progress, then reissue a narrower
+  instruction rather than the same one. On a genuinely long task a long run is
+  the task's shape; on a short one it is the model wandering, and the
+  transcript tells you which, because wandering repeats itself.
 - **Unreadable tool arguments.** The transcript notes the model's arguments
   were not valid JSON and it was told to retry. Occasional is tolerable;
   frequent is a model quality signal in itself.
@@ -150,9 +153,15 @@ changes nothing there.
 transcript shows the page loaded correctly. Try a sharper instruction first,
 then a stronger model on the same task and seed.
 
-**What does the max_turns error mean?** The model used its 25-turn budget
-without finishing. On a short task, that is a model-side symptom; on a long
-one, split the task into smaller instructions before blaming anything.
+**The run keeps going and never finishes - how do I stop it?** From the
+interface: while work is in flight the send button becomes a red stop button,
+and pressing it cancels the run. One detail worth knowing before you go looking
+for it: the button is a stop button only while the message box is empty, so if
+you have typed something the same button queues that message for the next turn
+instead - clear the box and the stop button is back. The cancel lands at the
+next tool call, so the step already in flight finishes first. Nothing else ends
+a run: the loop has no turn ceiling, so on a short task that will not converge,
+stopping it and narrowing the instruction is the move.
 
 **Can I run this diagnosis without spending anything?** The replay half, yes -
 the library needs no model and no key, and the engine download is one-time.
@@ -164,12 +173,14 @@ which is a certainty no model-driven run gives you.
 
 ## Sources
 
-All retrieved 2026-09-03.
+All retrieved 2026-09-03, except the loop itself, re-read 2026-09-08.
 
 - [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), this repository's
-  source: `src/aihawk/agent.py` (the shared loop, the
-  turn ceiling, the invalid-arguments retry), and the README (the
-  engine download and prefetch command).
+  source: `src/aihawk/agent.py` (the shared loop, which runs until the model
+  stops calling tools and has no turn ceiling, and the invalid-arguments
+  retry), `src/aihawk/web.py` (the task handle, the stop button and the cancel
+  that lands at the next tool call), and the README (the engine download and
+  prefetch command).
 - [invisible_playwright](https://github.com/feder-cr/invisible_playwright),
   the engine as a library; the replay snippet above was executed against
   books.toscrape.com on 2026-09-03 and printed the line quoted.

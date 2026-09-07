@@ -65,28 +65,40 @@ clean fingerprint still gets blocked, volume and address are the usual reasons -
 
 ## What bounds the loop in AIHawk
 
-AIHawk's loop carries two bounds worth knowing about, because they shape what a
-runaway task can and cannot do:
+Less than you might assume, and it is worth being exact, because this is what
+decides how big a runaway task can get. There is no turn ceiling: the loop takes
+turns until the model stops calling tools, so nothing in the code ends a task
+that keeps deciding to look again. What is actually there:
 
-- **A turn ceiling.** One instruction runs for at most 25 model turns by default,
-  and when the ceiling is hit the task stops with a plain message instead of
-  looping on. The message tells you the remedy too: narrow the task.
 - **One thing at a time.** Instructions are serialised - one instruction at a time
   on one browser - and the system prompt tells the model to prefer one clear action
   per turn over long chains.
+- **A ceiling on each reply.** 8,192 tokens per model reply. That bounds how big a
+  single turn gets, not how many turns happen.
+- **Tolerance for a malformed tool call.** Unreadable arguments go back to the model
+  to try again rather than ending the task. Good for finishing the job, and also one
+  more request.
+- **A person watching.** The interface holds the running task's handle, and while
+  work is in flight the send button becomes a red stop button that cancels it. Two
+  details matter when you reach for it: it is a stop button only while the message
+  box is empty (type something and the same button queues that message for the next
+  turn instead), and the cancel lands at the next tool call, so the step already in
+  flight finishes first.
 
-Be honest about what a ceiling is, though: it is a stop, not a throttle. It caps how
-big a burst one instruction can become; it does not pace the requests inside the
-burst, and it does not stop *you* from immediately issuing the same instruction
-again. The half that no product can supply is how often you run it.
+Be honest about what that adds up to: a person is a stop, not a throttle, and a stop
+that only works while someone is looking. It does not pace the requests inside a
+burst, it does not bound a burst you are not watching, and it does not stop *you*
+from immediately issuing the same instruction again. The half that no product can
+supply is how often you run it.
 
 ## The throttle lives in how you drive it
 
 - **Do not re-run a failed task immediately.** The worst response to a block or a
   failure is the identical request again, faster. Wait, and wait longer each time.
-- **Narrow the task instead of repeating it.** If an instruction hits the turn
-  ceiling, splitting it into smaller instructions with pauses between them produces
-  less traffic than re-running the big one until it fits.
+- **Narrow the task instead of repeating it.** If an instruction is still going
+  after a lot of turns without getting closer, stop it and split it into smaller
+  instructions with pauses between them. That produces less traffic than letting the
+  big one run on, and far less than re-running it whole.
 - **Mind the exit, not the browser count.** The unit a counter sees is requests per
   address and per account. Several agents behind one exit IP, each politely pacing
   itself, are one very busy client to the site.
@@ -136,9 +148,10 @@ decides how often the agent runs, which is you.
 
 Retrying and re-planning are what make an agent an agent, and they are also what
 turn one instruction into a burst of requests. Bursts are counted, and a counter is
-a different defence from a fingerprint check. AIHawk bounds the burst - a turn
-ceiling, serialised instructions - but pacing between runs, backoff after failures
-and a sane request budget live in how you drive it, and a clean exit lives under it.
+a different defence from a fingerprint check. AIHawk bounds less of that than you
+might hope - instructions are serialised, and a person can stop a run - but pacing
+between runs, backoff after failures and a sane request budget live in how you drive
+it, and a clean exit lives under it.
 The browser's job is to make each request real; keeping the requests few and
 well-spaced is yours.
 
@@ -152,10 +165,11 @@ with detection, not with volume.
 always because the agent sent many more requests, much faster, than you did.
 Retries, re-reads and reloads multiply traffic a person never generates.
 
-**Does AIHawk retry forever?** No. One instruction is capped at 25 model turns by
-default and then stops with a plain message. But the cap is a stop, not a throttle:
-re-issuing the same instruction immediately is still a retry loop, just with you in
-it.
+**Does AIHawk retry forever?** Nothing in the loop stops it: it keeps taking turns
+for as long as the model keeps calling tools, so a task that decides to keep trying
+will keep trying. What ends it is you, with the stop button the interface shows while
+a run is in flight. And stopping is not a throttle: re-issuing the same instruction
+immediately is still a retry loop, just with you in it.
 
 **Where should backoff live?** In whatever decides when tasks run: your habits at
 the prompt, or the script wrapping the one-shot run. No browser setting paces a loop
@@ -171,10 +185,12 @@ immediate identical re-run.
 
 ## Sources
 
-- AIHawk's own source, read 2026-09-03: `src/aihawk/agent.py` (the 25-turn default
-  ceiling and its stop message, tool errors fed back to the model as results, the
-  one-action-at-a-time system prompt) and `src/aihawk/link.py` (one instruction at a
-  time on one browser).
+- AIHawk's own source, read 2026-09-03 and the loop re-read 2026-09-08:
+  `src/aihawk/agent.py` (a loop with no turn ceiling, the per-reply token cap, tool
+  errors fed back to the model as results, the one-action-at-a-time system prompt),
+  `src/aihawk/web.py` (the task handle, the stop button, and the cancel landing at
+  the next tool call) and `src/aihawk/link.py` (one instruction at a time on one
+  browser).
 - The engine wiki's
   [rate limiting mechanics](https://github.com/feder-cr/invisible_playwright/wiki/how-to-rate-limit-your-scraper-playwright)
   and its notes on

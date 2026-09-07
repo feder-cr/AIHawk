@@ -50,8 +50,8 @@ class OpenRouterBrain(Brain):
     machinery" goes false with nobody editing it, and why this one is four lines.
     """
 
-    def __init__(self, client, model: str, *, max_turns: int = 25) -> None:
-        self._convo = Conversation(client, model, max_turns=max_turns)
+    def __init__(self, client, model: str) -> None:
+        self._convo = Conversation(client, model)
 
     @property
     def usage(self) -> dict:
@@ -62,11 +62,10 @@ class OpenRouterBrain(Brain):
         return self._convo.messages
 
     async def handle(self, text: str, link: Link, say: Say) -> None:
-        try:
-            await self._convo.run(text, link.call, link.tools,
-                                  say=say, describe=actions_help.summarise)
-        except RuntimeError as exc:
-            # The turn ceiling. It is the one failure a person can act on - by
-            # narrowing the task - so it is said plainly rather than raised into
-            # the generic handler that prefixes an exception class.
-            await say("err", str(exc))
+        # Nothing is caught here. There used to be a handler for the turn
+        # ceiling, the one failure a person could act on by narrowing the task;
+        # the ceiling is gone, and every remaining failure is either the
+        # cancellation the stop button raises or something the interface's own
+        # handler already reports.
+        await self._convo.run(text, link.call, link.tools,
+                              say=say, describe=actions_help.summarise)

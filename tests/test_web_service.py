@@ -18,7 +18,7 @@ import json
 
 import pytest
 
-from aihawk.web import ChatService, build_app
+from aihawk.web import PAGE, ChatService, build_app
 
 pytestmark = pytest.mark.asyncio
 
@@ -245,6 +245,40 @@ async def test_the_app_exposes_exactly_the_routes_the_page_calls():
     paths = {r.path for r in build_app(FakeLink(), svc).routes}
     assert paths == {"/", "/chat/send", "/chat/stop", "/chat/events",
                      "/live/frame", "/live/tabs", "/live/select"}
+
+
+async def test_the_stop_control_is_its_own_button_and_follows_the_run():
+    """The stop button must not be a mode of the send button.
+
+    It was one, and the mode was `busyNow && !typed`: the moment somebody typed
+    into the composer while the agent worked, the same control became "queue for
+    the next turn" and there was no way to stop from the page at all. That was
+    survivable while the loop stopped itself at twenty-five turns. It is not
+    survivable now: the loop has no ceiling, so this button is the only thing
+    that ends a run that will not converge.
+
+    ⛔ WHAT THIS DOES AND DOES NOT PROVE. It reads the markup and the script the
+    page ships, so it catches the button being deleted, renamed, or folded back
+    into `#go`. It does NOT execute the script, so it cannot prove the button is
+    reachable, visible or wired on a rendered page - that needs a browser, and
+    it was done by hand against a running interface.
+
+    Known-bad, all three caught here: removing the `#halt` element; painting it
+    from anything other than `busyNow`; giving `#go` back a `data-mode` stop.
+    """
+    page = PAGE
+
+    assert 'id="halt"' in page, "the dedicated stop button is gone"
+    assert "halt.onclick" in page and "'/chat/stop'" in page, \
+        "the stop button no longer posts to the stop route"
+
+    # Painted from the run and from nothing else. `!busyNow` is the whole
+    # condition: any `typed` in it is the old mode logic coming back.
+    assert "halt.hidden = !busyNow;" in page, \
+        "the stop button is no longer tied to the run alone"
+
+    assert 'data-mode' not in page, \
+        "the send button has a mode again, which is how stop went missing before"
 
 
 async def test_the_live_view_asks_for_nothing_until_an_instruction_has_been_given():

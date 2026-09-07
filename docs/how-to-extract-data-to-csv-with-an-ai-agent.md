@@ -65,19 +65,23 @@ nine still in the context. A 20-page walk is not twenty times the cost of one
 page; it is worse, because the pages ride along. The comparison page
 [runs the actual numbers](ai-browser-agents-vs-traditional-scraping.md).
 
-Three hard limits in AIHawk's own loop, taken from its source, bound one run:
+Two hard limits in AIHawk's own loop, taken from its source, bound one run:
 
 - **Tool results are clipped at 8,000 characters** before the model sees them.
   A 20-item page fits comfortably; a page listing hundreds of items may not.
-- **The loop stops at 25 turns** by default. A navigate-and-read cycle per page
-  plus the reading turns means a full 50-page walk does not fit in one run.
 - **The final reply has a token ceiling** (8,192 tokens). Around a thousand
   rows, the CSV itself outgrows the answer that is supposed to carry it.
 
-These are budgets, not defects, and the practical consequence is one habit:
-batch. "Pages one to ten, then stop" completes and verifies; "all fifty pages"
-runs long, costs more per row, and can hit a ceiling with the work
-half-carried.
+What is not limited is how long a run goes on. The loop has no turn ceiling: a
+50-page walk will not be cut short part way, it will keep going, one page at a
+time, until it answers or you stop it.
+
+That makes the batching habit more useful rather than less. "Pages one to ten,
+then stop" completes, is cheap to verify, and is short enough to watch. "All
+fifty pages" is a run whose cost per row climbs the further it gets, because
+every turn resends the whole transcript, and a long run is exactly the one you
+stop paying attention to - which matters, because attention is what ends a walk
+that has gone wrong.
 
 ## Where this beats a scraper, and where it loses
 
@@ -160,8 +164,8 @@ in the instruction.
 
 **Why is my extracted CSV incomplete?** Three usual causes: a long page
 truncated before the model saw all of it, an early "done" before the last
-pages, or a turn budget exhausted mid-walk. Counting rows against the site's
-own total finds all three; batching into smaller runs prevents them.
+pages, or a run stopped mid-walk. Counting rows against the site's own total
+finds all three; batching into smaller runs prevents them.
 
 **Can it handle pagination?** Yes, by walking it: find next, click, read,
 repeat, with cost per page climbing as the transcript grows. Bound the walk
@@ -179,14 +183,14 @@ with a header row.
 
 ## Sources
 
-All retrieved 2026-09-03.
+All retrieved 2026-09-03, except the loop's own bounds, re-read 2026-09-08.
 
 - [books.toscrape.com](https://books.toscrape.com/), the scraping sandbox used
   as the running example: 1,000 fictional items, 20 per page, with the site's
   own disclaimer that prices and ratings are randomly assigned.
 - [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README and
-  source in this repository: the loop, the 25-turn default, the 8,000-character
-  tool-result clip and the reply ceiling are in
+  source in this repository: the loop, its lack of a turn ceiling, the
+  8,000-character tool-result clip and the reply ceiling are in
   [`src/aihawk/agent.py`](https://github.com/feder-cr/AIHawk/blob/main/src/aihawk/agent.py),
   and the CLI surface in
   [`src/aihawk/cli.py`](https://github.com/feder-cr/AIHawk/blob/main/src/aihawk/cli.py).

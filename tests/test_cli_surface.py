@@ -51,15 +51,30 @@ def key_leaked(text: str) -> bool:
 
 
 @pytest.fixture(autouse=True)
-def clean_provider_env(monkeypatch):
-    """No provider variable may reach a test from the developer's own shell.
+def clean_provider_env(monkeypatch, tmp_path):
+    """No key may reach a test from the developer's machine, by either road.
 
     Known-bad this guards: a machine that happens to export OPENROUTER_API_KEY
     would turn the "no key anywhere" test green while the CLI was broken.
+
+    ⛔ AND THE ENVIRONMENT IS ONLY ONE OF THE TWO ROADS. `ui` also reads a
+    `.env` from the directory it runs in, which is the way this project's own
+    README tells people to supply the key, and `.env` is git-ignored precisely
+    so it can sit in a checkout. Measured 2026-09-08: with one there,
+    `test_no_key_anywhere_is_refused_and_points_at_the_library` and
+    `test_an_openai_key_in_the_environment_is_not_accepted` both fail, saying
+    the browser was launched before the refusal - a red that appears only on a
+    developer's machine and never in CI, where no `.env` exists. The fixture
+    scrubbed the variables and never thought about the file.
+
+    So the working directory moves to an empty one for the duration. That also
+    keeps every test in this file honest about a second thing: none of them may
+    depend on being run from inside the repository.
     """
     for name in ("OPENROUTER_API_KEY", "AIHAWK_MODEL", "OPENAI_API_KEY",
                  "ANTHROPIC_API_KEY"):
         monkeypatch.delenv(name, raising=False)
+    monkeypatch.chdir(tmp_path)
 
 
 class _Stop(Exception):
