@@ -404,6 +404,87 @@ async def test_a_capture_that_cannot_answer_says_why_instead_of_looking_idle():
     assert "page.screencast" in json.loads(resp.body)["error"]
 
 
+class _Req:
+    """The events route ignores its request; this is enough to call it."""
+    query_params: dict = {}
+
+
+async def _first_events(resp, want=4, each=1.0):
+    """Read up to `want` events, giving up when the stream goes quiet.
+
+    Bounded on purpose. The stream stays open forever by design, so an
+    unbounded read turns "the event never came" into a suite that hangs
+    instead of a test that fails, and a gate that hangs has no verdict. This
+    was not hypothetical: the first version of the test below hung under its
+    own known-bad mutation rather than going red.
+    """
+    seen = []
+    it = resp.body_iterator.__aiter__()
+    try:
+        while len(seen) < want:
+            chunk = await asyncio.wait_for(it.__anext__(), each)
+            seen.append(json.loads(chunk.decode().removeprefix("data: ").strip()))
+    except (asyncio.TimeoutError, StopAsyncIteration):
+        pass
+    return seen
+
+
+async def test_a_page_that_joins_a_run_in_flight_is_told_the_run_is_in_flight():
+    """Reload during a run and the stop button has to still be there.
+
+    ⛔ MEASURED BY HAND 2026-09-08, against a running interface, and it was the
+    turn ceiling that had been hiding it. `emit` keeps `busy` out of the history
+    on purpose - replaying it would show a spinner for work that ended an hour
+    ago - but nothing then told a NEW listener the state of now. So a reload
+    mid-run replayed the transcript and left the page believing it was idle:
+    steps kept arriving and appending, under a composer that said nothing was
+    happening, with no stop button. With the ceiling gone that run had no other
+    end, so the page offered no way to stop what it was showing.
+
+    The history stays free of state. What is sent is the present, once, at
+    subscribe time, and only when true.
+
+    Known-bad: dropping the current-state event from the events route. The
+    listener below then never sees a `busy` event at all.
+    """
+    brain = HangingBrain()
+    svc = ChatService(FakeLink(), brain)
+    app = build_app(FakeLink(), svc)
+    events = [r for r in app.routes if r.path == "/chat/events"][0]
+
+    svc.start("something long")
+    await asyncio.wait_for(brain.started.wait(), 2)
+    assert svc.busy, "the service does not consider itself busy while a run runs"
+
+    # A listener arriving now, which is what a reload is.
+    resp = await events.endpoint(_Req())
+    seen = await _first_events(resp)
+
+    busy = [e for e in seen if e["kind"] == "busy"]
+    assert busy, "a page joining a run in flight was never told a run is in flight: %r" % seen
+    assert busy[0]["text"] == "1"
+    assert not busy[0].get("replay"), "the run is happening now, not being replayed"
+
+    svc.stop()
+
+
+async def test_a_page_that_joins_an_idle_service_is_not_told_anything_about_busy():
+    """The other side, and the reason the event is conditional: a page starts
+    out believing it is idle, so saying so again is noise, and the page's own
+    handler treats `busy 0` as the end of a turn it never saw begin.
+
+    Known-bad: sending the state unconditionally.
+    """
+    svc = ChatService(FakeLink(), SilentBrain())
+    app = build_app(FakeLink(), svc)
+    events = [r for r in app.routes if r.path == "/chat/events"][0]
+
+    resp = await events.endpoint(_Req())
+    seen = await _first_events(resp)
+
+    assert [e for e in seen if e["kind"] == "busy"] == []
+
+
 # --------------------------------------------------------------------------
 # the tab strip, which only became possible when the tool stopped lying
 # --------------------------------------------------------------------------

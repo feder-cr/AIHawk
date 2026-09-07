@@ -699,6 +699,16 @@ class ChatService:
         for q in list(self._listeners):
             q.put_nowait(event)
 
+    @property
+    def busy(self) -> bool:
+        """Whether an instruction is in flight, for a listener joining now.
+
+        The lock and not the task handle: the lock is held for exactly as long
+        as `send` runs, which is the span the page draws as busy, while the
+        handle survives its own task and would answer for a run that ended.
+        """
+        return self._busy.locked()
+
     def start(self, text: str) -> None:
         """Run an instruction detached, keeping the handle so it can be stopped.
 
@@ -764,6 +774,9 @@ def build_app(link: Link, service: ChatService) -> Starlette:
         # starts `stream` later, so taking this snapshot inside it would let an
         # intervening event appear in both history and the listener's queue.
         replay = list(service.history)
+        # Taken with the snapshot, for the same reason: whether a run is in
+        # flight is part of the state this listener is joining.
+        joining_a_run = service.busy
 
         async def stream() -> AsyncIterator[bytes]:
             try:
@@ -774,6 +787,18 @@ def build_app(link: Link, service: ChatService) -> Starlette:
                 # before this listener existed.
                 for past in replay:
                     yield b"data: " + json.dumps({**past, "replay": True}).encode() + b"\n\n"
+                # And then the CURRENT state, which the replay above cannot
+                # carry: `emit` keeps `busy` out of the history on purpose, so a
+                # page opened long after a run would not show a spinner for work
+                # that ended an hour ago. That is right for a finished run and
+                # wrong for one still going - the page would show a transcript
+                # growing under a composer that says nothing is happening, and
+                # with no turn ceiling the stop button is the only thing that
+                # ends such a run. So it is sent as what it is, the present, and
+                # only when true: a page starts out believing it is idle.
+                if joining_a_run:
+                    yield b"data: " + json.dumps(
+                        {"kind": "busy", "text": "1"}).encode() + b"\n\n"
                 while True:
                     event = await q.get()
                     yield b"data: " + json.dumps(event).encode() + b"\n\n"
