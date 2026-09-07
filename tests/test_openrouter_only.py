@@ -34,7 +34,15 @@ from urllib.parse import urlparse
 import pytest
 
 from aihawk import llm
-from aihawk.llm import BASE_URL, DEFAULT_MODEL, make_client, resolve_key, resolve_model
+from aihawk.llm import (
+    APP_TITLE,
+    APP_URL,
+    BASE_URL,
+    DEFAULT_MODEL,
+    make_client,
+    resolve_key,
+    resolve_model,
+)
 
 # Environment variables that must never influence this package. OPENAI_* are
 # read by the openai SDK itself; the rest stand in for other vendors.
@@ -275,6 +283,49 @@ def test_a_real_request_carries_the_given_key(clean_env):
     with _StubOpenRouter() as stub:
         _send_one_completion("or-control-key", stub)
         assert stub.headers.get("authorization") == "Bearer or-control-key"
+
+
+# --------------------------------------------------------------------------
+# make_client: app attribution
+# --------------------------------------------------------------------------
+
+def test_a_real_request_carries_the_app_attribution_headers(clean_env):
+    """OpenRouter groups the /apps rankings by these two headers and nothing else.
+
+    Asserted on the wire rather than on ``client.default_headers``, for the same
+    reason the key is: an attribute can hold a value the request never sends.
+
+    Known-bad: dropping ``default_headers`` from the OpenAI(...) call. Nothing
+    fails when it goes - no error, no changed answer - the traffic simply
+    becomes anonymous and the app leaves the rankings, which is why it needs a
+    test rather than an occasional look at the site.
+    """
+    with _StubOpenRouter() as stub:
+        _send_one_completion("or-control-key", stub)
+        assert stub.headers.get("http-referer") == APP_URL
+        assert stub.headers.get("x-title") == APP_TITLE
+
+
+def test_app_attribution_survives_a_foreign_environment(foreign_env):
+    """Another vendor's variables must not displace our own identification.
+
+    Known-bad: passing the two headers per-request at one call site instead of
+    on the client, which leaves every other call site anonymous.
+    """
+    with _StubOpenRouter() as stub:
+        _send_one_completion("or-real-key", stub)
+        assert stub.headers.get("http-referer") == APP_URL
+        assert stub.headers.get("x-title") == APP_TITLE
+
+
+def test_app_attribution_constants_are_a_url_and_a_name():
+    """Known-bad: an empty title, or a referer that is not a URL. OpenRouter
+    accepts both without complaint and produces an unusable rankings entry."""
+    parsed = urlparse(APP_URL)
+    assert parsed.scheme == "https"
+    assert parsed.netloc == "github.com"
+    assert APP_TITLE.strip() == APP_TITLE
+    assert APP_TITLE != ""
 
 
 # --------------------------------------------------------------------------

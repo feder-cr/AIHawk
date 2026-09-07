@@ -10,8 +10,8 @@ nav_order: 2
 
 AIHawk brings the browser and you bring the model, from
 [OpenRouter](https://openrouter.ai) and nowhere else. If you set nothing, you get
-`z-ai/glm-4.6`: that is the default written into the source, and it sits at the
-cheap-and-capable end of the catalog rather than the flagship end. You override it
+`z-ai/glm-5.3-flash`: that is the default written into the source, and it sits at
+the cheap-and-fast end of the catalog rather than the flagship end. You override it
 with `--model` on `aihawk ui`, or the `AIHAWK_MODEL` environment variable, and
 any model id OpenRouter serves is legal. So the real question is not "which model
 does AIHawk support" - all of them - but which one is worth paying for on this
@@ -64,30 +64,41 @@ Speed matters more than in chat, too: a person watches the interface while up to
 
 ## Real prices, and one worked comparison
 
-Retrieved from OpenRouter on 2026-09-03. OpenRouter routes each model across
+Retrieved from OpenRouter on 2026-09-08. OpenRouter routes each model across
 several providers, so cheap models show a price range rather than one number,
 and all of these move; check the model's page before relying on them.
 
 | Model | Input, per 1M tokens | Output, per 1M tokens |
 |---|---|---|
-| `z-ai/glm-4.6` (the default) | $0.43 - $0.60 | $1.75 - $2.20 |
-| `anthropic/claude-sonnet-4.5` | $3.00 | $15.00 |
+| `z-ai/glm-5.3-flash` (the default) | $0.071 - $0.388 | $0.237 - $1.358 |
+| `anthropic/claude-sonnet-4.5` | $3.00 - $3.30 | $15.00 - $16.50 |
 
-Sonnet's figures are the standard tier; above 200,000 prompt tokens a higher
-tier applies ($6.00 / $22.50), which an agent transcript can in principle reach,
-though with this loop's 25-turn cap and clipped tool results it rarely will.
+The default's range is that wide because two dozen providers serve it and
+OpenRouter picks one per request, so a task's bill depends on where it landed as
+well as on how long it ran. Sonnet's lower figures are the standard tier; above
+200,000 prompt tokens a higher tier applies ($6.00 / $22.50), which an agent
+transcript can in principle reach, though with this loop's 25-turn cap and
+clipped tool results it rarely will.
+
+One more number from the same page, because it changes what stops a run: the
+default's context window is 1,310,720 tokens, against 204,800 for `z-ai/glm-4.6`,
+the default before it. With a 25-turn cap and tool results clipped at 8,000
+characters, a transcript will not come near filling that window, so the ceiling
+you actually meet is the turn cap or the bill, not the model's context.
 
 Now the arithmetic, illustrative rather than measured: take a 20-turn task whose
 transcript averages 15,000 tokens per turn. That is about 300,000 input tokens,
 plus a few thousand output tokens.
 
-- On GLM 4.6 at the top of its range: about $0.18 of input and a cent of
-  output. Call it **$0.19**.
+- On the default, at the top of its range: about $0.12 of input and under a cent
+  of output. Call it **$0.12**. Routed to the cheap end of the same range, the
+  same task is about **$0.02**.
 - On Claude Sonnet 4.5: $0.90 of input and $0.06 of output. Call it **$0.96**.
 
-Same task, roughly a 5x multiplier. Both are under a dollar, which is the honest
-scale of a single task; the multiplier is what compounds when you run fifty of
-them, or when a monitoring job runs one every hour.
+Same task: an 8x multiplier against the default's most expensive provider, and
+around 40x against its cheapest. All of them are under a dollar, which is the
+honest scale of a single task; the multiplier is what compounds when you run
+fifty of them, or when a monitoring job runs one every hour.
 
 ## The catch: a cheaper model that retries is not cheaper
 
@@ -97,7 +108,14 @@ pages it already read, or wanders into the 25-turn ceiling - and a task that
 dies at the ceiling costs more than a task that succeeds, because the transcript
 was at its largest exactly when it was being resent most. Three failed cheap
 runs plus one successful one can overtake a single clean run on a model five
-times the price. Neither direction of this is guaranteed, which is why the only
+times the price.
+
+That caveat applies to the default as much as to anything you might downgrade
+to. It is a fast, cheap model, and this wiki has no measurement of how it holds
+up over twenty turns of tool calls in this particular loop. What is known is the
+price, the context window, and that it is what you get if you set nothing; how
+many turns it takes on your tasks is something to read off your own transcripts,
+not off this page. Neither direction of this is guaranteed, which is why the only
 trustworthy comparison is empirical: same task, both models, read the
 transcripts. [Browser problem or model problem?](browser-problem-or-model-problem.md)
 covers how to make that comparison clean, and passing the same `--seed` keeps
@@ -127,7 +145,7 @@ criteria above do not.
 
 ## Short answers to the questions that lead here
 
-**What model does AIHawk use by default?** `z-ai/glm-4.6`, via OpenRouter. Set
+**What model does AIHawk use by default?** `z-ai/glm-5.3-flash`, via OpenRouter. Set
 `--model` or `AIHAWK_MODEL` to use anything else OpenRouter serves.
 
 **Do I need an OpenRouter account?** For AIHawk's own interface, yes - the
@@ -158,10 +176,12 @@ visible while it is still cheap.
 
 ## Sources
 
-All retrieved 2026-09-03.
+All retrieved 2026-09-08.
 
-- [OpenRouter: Z.ai GLM 4.6](https://openrouter.ai/z-ai/glm-4.6), for the
-  default model's per-provider pricing range.
+- [OpenRouter: Z.ai GLM 5.3 Flash](https://openrouter.ai/z-ai/glm-5.3-flash), for
+  the default model's per-provider pricing range and its context length.
+- [OpenRouter: Z.ai GLM 4.6](https://openrouter.ai/z-ai/glm-4.6), the previous
+  default, for the context-window comparison only.
 - [OpenRouter: Claude Sonnet 4.5](https://openrouter.ai/anthropic/claude-sonnet-4.5),
   for the frontier comparison pricing and the long-context tier.
 - [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), this repository's

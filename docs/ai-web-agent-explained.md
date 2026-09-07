@@ -73,11 +73,13 @@ This is the section vendors skip, so it gets the detail here.
   agent spend forty steps on a six-step task is a rite of passage. Caps on steps and
   spend are not optional.
 - **Cost per task.** Every observation of a complex page is thousands of tokens.
-  Multiply by steps and by retries. Concretely: AIHawk's default model, GLM-4.6, is
-  priced on OpenRouter at $0.43 per million input tokens and $1.75 per million
-  output, which is cheap for the class; a multi-step task still routinely moves
-  hundreds of thousands of input tokens. On frontier-priced models the same task
-  costs an order of magnitude more. The full cost argument, against the alternative
+  Multiply by steps and by retries. Concretely: AIHawk's default model,
+  GLM-5.3-Flash, is priced on OpenRouter between $0.071 and $0.388 per million
+  input tokens and between $0.237 and $1.358 per million output, depending which
+  provider serves the request, which is cheap even for the cheap end of the class;
+  a multi-step task still routinely moves hundreds of thousands of input tokens. On
+  frontier-priced models the same task costs one to two orders of magnitude more.
+  The full cost argument, against the alternative
   of writing a scraper, is on
   [agents vs traditional scraping](ai-browser-agents-vs-traditional-scraping.md).
 - **Sites that push back.** Some pages detect and block automation, and an agent
@@ -171,7 +173,7 @@ fix the first, influence the fourth, and cannot fix the middle two;
 
 ## Sources
 
-All retrieved 2026-09-03.
+All retrieved 2026-09-03, except the OpenRouter pricing, retrieved 2026-09-08.
 
 - [WebArena paper abstract (arXiv:2307.13854)](https://arxiv.org/abs/2307.13854),
   for the 14.41% agent versus 78.24% human end-to-end success rates.
@@ -179,8 +181,8 @@ All retrieved 2026-09-03.
   OSWorld figure and its human-level comparison.
 - [browser-use/browser-use](https://github.com/browser-use/browser-use), as the
   reference example of a DOM-plus-screenshot observation design.
-- [GLM-4.6 on OpenRouter](https://openrouter.ai/z-ai/glm-4.6), for current per-token
-  pricing of AIHawk's default model.
+- [GLM-5.3-Flash on OpenRouter](https://openrouter.ai/z-ai/glm-5.3-flash), for
+  current per-token pricing of AIHawk's default model.
 - [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README in this
   repository, for the claims about AIHawk itself.
 

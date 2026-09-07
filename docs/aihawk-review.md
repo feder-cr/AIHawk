@@ -15,8 +15,9 @@ have not read, and because a first-party review can do one thing a
 third-party one cannot: state plainly what the project does not do, and be
 accountable for it. Every factual claim below is checkable against the
 [repository](https://github.com/feder-cr/AIHawk) and the published package,
-both read on 2026-09-03, and the honest move for a reader is to treat the
-praise with suspicion and the self-criticism as reliable.
+both read on 2026-09-03 with the default model re-read on 2026-09-08, and the
+honest move for a reader is to treat the praise with suspicion and the
+self-criticism as reliable.
 
 ## What AIHawk is
 
@@ -42,7 +43,7 @@ There are two ways to run it, and they share one browser:
   Cursor, and your assistant's model does the thinking.
 - **Standalone.** `uvx aihawk ui` serves a local page with chat on the
   left and the live browser on the right. It takes an
-  [OpenRouter](https://openrouter.ai) key, defaults to `z-ai/glm-4.6`,
+  [OpenRouter](https://openrouter.ai) key, defaults to `z-ai/glm-5.3-flash`,
   and accepts `--model` for anything OpenRouter serves. Since 0.3.0 this
   is the only aihawk entrypoint; headless one-shots run through the
   assistant path above.
@@ -207,7 +208,7 @@ the MCP route.
 
 ## Sources
 
-- The [AIHawk repository](https://github.com/feder-cr/AIHawk): README, LICENSE, `pyproject.toml` and `tests/test_key_isolation.py` read in the working tree on 2026-09-03; stars, forks, license and creation date read via the GitHub API the same day.
+- The [AIHawk repository](https://github.com/feder-cr/AIHawk): README, LICENSE, `pyproject.toml` and `tests/test_key_isolation.py` read in the working tree on 2026-09-03; stars, forks, license and creation date read via the GitHub API the same day; `src/aihawk/llm.py`, for the default model id, re-read 2026-09-08.
 - [`aihawk` on PyPI](https://pypi.org/project/aihawk/), version 0.3.0 metadata checked against the index 2026-09-04.
 - The relicense commit ("Relicense under MIT", dated 2026-09-02) in the repository history, and the README's license section stating the AGPL-3.0 boundary for earlier distributions, both read 2026-09-03.
 - For comparative claims about other tools, the pages linked above carry their own dated sources; none are repeated here.

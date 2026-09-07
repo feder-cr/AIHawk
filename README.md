@@ -103,7 +103,7 @@ It drives the page the way a person would: the pointer moves, keys are pressed.
 ## Options: proxy, profile, seed
 
 - **`--openrouter-key`** Your key, or the `OPENROUTER_API_KEY` variable.
-- **`--model`** An OpenRouter model id, or `AIHAWK_MODEL`. Defaults to `z-ai/glm-4.6`.
+- **`--model`** An OpenRouter model id, or `AIHAWK_MODEL`. Defaults to `z-ai/glm-5.3-flash`.
 - **`--proxy`** Optional. `http://user:pass@proxy.example.com:8080` or
   `socks5://proxy.example.com:1080`. Host and port are both required. The
   timezone, locale and egress follow it.

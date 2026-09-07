@@ -52,12 +52,15 @@ lumpy and unplanned.
 Now the agent. Each loop turn sends the page state to a model: on a complex page, an
 observation is thousands to tens of thousands of tokens. A realistic multi-step
 task, navigate, search, open results, extract, takes ten to twenty turns with
-history accumulating in the context. Using the pricing of GLM-4.6, AIHawk's default
-model and one of the cheaper capable options at $0.43 per million input tokens and
-$1.75 per million output on OpenRouter: a task moving 500,000 input tokens and
-10,000 output tokens costs roughly $0.23. As an estimate, call it cents per task on
-a budget model, and ten times that on frontier-priced models. Retries and wandering
-multiply it; agents that misread a page can spend forty turns on a six-step task.
+history accumulating in the context. Using the pricing of GLM-5.3-Flash, AIHawk's
+default model and one of the cheaper options in the catalog, at $0.071 to $0.388
+per million input tokens and $0.237 to $1.358 per million output on OpenRouter
+depending which of its two dozen providers serves the request: a task moving
+500,000 input tokens and 10,000 output tokens costs roughly $0.04 at the cheap end
+of that range and $0.21 at the expensive end. As an estimate, call it cents per task
+on a budget model, and eight to forty times that on frontier-priced models. Retries
+and wandering multiply it; agents that misread a page can spend forty turns on a
+six-step task.
 
 Put the two curves side by side and the crossover is stark. At ten pages a day, the
 agent's cents are noise and the scraper's maintenance is the whole cost. At a
@@ -157,9 +160,10 @@ change (nothing structural is hardcoded) and a scraper is better per page (near-
 marginal cost). Volume and volatility decide which axis matters for your case.
 
 **How much does an AI agent cost per page or per task?** Order of magnitude: cents
-per multi-step task on a budget model like GLM-4.6 ($0.43 per million input tokens
-on OpenRouter as of 2026-09-03), roughly ten times that on frontier-priced models,
-plus multipliers for retries. A scripted request costs effectively nothing.
+per multi-step task on a budget model like GLM-5.3-Flash ($0.071 to $0.388 per
+million input tokens on OpenRouter as of 2026-09-08, depending on the provider the
+request routes to), tens of times that on frontier-priced models, plus multipliers
+for retries. A scripted request costs effectively nothing.
 
 **Will agents replace web scraping?** Not at current per-token prices for
 high-volume extraction, where deterministic code wins on cost, speed and
@@ -183,12 +187,12 @@ volume. The two failure modes cover for each other.
 
 ## Sources
 
-All retrieved 2026-09-03.
+All retrieved 2026-09-03, except the OpenRouter pricing, retrieved 2026-09-08.
 
 - [Scrapy](https://www.scrapy.org/), for the framework's positioning and its
   fifteen-plus years of maintained history.
-- [GLM-4.6 on OpenRouter](https://openrouter.ai/z-ai/glm-4.6), for the per-token
-  prices used in the cost arithmetic.
+- [GLM-5.3-Flash on OpenRouter](https://openrouter.ai/z-ai/glm-5.3-flash), for the
+  per-token prices used in the cost arithmetic.
 - [WebArena paper abstract (arXiv:2307.13854)](https://arxiv.org/abs/2307.13854),
   for the 14.41% versus 78.24% end-to-end success figures.
 - [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README in this
