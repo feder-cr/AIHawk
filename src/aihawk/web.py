@@ -95,7 +95,16 @@ PAGE = r"""<!doctype html>
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas,
           "Liberation Mono", "DejaVu Sans Mono", monospace;
-  --t-label:11px; --t-mono:13px; --t-ui:13px; --t-body:14px;
+  /* ⛔ rem AND NOT px, WHICH IS THE DIFFERENCE BETWEEN HONOURING AND IGNORING
+     A SETTING SOMEBODY CHANGED FOR THEIR EYES. A default font size set in the
+     browser or the system does nothing to a page whose sizes are absolute -
+     page zoom still works, but that is a different control and it scales the
+     browser view on the right along with the text. web.dev's typography
+     accessibility guidance marks `font-size: 16px` "Don't" and `1rem` "Do" for
+     exactly this. Same pixels at the default 16px root, so nothing moves for
+     anybody who never changed it. */
+  --t-label:.6875rem; --t-mono:.8125rem; --t-ui:.8125rem; --t-body:.875rem;
+  --t-h1:1.0625rem; --t-h2:.9375rem; --t-h3:.8125rem;  /* the answer's headings */
 
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:32px;
   --r-sm:4px; --r:8px; --r-lg:12px; --r-pill:999px;
@@ -188,9 +197,25 @@ code,pre,.g,.meta,.badge,#url,#tok{
    thread: 460px of nothing, taken from the pane that could have used it. The
    clamp holds the column at what the thread plus its gutters actually need and
    hands the rest to the right. Only desktops run this, so the floor is the
-   narrow end of a laptop and there is no phone case to carry. */
-#left { width:clamp(420px, 44%, 760px); display:flex; flex-direction:column;
-        position:relative; border-right:1px solid var(--line-1) }
+   narrow end of a laptop and there is no phone case to carry.
+
+   The ceiling is derived, not chosen: the thread caps at 66ch, which is 498px
+   in this font, plus the 32px of log padding it sits in. Anything wider would
+   be slack inside this pane rather than measure, and it is worth more to the
+   picture on the right. */
+#left { width:clamp(420px, 44%, 530px); display:flex; flex-direction:column;
+        position:relative }
+/* The separator carries the line that used to be `#left`'s right border, so
+   the thing you drag and the thing you see are the same thing. Wider than the
+   line it draws: a 1px target is a 1px target, and this one is grabbed by
+   hand. */
+#split{ flex:0 0 9px; cursor:col-resize; position:relative; background:none;
+        border:0; padding:0; touch-action:none }
+#split::after{ content:""; position:absolute; top:0; bottom:0; left:4px; width:1px;
+               background:var(--line-1); transition:background-color 120ms ease-out }
+#split:hover::after{ background:var(--line-3) }
+#split:focus-visible{ outline:none }
+#split:focus-visible::after, #split[data-drag]::after{ background:var(--accent); width:2px }
 #right{ flex:1; min-width:0; display:flex; flex-direction:column; background:var(--well) }
 #head { display:flex; align-items:center; gap:10px; padding:var(--s3) var(--s4);
         border-bottom:1px solid var(--line-1) }
@@ -212,17 +237,31 @@ code,pre,.g,.meta,.badge,#url,#tok{
    well past the 50 to 75 the readability research settles on. `ch` follows the
    font instead of guessing at it.
 
-   ⛔ BUT THE CAP WAS CENTRED, AND THE MEASURE IT CAPS IS NOT THE ONE IT SETS.
-   Centring splits the slack in two and puts half of it on the LEFT, where a
-   reader sees it as the column having been pushed away from the edge for no
-   reason - said in exactly those words on 2026-09-08, and visible in a
-   screenshot as 185px of nothing before the first character. And the number
-   itself was measuring the wrong thing: an answer carries `--indent` of its
-   own, about 4.7ch, so a 72ch container was giving 67 characters of prose,
-   under the range the comment above cites rather than over it. 84 minus the
-   indent lands at 79, inside the 80. Left aligned, so what is left over sits
-   on one side, next to the browser pane, instead of framing the text. */
-#thread{ max-width:84ch; margin:0 }
+   ⛔ AND `ch` IS NOT A CHARACTER. It is the advance width of the digit zero,
+   which in a proportional font is much wider than an average letter, so a
+   number written in `ch` reads like a character count and is not one.
+   MEASURED on this font with a canvas, on real prose in both languages this
+   interface serves: `0` is 7.55px at 14px system-ui, while the average
+   character of a sentence is 6.11px. One `ch` is 1.24 characters.
+
+   What that turned into, twice. The cap started at 72ch believing it was 72
+   characters: minus the indent an answer carries, it was really 83. Then it
+   was widened to 84ch on the reasoning that the indent made the column too
+   NARROW - the arithmetic was done in `ch` again, and the result was 98
+   characters per line, past every source that has a number: 65-72 in the chat
+   design guidance, 75 as Baymard's upper bound, 80 as the WCAG 2.1 AAA cap.
+
+   66ch is 498px here; minus the 37px indent that is 461px of text, and at
+   6.11px a character that is 75 characters. The unit stays `ch` because it
+   tracks the font's own metrics if the font ever changes; the number comes
+   from the measurement, and the conversion is written down here so the next
+   person does not redo it in the wrong unit for the third time.
+
+   Left aligned rather than centred: centring splits the slack in two and puts
+   half on the LEFT, which reads as the column having been pushed away from the
+   edge for no reason - 185px of nothing before the first character, in a
+   screenshot. */
+#thread{ max-width:66ch; margin:0 }
 
 /* Bottom-pinning with no scroll handler and no epsilon: the sentinel is the only
    anchor the browser may keep, so content inserted before it pushes the view
@@ -236,7 +275,7 @@ code,pre,.g,.meta,.badge,#url,#tok{
 #hint .eg{ font:var(--t-mono)/1.9 var(--mono); color:var(--fg-2);
            background:var(--raised); border:1px solid var(--line-1);
            border-radius:var(--r); padding:var(--s3) var(--s4); text-align:left }
-#hint .sm{ font-size:12px; color:var(--fg-4) }
+#hint .sm{ font-size:.75rem; color:var(--fg-4) }
 
 #jump{ position:absolute; bottom:110px; left:50%; transform:translateX(-50%); z-index:2;
        background:var(--top); border:1px solid var(--line-2); color:var(--fg);
@@ -277,6 +316,11 @@ code,pre,.g,.meta,.badge,#url,#tok{
    heading - a heading needs more space ABOVE it than below, because the space
    is what says the section starts, and a heading floating equidistant between
    two paragraphs belongs to neither. */
+/* 1.6 rather than the 1.55 the rest of the app uses: this is the only place
+   somebody reads paragraphs rather than scans rows, and the guidance for
+   long-form chat answers puts the comfortable leading at about 1.6. WCAG 2.2
+   asks 1.5 as a floor, so both pass; this one is the reading surface. */
+.md-p, .md-i{ line-height:1.6 }
 .md-p{ margin:0 0 var(--s4); white-space:pre-wrap; overflow-wrap:anywhere }
 h3.md-h, h4.md-h, h5.md-h, h6.md-h{
       margin:calc(var(--s4) + var(--s2)) 0 var(--s2); font-family:var(--sans);
@@ -284,9 +328,9 @@ h3.md-h, h4.md-h, h5.md-h, h6.md-h{
 /* `##` is what a model writes most, so h4 is the one that has to read as a
    heading and not as a bold line: at 14px it was the size of the body text
    under it, which is a hierarchy only the weight was carrying. */
-h3.md-h{ font-size:17px }
-h4.md-h{ font-size:15px }
-h5.md-h, h6.md-h{ font-size:13px; color:var(--fg-2) }
+h3.md-h{ font-size:var(--t-h1) }
+h4.md-h{ font-size:var(--t-h2) }
+h5.md-h, h6.md-h{ font-size:var(--t-h3); color:var(--fg-2) }
 /* A fenced block inside an answer is already inside the answer's indent, and
    `.out` carries its own for the tool output it was written for: the two
    stacked, so code sat a step to the right of the prose describing it. */
@@ -314,7 +358,7 @@ h5.md-h, h6.md-h{ font-size:13px; color:var(--fg-2) }
    whatever page the agent last read, and the browser it drives is right there.
    The address is printed next to them so an injected one is legible. */
 .lk  { color:var(--fg) }
-.href{ color:var(--fg-4); font:12px/1.5 var(--mono); overflow-wrap:anywhere }
+.href{ color:var(--fg-4); font:.75rem/1.5 var(--mono); overflow-wrap:anywhere }
 .href::before{ content:" " }
 .orph  { display:flex; gap:8px; font-size:var(--t-mono); color:var(--err);
          background:rgba(232,131,107,.08); border-radius:var(--r-sm);
@@ -368,7 +412,7 @@ h5.md-h, h6.md-h{ font-size:13px; color:var(--fg-2) }
 .out{ margin:2px 0 var(--s2) var(--indent);
       max-height:290px; max-height:15lh; overflow:auto; overscroll-behavior:contain;
       white-space:pre-wrap; overflow-wrap:anywhere;
-      font:12px/1.5 var(--mono); color:var(--fg-3);
+      font:.75rem/1.5 var(--mono); color:var(--fg-3);
       background:var(--raised); border-left:2px solid var(--line-2);
       border-radius:0 var(--r-sm) var(--r-sm) 0; padding:8px 10px }
 
@@ -438,7 +482,7 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
 [data-state="offline"] #dot, [data-state="error"] #dot{ background:var(--err) }
 #url{ flex:1; min-width:0; height:24px; line-height:24px; padding:0 10px;
       border-radius:var(--r-pill); background:var(--well); border:1px solid var(--line-1);
-      font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+      font-size:.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
 #url .dim{ color:var(--fg-4) }
 #url .host{ color:var(--fg) }
 #mode{ display:inline-flex; gap:2px; flex:none; background:var(--base);
@@ -581,6 +625,15 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
     </div>
   </form>
 </div>
+
+<!-- The split is a control, so it says so: a real separator with a value a
+     screen reader can read and the arrow keys can move. Which pane deserves
+     the room is a property of the TASK - reading a long answer wants one
+     ratio, watching a form being filled wants another - so it is not a number
+     this file gets to decide once. -->
+<div id="split" role="separator" aria-orientation="vertical" tabindex="0"
+     aria-label="Width of the conversation" aria-valuemin="420"
+     aria-valuenow="530"></div>
 
 <div id="right" data-state="idle">
   <div id="tabs" hidden></div>
@@ -1408,7 +1461,82 @@ if(waiting_text){ i.value = waiting_text; setQueued(null);
                   i.style.height = 'auto';
                   i.style.height = Math.min(i.scrollHeight, 200) + 'px'; }
 
-paint(); listen(); tick(); where(); fleetPoll(); slowTick();
+/* ---- the split between the two panes ----
+   ⛔ THE RATIO IS A PROPERTY OF THE TASK, NOT OF THIS FILE. Reading a long
+   answer wants one, watching a form get filled wants another, and the ratio
+   this page picks is right for neither for very long. The measured default is
+   still a default - the conversation stops at its reading measure and the rest
+   goes to the picture - and from there it is dragged, with the arrow keys, or
+   double-clicked back to the default. Remembered per browser, because somebody
+   who has set it once has said what they want.
+
+   Everything here is a FUNCTION called from the boot line below: nothing at
+   the top level of this script may depend on the order of the lines. */
+const SPLITKEY = 'aihawk.split';
+
+function splitTo(px, remember){
+  /* The floor is the narrowest the conversation stays usable at; the ceiling
+     leaves the browser pane enough to be a picture rather than a strip. Both
+     are recomputed against the window, so a value dragged wide on a big
+     monitor does not strand the right pane on a laptop. */
+  const min = 420, max = Math.max(min, window.innerWidth - 480);
+  const w = Math.round(Math.min(max, Math.max(min, px)));
+  $('left').style.width = w + 'px';
+  $('split').setAttribute('aria-valuenow', String(w));
+  $('split').setAttribute('aria-valuemax', String(max));
+  if(remember){ try { localStorage.setItem(SPLITKEY, String(w)); } catch(e) {} }
+}
+
+function splitReset(){
+  try { localStorage.removeItem(SPLITKEY); } catch(e) {}
+  $('left').style.width = '';
+  $('split').setAttribute('aria-valuenow',
+                          String(Math.round($('left').getBoundingClientRect().width)));
+}
+
+function splitter(){
+  const bar = $('split');
+  let saved = null;
+  try { saved = localStorage.getItem(SPLITKEY); } catch(e) {}
+  if(saved) splitTo(parseInt(saved, 10), false);
+  else splitReset();
+
+  bar.addEventListener('pointerdown', e => {
+    bar.setPointerCapture(e.pointerId);
+    bar.dataset.drag = '1';
+    /* ⛔ FOCUS BY HAND, BECAUSE THE LINE BELOW TAKES IT AWAY. preventDefault on
+       pointerdown stops the drag from selecting the text beside it, and it also
+       stops the browser from focusing what was pressed - so the separator could
+       be dragged and then not moved with the arrow keys, which is the half of
+       this control that exists for people who do not drag. Found by clicking
+       it: nothing in the suite clicks. */
+    bar.focus();
+    e.preventDefault();
+  });
+  bar.addEventListener('pointermove', e => {
+    if(!bar.dataset.drag) return;
+    splitTo(e.clientX - $('left').getBoundingClientRect().left, true);
+  });
+  bar.addEventListener('pointerup', e => {
+    delete bar.dataset.drag;
+    bar.releasePointerCapture(e.pointerId);
+  });
+  bar.addEventListener('dblclick', splitReset);
+  bar.addEventListener('keydown', e => {
+    const step = e.shiftKey ? 64 : 16;
+    const now = $('left').getBoundingClientRect().width;
+    if(e.key === 'ArrowLeft'){ splitTo(now - step, true); e.preventDefault(); }
+    else if(e.key === 'ArrowRight'){ splitTo(now + step, true); e.preventDefault(); }
+    else if(e.key === 'Home' || e.key === 'Escape'){ splitReset(); e.preventDefault(); }
+  });
+  /* A width saved on a wide monitor is not a width on a laptop: put it back
+     through the same clamp whenever the window changes. */
+  window.addEventListener('resize', () => {
+    if($('left').style.width) splitTo(parseFloat($('left').style.width), false);
+  });
+}
+
+paint(); listen(); tick(); where(); fleetPoll(); slowTick(); splitter();
 if(!$('rail').hidden) drawChats();
 </script>
 """

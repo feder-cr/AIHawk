@@ -431,3 +431,42 @@ def test_every_handler_the_page_wires_up_exists():
     assert not missing, (
         "the page wires these to an event and nothing defines them, so the "
         "handler throws the first time somebody uses it: %s" % missing)
+
+
+def test_the_answer_measure_is_inside_the_range_every_source_agrees_on():
+    """⛔ THIS NUMBER HAS BEEN WRONG TWICE, THE SAME WAY BOTH TIMES: computed in
+    `ch` and read as characters.
+
+    `ch` is the advance width of the digit zero. In a proportional font that is
+    much wider than an average letter, so a cap written in `ch` looks like a
+    character count and is not one. Measured on this font with a canvas, on real
+    prose in both languages this interface serves: `0` is 7.55px at 14px
+    system-ui, the average character of a sentence is 6.11px, so one `ch` is
+    1.24 characters.
+
+    First the cap was 72ch believing it was 72 characters, and minus the indent
+    an answer carries it was 83. Then it was widened to 84ch to make up for that
+    indent, in `ch` again, and became 98 - past 65-72 (chat design guidance), 75
+    (Baymard's upper bound) and 80 (WCAG 2.1 AAA, SC 1.4.8).
+
+    So the conversion lives here rather than in a comment, and it reads the page
+    instead of repeating it: change the cap or the gutter and this recomputes.
+
+    Known-bad, both real: 84ch gives 98 and 72ch gives 83, and both go red.
+    """
+    import re
+
+    cap = float(re.search(r"#thread\{ max-width:([\d.]+)ch", PAGE).group(1))
+    gutter = float(re.search(r"--gutter:([\d.]+)rem", PAGE).group(1))
+    gap = float(re.search(r"--gap:([\d.]+)rem", PAGE).group(1))
+
+    #: Both measured in the browser, on the font the page actually declares.
+    CH_PX, AVG_CHAR_PX, ROOT_PX = 7.55, 6.11, 16.0
+
+    indent = (gutter + gap) * ROOT_PX          # --indent, which an answer carries
+    chars = (cap * CH_PX - indent) / AVG_CHAR_PX
+    assert 65 <= chars <= 80, (
+        "the answer is %.0f characters per line. Under 65 the eye returns too "
+        "often; over 80 it loses the line, and 80 is the WCAG 2.1 AAA cap. "
+        "The cap is %.0fch, which is NOT %.0f characters: one ch is 1.24 of "
+        "them in this font" % (chars, cap, cap))
