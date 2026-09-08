@@ -160,24 +160,39 @@ code,pre,.g,.meta,.badge,#url,#tok{
 #newchat:hover{ background:var(--raised); color:var(--fg);
                 border-color:var(--line-2) }
 
-/* ⛔ THE THREE LINES WERE A GUESS AND THE WORD IS NOT. A hamburger says "there
-   is a menu here" only to somebody who has already learned that it does, and
-   what is behind this one is a list of sessions - which the rail's own header
-   says in words, in this same type. Saying it on the control too costs 70px of
-   a header that has them. Asked for in exactly those terms on 2026-09-09.
-   Same type as `.label` so the button and the column it opens read as one
-   word in one voice, rather than as a control and a title that happen to
-   agree. */
-#rails{ flex:none; width:96px; height:26px; display:grid; place-items:center;
-        padding:0; border-radius:var(--r); border:1px solid var(--line-2);
-        background:var(--raised); color:var(--fg-2); cursor:pointer;
-        font:600 var(--t-label)/1 var(--sans); letter-spacing:.07em;
-        text-transform:uppercase;
-        transition:background-color 120ms ease-out, color 120ms ease-out,
-                   border-color 120ms ease-out }
-#rails:hover{ background:var(--hover); color:var(--fg) }
-#rails[aria-expanded="true"]{ background:var(--hover); color:var(--fg);
-                              border-color:var(--line-3) }
+/* ⛔ THE THREE LINES WERE A GUESS AND THE WORD IS NOT, and the word belongs on
+   the EDGE. A hamburger says "there is a menu here" only to somebody who has
+   already learned that it does. Written into the frame instead, the full height
+   of the window, it is not a control among the header's other controls: it is
+   part of the room, always there, and the only way in or out of the column.
+   The type is `.label`'s, so the spine and the column it opens read as one word
+   in one voice.
+   `vertical-rl` turned upside down gives the word bottom to top, which is the
+   direction every spine on a shelf uses in this alphabet, and the direction the
+   napkin had it. */
+/* The accent runs the full height of the spine and stays there whether the
+   column is open or shut: asked for on 2026-09-09, and it is the better of the
+   two - a line that appears and disappears is a state indicator competing with
+   the background, while a line that is always there is the edge of the room,
+   and the open state has the background and the ink to say it. It also replaces
+   the hairline that used to separate this from what follows. */
+#railtab{ flex:none; width:34px; padding:0; cursor:pointer; border:0;
+          background:var(--base); color:var(--fg-3);
+          box-shadow:inset -2px 0 0 var(--accent);
+          display:grid; place-items:center;
+          transition:background-color 120ms ease-out, color 120ms ease-out }
+/* ⛔ THE TEXT TURNS, NOT THE BUTTON. `transform` on the button would rotate the
+   whole box with it, so the border and the accent below would be drawn on the
+   edge away from the column instead of the one beside it - correct in the
+   element's own coordinates and backwards on the screen. */
+#railtab span{ writing-mode:vertical-rl; transform:rotate(180deg);
+               font:600 var(--t-label)/1 var(--sans); letter-spacing:.16em;
+               text-transform:uppercase }
+#railtab:hover{ background:var(--raised); color:var(--fg) }
+/* Open: the spine lifts a rung and the word goes to full ink. The state is
+   drawn on the thing you press, where a hand already is. */
+#railtab[aria-expanded="true"]{ background:var(--raised); color:var(--fg) }
+@media (max-width:900px){ #railtab{ display:none } }
 #chats{ flex:1; min-height:0; overflow-y:auto; padding:var(--s2) var(--s2) var(--s3);
         /* A long list is cheap to skip past: the rows below the fold are not
            laid out until they are scrolled to, and Ctrl+F still finds them. */
@@ -588,9 +603,22 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
 }
 </style>
 
+<!-- The spine. It is the first thing in the document and the leftmost thing on
+     the screen, it is always there, and it is the only way in or out of the
+     column: closed it is the word, open it is the word next to the list.
+     Drawn on a napkin on 2026-09-09 after a bar in the header turned out not to
+     be it - a control that is part of the frame reads as permanent, where one
+     among the header's other controls reads as one more button. -->
+<button id="railtab" type="button" aria-expanded="false" aria-controls="rail"
+        title="Sessions"><span>Sessions</span></button>
+
 <nav id="rail" aria-label="Sessions" hidden>
+  <!-- No title here any more: the spine to the left of this column carries the
+       word, and with the column open the two sat twenty pixels apart saying the
+       same thing. The row keeps its height from its padding, so it still lines
+       up with the app header beside it. -->
   <div id="railhead">
-    <span class="label">Sessions</span>
+    <span class="label" aria-hidden="true"></span>
     <button id="newchat" type="button" aria-label="New session" title="New session">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor"
            stroke-width="1.6" stroke-linecap="round"><path d="M7 2.5v9M2.5 7h9"/></svg>
@@ -601,11 +629,6 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
 
 <div id="left">
   <div id="head">
-    <!-- No aria-label: the visible word IS the name now, and an aria-label
-         would replace it with a different one for a screen reader. The state
-         is carried by aria-expanded, which is what it is for. -->
-    <button id="rails" type="button" aria-expanded="false" aria-controls="rail"
-            title="Sessions">Sessions</button>
     <b>AIHawk</b><span class="badge" id="model">no model</span>
     <button id="fresh" type="button" title="Clear this conversation">Clear</button></div>
   <div id="log">
@@ -1318,7 +1341,7 @@ async function drawChats(){
 const RAILKEY = 'aihawk.rail';
 function showRail(open){
   $('rail').hidden = !open;
-  $('rails').setAttribute('aria-expanded', open ? 'true' : 'false');
+  $('railtab').setAttribute('aria-expanded', open ? 'true' : 'false');
   /* ⛔ AND NO aria-label ANY MORE. It used to say "Show sessions" / "Hide
      sessions", which was right while the control was three lines and nothing
      else. Now the button says Sessions in words, and an aria-label REPLACES
@@ -1331,7 +1354,7 @@ function showRail(open){
   try { localStorage.setItem(RAILKEY, open ? '1' : '0'); } catch(err){}
   if(open) drawChats();
 }
-$('rails').onclick = () => showRail($('rail').hidden);
+$('railtab').onclick = () => showRail($('rail').hidden);
 try { showRail(localStorage.getItem(RAILKEY) === '1'); } catch(err){ showRail(false); }
 
 async function renameChat(id, was){

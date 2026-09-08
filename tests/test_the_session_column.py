@@ -449,7 +449,7 @@ def test_the_sessions_control_is_named_by_the_word_on_it():
     """
     import re
 
-    button = re.search(r"<button id=\"rails\"[^>]*>(.*?)</button>", PAGE, re.S)
+    button = re.search(r"<button id=\"railtab\"[^>]*>(.*?)</button>", PAGE, re.S)
     assert button, "the sessions control is gone"
     assert "aria-label" not in button.group(0), (
         "the control carries an aria-label as well as a visible word, and the "
@@ -463,10 +463,42 @@ def test_the_sessions_control_is_named_by_the_word_on_it():
     script = PAGE[PAGE.index("<script"):]
     code = re.sub(r"/\*.*?\*/", "", script, flags=re.S)
     # Every place the script names this control, and not the 400 characters
-    # after the first one: the first `$('rails')` in the file is not the one
+    # after the first one: the first `$('railtab')` in the file is not the one
     # in `showRail`, so that window read the wrong code and the known-bad
     # walked straight through it.
-    sets = re.findall(r"\$\('rails'\)\s*\.setAttribute\(\s*'aria-label'", code)
+    sets = re.findall(r"\$\('railtab'\)\s*\.setAttribute\(\s*'aria-label'", code)
     assert not sets, (
         "the script puts an aria-label back on the control, which replaces the "
         "word written on it every time the column opens or closes")
+
+
+def test_the_spine_is_part_of_the_frame_and_is_the_only_way_in():
+    """The control is the leftmost thing on the screen and the first thing in
+    the document, ahead of the conversation pane: it belongs to the room rather
+    than to the panel beside it, which is what a drawing on 2026-09-09 asked
+    for after a bar in the header turned out not to be it.
+
+    And there is ONE of them. A second control that opens the same column is a
+    second thing to keep in step with the first, and the header carried exactly
+    that for half an hour.
+
+    Known-bad, three: move the button after `<div id="left"`; add a second
+    control with `aria-controls="rail"`; drop the vertical writing so the word
+    runs across a 34px column.
+    """
+    import re
+
+    spine = PAGE.index('id="railtab"')
+    assert spine < PAGE.index('<div id="left"'), (
+        "the control sits inside or after the conversation pane, so it reads as "
+        "one of that pane's buttons rather than as part of the frame")
+    opens = re.findall(r'aria-controls="rail"', PAGE)
+    assert len(opens) == 1, (
+        "%d controls open the sessions column; two of them can disagree about "
+        "whether it is open" % len(opens))
+    style = PAGE[PAGE.index("#railtab"):PAGE.index("@media (max-width:900px){ #railtab")]
+    assert "writing-mode:vertical-rl" in style, (
+        "the word runs across a column 34px wide, so it is not readable at all")
+    assert "rotate(180deg)" in style, (
+        "vertical-rl alone reads top to bottom; a spine in this alphabet reads "
+        "bottom to top, which is what the drawing showed")
