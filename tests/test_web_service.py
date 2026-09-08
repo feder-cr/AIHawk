@@ -264,10 +264,14 @@ async def test_the_app_exposes_exactly_the_routes_the_page_calls():
                      "/live/frame", "/live/tabs", "/live/select",
                      # The workspace, added in 0.18.0: which browsers to draw a
                      # pane for, and which one the commands go to.
-                     "/live/browsers", "/live/watch",
-                     "/live/open", "/live/close",
-                     # Waking a declared browser, added in 0.19.0.
-                     "/live/wake"}
+                     # ⛔ AND FOUR THAT WENT AWAY IN 0.21.0: /live/open,
+                     # /live/close, /live/watch and /live/wake. Browsers are
+                     # opened, closed, focused and woken by ASKING - the agent
+                     # already does all four when told to - and a control beside
+                     # the chat is a second way to move the same thing, which is
+                     # two things that can disagree about which browser is
+                     # current.
+                     "/live/browsers"}
 
     called = {m for m in re.findall(r"""fetch\(\s*[`'"]([^`'"?]+)""", PAGE)}
     unserved = sorted(called - paths)

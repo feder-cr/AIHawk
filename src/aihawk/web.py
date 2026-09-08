@@ -129,25 +129,42 @@ code,pre,.g,.meta,.badge,#url,#tok{
    left, because the column holds names and a name does not get more readable
    with more room, while the transcript and the picture both do. It collapses
    below 900px rather than squeezing the two things that matter. */
-#rail { width:212px; flex:none; display:flex; flex-direction:column;
+/* ⛔ CLOSED UNTIL SOMEBODY ASKS FOR IT. A column of sessions standing open
+   beside a conversation somebody is reading is a list nobody needed yet taking
+   a fifth of the width; open by default it reads as scaffolding rather than as
+   a choice. It is one keystroke away, it remembers what you last did with it,
+   and the toggle lives IN the header row rather than above the list - a control
+   floating over a panel is what "bolted on" looks like. */
+#rail { width:224px; flex:none; display:flex; flex-direction:column;
         background:var(--well); border-right:1px solid var(--line-1) }
-#rail h2{ margin:0; padding:var(--s3) var(--s3) var(--s2);
-          font-size:var(--t-label); font-weight:600; letter-spacing:.07em;
-          text-transform:uppercase; color:var(--fg-4) }
-#newchat{ margin:0 var(--s3) var(--s2); padding:7px 10px; border-radius:8px;
-          border:1px solid var(--line-2); background:var(--raised); color:var(--fg);
-          font:inherit; font-size:var(--t-small); text-align:left; cursor:pointer }
-#newchat:hover{ border-color:var(--line-3) }
-#chats{ flex:1; min-height:0; overflow-y:auto; padding:0 var(--s2) var(--s3);
+/* The header of the column lines up with the header of the conversation beside
+   it: same height, same padding, so the two read as one row across the app. */
+#railhead{ display:flex; align-items:center; gap:8px;
+           padding:var(--s3) var(--s3) var(--s3) var(--s4);
+           border-bottom:1px solid var(--line-1) }
+#railhead .label{ flex:1 }
+#newchat, #rails{ flex:none; width:26px; height:26px; display:grid;
+                  place-items:center; padding:0; border-radius:7px;
+                  border:1px solid transparent; background:none;
+                  color:var(--fg-3); cursor:pointer;
+                  transition:background-color 120ms ease-out, color 120ms ease-out }
+#newchat:hover, #rails:hover{ background:var(--raised); color:var(--fg);
+                              border-color:var(--line-2) }
+#rails[aria-expanded="true"]{ background:var(--raised); color:var(--fg) }
+#chats{ flex:1; min-height:0; overflow-y:auto; padding:var(--s2) var(--s2) var(--s3);
         /* A long list is cheap to skip past: the rows below the fold are not
            laid out until they are scrolled to, and Ctrl+F still finds them. */
         content-visibility:auto; contain-intrinsic-size:auto 600px }
-.chat{ display:flex; align-items:center; gap:6px; width:100%;
-       padding:7px 8px; border:0; border-radius:8px; background:none;
+.chat{ position:relative; display:flex; align-items:center; gap:6px; width:100%;
+       padding:7px 8px 7px 10px; border:0; border-radius:8px; background:none;
        color:var(--fg-2); font:inherit; font-size:var(--t-small);
        text-align:left; cursor:pointer }
 .chat:hover{ background:var(--raised); color:var(--fg) }
-.chat[aria-current="true"]{ background:var(--raised); color:var(--fg); font-weight:600 }
+/* A mark on the edge rather than a filled row: the current session should be
+   findable at a glance without the list turning into a row of blocks. */
+.chat[aria-current="true"]{ color:var(--fg) }
+.chat[aria-current="true"]::before{ content:""; position:absolute; left:0;
+       top:7px; bottom:7px; width:2px; border-radius:2px; background:var(--fg-3) }
 /* The name is a button so it can be reached by keyboard, and the whole of the
    user agent's button chrome has to come off or it draws as a raised box with
    its text centred - which is what shipped in the first screenshot of this
@@ -366,17 +383,17 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
    A row of slow previews under the live pane, never a second live pane: eight
    at full rate would want 2.3 seconds of pipe for every second that passes,
    measured, and that is arithmetic rather than an optimisation problem. */
-#fleet{ flex:none; display:flex; align-items:flex-end; gap:8px;
-        padding:0 14px 12px }
-#thumbs{ flex:1; min-width:0; display:flex; gap:8px; overflow-x:auto }
-#addbrowser{ flex:none; align-self:center; padding:6px 10px; border-radius:8px;
-             border:1px solid var(--line-2); background:var(--raised);
-             color:var(--fg-3); font:inherit; font-size:var(--t-label);
-             cursor:pointer }
-#addbrowser:hover{ border-color:var(--line-3); color:var(--fg) }
-.thumb .cap .x{ flex:none; width:16px; height:16px; border-radius:3px;
-                color:var(--fg-4); text-align:center; line-height:16px }
-.thumb .cap .x:hover{ background:var(--line-2); color:var(--fg) }
+/* ⛔ NO CONTROLS HERE. Browsers are opened and closed by ASKING - "open
+   another browser", "close the second one" - because the agent is what drives
+   this and a button beside it is a second way to do the same thing, in a place
+   where the two can disagree about which browser is current. The panes are
+   views: clicking one changes what YOU are looking at and tells the agent
+   nothing. */
+#thumbs{ flex:none; display:flex; gap:8px; padding:0 14px 12px; overflow-x:auto }
+/* The one the agent is driving, marked rather than selected: the person's eye
+   and the agent's hand are two different things and the pane says both. */
+.thumb .cap .dot{ flex:none; width:6px; height:6px; border-radius:50%;
+                  background:var(--ok, #6c9); box-shadow:0 0 0 2px var(--raised) }
 .thumb{ flex:none; width:168px; border:1px solid var(--line-2); border-radius:8px;
         background:var(--raised); padding:0; cursor:pointer; overflow:hidden;
         display:flex; flex-direction:column; text-align:left; font:inherit;
@@ -435,14 +452,26 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
 }
 </style>
 
-<nav id="rail" aria-label="Conversations">
-  <h2>Sessions</h2>
-  <button id="newchat" type="button">+ New session</button>
+<nav id="rail" aria-label="Sessions" hidden>
+  <div id="railhead">
+    <span class="label">Sessions</span>
+    <button id="newchat" type="button" aria-label="New session" title="New session">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor"
+           stroke-width="1.6" stroke-linecap="round"><path d="M7 2.5v9M2.5 7h9"/></svg>
+    </button>
+  </div>
   <div id="chats" role="list"></div>
 </nav>
 
 <div id="left">
-  <div id="head"><b>AIHawk</b><span class="badge" id="model">no model</span>
+  <div id="head">
+    <button id="rails" type="button" aria-expanded="false" aria-controls="rail"
+            aria-label="Show sessions" title="Sessions">
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor"
+           stroke-width="1.5" stroke-linecap="round">
+        <path d="M2 4h11M2 7.5h11M2 11h11"/></svg>
+    </button>
+    <b>AIHawk</b><span class="badge" id="model">no model</span>
     <button id="fresh" type="button" title="Clear this conversation">Clear</button></div>
   <div id="log">
     <div id="thread">
@@ -498,10 +527,7 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
       </div>
     </div>
   </div>
-  <div id="fleet">
-    <div id="thumbs" aria-label="The other browsers in this session"></div>
-    <button id="addbrowser" type="button" title="Open another browser in this session">+ Browser</button>
-  </div>
+  <div id="thumbs" aria-label="The other browsers in this session"></div>
 </div>
 
 <script>
@@ -1038,6 +1064,22 @@ async function drawChats(){
   }
 }
 
+/* ---------------- showing and hiding the column ----------------
+   Closed until asked for, and it remembers: a panel that reopens itself every
+   time the page loads is a panel that ignores what you told it. Per browser
+   rather than per conversation - which panels you keep open is a habit, not a
+   property of the work. */
+const RAILKEY = 'aihawk.rail';
+function showRail(open){
+  $('rail').hidden = !open;
+  $('rails').setAttribute('aria-expanded', open ? 'true' : 'false');
+  $('rails').setAttribute('aria-label', open ? 'Hide sessions' : 'Show sessions');
+  try { localStorage.setItem(RAILKEY, open ? '1' : '0'); } catch(err){}
+  if(open) drawChats();
+}
+$('rails').onclick = () => showRail($('rail').hidden);
+try { showRail(localStorage.getItem(RAILKEY) === '1'); } catch(err){ showRail(false); }
+
 async function renameChat(id, was){
   const name = prompt('Name this session', was);
   if(name === null) return;
@@ -1079,6 +1121,18 @@ $('newchat').onclick = async () => {
 const SLOW_MS = 400;
 let fleet = [], nextPane = 0, focusHere = '';
 
+/* ⛔ TWO DIFFERENT THINGS, AND THEY USED TO BE ONE. `focusHere` is the browser
+   the AGENT drives - it lives on the server and only the agent moves it, by
+   being asked. `pinned2` is the pane the PERSON is looking at, which is this
+   page's own business and nobody else's.
+
+   They were the same value until somebody said everything should be commanded
+   from the chat, and folding them together is what made clicking a pane a
+   COMMAND. Now the big pane follows the agent, which is what you want while it
+   works, and looking somewhere else is a choice that sticks until you undo it. */
+let pinned2 = null;
+const watched = () => pinned2 || focusHere;
+
 function thumbFor(b){
   const el2 = document.createElement('button');
   el2.type = 'button'; el2.className = 'thumb'; el2.dataset.id = b.id;
@@ -1098,14 +1152,13 @@ function thumbFor(b){
   const cap = el('div','cap');
   cap.appendChild(el('span','id', b.id));
   cap.appendChild(el('span','st', b.running ? '' : 'idle'));
-  const shut = el('span','x','x');
-  shut.title = 'Close ' + b.id;
-  shut.onclick = (e) => { e.stopPropagation(); closeThis(b.id); };
-  cap.appendChild(shut);
+  if(b.id === focusHere){
+    const dot = el('span','dot');
+    dot.title = 'the agent is working here';
+    cap.appendChild(dot);
+  }
   el2.append(pic, cap);
-  /* A pane that is only declared has to be STARTED before it can be watched,
-     and the two are one gesture: clicking it means "work here". */
-  el2.onclick = () => b.running ? watchThis(b.id) : wakeThis(b.id, el2);
+  el2.onclick = () => watchThis(b.id);
   return el2;
 }
 
@@ -1114,47 +1167,12 @@ function thumbFor(b){
    fourteen seconds is the defect this project fixed elsewhere with the Thinking
    clock, and a pane that simply does not change is indistinguishable from a
    click that did nothing. */
-async function wakeThis(id, pane){
-  const st = pane.querySelector('.st'), pic = pane.querySelector('.pic span');
-  const t0 = performance.now();
-  const beat = setInterval(() => {
-    st.textContent = ((performance.now() - t0) / 1000).toFixed(0) + 's';
-  }, 250);
-  if(pic) pic.textContent = 'starting';
-  pane.disabled = true;
-  try {
-    await fetch(at('/live/wake'), {method:'POST', headers:{'Content-Type':'application/json'},
-                                   body: JSON.stringify({id})});
-    await watchThis(id);
-  } finally {
-    clearInterval(beat);
-    pane.disabled = false;
-    await drawFleet();
-  }
-}
-
-async function closeThis(id){
-  if(!confirm('Close browser "' + id + '"? Its tabs go with it.')) return;
-  await fetch(at('/live/close'), {method:'POST', headers:{'Content-Type':'application/json'},
-                                  body: JSON.stringify({id})});
-  await drawFleet();
-}
-
-async function openAnother(){
-  const r = await fetch(at('/live/open'), {method:'POST'});
-  const j = await r.json().catch(() => ({}));
-  /* The server owns the ceiling and its refusal carries what eight browsers
-     cost, measured. Showing that sentence is the whole point of it saying so:
-     a page that turned it into "limit reached" would be the reason somebody
-     later raises the number without ever seeing the number. */
-  if(j.said && /already holds/.test(j.said)) alert(j.said);
-  await drawFleet();
-}
-
-async function watchThis(id){
-  await fetch(at('/live/watch'), {method:'POST', headers:{'Content-Type':'application/json'},
-                                  body: JSON.stringify({id})});
-  await drawFleet();
+/* Looking, not commanding. Clicking the pane you are already watching gives
+   the view back to the agent, so there is a way out of a choice as well as in. */
+function watchThis(id){
+  pinned2 = (pinned2 === id) ? null : id;
+  lastArn = null;
+  drawFleet();
 }
 
 async function drawFleet(){
@@ -1164,11 +1182,12 @@ async function drawFleet(){
   catch(err){ return; }
   fleet = got.browsers || [];
   focusHere = got.focus || '';
-  const others = fleet.filter(b => b.id !== focusHere);
+  const others = fleet.filter(b => b.id !== watched());
   const box = $('thumbs');
   /* Only when the SET changes. Redrawing on every poll would throw away the
      preview images and make the row flash once a second for no new fact. */
-  const sig = others.map(b => b.id + (b.running ? '1' : '0')).join(',') + '|' + focusHere;
+  const sig = others.map(b => b.id + (b.running ? '1' : '0') + (b.id === focusHere ? 'a' : ''))
+                    .join(',') + '|' + watched();
   if(box.dataset.sig !== sig){
     box.dataset.sig = sig;
     box.textContent = '';
@@ -1205,8 +1224,6 @@ async function slowTick(){
 
 async function fleetPoll(){ await drawFleet(); setTimeout(fleetPoll, 3000); }
 
-$('addbrowser').onclick = openAnother;
-
 /* Whatever was waiting when the page went away comes back into the composer
    rather than into the queue: the run it was queued behind is over, so the
    honest place for it is where somebody can read it and press send. */
@@ -1215,7 +1232,8 @@ if(waiting_text){ i.value = waiting_text; setQueued(null);
                   i.style.height = 'auto';
                   i.style.height = Math.min(i.scrollHeight, 200) + 'px'; }
 
-paint(); listen(); tick(); where(); drawChats(); fleetPoll(); slowTick();
+paint(); listen(); tick(); where(); fleetPoll(); slowTick();
+if(!$('rail').hidden) drawChats();
 </script>
 """
 
@@ -1778,82 +1796,6 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
                              "focus": got.get("focus") or "",
                              "limit": got.get("limit") or 0})
 
-    async def watch(request: Request) -> JSONResponse:
-        """Make one browser the one this session's unaddressed commands go to.
-
-        The pane a person clicks becomes the live one, and that is the SAME
-        focus the agent uses - not a second idea of "current" kept by the page.
-        Two of those would disagree the first time the model opened a browser,
-        and the disagreement would show as commands landing in a pane nobody was
-        watching.
-        """
-        body = await request.json()
-        name = (body or {}).get("id", "")
-        if not name:
-            return JSONResponse({"error": "no id"}, status_code=400)
-        said = await which(request).link.call_text("browser_focus",
-                                                   {"browser_id": name})
-        return JSONResponse({"focused": name, "said": said})
-
-    async def wake(request: Request) -> JSONResponse:
-        """Start a browser this session declared but has not needed yet.
-
-        ⛔ NO NEW TOOL, BECAUSE THE CONTRACT ALREADY SAYS WHAT A WAKE IS: the
-        next command aimed at a declared browser starts it, as the same person,
-        and reopens the tabs it had. So the wake IS that command - asking it for
-        its tabs - and the interface stays a client of the tools as they are
-        rather than growing a verb that only it can use.
-
-        It takes seven to fourteen seconds, measured, so it answers when the
-        browser is up rather than immediately: the page shows a stopwatch on the
-        pane meanwhile, and a route that returned early would leave that
-        stopwatch to guess.
-
-        ⛔ A TOOL THAT FAILS REACHES A CLIENT AS AN ERROR RESULT, NOT AS AN
-        EXCEPTION, so catching exceptions alone reported a browser awake that
-        had never started - measured, on the first real wake: the route answered
-        `awake` in five seconds while the pane still said "not up", and nothing
-        anywhere said why. The reason is read off the result and handed back.
-        """
-        body = await request.json()
-        name = (body or {}).get("id", "")
-        if not name:
-            return JSONResponse({"error": "no id"}, status_code=400)
-        try:
-            got = await which(request).link.call("session_list_pages",
-                                                 {"browser_id": name})
-        except Exception as exc:
-            return JSONResponse({"error": str(exc)[:200]}, status_code=503)
-        if getattr(got, "isError", False):
-            return JSONResponse({"error": text_of(got)[:300]}, status_code=503)
-        return JSONResponse({"awake": name, "said": text_of(got)})
-
-    async def open_browser(request: Request) -> JSONResponse:
-        """Open another browser in this session, from the workspace.
-
-        Creating and destroying browsers are first-class operations here and not
-        only in the tool surface: an interface where the only way to get a
-        second browser is to ask the model for one makes a measured feature
-        depend on a sentence being understood.
-
-        The server decides whether it is allowed - eight is its ceiling and its
-        refusal carries what eight cost - and the answer is passed through
-        rather than judged again here. Two places deciding the same limit is two
-        places to disagree about it.
-        """
-        said = await which(request).link.call_text("browser_open")
-        return JSONResponse({"said": said})
-
-    async def close_browser(request: Request) -> JSONResponse:
-        """Close one browser of this session and free what it held."""
-        body = await request.json()
-        name = (body or {}).get("id", "")
-        if not name:
-            return JSONResponse({"error": "no id"}, status_code=400)
-        said = await which(request).link.call_text("browser_close",
-                                                   {"browser_id": name})
-        return JSONResponse({"said": said})
-
     async def tabs(request: Request) -> JSONResponse:
         """Every tab, and which one is current.
 
@@ -1901,10 +1843,6 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         Route("/chat/events", events),
         Route("/live/frame", frame),
         Route("/live/browsers", browsers),
-        Route("/live/watch", watch, methods=["POST"]),
-        Route("/live/wake", wake, methods=["POST"]),
-        Route("/live/open", open_browser, methods=["POST"]),
-        Route("/live/close", close_browser, methods=["POST"]),
         Route("/live/tabs", tabs),
         Route("/live/select", select, methods=["POST"]),
     ])

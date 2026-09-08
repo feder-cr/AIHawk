@@ -183,31 +183,52 @@ async def test_the_live_pane_still_asks_for_the_focused_browser_when_none_is_nam
     assert "browser_id" not in watched[-1], watched[-1]
 
 
-async def test_clicking_a_pane_moves_the_focus_the_agent_uses():
-    """⛔ ONE FOCUS, NOT TWO. The pane a person clicks becomes the browser the
-    session's unaddressed commands go to. A second idea of "current" kept by the
-    page would disagree with the server the first time the model opened a
-    browser, and the disagreement shows as commands landing in a pane nobody is
-    watching.
+async def test_the_page_cannot_open_close_or_redirect_a_browser():
+    """⛔ EVERYTHING IS COMMANDED FROM THE CHAT, and this is where that stops
+    being a slogan. The interface used to carry four controls that acted on
+    browsers - open one, close one, move the agent's focus, wake a declared one -
+    and every one of them was a second way to do something the agent already
+    does when asked. Two ways to move the same thing is two things that can
+    disagree about which browser is current, and the one the person clicked is
+    not the one the model believes it is driving.
 
-    Known-bad: have the route remember the choice locally instead of calling
-    `browser_focus`.
+    The routes are gone, not hidden: a route nothing calls is surface anybody
+    can call.
+
+    Known-bad: put `/live/open` back and give the page a button for it.
     """
-    link, sessions, client = _app()
-    await sessions.get("lavoro").send("start something")
-
-    said = client.post("/live/watch?s=lavoro", json={"id": "posta"})
-
-    assert said.status_code == 200 and said.json()["focused"] == "posta"
-    assert ("browser_focus", {"browser_id": "posta", "session_id": "lavoro"}) \
-        in link.calls, link.calls
-
-
-async def test_focusing_nothing_refuses():
-    """Known-bad: treat a missing id as the focused browser, which makes a bug
-    in the page silently a no-op instead of an error somebody can see."""
     _, sessions, client = _app()
-    assert client.post("/live/watch?s=lavoro", json={}).status_code == 400
+
+    for path in ("/live/open", "/live/close", "/live/watch", "/live/wake"):
+        assert client.post(path + "?s=lavoro", json={"id": "posta"}).status_code == 404, (
+            "%s still exists, so the page can command a browser without saying "
+            "it in the conversation" % path)
+
+
+async def test_looking_at_a_pane_tells_the_agent_nothing():
+    """The other half of the same decision, read out of the page: clicking a
+    pane changes what YOU see and sends nothing.
+
+    Two different things, and they used to be one value. `focusHere` is the
+    browser the agent drives - it lives on the server and only the agent moves
+    it. `pinned2` is the pane the person is looking at, which is this page's own
+    business. Folding them together is what made a click a command.
+
+    Known-bad: have `watchThis` POST anywhere.
+    """
+    import re
+
+    script = PAGE[PAGE.index("<script"):]
+    code = re.sub(r"/\*.*?\*/", "", script, flags=re.S)
+    watch = code[code.index("function watchThis"):code.index("async function drawFleet")]
+
+    assert "fetch" not in watch, (
+        "clicking a pane sends something to the server, so looking at a browser "
+        "moves the agent's hand: %s" % watch.strip()[:120])
+    assert "pinned2" in watch, "the page has no idea of its own of what it is watching"
+    assert "const watched = () => pinned2 || focusHere;" in code, (
+        "the big pane does not follow the agent when nothing is pinned, so it "
+        "stops showing the work while the work is happening")
 
 
 # --- the arithmetic, read out of the page -----------------------------------
@@ -255,12 +276,15 @@ def test_the_previews_cost_the_same_whether_there_are_two_or_eight():
         "a pane schedules its own refresh, so the cost of the previews grows "
         "with the number of panes - which is the thing the arithmetic forbids")
 
-    # The wake's stopwatch is allowed and is not a refresh, but an interval that
-    # is never cleared is a leak that outlives the click that made it.
-    wake = script[script.index("async function wakeThis"):]
-    wake = wake[:wake.index(chr(10) + "}")]
-    assert "setInterval" not in wake or "clearInterval" in wake, (
-        "the wake starts a stopwatch it never stops")
+    # And nothing in the WORKSPACE starts a repeating timer: the previews are
+    # paced by one self-rescheduling loop and nothing else. Scoped to those
+    # functions rather than to the whole page, because the step list and the
+    # Thinking clock legitimately tick and a gate that forbade every interval
+    # would be red on code it was never about.
+    fleet = script[script.index("function thumbFor"):script.index("async function fleetPoll")]
+    assert "setInterval" not in fleet, (
+        "a workspace function repeats on an interval, so the cost of the "
+        "previews grows with what is on screen")
 
 
 def test_a_pane_that_is_not_running_is_never_asked_for_a_picture():
@@ -375,35 +399,35 @@ def test_no_top_level_declaration_uses_a_name_declared_later():
         % early)
 
 
-async def test_waking_nothing_refuses():
-    """A wake takes seven to fourteen seconds and starts an engine. Treating a
-    missing id as "the current one" would make a bug in the page spend that on a
-    browser nobody asked about.
+def test_every_handler_the_page_wires_up_exists():
+    """⛔ A FUNCTION THAT VANISHES IS ONLY FOUND BY CLICKING, and nothing in this
+    suite clicks. Removing a block of the script took `watchThis` with it - it
+    sat between two functions that were going away - and the page still loaded,
+    still drew, still ran: only a click on a pane would have thrown, and no test
+    clicks anything.
 
-    Known-bad: default the id instead of refusing.
+    Third time in three days that this page broke in a way a green suite could
+    not see, and the third different mechanism: a duplicate name, an order, and
+    now a missing definition behind an event handler.
+
+    Known-bad: delete any `function` the page assigns to an `onclick`.
     """
-    _, sessions, client = _app()
-    assert client.post("/live/wake?s=lavoro", json={}).status_code == 400
+    import re
 
+    script = PAGE[PAGE.index("<script"):]
+    code = re.sub(r"/\*.*?\*/", "", script, flags=re.S)
 
-async def test_the_wake_is_the_first_command_aimed_at_the_browser():
-    """⛔ NO NEW TOOL FOR IT. The contract already says a declared browser starts
-    on the next command aimed at it, as the same person, with the tabs it had.
-    So the wake IS that command, and the interface stays a client of the tools
-    as they are rather than growing a verb only it can use.
+    wired = set(re.findall(r"on(?:click|dblclick|input|submit)\s*=\s*([A-Za-z_$][\w$]*)\s*;",
+                           code))
+    wired |= set(re.findall(r"=>\s*([A-Za-z_$][\w$]*)\(", code))
+    defined = set(re.findall(r"(?:async\s+)?function\s+([A-Za-z_$][\w$]*)", code))
+    defined |= set(re.findall(r"(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=", code))
+    # Things the language and the document provide.
+    BUILT_IN = {"fetch", "alert", "confirm", "prompt", "parseInt", "String",
+                "Number", "JSON", "Math", "Object", "Array", "setTimeout",
+                "clearTimeout", "setInterval", "clearInterval", "el", "$"}
 
-    Known-bad: have the route call `browser_open`. That opens a NEW browser
-    instead of starting the declared one, so the person waiting for their tabs
-    gets a stranger with none.
-    """
-    link, sessions, client = _app()
-    await sessions.get("lavoro").send("start something")
-    before = len(link.calls)
-
-    client.post("/live/wake?s=lavoro", json={"id": "dormiente"})
-
-    made = [c for c in link.calls[before:]]
-    assert ("session_list_pages",
-            {"browser_id": "dormiente", "session_id": "lavoro"}) in made, made
-    assert not any(name == "browser_open" for name, _ in made), (
-        "waking a declared browser opened a new one instead: %r" % made)
+    missing = sorted(n for n in wired if n not in defined and n not in BUILT_IN)
+    assert not missing, (
+        "the page wires these to an event and nothing defines them, so the "
+        "handler throws the first time somebody uses it: %s" % missing)
