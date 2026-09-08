@@ -72,3 +72,35 @@ def test_the_server_starts_each_test_holding_nothing():
     for held in ("_focus", "_loaded", "_seen_tabs", "_tabs_owed"):
         assert not getattr(server, held), (
             "server.%s arrived at this test with %r in it" % (held, getattr(server, held)))
+
+
+def test_the_conftest_imports_nothing_the_light_jobs_do_not_have():
+    """⛔ AN AUTOUSE FIXTURE RUNS FOR EVERY TEST IN THE REPOSITORY, so anything
+    it imports becomes a dependency of every test - including the ones in jobs
+    that deliberately install almost nothing.
+
+    Measured on 2026-09-08: the fixture next door imported `aihawk.mcp.server`
+    to clear four dicts, and the `version` and `releases` jobs, which run
+    `pip install pytest` and nothing else because what they check is a version
+    number and a set of release pages, both went red with `ModuleNotFoundError:
+    No module named 'mcp'` at fixture setup - on tests that have no business
+    knowing the server exists. Six matrix jobs were green at the same time.
+
+    The state can only be dirty if something imported the module, so
+    `sys.modules.get` answers the question without creating the dependency.
+
+    Known-bad: put `from aihawk.mcp import server` back in the fixture. Costs a
+    CI round trip to find out otherwise.
+    """
+    import pathlib
+    import re
+
+    source = (pathlib.Path(__file__).parent / "conftest.py").read_text(encoding="utf-8")
+    code = re.sub(r'"""(?:.|\n)*?"""', "", source)
+    reached = re.findall(r"^\s*(?:from|import)\s+([A-Za-z_][\w.]*)", code, re.M)
+    allowed = {"__future__", "os", "sys", "tempfile", "pytest", "pathlib"}
+    assert set(reached) <= allowed, (
+        "conftest.py imports %s, and every test in the repository then needs "
+        "it: the two jobs that install pytest alone would fail at fixture "
+        "setup, on tests that never touch it"
+        % sorted(set(reached) - allowed))

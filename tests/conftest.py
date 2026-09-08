@@ -41,6 +41,7 @@ file forget. What one test leaves behind is not an input to the next one.
 from __future__ import annotations
 
 import os
+import sys
 import tempfile
 
 import pytest
@@ -64,11 +65,23 @@ def _the_server_remembers_nothing_from_the_last_test():
     Emptied rather than replaced: a test that monkeypatches one of them still
     gets its own, and a test that does not gets an empty one instead of
     whatever the file before it left.
-    """
-    from aihawk.mcp import server
 
-    for held in ("_focus", "_loaded", "_seen_tabs", "_tabs_owed"):
-        got = getattr(server, held, None)
-        if got is not None:
-            got.clear()
+    ⛔ LOOKED UP IN `sys.modules`, NEVER IMPORTED, and the first version got
+    that wrong. An autouse fixture runs for EVERY test in the repository, so
+    importing the server here made every test depend on the `mcp` package - and
+    two CI jobs install pytest and nothing else, because what they check is a
+    version number and a set of release pages. Both went red with
+    `ModuleNotFoundError: No module named 'mcp'` at fixture setup, on tests that
+    have no business knowing the server exists.
+
+    Asking `sys.modules` is also the more honest question: this state can only
+    be dirty if something imported the module, so if it is not there, there is
+    nothing to clear.
+    """
+    server = sys.modules.get("aihawk.mcp.server")
+    if server is not None:
+        for held in ("_focus", "_loaded", "_seen_tabs", "_tabs_owed"):
+            got = getattr(server, held, None)
+            if got is not None:
+                got.clear()
     yield
