@@ -152,14 +152,32 @@ code,pre,.g,.meta,.badge,#url,#tok{
            padding:var(--s3) var(--s3) var(--s3) var(--s4);
            border-bottom:1px solid var(--line-1) }
 #railhead .label{ flex:1 }
-#newchat, #rails{ flex:none; width:26px; height:26px; display:grid;
-                  place-items:center; padding:0; border-radius:7px;
-                  border:1px solid transparent; background:none;
-                  color:var(--fg-3); cursor:pointer;
-                  transition:background-color 120ms ease-out, color 120ms ease-out }
-#newchat:hover, #rails:hover{ background:var(--raised); color:var(--fg);
-                              border-color:var(--line-2) }
-#rails[aria-expanded="true"]{ background:var(--raised); color:var(--fg) }
+#newchat{ flex:none; width:26px; height:26px; display:grid;
+          place-items:center; padding:0; border-radius:7px;
+          border:1px solid transparent; background:none;
+          color:var(--fg-3); cursor:pointer;
+          transition:background-color 120ms ease-out, color 120ms ease-out }
+#newchat:hover{ background:var(--raised); color:var(--fg);
+                border-color:var(--line-2) }
+
+/* ⛔ THE THREE LINES WERE A GUESS AND THE WORD IS NOT. A hamburger says "there
+   is a menu here" only to somebody who has already learned that it does, and
+   what is behind this one is a list of sessions - which the rail's own header
+   says in words, in this same type. Saying it on the control too costs 70px of
+   a header that has them. Asked for in exactly those terms on 2026-09-09.
+   Same type as `.label` so the button and the column it opens read as one
+   word in one voice, rather than as a control and a title that happen to
+   agree. */
+#rails{ flex:none; width:96px; height:26px; display:grid; place-items:center;
+        padding:0; border-radius:var(--r); border:1px solid var(--line-2);
+        background:var(--raised); color:var(--fg-2); cursor:pointer;
+        font:600 var(--t-label)/1 var(--sans); letter-spacing:.07em;
+        text-transform:uppercase;
+        transition:background-color 120ms ease-out, color 120ms ease-out,
+                   border-color 120ms ease-out }
+#rails:hover{ background:var(--hover); color:var(--fg) }
+#rails[aria-expanded="true"]{ background:var(--hover); color:var(--fg);
+                              border-color:var(--line-3) }
 #chats{ flex:1; min-height:0; overflow-y:auto; padding:var(--s2) var(--s2) var(--s3);
         /* A long list is cheap to skip past: the rows below the fold are not
            laid out until they are scrolled to, and Ctrl+F still finds them. */
@@ -583,12 +601,11 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
 
 <div id="left">
   <div id="head">
+    <!-- No aria-label: the visible word IS the name now, and an aria-label
+         would replace it with a different one for a screen reader. The state
+         is carried by aria-expanded, which is what it is for. -->
     <button id="rails" type="button" aria-expanded="false" aria-controls="rail"
-            aria-label="Show sessions" title="Sessions">
-      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor"
-           stroke-width="1.5" stroke-linecap="round">
-        <path d="M2 4h11M2 7.5h11M2 11h11"/></svg>
-    </button>
+            title="Sessions">Sessions</button>
     <b>AIHawk</b><span class="badge" id="model">no model</span>
     <button id="fresh" type="button" title="Clear this conversation">Clear</button></div>
   <div id="log">
@@ -1302,7 +1319,15 @@ const RAILKEY = 'aihawk.rail';
 function showRail(open){
   $('rail').hidden = !open;
   $('rails').setAttribute('aria-expanded', open ? 'true' : 'false');
-  $('rails').setAttribute('aria-label', open ? 'Hide sessions' : 'Show sessions');
+  /* ⛔ AND NO aria-label ANY MORE. It used to say "Show sessions" / "Hide
+     sessions", which was right while the control was three lines and nothing
+     else. Now the button says Sessions in words, and an aria-label REPLACES
+     that name: a screen reader would read a word that is not on the button,
+     and somebody driving by voice who says "Sessions" would find nothing to
+     click. The open state is already carried by aria-expanded, which is the
+     attribute for it. Found by reading the live DOM after the change, not the
+     source: removing the attribute from the markup left this line putting it
+     back. */
   try { localStorage.setItem(RAILKEY, open ? '1' : '0'); } catch(err){}
   if(open) drawChats();
 }

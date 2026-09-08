@@ -21,7 +21,8 @@ import json
 import pytest
 
 from aihawk.mcp import store
-from aihawk.web import DEFAULT_CHAT_ID, UNNAMED, ChatService, Sessions, build_app
+from aihawk.web import (PAGE, DEFAULT_CHAT_ID, UNNAMED, ChatService, Sessions,
+                        build_app)
 
 pytestmark = pytest.mark.asyncio
 
@@ -426,3 +427,46 @@ async def test_a_queued_message_is_not_lost_when_the_page_goes_away():
     assert not stray, (
         "these assign the queue outside its single writer, so they do not save "
         "it: %s" % stray)
+
+
+def test_the_sessions_control_is_named_by_the_word_on_it():
+    """⛔ AN aria-label REPLACES THE VISIBLE NAME, IT DOES NOT ADD TO IT.
+
+    The control was three lines and an `aria-label` reading "Show sessions" /
+    "Hide sessions", which was the only name it had. On 2026-09-09 it became a
+    bar with the word Sessions written on it, and the label became a defect:
+    a screen reader would announce a word that is not on the button, and
+    somebody driving by voice who says "Sessions" would find nothing to click.
+    WCAG 2.5.3 Label in Name is the criterion, and the open state is carried by
+    `aria-expanded`, which is the attribute for it.
+
+    Found by reading the live DOM after the change rather than the source:
+    taking the attribute out of the markup left the script putting it back on
+    every open and close.
+
+    Known-bad, two: put `aria-label` back on the button, and put the
+    `setAttribute('aria-label', ...)` line back in `showRail`.
+    """
+    import re
+
+    button = re.search(r"<button id=\"rails\"[^>]*>(.*?)</button>", PAGE, re.S)
+    assert button, "the sessions control is gone"
+    assert "aria-label" not in button.group(0), (
+        "the control carries an aria-label as well as a visible word, and the "
+        "label is what a screen reader reads instead of the word: %s"
+        % button.group(0))
+    assert "Sessions" in button.group(1), (
+        "the control has no visible word, so it has no accessible name either")
+    assert 'aria-expanded' in button.group(0), (
+        "nothing says whether the column is open")
+
+    script = PAGE[PAGE.index("<script"):]
+    code = re.sub(r"/\*.*?\*/", "", script, flags=re.S)
+    # Every place the script names this control, and not the 400 characters
+    # after the first one: the first `$('rails')` in the file is not the one
+    # in `showRail`, so that window read the wrong code and the known-bad
+    # walked straight through it.
+    sets = re.findall(r"\$\('rails'\)\s*\.setAttribute\(\s*'aria-label'", code)
+    assert not sets, (
+        "the script puts an aria-label back on the control, which replaces the "
+        "word written on it every time the column opens or closes")
