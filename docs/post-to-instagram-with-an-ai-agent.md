@@ -64,7 +64,11 @@ inferred from a failed attempt. The agent can log in with your saved
 session, open the create dialog and write a caption, but it cannot hand a
 file to the picker. Since a feed post cannot exist without media, **AIHawk
 cannot post to Instagram end to end, and this page will not pretend
-otherwise.**
+otherwise.** What each of those tools returns, and why the ladder between them
+stops where it does, is
+[written down separately](mcp-tool-design.md), which is what makes a limit
+like this one checkable against the source instead of guessed at from a
+failure.
 
 What works instead is a division of labor that is honest about who does
 what. Run headed, so the browser is a normal window on your desktop:
@@ -84,6 +88,9 @@ that cannot say that sentence is selling something.
 
 The final click stays yours either way. AIHawk's stated rule for every
 surface applies verbatim here: do not submit anything a human has not read.
+[The forms page](ai-agent-fill-out-forms.md) states the same rule and shows
+what it costs to follow, since a form that rejects a submission puts the agent
+into a read-back loop where the temptation to stop reading is highest.
 
 ## The terms, and the account you are risking
 
@@ -106,7 +113,10 @@ trigger action against the account - challenges, feature blocks,
 restriction, or loss of the account - and Instagram has enforced against
 automation more visibly than almost any platform. A personal account driven
 by an agent, even gently, carries that risk, and the account is yours, not
-the tool's. The lowest-risk shape is the one this page describes: your
+the tool's. That is the whole of
+[the question of whether to log an agent in at all](should-you-log-your-ai-agent-into-accounts.md),
+and a personal account with years of history in it is the case where the
+answer is least obvious. The lowest-risk shape is the one this page describes: your
 session, your media click, your review, single posts at human frequency.
 
 ## Short answers to the questions that lead here

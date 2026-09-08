@@ -90,14 +90,21 @@ engagement SaaS products whose LinkedIn support does not run through the
 approved API, operating instead through unofficial means; and there is browser
 automation in all its forms, AI agents included, driving the site the way a
 person would. The clauses quoted above cover both, and the help pages say what
-happens next: detection, then restriction. LinkedIn's automated-activity page
+happens next: detection, then restriction. The detection half is not specific
+to this platform and is
+[its own subject](why-does-my-ai-agent-get-blocked.md); what is specific here
+is that the terms already answer the question before detection enters it. LinkedIn's automated-activity page
 describes the recovery path for a restricted account, which involves disabling
 the software before the account is re-enabled, and the restrictions page says
 plainly that the outcome can be temporary or permanent.
 
 The cost side deserves one plain sentence. A LinkedIn account is, for most
 people, a professional identity built over years, which makes it about the
-most expensive account there is to lose to a tool experiment.
+most expensive account there is to lose to a tool experiment. That calculation
+is the same one behind
+[whether to log an agent into your accounts at all](should-you-log-your-ai-agent-into-accounts.md),
+and it comes out differently for a throwaway login than for the account your
+career sits on.
 
 One line acknowledging the obvious, because pretending otherwise would insult
 you: tools and workflows that automate LinkedIn through the browser exist in
@@ -105,9 +112,14 @@ the wild, and this page does not name, link or describe them.
 
 ## Why this wiki does not publish a LinkedIn walkthrough
 
-The social posting series here has per-platform pages for Facebook, Instagram
-and X. LinkedIn is deliberately absent, and this page is the explanation
-rather than the replacement.
+The social posting series here has per-platform pages for
+[Facebook](post-to-facebook-with-an-ai-agent.md),
+[Instagram](post-to-instagram-with-an-ai-agent.md) and
+[X](ai-agent-post-to-x.md). LinkedIn is deliberately absent, and this page is
+the explanation rather than the replacement. Reading one of the three next to
+this one is the clearest way to see the difference: they open with what their
+platform's terms say and then continue, and here the opening is where the page
+ends.
 
 An honest LinkedIn automation guide would have to open by telling you that the
 platform's terms prohibit the approach it was about to teach; section 8.2
