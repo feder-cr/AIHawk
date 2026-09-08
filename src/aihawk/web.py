@@ -181,7 +181,15 @@ code,pre,.g,.meta,.badge,#url,#tok{
 .chat .x:hover{ background:var(--line-2); color:var(--fg) }
 @media (max-width:900px){ #rail{ display:none } }
 
-#left { width:44%; min-width:380px; display:flex; flex-direction:column;
+/* ⛔ A PERCENTAGE ALONE GIVES THE SURPLUS TO THE WRONG PANE. The conversation
+   stops getting better past its measure cap - a wider column is a longer line,
+   not more text - while the browser view is a picture and gets better with
+   every pixel. At 44% of a 2560 screen this column was 1126px around a 634px
+   thread: 460px of nothing, taken from the pane that could have used it. The
+   clamp holds the column at what the thread plus its gutters actually need and
+   hands the rest to the right. Only desktops run this, so the floor is the
+   narrow end of a laptop and there is no phone case to carry. */
+#left { width:clamp(420px, 44%, 760px); display:flex; flex-direction:column;
         position:relative; border-right:1px solid var(--line-1) }
 #right{ flex:1; min-width:0; display:flex; flex-direction:column; background:var(--well) }
 #head { display:flex; align-items:center; gap:10px; padding:var(--s3) var(--s4);
