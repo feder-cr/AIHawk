@@ -544,6 +544,40 @@ async def test_the_frame_pause_is_shorter_than_the_capture_produces():
                            1000 / (pause_ms + round_trip_ms)))
 
 
+async def test_the_answer_is_built_from_nodes_and_never_from_html():
+    """The model's Markdown is drawn, and it is drawn without `innerHTML`.
+
+    The answer `The main heading says **"Example Domain"**` used to reach the
+    screen with its asterisks, because everything in this page is built with
+    `textContent`. That invariant is not the oversight - it is why the pane is
+    safe: the text was written by a model that had just read arbitrary web
+    pages, so its content is chosen by whoever wrote the last page it visited.
+
+    ⛔ THE INVARIANT IS THE TEST. `innerHTML` must not appear in the page at
+    all, and the renderer must build elements instead. Known-bad, and the whole
+    reason this test exists: someone reaching for a Markdown library that
+    returns an HTML string and assigning it, which is the documented road to
+    exfiltration through an injected image.
+    """
+    # The ASSIGNMENT and not the word: both this file and the page discuss
+    # `innerHTML` in prose precisely because neither may use it, and a check
+    # tripped by the sentence explaining the rule is the defect this project
+    # writes down most often.
+    import re
+
+    assert not re.search(r"innerHTML\s*=", PAGE), \
+        "something assigns HTML now, and the text it assigns comes from the web"
+    assert "insertAdjacentHTML" not in PAGE and "document.write" not in PAGE, \
+        "another way into the parser was opened"
+    assert "function rich(" in PAGE and "createTextNode" in PAGE, \
+        "the answer is no longer built from nodes"
+    # The two marks the model actually emits, and the fence.
+    assert "el('strong'" in PAGE and "el('code'" in PAGE and "el('em'" in PAGE
+    # Never built from model text: one is the exfiltration vector, the other has
+    # no reason to be clickable next to a browser this page is already driving.
+    assert "el('img'" not in PAGE and "el('a'" not in PAGE
+
+
 async def test_a_reconnection_resumes_instead_of_replaying_the_whole_thing():
     """`EventSource` reconnects by itself after any drop, and the page has no
     de-duplication, so a server that answers every reconnection with the whole

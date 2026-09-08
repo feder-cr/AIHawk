@@ -427,6 +427,46 @@ const $ = id => document.getElementById(id);
 const el = (t,c,x) => { const e = document.createElement(t);
                         if(c) e.className = c; if(x != null) e.textContent = x; return e; };
 
+/* Markdown to NODES, never to a string of HTML.
+   The model answered `The main heading says **"Example Domain"**` and the page
+   drew the asterisks, because everything here is built with textContent - and
+   that invariant is not an oversight to correct, it is the reason this pane is
+   safe. The text arriving here was written by a model that has just read
+   arbitrary web pages, so it is chosen by whoever wrote the last page it
+   visited. Putting it through innerHTML is the documented road to exfiltration
+   by injected image, and no amount of sanitising makes that road shorter than
+   this one.
+   So: the marks become elements, built by hand, and the text between them stays
+   text. A `<script>` in the answer is still drawn as the characters of a
+   script, because it never stops being a text node.
+   Deliberately absent: images, which are the exfiltration vector itself, and
+   links, which this pane has no reason to make clickable when the browser it
+   drives is right there. */
+function inline(text, into){
+  for(const part of text.split(/(\*\*[^*\n]+\*\*|`[^`\n]+`|\*[^*\n]+\*)/)){
+    if(!part) continue;
+    const two = part.length > 4 && part.startsWith('**') && part.endsWith('**');
+    const tick = part.length > 2 && part.startsWith('`') && part.endsWith('`');
+    const one = part.length > 2 && !two && part.startsWith('*') && part.endsWith('*');
+    if(two)       into.appendChild(el('strong', null, part.slice(2, -2)));
+    else if(tick) into.appendChild(el('code', null, part.slice(1, -1)));
+    else if(one)  into.appendChild(el('em', null, part.slice(1, -1)));
+    else          into.appendChild(document.createTextNode(part));
+  }
+}
+
+function rich(text){
+  const frag = document.createDocumentFragment();
+  /* An odd number of fences means the last block never closed, which is what a
+     half-written answer looks like. It is still shown as code: the alternative
+     is prose that changes shape when the closing fence arrives. */
+  text.split('```').forEach((block, i) => {
+    if(i % 2) frag.appendChild(el('pre','out', block.replace(/^[a-z]*\n/i, '')));
+    else if(block) inline(block, frag);
+  });
+  return frag;
+}
+
 /* Raw tool names read as the machine's word order. One table, two tenses. */
 const VERB = {
   browser_navigate:['Navigating','Navigated'], browser_click:['Clicking','Clicked'],
@@ -465,7 +505,9 @@ function flush(asAnswer, replay){
   if(hold === null) return;
   const text = hold.replace(LEAD,'').replace(/^\w/, c => c.toUpperCase());
   hold = null;
-  put(el('div', asAnswer ? 'answer' : 'say', text), replay);
+  const box = el('div', asAnswer ? 'answer' : 'say');
+  box.appendChild(rich(text));
+  put(box, replay);
 }
 
 function step(text, replay){
