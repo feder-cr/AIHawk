@@ -134,3 +134,71 @@ def image_of(result) -> "tuple[bytes, str] | None":
         except Exception:
             continue
     return None
+
+
+class SessionLink:
+    """One session's view of the shared connection: every call carries its id.
+
+    ⛔ WITHOUT THIS THE SESSION COLUMN IS DECORATION. The interface holds several
+    conversations now, and the server has addressed browsers per session since
+    0.15.0 - but a tool call that names no session lands on the default one, so
+    two conversations would drive the SAME browser while each drew its own
+    transcript. Nothing would fail: the second session would find the first
+    one's tabs, its cookies and its identity, and read them as its own.
+
+    The id is IMPOSED, not defaulted. A model that passes `session_id` itself -
+    because it read one in a tool result, or guessed - has it overwritten rather
+    than honoured. Letting it through would mean the thing that decides which
+    person's browser a command reaches is the model, and a model that names
+    another session's id gets that session's logins. Which session a
+    conversation belongs to is not a modelling decision.
+
+    Which tools take an address is read from the SCHEMA the server publishes,
+    never from a list written here: a list drifts, and the failure it produces
+    is a tool called with an argument it does not accept, which is an error the
+    person sees instead of the browser they meant.
+    """
+
+    def __init__(self, link: "Link", session_id: str) -> None:
+        self._link = link
+        self._session_id = session_id
+        #: Whether THIS session has ever issued an instruction. Per session and
+        #: not per connection, and the difference is a browser nobody asked for:
+        #: the live pane is allowed to ask for a picture only once a browser
+        #: could exist, and over MCP there is no way to ask "is one running"
+        #: without starting one. Delegating to the shared link would make every
+        #: NEW conversation inherit the answer from an old one, so opening a
+        #: second chat would launch an engine to draw a pane for a session that
+        #: has done nothing.
+        self._touched = False
+        self._addressable = {
+            t.name for t in link.tools
+            if "session_id" in (getattr(t, "inputSchema", None) or {}).get(
+                "properties", {})
+        }
+
+    @property
+    def session_id(self) -> str:
+        return self._session_id
+
+    @property
+    def tools(self):
+        return self._link.tools
+
+    @property
+    def touched(self) -> bool:
+        return self._touched
+
+    def addresses(self, name: str) -> bool:
+        """Whether a call to this tool will carry the session id."""
+        return name in self._addressable
+
+    async def call(self, name: str, arguments: dict | None = None):
+        args = dict(arguments or {})
+        if name in self._addressable:
+            args["session_id"] = self._session_id
+        self._touched = True
+        return await self._link.call(name, args)
+
+    async def call_text(self, name: str, arguments: dict | None = None) -> str:
+        return text_of(await self.call(name, arguments))

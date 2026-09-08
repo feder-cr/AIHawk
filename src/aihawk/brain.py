@@ -63,6 +63,25 @@ class OpenRouterBrain(Brain):
         """
         self._convo = Conversation(self._convo.client, self._convo.model)
 
+    def remember(self, messages: list, usage: dict | None = None) -> None:
+        """Take up a transcript that was written down, and continue it.
+
+        The twin of `forget`, and the reason it exists is the same one stated
+        there from the other side: what the follow-up box means is the
+        transcript. A session reopened with the page showing the conversation
+        and the model holding nothing would answer "and now sort them by price"
+        with a question about what "them" is - worse than an empty chat, because
+        it looks like it remembers.
+
+        Written into the conversation this brain already has rather than by
+        building a new one: the client and the model are this process's, and the
+        file has no business deciding either.
+        """
+        if messages:
+            self._convo.messages = list(messages)
+        if usage:
+            self._convo.usage.update(usage)
+
     @property
     def usage(self) -> dict:
         return self._convo.usage

@@ -46,7 +46,8 @@ from starlette.responses import HTMLResponse, JSONResponse, Response, StreamingR
 from starlette.routing import Route
 
 from .brain import Brain
-from .link import Link, image_of, text_of
+from .link import Link, SessionLink, image_of, text_of
+from .mcp import store
 
 # A RAW string. The script below contains \n, \w and \s inside JavaScript
 # literals and regular expressions; in an ordinary triple-quoted string Python
@@ -124,6 +125,45 @@ code,pre,.g,.meta,.badge,#url,#tok{
 [hidden]{ display:none !important }
 
 /* ---------------- panes ---------------- */
+/* The session column is FIXED width and the two panes beside it share what is
+   left, because the column holds names and a name does not get more readable
+   with more room, while the transcript and the picture both do. It collapses
+   below 900px rather than squeezing the two things that matter. */
+#rail { width:212px; flex:none; display:flex; flex-direction:column;
+        background:var(--well); border-right:1px solid var(--line-1) }
+#rail h2{ margin:0; padding:var(--s3) var(--s3) var(--s2);
+          font-size:var(--t-label); font-weight:600; letter-spacing:.07em;
+          text-transform:uppercase; color:var(--fg-4) }
+#newchat{ margin:0 var(--s3) var(--s2); padding:7px 10px; border-radius:8px;
+          border:1px solid var(--line-2); background:var(--raised); color:var(--fg);
+          font:inherit; font-size:var(--t-small); text-align:left; cursor:pointer }
+#newchat:hover{ border-color:var(--line-3) }
+#chats{ flex:1; min-height:0; overflow-y:auto; padding:0 var(--s2) var(--s3);
+        /* A long list is cheap to skip past: the rows below the fold are not
+           laid out until they are scrolled to, and Ctrl+F still finds them. */
+        content-visibility:auto; contain-intrinsic-size:auto 600px }
+.chat{ display:flex; align-items:center; gap:6px; width:100%;
+       padding:7px 8px; border:0; border-radius:8px; background:none;
+       color:var(--fg-2); font:inherit; font-size:var(--t-small);
+       text-align:left; cursor:pointer }
+.chat:hover{ background:var(--raised); color:var(--fg) }
+.chat[aria-current="true"]{ background:var(--raised); color:var(--fg); font-weight:600 }
+/* The name is a button so it can be reached by keyboard, and the whole of the
+   user agent's button chrome has to come off or it draws as a raised box with
+   its text centred - which is what shipped in the first screenshot of this
+   column. A row in a list looks like a row. */
+.chat .nm{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis;
+           white-space:nowrap; border:0; background:none; color:inherit;
+           font:inherit; text-align:left; padding:0; cursor:pointer }
+.chat .cnt{ flex:none; font-family:var(--mono); font-size:var(--t-label);
+            color:var(--fg-4) }
+.chat .x{ flex:none; width:18px; height:18px; border:0; border-radius:4px;
+          background:none; color:var(--fg-4); cursor:pointer; line-height:1;
+          visibility:hidden }
+.chat:hover .x, .chat:focus-within .x{ visibility:visible }
+.chat .x:hover{ background:var(--line-2); color:var(--fg) }
+@media (max-width:900px){ #rail{ display:none } }
+
 #left { width:44%; min-width:380px; display:flex; flex-direction:column;
         position:relative; border-right:1px solid var(--line-1) }
 #right{ flex:1; min-width:0; display:flex; flex-direction:column; background:var(--well) }
@@ -363,9 +403,15 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
 }
 </style>
 
+<nav id="rail" aria-label="Conversations">
+  <h2>Sessions</h2>
+  <button id="newchat" type="button">+ New session</button>
+  <div id="chats" role="list"></div>
+</nav>
+
 <div id="left">
   <div id="head"><b>AIHawk</b><span class="badge" id="model">no model</span>
-    <button id="fresh" type="button" title="New conversation">New</button></div>
+    <button id="fresh" type="button" title="Clear this conversation">Clear</button></div>
   <div id="log">
     <div id="thread">
       <div id="hint">
@@ -601,8 +647,27 @@ function settleOnce(){
   settle = setTimeout(() => { pinned = true; anchor.scrollIntoView({block:'end'}); }, 150);
 }
 
-const es = new EventSource('/chat/events');
-es.onmessage = (e) => {
+/* ---------------- which conversation this page is in ----------------
+   ⛔ ONE PLACE, AND EVERY REQUEST GOES THROUGH IT. The server routes all read
+   `?s=`, so a fetch that forgets it acts on the DEFAULT conversation while the
+   page shows another - and the way that shows up is the picture on the right
+   belonging to somebody else's browser, with nothing red anywhere. `at()` is
+   the only thing that writes the parameter, so there is one place to be wrong
+   and it is covered by a test that reads this file.
+
+   The id is kept in the URL rather than in a variable, so a reload, a bookmark
+   and a second tab all land in the same conversation instead of silently
+   dropping to the default one. */
+let here = new URLSearchParams(location.search).get('s') || 'default';
+const at = (path) => path + (path.includes('?') ? '&' : '?') + 's=' + encodeURIComponent(here);
+
+let es = null;
+function listen(){
+  if(es) es.close();
+  es = new EventSource(at('/chat/events'));
+  es.onmessage = onEvent;
+}
+const onEvent = (e) => {
   const m = JSON.parse(e.data), r = m.replay;
   switch(m.kind){
     case 'model': $('model').textContent = m.text; break;
@@ -615,6 +680,12 @@ es.onmessage = (e) => {
       /* Not on a replay: those events describe a wait that is over. */
       if(busyNow && !r) waiting(); else waited();
       if(!busyNow){ flush(true, r); live = null; clearInterval(timer);
+                    /* The name of a conversation is decided by its FIRST
+                       instruction, on the server, so the column is stale from
+                       the moment a new session is used until it is redrawn.
+                       Redrawn on the end of a turn and not on its start: the
+                       turn count beside the name is only right once. */
+                    if(!r) drawChats();
                     if(queued){ const t = queued; queued = null; send(t); } }
       paint(); break;
     case 'you':   flush(false, r); live = null; newTurn();
@@ -676,7 +747,7 @@ i.addEventListener('keydown', e => {
 document.addEventListener('keydown', e => {
   if(e.key !== 'Escape' || !busyNow) return;
   if(document.activeElement === i && i.value.trim()) return;
-  fetch('/chat/stop', {method:'POST'});
+  fetch(at('/chat/stop'), {method:'POST'});
 });
 /* A pencil and not a cross: a cross would read as "cancel the queued message".
    This returns it to the composer to be edited. */
@@ -684,7 +755,7 @@ chip.onclick = () => { i.value = queued; queued = null; i.focus();
                        i.dispatchEvent(new Event('input')); };
 
 function send(text){
-  fetch('/chat/send', {method:'POST', headers:{'Content-Type':'application/json'},
+  fetch(at('/chat/send'), {method:'POST', headers:{'Content-Type':'application/json'},
                        body: JSON.stringify({text})});
 }
 /* Clearing the page is NOT what this does, and the difference is the point:
@@ -704,9 +775,9 @@ function wipe(){
   busyNow = false;
   queued = null; paint();
 }
-fresh.onclick = () => fetch('/chat/fresh', {method:'POST'});
+fresh.onclick = () => fetch(at('/chat/fresh'), {method:'POST'});
 
-halt.onclick = () => fetch('/chat/stop', {method:'POST'});
+halt.onclick = () => fetch(at('/chat/stop'), {method:'POST'});
 f.onsubmit = (e) => {
   e.preventDefault();
   const t = i.value.trim();
@@ -747,7 +818,7 @@ $('mode').onclick = (e) => {
 
 async function tick(){
   if(!frozen) try {
-    const r = await fetch('/live/frame?t=' + Date.now(), {cache:'no-store'});
+    const r = await fetch(at('/live/frame?t=' + Date.now()), {cache:'no-store'});
     if(r.status === 204){ img.hidden = true; empty.hidden = false; say('idle'); }
     else if(r.ok){
       const blob = await r.blob(), old = img.src;
@@ -825,30 +896,106 @@ function paintTabs(rows){
    through the same tool an agent would call. */
 $('tabs').onclick = (e) => {
   const b = e.target.closest('button'); if(!b) return;
-  fetch('/live/select', {method:'POST', headers:{'Content-Type':'application/json'},
+  fetch(at('/live/select'), {method:'POST', headers:{'Content-Type':'application/json'},
                          body: JSON.stringify({id: b.dataset.id})});
 };
 
 async function where(){
-  try { const r = await fetch('/live/tabs', {cache:'no-store'});
+  try { const r = await fetch(at('/live/tabs'), {cache:'no-store'});
         if(r.ok){ const j = await r.json(); paintUrl(j.url || ''); paintTabs(j.tabs); } }
   catch(err){}
   setTimeout(where, 2000);
 }
-paint(); tick(); where();
+/* ---------------- the session column ----------------
+   Drawn from the server every time it changes rather than kept in step by hand:
+   a name is set by the FIRST INSTRUCTION of a conversation, which happens on
+   the server, so a column the page maintained locally would be right until
+   somebody actually used a session. */
+async function drawChats(){
+  let rows = [];
+  try { const r = await fetch('/sessions', {cache:'no-store'});
+        if(r.ok) rows = (await r.json()).sessions || []; }
+  catch(err){ return; }
+  const box = $('chats');
+  box.textContent = '';
+  for(const s of rows){
+    const row = el('div','chat');
+    row.setAttribute('role','listitem');
+    if(s.id === here) row.setAttribute('aria-current','true');
+    const open = el('button', 'nm', s.name || s.id);
+    open.type = 'button';
+    open.title = s.name || s.id;
+    /* Switching is a NAVIGATION, not a repaint: the transcript, the picture and
+       the stream all belong to the conversation, and the server hands back the
+       whole of it for an id. Rebuilding that by hand would be a second
+       implementation of what a page load already does correctly. */
+    open.onclick = () => { if(s.id !== here) location.search = '?s=' + encodeURIComponent(s.id); };
+    open.ondblclick = () => renameChat(s.id, s.name || s.id);
+    row.appendChild(open);
+    if(s.turns) row.appendChild(el('span','cnt', String(s.turns)));
+    const kill = el('button','x','x');
+    kill.type = 'button';
+    kill.title = 'Delete this session and close its browsers';
+    kill.setAttribute('aria-label', 'Delete ' + (s.name || s.id));
+    kill.onclick = (e) => { e.stopPropagation(); forgetChat(s.id, s.name || s.id); };
+    row.appendChild(kill);
+    box.appendChild(row);
+  }
+}
+
+async function renameChat(id, was){
+  const name = prompt('Name this session', was);
+  if(name === null) return;
+  await fetch('/sessions/rename', {method:'POST', headers:{'Content-Type':'application/json'},
+                                   body: JSON.stringify({id, name})});
+  drawChats();
+}
+
+async function forgetChat(id, name){
+  /* The browsers go with it, and that is worth saying before it happens rather
+     than after: a session can be holding eight logged-in engines. */
+  if(!confirm('Delete "' + name + '"? Its conversation and its browsers go with it.')) return;
+  await fetch('/sessions/forget', {method:'POST', headers:{'Content-Type':'application/json'},
+                                   body: JSON.stringify({id})});
+  if(id === here){ location.search = ''; return; }
+  drawChats();
+}
+
+$('newchat').onclick = async () => {
+  const r = await fetch('/sessions/new', {method:'POST'});
+  if(!r.ok) return;
+  const j = await r.json();
+  location.search = '?s=' + encodeURIComponent(j.id);
+};
+
+paint(); listen(); tick(); where(); drawChats();
 </script>
 """
+
+
+#: The conversation a page that names none is in. The SAME string the server
+#: uses for the session a tool call that names none reaches, and that is the
+#: point rather than a coincidence: every client written before this existed
+#: keeps landing on one conversation driving one browser, exactly as before.
+DEFAULT_CHAT_ID = "default"
+
+#: What a conversation is called before it has been asked anything.
+UNNAMED = "New chat"
 
 
 class ChatService:
     """One conversation, its listeners, and the link it drives."""
 
     def __init__(self, link: Link, brain: Brain,
-                 model_label: str = "no model") -> None:
+                 model_label: str = "no model", *,
+                 session_id: str = DEFAULT_CHAT_ID,
+                 name: str | None = None) -> None:
         self._link = link
         self._brain = brain
         self._listeners: List[asyncio.Queue] = []
         self.history: List[Dict[str, str]] = []
+        self.session_id = session_id
+        self.name = name or UNNAMED
         self.model_label = model_label
         self._busy = asyncio.Lock()
         self._task: Optional[asyncio.Task] = None
@@ -859,6 +1006,62 @@ class ChatService:
         #: Counted from the clock so a restart cannot collide with the run
         #: before it.
         self._epoch = str(int(time.time() * 1000))
+
+    @property
+    def link(self):
+        """The connection this conversation drives, addressed to it.
+
+        Exposed because the LIVE routes need it: the picture and the tab strip
+        belong to this session's browser, and reaching for the shared connection
+        instead would draw whatever the default session happens to be looking
+        at. That is a wrong answer that looks exactly like a right one.
+        """
+        return self._link
+
+    def save(self) -> None:
+        """Write this conversation down as it stands.
+
+        Called when the conversation CHANGES - a turn ended, it was renamed, it
+        was reset - and not on a timer, for the reason the browsers are saved
+        the same way: a file written on a tick is a version of the session that
+        existed only between two ticks.
+
+        ⛔ BOTH TRANSCRIPTS, and saving only one would be a promise the other
+        half cannot keep. The page draws `history`; the model holds `messages`.
+        Reopening with only the first gives somebody a conversation they can
+        read and cannot continue, under a follow-up box that still says "and now
+        sort them by price" will work.
+
+        A write that fails costs the saved conversation and nothing else: the
+        turn is already finished and answered, and losing it to a full disk
+        would be a strange way to report a full disk.
+        """
+        try:
+            store.save_chat(self.session_id, self.name, self.history,
+                            list(getattr(self._brain, "messages", []) or []),
+                            self.usage)
+        except Exception:
+            pass
+
+    def restore(self) -> bool:
+        """Read this conversation back, if one was saved. Answers whether it was.
+
+        The epoch is NOT restored, and that is deliberate: it says which
+        transcript a page's positions belong to, and a page reconnecting from
+        before the restart holds positions into a transcript this process never
+        had. A new epoch makes it replay from the beginning instead of resuming
+        into the middle of something else.
+        """
+        saved = store.load_chat(self.session_id)
+        if not saved:
+            return False
+        self.history = list(saved.get("history") or [])
+        self.name = saved.get("name") or self.name
+        messages = saved.get("messages") or []
+        remember = getattr(self._brain, "remember", None)
+        if callable(remember) and messages:
+            remember(messages, saved.get("usage") or {})
+        return True
 
     def subscribe(self) -> asyncio.Queue:
         q: asyncio.Queue = asyncio.Queue()
@@ -954,6 +1157,13 @@ class ChatService:
             # of the transcript: somebody opening the page mid-run sees what was
             # asked, and a reload does not lose it. The page adding it locally is
             # one line shorter and leaves a conversation with no questions in it.
+            if self.name == UNNAMED:
+                # Named from what it was first asked, because a column of eight
+                # rows that all say "New chat" is a column nobody can use, and
+                # asking somebody to name a conversation before having it is
+                # asking them to describe work they have not done yet.
+                flat = " ".join(text.split())
+                self.name = flat[:48] + ("..." if len(flat) > 48 else "")
             await self.emit("you", text)
             await self.emit("busy", "1")
             try:
@@ -975,32 +1185,188 @@ class ChatService:
                 await self.emit("err", f"{type(exc).__name__}: {exc}")
             finally:
                 await self.emit("busy", "0")
+                # After the turn and not during it: a transcript written
+                # mid-run is a version of the conversation that existed for a
+                # moment, and this is the moment it is worth keeping. Stopped
+                # and failed runs are saved too - what was asked and how far it
+                # got is exactly what somebody reopens the session to see.
+                self.save()
 
 
-def build_app(link: Link, service: ChatService) -> Starlette:
+class Sessions:
+    """Every conversation this interface holds, by id, saved as it goes.
+
+    ⛔ A CONVERSATION AND ITS BROWSERS ARE ONE SESSION, and this class is where
+    that is true rather than nearly true. The id it keys on is the SAME id the
+    server keys browsers on, so the chat called `lavoro` drives the browsers of
+    session `lavoro` and nothing else - which is why `forget` below closes them
+    as well. Two ids would have been easier and would have meant that deleting a
+    conversation left up to eight engines running with nothing naming them.
+
+    The MCP connection underneath is shared on purpose: one server, one process,
+    one place the browsers live. What keeps two conversations from driving each
+    other's browser is `SessionLink`, which puts the id on every call.
+
+    Conversations are built on demand and read from disk the first time they are
+    asked for. They are not all loaded at startup: a transcript is thousands of
+    lines and somebody with twenty sessions wants a column of names, not twenty
+    transcripts in memory to draw it.
+    """
+
+    def __init__(self, link: Link, make_brain, model_label: str = "no model") -> None:
+        self._link = link
+        self._make_brain = make_brain
+        self.model_label = model_label
+        self._live: Dict[str, ChatService] = {}
+
+    @classmethod
+    def around(cls, service: "ChatService") -> "Sessions":
+        """A registry holding one conversation somebody else built.
+
+        For callers that make the conversation themselves - the tests do, and so
+        would anything embedding this - so that having one conversation does not
+        require a second code path through the routes. One path means the single
+        case is exercised by the same code the many-session case uses.
+        """
+        got = cls(service._link, lambda: service._brain, service.model_label)
+        got._live[service.session_id] = service
+        return got
+
+    def get(self, session_id: str | None = None) -> ChatService:
+        """The conversation with this id, loaded from disk the first time."""
+        at = session_id or DEFAULT_CHAT_ID
+        found = self._live.get(at)
+        if found is not None:
+            return found
+        service = ChatService(SessionLink(self._link, at), self._make_brain(),
+                              model_label=self.model_label, session_id=at)
+        service.restore()
+        self._live[at] = service
+        return service
+
+    def new(self) -> ChatService:
+        """A conversation nobody has used yet, with an id of its own.
+
+        The id is the clock, not a counter: a counter has to be stored somewhere
+        to survive a restart, and the place it would be stored is the thing that
+        breaks. It is never shown - the name is - so it only has to be unique.
+        """
+        at = "s%d" % int(time.time() * 1000)
+        while at in self._live or store.load_chat(at) is not None:
+            at += "x"
+        return self.get(at)
+
+    def listing(self) -> List[dict]:
+        """Every conversation, saved or only live, newest first.
+
+        A conversation opened a moment ago has nothing on disk yet, and leaving
+        it out would make the column disagree with the page it is drawn beside.
+        """
+        rows = {r["id"]: dict(r) for r in store.known_chats()}
+        for at, service in self._live.items():
+            row = rows.setdefault(at, {"id": at, "saved": "", "turns": 0})
+            row["name"] = service.name
+            row["turns"] = sum(1 for e in service.history if e.get("kind") == "you")
+            row["live"] = True
+        out = list(rows.values())
+        out.sort(key=lambda r: (r.get("saved") or "", r["id"]), reverse=True)
+        return out
+
+    def rename(self, session_id: str, name: str) -> bool:
+        clean = " ".join((name or "").split())[:80]
+        if not clean:
+            return False
+        service = self.get(session_id)
+        service.name = clean
+        service.save()
+        return True
+
+    async def forget(self, session_id: str) -> bool:
+        """Delete a conversation AND the browsers that belonged to it.
+
+        ⛔ Both halves, because they are one session. Erasing only the chat file
+        would leave up to eight engines running with nothing left that names
+        them - 6.5 GB, measured, unreachable and unkillable short of the task
+        manager. `session_forget` on the server is the tool that does the other
+        half, and it exists for exactly this.
+
+        Refused while that conversation is mid-run: the same reason `reset` is.
+        """
+        service = self._live.get(session_id)
+        if service is not None and service.busy:
+            return False
+        try:
+            await self._link.call("session_forget", {"session_id": session_id})
+        except Exception:
+            # The browsers could not be closed - the server is gone, or it
+            # refused. The conversation is still deleted: leaving it listed
+            # because something else failed would tell somebody the delete did
+            # not work, when the half they were looking at did.
+            pass
+        self._live.pop(session_id, None)
+        return store.erase_chat(session_id) or service is not None
+
+
+def build_app(link: Link, sessions: "Sessions") -> Starlette:
+    def which(request: Request) -> ChatService:
+        """The conversation this request is about.
+
+        ⛔ EVERY ROUTE GOES THROUGH HERE, the live ones included. A route that
+        read the session id and a route that did not would act on two different
+        conversations while the page showed one, and the way that fails is the
+        picture on the right belonging to somebody else's browser. A caller that
+        names nothing gets the default conversation, which is what every page
+        written before this existed does.
+        """
+        return sessions.get(request.query_params.get("s"))
+
     async def root(_request: Request) -> HTMLResponse:
         return HTMLResponse(PAGE)
+
+    async def listing(_request: Request) -> JSONResponse:
+        return JSONResponse({"sessions": sessions.listing(),
+                             "default": DEFAULT_CHAT_ID})
+
+    async def new_session(_request: Request) -> JSONResponse:
+        service = sessions.new()
+        return JSONResponse({"id": service.session_id, "name": service.name})
+
+    async def rename_session(request: Request) -> JSONResponse:
+        body = await request.json()
+        at = (body or {}).get("id") or DEFAULT_CHAT_ID
+        done = sessions.rename(at, (body or {}).get("name", ""))
+        return JSONResponse({"renamed": done, "name": sessions.get(at).name})
+
+    async def forget_session(request: Request) -> JSONResponse:
+        body = await request.json()
+        at = (body or {}).get("id")
+        if not at:
+            return JSONResponse({"error": "no id"}, status_code=400)
+        return JSONResponse({"forgotten": await sessions.forget(at)})
 
     async def send(request: Request) -> JSONResponse:
         body = await request.json()
         text = (body or {}).get("text", "")
         if not text:
             return JSONResponse({"error": "empty"}, status_code=400)
-        service.start(text)
+        which(request).start(text)
         return JSONResponse({"accepted": True})
 
-    async def stop(_request: Request) -> JSONResponse:
-        return JSONResponse({"stopped": service.stop()})
+    async def stop(request: Request) -> JSONResponse:
+        return JSONResponse({"stopped": which(request).stop()})
 
-    async def fresh(_request: Request) -> JSONResponse:
+    async def fresh(request: Request) -> JSONResponse:
+        service = which(request)
         done = service.reset()
         if done:
             # Told to every listener, not just the tab that asked: two tabs on
             # one session must not disagree about what the conversation is.
             await service.emit("fresh", "1")
+            service.save()
         return JSONResponse({"fresh": done})
 
     async def events(request: Request) -> StreamingResponse:
+        service = which(request)
         q = service.subscribe()
         # Freeze the replay/live boundary while subscribing. StreamingResponse
         # starts `stream` later, so taking this snapshot inside it would let an
@@ -1087,7 +1453,7 @@ def build_app(link: Link, service: ChatService) -> Starlette:
         return StreamingResponse(stream(), media_type="text/event-stream",
                                  headers={"Cache-Control": "no-store"})
 
-    async def frame(_request: Request) -> Response:
+    async def frame(request: Request) -> Response:
         """The window the active tab lives in, as `browser_watch` captures it.
 
         Not `browser_take_screenshot`: that is the page alone, and the engine
@@ -1101,13 +1467,16 @@ def build_app(link: Link, service: ChatService) -> Starlette:
         page draws above it are the same facts as elements, and those can be
         clicked and copied. Both stay.
         """
-        if not link.touched:
+        seen = which(request)
+        if not seen.link.touched:
             # 204, not an error: nothing is wrong, there is simply nothing to
             # look at. Asking the server would START a browser, which is exactly
-            # what a view is not allowed to cause.
+            # what a view is not allowed to cause - and it is asked of THIS
+            # conversation, so opening a second chat does not launch an engine
+            # to draw a pane for a session that has done nothing.
             return Response(status_code=204)
         try:
-            result = await link.call("browser_watch")
+            result = await seen.link.call("browser_watch")
         except Exception as exc:
             return JSONResponse({"error": str(exc)[:200]}, status_code=503)
         got = image_of(result)
@@ -1124,7 +1493,7 @@ def build_app(link: Link, service: ChatService) -> Starlette:
         jpeg, mime = got
         return Response(jpeg, media_type=mime, headers={"Cache-Control": "no-store"})
 
-    async def tabs(_request: Request) -> JSONResponse:
+    async def tabs(request: Request) -> JSONResponse:
         """Every tab, and which one is current.
 
         ONE call where there were two. It asks `session_list_pages`, which since
@@ -1138,10 +1507,11 @@ def build_app(link: Link, service: ChatService) -> Starlette:
         parse into those fields leaves the strip empty and the address blank,
         and the pane keeps working as a picture.
         """
-        if not link.touched:
+        seen = which(request)
+        if not seen.link.touched:
             return JSONResponse({"url": "", "tabs": []})
         try:
-            raw = await link.call_text("session_list_pages")
+            raw = await seen.link.call_text("session_list_pages")
             rows = json.loads(raw)
         except Exception:
             return JSONResponse({"url": "", "tabs": []})
@@ -1155,11 +1525,15 @@ def build_app(link: Link, service: ChatService) -> Starlette:
         page_id = (body or {}).get("id", "")
         if not page_id:
             return JSONResponse({"error": "no id"}, status_code=400)
-        await link.call("session_select_page", {"page_id": page_id})
+        await which(request).link.call("session_select_page", {"page_id": page_id})
         return JSONResponse({"ok": True})
 
     return Starlette(routes=[
         Route("/", root),
+        Route("/sessions", listing),
+        Route("/sessions/new", new_session, methods=["POST"]),
+        Route("/sessions/rename", rename_session, methods=["POST"]),
+        Route("/sessions/forget", forget_session, methods=["POST"]),
         Route("/chat/send", send, methods=["POST"]),
         Route("/chat/stop", stop, methods=["POST"]),
         Route("/chat/fresh", fresh, methods=["POST"]),

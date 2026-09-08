@@ -139,3 +139,95 @@ def erase(session_id: str) -> bool:
         return False
     except Exception:
         return False
+
+
+# --- the other half of a session: its conversation ---------------------------
+#
+# ⛔ A SEPARATE FILE, WRITTEN BY A SEPARATE PROCESS, AND THAT IS THE REASON.
+# The browsers above are written by the MCP SERVER; a conversation is written by
+# the INTERFACE, which reaches the server over stdio and is therefore another
+# program. One file with two writers is a race that costs somebody their
+# transcript on the day two writes land together, and neither process can see
+# the other to take a lock. So the session id is the join key and each writer
+# owns its own file, which is also why the conversation does not live under
+# `sessions/`: `known()` globs that directory, and a chat file landing in it
+# would be listed as a session with no browsers.
+#
+# What is saved is the transcript as the PAGE draws it plus the transcript as
+# the MODEL holds it. Saving only the first would give somebody back a
+# conversation they can read and cannot continue - the follow-up box would still
+# be there, meaning nothing.
+
+
+def _chats_dir() -> Path:
+    return home() / "chats"
+
+
+def chat_path(session_id: str) -> Path:
+    return _chats_dir() / ("%s.json" % _safe(session_id))
+
+
+def save_chat(session_id: str, name: str, history: List[dict],
+              messages: List[dict], usage: Optional[dict] = None) -> Path:
+    """Write one conversation down. Returns where it went."""
+    where = chat_path(session_id)
+    where.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "id": session_id,
+        "name": name,
+        "saved": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "history": history,
+        "messages": messages,
+        "usage": usage or {},
+    }
+    blob = json.dumps(payload, indent=2).encode("utf-8")
+    beside = where.with_suffix(".json.writing")
+    beside.write_bytes(blob)
+    os.replace(beside, where)
+    return where
+
+
+def load_chat(session_id: str) -> Optional[dict]:
+    """One conversation as it was written, or None if there is nothing to read."""
+    try:
+        return json.loads(chat_path(session_id).read_bytes().decode("utf-8"))
+    except Exception:
+        return None
+
+
+def known_chats() -> List[dict]:
+    """Every saved conversation, newest first, WITHOUT its transcript.
+
+    The list is drawn every time somebody opens the page, and a session that has
+    been worked in all afternoon holds a transcript of thousands of lines.
+    Reading them all to show a column of names would make the cheapest thing the
+    interface does the most expensive.
+    """
+    out = []
+    try:
+        files = sorted(_chats_dir().glob("*.json"))
+    except Exception:
+        return out
+    for f in files:
+        try:
+            d = json.loads(f.read_bytes().decode("utf-8"))
+        except Exception:
+            continue
+        out.append({"id": d.get("id") or f.stem,
+                    "name": d.get("name") or d.get("id") or f.stem,
+                    "saved": d.get("saved") or "",
+                    "turns": sum(1 for e in (d.get("history") or [])
+                                 if e.get("kind") == "you")})
+    out.sort(key=lambda s: s.get("saved") or "", reverse=True)
+    return out
+
+
+def erase_chat(session_id: str) -> bool:
+    """Forget a saved conversation. Answers whether there was one."""
+    try:
+        chat_path(session_id).unlink()
+        return True
+    except FileNotFoundError:
+        return False
+    except Exception:
+        return False

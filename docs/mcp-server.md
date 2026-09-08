@@ -143,7 +143,7 @@ between what the browser says it is and where it appears to be.
 | `STEALTHFOX_MCP_TRANSPORT` | `http` to serve over streamable HTTP instead of stdio. Default is stdio, which is what MCP clients expect. |
 | `STEALTHFOX_MCP_HOST` | Bind address for the HTTP transport. Default `127.0.0.1`. |
 | `STEALTHFOX_MCP_PORT` | Port for the HTTP transport. Default `8765`, which is also the AIHawk interface's default: change one of the two if you run both. |
-| `AIHAWK_HOME` | Where saved sessions are kept. Defaults to `%APPDATA%ihawk` on Windows, `~/Library/Application Support/aihawk` on macOS and `$XDG_DATA_HOME/aihawk` on Linux. Set it to put them on another disk. |
+| `AIHAWK_HOME` | Where saved sessions are kept. Defaults to `%APPDATA%/aihawk` on Windows, `~/Library/Application Support/aihawk` on macOS and `$XDG_DATA_HOME/aihawk` on Linux. Set it to put them on another disk. |
 
 Anything a tool call says wins over these. `session_start` can pick another
 seed, another exit or another profile for one session; the variables are what a
@@ -200,6 +200,12 @@ default. A session holds up to eight browsers, so two accounts CAN be live at
 the same time: open a second browser with `browser_open` and address commands to
 whichever one you mean. `session_start` still replaces the browser you are in
 rather than adding one, which is the difference between the two.
+
+**The interface's session column lists these same sessions.** A conversation
+in `aihawk ui` and a session here are one thing with one id: the chat named
+`lavoro` drives the browsers of session `lavoro` and no others, and deleting it
+there closes them. A client that names no session and a page that names none
+both land on `default`, which is why they share a browser.
 
 Sessions are written down as soon as one holds a browser, and what is written is
 the DECLARATION - which browsers a session has, who each one is, and where its

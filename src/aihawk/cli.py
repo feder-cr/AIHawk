@@ -136,7 +136,7 @@ def ui(openrouter_key, model, host, port, proxy, seed, headed, binary, profile_d
     from .brain import OpenRouterBrain
     from .link import Link
     from .llm import make_client
-    from .web import ChatService, build_app
+    from .web import Sessions, build_app
 
     key = openrouter_key or os.environ.get("OPENROUTER_API_KEY")
     if not key:
@@ -146,7 +146,11 @@ def ui(openrouter_key, model, host, port, proxy, seed, headed, binary, profile_d
             "the invisible_playwright library directly: same engine, "
             "Playwright's whole API.")
     mdl = resolve_model(model, os.environ)
-    brain = OpenRouterBrain(make_client(key), mdl)
+    # ONE client, a brain PER CONVERSATION. The client is a connection and the
+    # brain is a transcript: sharing the first is what it is for, and sharing
+    # the second would give every session in the column the same memory, so
+    # asking one thing in a session would answer with another session's work.
+    client = make_client(key)
     label = mdl
     click.echo("model    %s via %s" % (mdl, BASE_URL))
 
@@ -159,8 +163,9 @@ def ui(openrouter_key, model, host, port, proxy, seed, headed, binary, profile_d
         link = await Link(opts, key=key).open()
         click.echo("server   connected, %d tools" % len(link.tools))
         click.echo("open     http://%s:%d" % (host, port))
-        service = ChatService(link, brain, model_label=label)
-        app = build_app(link, service)
+        sessions = Sessions(link, lambda: OpenRouterBrain(client, mdl),
+                            model_label=label)
+        app = build_app(link, sessions)
         server = uvicorn.Server(uvicorn.Config(app, host=host, port=port,
                                                log_level="warning"))
         try:
