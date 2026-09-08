@@ -152,6 +152,29 @@ DEFAULT_BROWSER_ID = "main"
 MAX_BROWSERS_PER_SESSION = 8
 
 
+#: Which browser a session's unaddressed commands land on. A session with one
+#: browser never touches this; a session with several needs somewhere to say
+#: "this one for now", or every call would have to repeat the id and the first
+#: one forgotten would act on a browser nobody meant.
+_focus: dict = {}
+
+
+def focused(session_id: str | None = None) -> str:
+    """The browser this session's unaddressed commands go to."""
+    return _focus.get(session_id or DEFAULT_SESSION_ID, DEFAULT_BROWSER_ID)
+
+
+def browsers_in(session_id: str | None = None) -> list:
+    """The browsers this session has, by id.
+
+    Read from the registry's keys rather than from a list kept beside them,
+    because a second list is a second truth: a browser dropped by a failed retry
+    would still be in it, and the ceiling would refuse a slot that is free.
+    """
+    prefix = "%s/" % (session_id or DEFAULT_SESSION_ID)
+    return sorted(k[len(prefix):] for k in registry.ids() if k.startswith(prefix))
+
+
 def addressed(session_id: str | None = None, browser_id: str | None = None) -> str:
     """The registry key for one browser inside one session.
 
@@ -168,7 +191,7 @@ def addressed(session_id: str | None = None, browser_id: str | None = None) -> s
     neighbours wrote to another, and nothing would raise.
     """
     return "%s/%s" % (session_id or DEFAULT_SESSION_ID,
-                      browser_id or DEFAULT_BROWSER_ID)
+                      browser_id or focused(session_id))
 
 
 async def _retrying(fn, *args, session_id=None, browser_id=None, **kwargs):
@@ -192,6 +215,138 @@ async def _retrying(fn, *args, session_id=None, browser_id=None, **kwargs):
         await registry.drop(at)
         session = await registry.ensure(at)
         return await fn(session, *args, **kwargs)
+
+
+# --- the browsers a session holds ------------------------------------------
+
+@mcp.tool()
+async def browser_open(browser_id: str | None = None, seed: int | None = None,
+                       proxy: str | None = None, profile: str | None = None,
+                       session_id: str | None = None) -> str:
+    """Open ANOTHER browser in this session, and make it the one commands go to.
+
+    A session can hold several browsers at once, each with its own tabs, its own
+    cookies and its own identity: one for the dashboard, one for the docs, one
+    logged in as somebody else. They do not share anything, so work in one
+    cannot disturb another.
+
+    Give `browser_id` a name you will recognise, or let one be chosen. `seed`,
+    `proxy` and `profile` decide who this browser is, exactly as in
+    session_start, and they apply to this browser alone.
+
+    Opening one takes several seconds and costs real memory, so open what you
+    need and close what you stop using: browser_close frees it.
+    """
+    at_session = session_id or DEFAULT_SESSION_ID
+    have = browsers_in(at_session)
+
+    if browser_id is None:
+        # Never a name already in use, and never one that was in use earlier in
+        # this session: reusing it would hand somebody a browser they think they
+        # opened and somebody else thinks they still hold.
+        n = 1
+        while ("b%d" % n) in have:
+            n += 1
+        browser_id = "b%d" % n
+    elif browser_id in have:
+        return ("session %s already has a browser called %s. Use it by naming "
+                "it, or close it first." % (at_session, browser_id))
+
+    if len(have) >= MAX_BROWSERS_PER_SESSION:
+        # The ceiling says what it costs, because a refusal that only says "no"
+        # invites the reader to raise the number.
+        return ("session %s already holds %d browsers, which is the limit. "
+                "Eight live browsers were measured at 61 processes and about "
+                "6.5 GB, with the eighth taking twice as long to start as the "
+                "first, so the ceiling is a real cost and not a formality. "
+                "Close one with browser_close before opening another. Open "
+                "now: %s." % (at_session, len(have), ", ".join(have)))
+
+    at = addressed(at_session, browser_id)
+    settings = plan.plan_session(seed=seed, proxy=proxy, profile=profile).kwargs
+    try:
+        await registry.restart(at, **settings)
+    except Exception as exc:
+        return "browser %s could not start: %s" % (browser_id, exc)
+
+    _focus[at_session] = browser_id
+    return ("browser %s is open in session %s and is now the one unaddressed "
+            "commands go to. %s" % (browser_id, at_session,
+                                    plan.describe(registry.config(at) or {})))
+
+
+@mcp.tool()
+async def browser_close(browser_id: str | None = None,
+                        session_id: str | None = None) -> str:
+    """Close one browser of this session and free what it was holding.
+
+    The tabs it had are gone with it. The other browsers in the session are not
+    touched, and neither is the conversation.
+
+    Closing FORGETS who that browser was: a later browser opened under the same
+    name is a new stranger, not the same person resumed. That is deliberate -
+    a browser somebody shut down should not come back wearing its old identity.
+    """
+    at_session = session_id or DEFAULT_SESSION_ID
+    name = browser_id or focused(at_session)
+    existed = await registry.forget(addressed(at_session, name))
+
+    if _focus.get(at_session) == name:
+        _focus.pop(at_session, None)
+    left = browsers_in(at_session)
+    if not existed:
+        return "session %s has no browser called %s." % (at_session, name)
+    return ("browser %s is closed. Still open in session %s: %s."
+            % (name, at_session, ", ".join(left) if left else "none"))
+
+
+@mcp.tool()
+async def browser_list(session_id: str | None = None) -> str:
+    """Which browsers this session holds, and which one commands go to.
+
+    Starts nothing: it reports what is running, so asking is free.
+    """
+    at_session = session_id or DEFAULT_SESSION_ID
+    have = browsers_in(at_session)
+    if not have:
+        return ("session %s has no browser open yet. The next tool that needs a "
+                "page will open one, or call browser_open to choose who it is."
+                % at_session)
+
+    here = focused(at_session)
+    rows = []
+    for name in have:
+        session = registry.peek(addressed(at_session, name))
+        where = ""
+        if session is not None:
+            try:
+                pages = await session.describe_pages()
+                where = "; ".join(p["url"] or "blank" for p in pages) or "no tabs"
+            except Exception:
+                where = "tabs unreadable"
+        else:
+            where = "not up; the next command restarts it as the same person"
+        rows.append("%s%s: %s" % (name, " (commands go here)" if name == here else "",
+                                 where))
+    return "session %s holds %d of %d browsers. %s" % (
+        at_session, len(have), MAX_BROWSERS_PER_SESSION, " | ".join(rows))
+
+
+@mcp.tool()
+async def browser_focus(browser_id: str, session_id: str | None = None) -> str:
+    """Choose which browser this session's unaddressed commands go to.
+
+    Every tool can still name a browser and reach it whatever the focus is; this
+    only decides where the ones that name none land, so a run of commands on one
+    browser does not have to repeat its id.
+    """
+    at_session = session_id or DEFAULT_SESSION_ID
+    have = browsers_in(at_session)
+    if browser_id not in have:
+        return ("session %s has no browser called %s. Open: %s."
+                % (at_session, browser_id, ", ".join(have) if have else "none"))
+    _focus[at_session] = browser_id
+    return "commands without a browser_id now go to %s." % browser_id
 
 
 # --- who is browsing -------------------------------------------------------

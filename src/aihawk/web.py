@@ -479,6 +479,10 @@ const VERB = {
   session_new_page:['Opening tab','Opened tab'],   session_select_page:['Switching tab','Switched tab'],
   session_close_page:['Closing tab','Closed tab'], session_list_pages:['Listing tabs','Listed tabs'],
   session_start:['Starting browser','Started browser'],
+  browser_open:['Opening browser','Opened browser'],
+  browser_close:['Closing browser','Closed browser'],
+  browser_list:['Listing browsers','Listed browsers'],
+  browser_focus:['Switching browser','Switched browser'],
   session_status:['Checking session','Checked session']
 };
 const LEAD = /^(I will |I'll |I am |I'm |Let me |Now I will |Now I'll )/i;

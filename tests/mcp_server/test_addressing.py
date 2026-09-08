@@ -331,9 +331,17 @@ async def test_every_tool_that_reaches_a_browser_offers_a_way_to_name_it():
     the SCHEMA the server publishes, not the Python signature: a parameter the
     client cannot see is a parameter that does not exist.
 
+    ⛔ ONE EXEMPTION, and it is about the question rather than about the tool.
+    `browser_list` asks which browsers a SESSION holds, which is not a question
+    any one browser can answer, so it takes a session and no browser on purpose.
+    Exempting it by name rather than by loosening the rule to "one of the two"
+    keeps the rule able to catch the case it exists for: a tool that acts on a
+    browser and cannot say which.
+
     Known-bad: delete `session_id` and `browser_id` from any one tool.
     """
-    needing = _tools_that_reach_a_browser()
+    ASKS_ABOUT_THE_SESSION = {"browser_list"}
+    needing = _tools_that_reach_a_browser() - ASKS_ABOUT_THE_SESSION
     assert len(needing) >= 18, (
         "only %d tools were found reaching a browser; has the module moved? %r"
         % (len(needing), sorted(needing)))

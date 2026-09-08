@@ -29,6 +29,12 @@ async def test_server_registers_expected_tools():
         # server returned was the content viewport, and the pointer is drawn
         # outside the page on purpose - so nobody watching could see it.
         "browser_watch",
+        # Added in 0.15.0 with the rest of the multi-browser work: a session
+        # holds several browsers now, so it needs a way to open one, close it,
+        # ask what it holds, and say which one the unaddressed commands mean.
+        # `browser_list` takes a session and no browser on purpose - what a
+        # session holds is not a question one browser can answer.
+        "browser_open", "browser_close", "browser_list", "browser_focus",
     }
     # EXACT, not a subset. `expected <= names` passed while a tool nobody
     # meant to publish sat in the list, and the surface of an MCP server is

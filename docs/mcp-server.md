@@ -151,7 +151,8 @@ session gets when nobody says anything.
 ## Tools
 
 `session_status`, `session_start`, `session_new_page`, `session_list_pages`,
-`session_select_page`, `session_close_page`, `browser_navigate`,
+`session_select_page`, `session_close_page`, `browser_open`, `browser_close`,
+`browser_list`, `browser_focus`, `browser_navigate`,
 `browser_read_text`, `browser_snapshot`, `browser_read_html`,
 `browser_take_screenshot`, `browser_watch`, `browser_click`, `browser_click_at`,
 `browser_type`, `browser_select_option`, `browser_press_key`, `browser_evaluate`.
@@ -178,6 +179,10 @@ address.
 
 | Tool | Arguments | What it does |
 |---|---|---|
+| `browser_open` | `browser_id`, `seed`, `proxy`, `profile`, all optional | Opens another browser in this session and makes it the one unaddressed commands go to. Each browser has its own tabs, cookies and identity and shares none of them. Refuses past eight, saying what eight cost when it was measured. |
+| `browser_close` | `browser_id` optional | Closes one browser and frees what it held. Its tabs go with it; the other browsers and the conversation do not. Forgets who it was, so the same name later is a new stranger rather than that person resumed. |
+| `browser_list` | `session_id` optional | Which browsers this session holds, where each one is, and which one commands go to. Starts nothing, so asking is free. |
+| `browser_focus` | `browser_id` | Chooses which browser the commands that name none land on. Naming a browser still reaches it whatever the focus is. |
 | `session_status` | none | Who is browsing right now: the seed, the exit, the profile and the open tabs. Starts nothing; if no browser is up it says so. |
 | `session_start` | `seed`, `proxy`, `profile`, all optional | Close whatever is open and start a browser as a particular person. Returns a sentence describing the session it actually started. |
 | `session_new_page` | none | Open a tab, make it the active one, return its id. |

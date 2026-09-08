@@ -210,6 +210,25 @@ class SessionRegistry:
         async with self._lock(session_id):
             await self._discard(session_id)
 
+    async def forget(self, session_id: str = DEFAULT_SESSION_ID) -> bool:
+        """Close this browser and forget who it was. Answers whether it existed.
+
+        ⛔ `drop` and this one differ in exactly the way `close_all` explains,
+        and picking the wrong one is a leak rather than an inconvenience. `drop`
+        is RECOVERY: the browser died under a caller who is still working, so
+        the identity, the profile and the exit are kept and the replacement is
+        the same person. This is a DELIBERATE close, and a browser that came
+        back wearing an identity its owner had shut down would hand the next
+        caller a person they never asked for - the same leak `close_all` refuses,
+        one browser at a time.
+        """
+        async with self._lock(session_id):
+            existed = session_id in self._sessions or session_id in self._configs
+            await self._discard(session_id)
+            self._configs.pop(session_id, None)
+            self._refusals.pop(session_id, None)
+            return existed
+
     async def close_all(self) -> None:
         """Shut every session down. Called when the PROCESS ends, not when a
         client disconnects - that difference is the reason this class exists.
