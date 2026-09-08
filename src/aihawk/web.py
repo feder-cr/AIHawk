@@ -611,12 +611,23 @@ async function tick(){
     else { say('error'); }
   } catch(err){ say('offline'); }
   /* Ask for the next frame only once this one has landed, or a browser slower
-     than the interval accumulates requests it can never serve. A frame is one
-     JPEG the server already holds, not a paint, so five a second cost the pipe
-     almost nothing; the engine produces ten, and asking faster than that would
-     only show the same frame twice. Actions share this pipe and wait at most
-     one frame. */
-  setTimeout(tick, 200);
+     than the interval accumulates requests it can never serve.
+
+     The pause used to be 200 ms, under a comment that knew the engine produces
+     ten frames a second and asked for five anyway, reasoning that asking faster
+     "would only show the same frame twice". Below the source rate that is
+     backwards: half the frames were made, held, and thrown away. Measured on
+     an animating page, same browser, interleaved rounds: 200 ms delivered
+     4.6 fps to the pane, 60 ms delivers 10.0, which is everything the capture
+     produces (9.6 fps measured at its own callback).
+
+     60 and not 0: a frame costs one round trip of about 22 ms on the pipe that
+     ACTIONS also use, so the cycle is roughly 82 ms and asks about 13 times a
+     second for 10 frames - a little waste to keep the picture whole, against
+     the 46 a second an unpaced loop would ask, which would spend the pipe on
+     duplicates and make every click queue behind them. An action still waits
+     at most one frame. */
+  setTimeout(tick, 60);
 }
 
 /* Built from elements with textContent and never innerHTML: this string comes

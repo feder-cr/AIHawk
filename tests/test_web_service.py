@@ -429,6 +429,38 @@ async def _first_events(resp, want=4, each=1.0):
     return seen
 
 
+async def test_the_frame_pause_is_shorter_than_the_capture_produces():
+    """Asking slower than the source means frames are made and thrown away.
+
+    The capture pushes about ten frames a second (measured 9.6 at its own
+    callback), and a frame costs roughly 22 ms on the pipe, so a pause of P ms
+    makes a cycle of about P + 22. For the pane to show every frame the source
+    makes, that cycle has to fit inside the ~100 ms between frames.
+
+    It did not: the pause was 200 ms, and the pane ran at 4.6 fps against a
+    source giving 10. The comment above it had both halves of the fact - "the
+    engine produces ten" and "five a second" - and drew the wrong conclusion
+    from them.
+
+    Known-bad: putting it back to 200, or to anything that leaves no room for
+    the round trip.
+    """
+    import re
+
+    m = re.search(r"setTimeout\(tick,\s*(\d+)\)", PAGE)
+    assert m, "the frame pump no longer paces itself with setTimeout(tick, ...)"
+    pause_ms = int(m.group(1))
+
+    round_trip_ms = 22    # measured against the running interface
+    source_period_ms = 100  # 10 fps out of the capture
+
+    assert pause_ms + round_trip_ms <= source_period_ms, (
+        "a %d ms pause makes a %d ms cycle against a source that produces one "
+        "frame every %d ms, so the pane would show about %.1f of the 10 fps it "
+        "is being sent" % (pause_ms, pause_ms + round_trip_ms, source_period_ms,
+                           1000 / (pause_ms + round_trip_ms)))
+
+
 async def test_a_page_that_joins_a_run_in_flight_is_told_the_run_is_in_flight():
     """Reload during a run and the stop button has to still be there.
 
