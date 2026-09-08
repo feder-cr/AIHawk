@@ -102,10 +102,37 @@ async def close_page(session, page_id: str = "") -> str:
 # --- reading ---------------------------------------------------------------
 
 async def navigate(session, url: str, wait_until: str = "domcontentloaded") -> str:
+    """Go to a url, and say what came back.
+
+    ⛔ IT USED TO ANSWER `navigated to {url}` WHATEVER HAPPENED, and both halves
+    of that were capable of being untrue. A page that answered 404, 403 or 500
+    got the same sentence as one that answered 200, so a model reading the reply
+    had no way to tell a missing page from a real one and would go on to read an
+    error document as content. And after a redirect the url in the sentence was
+    the one ASKED FOR, not the one landed on, which is the same defect as the
+    silent cut `read_text` used to do: a caller cannot see what it is not told.
+
+    Both halves are now read off the Response. The status is the server's own
+    verdict, and the url is `response.url`, which is where the redirect chain
+    actually ended.
+
+    ⛔ AND THIS IS WHY `pyproject.toml` FLOORS `invisible-playwright` AT 0.13.2,
+    not at 0.13.0. Below that version `goto` answered `None` on every navigation
+    ([B200] in the engine's docs), so this function would report "no HTTP
+    response" for every page in the world - which is worse than the sentence it
+    replaces, because it is a confident and wrong statement rather than a vague
+    one. The floor is load-bearing, not hygiene.
+    """
     if not session.list_pages():
         await session.new_page()
-    await session.page().goto(url, wait_until=wait_until, timeout=45_000)
-    return f"navigated to {url}"
+    page = session.page()
+    response = await page.goto(url, wait_until=wait_until, timeout=45_000)
+    if response is None:
+        # A same-document navigation (an anchor, or the same url again) creates
+        # no document and so has no response. Playwright answers None here and
+        # so do we: naming the reason keeps it from reading as a failure.
+        return f"navigated to {page.url} (no HTTP response: same-document navigation)"
+    return f"navigated to {response.url} (HTTP {response.status})"
 
 
 async def read_text(session, selector: str = "body", max_chars: int = DEFAULT_MAX_CHARS) -> str:

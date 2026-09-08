@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aihawk"
-version = "0.13.2"
+version = "0.13.3"
 description = "Drive a stealth browser with an LLM from one command"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -37,7 +37,11 @@ dependencies = [
     # wait_for_timeout, and in every earlier version that wait returned
     # instantly, so hold_seconds never held. >=0.13.0 because browser_watch
     # and the live pane are built on page.screencast, which arrived there.
-    "invisible-playwright>=0.13.0",
+    # >=0.13.2 because browser_navigate reports the HTTP status and the landed
+    # url, and both are read off what page.goto() answers. Until 0.13.2 that
+    # was hardcoded to None on every navigation, so on an older wheel the tool
+    # would tell a model "no HTTP response" for every page it ever visited.
+    "invisible-playwright>=0.13.2",
     # HTML parsing for browser_read_html. Chosen over lxml by measurement: on
     # six real pages both found byte-identical sets of interactive elements,
     # so correctness did not separate them, and selectolax then parsed 3-5x

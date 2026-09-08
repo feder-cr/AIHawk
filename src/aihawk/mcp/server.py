@@ -293,6 +293,12 @@ async def session_close_page(page_id: str = "") -> str:
 async def browser_navigate(url: str, wait_until: str = "domcontentloaded") -> str:
     """Go to a url in the active tab, opening one if none exists.
 
+    Answers with the HTTP status the server gave and the url actually landed
+    on, which is not always the one asked for: a redirect to a login wall or a
+    regional domain shows up here. Read the status before trusting the page -
+    a 404 or a 403 still has a document, and reading it as content is the
+    mistake this reply exists to prevent.
+
     wait_until is "domcontentloaded" by default, which returns as soon as the
     markup is parsed. Use "load" when the page needs its images and stylesheets,
     or "networkidle" for a single-page app that fetches its content after
