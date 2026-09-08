@@ -176,11 +176,26 @@ code,pre,.g,.meta,.badge,#url,#tok{
    the background, while a line that is always there is the edge of the room,
    and the open state has the background and the ink to say it. It also replaces
    the hairline that used to separate this from what follows. */
-#railtab{ flex:none; width:34px; padding:0; cursor:pointer; border:0;
-          background:var(--base); color:var(--fg-3);
+#railtab{ flex:none; width:44px; padding:0; cursor:pointer; border:0;
+          position:relative; background:var(--base); color:var(--fg-3);
           box-shadow:inset -2px 0 0 var(--accent);
-          display:grid; place-items:center;
+          /* The chevron and the word are two rows of one grid, centred
+             together: pinned to the top the arrow sat 450px from the word and
+             the two read as separate things on the same strip. */
+          display:grid; align-content:center; justify-items:center; gap:12px;
           transition:background-color 120ms ease-out, color 120ms ease-out }
+/* ⛔ A WORD ON A WALL IS NOT A BUTTON. At 34px with nothing but letters it read
+   as a label somebody had printed on the frame, which is the one thing it must
+   not read as - said in those words on 2026-09-09. Wider, and with the same
+   chevron the step rows use, drawn from borders rather than an icon: it points
+   into the room when the column is shut and back out when it is open, so the
+   thing you press also says which way it goes. */
+#railtab::before{ content:""; width:5px; height:5px;
+                  border-right:1.5px solid currentColor;
+                  border-bottom:1.5px solid currentColor;
+                  transform:rotate(-45deg) translate(-1px, -1px);
+                  transition:transform 150ms ease }
+#railtab[aria-expanded="true"]::before{ transform:rotate(135deg) translate(-1px, -1px) }
 /* ⛔ THE TEXT TURNS, NOT THE BUTTON. `transform` on the button would rotate the
    whole box with it, so the border and the accent below would be drawn on the
    edge away from the column instead of the one beside it - correct in the
@@ -368,11 +383,15 @@ h5.md-h, h6.md-h{ font-size:var(--t-h3); color:var(--fg-2) }
    `.out` carries its own for the tool output it was written for: the two
    stacked, so code sat a step to the right of the prose describing it. */
 .say > .out, .answer > .out{ margin-left:0 }
-/* 1.9em, not the 1.4 it started at: at that width the marker sat almost under
-   the first letter and a list read as prose with dots in it. The step of the
-   indent has to be bigger than the space between two words or it is not a
-   step. */
-.md-l{ margin:0 0 var(--s4); padding-left:1.9em }
+/* ⛔ A LIST IS SET APART ON BOTH SIDES, and only stepping the left is why it
+   still read as prose with dots in it. Measured on a real answer: the items
+   began 26px in from the paragraph above and ended at 548, the SAME pixel the
+   paragraph ended on, so the block was indented on one edge and flush on the
+   other - which the eye reads as the same column, slightly ragged, rather than
+   as something set inside it. 2.6em in and 1.4em back gives it two edges of its
+   own. (1.9 was already the second attempt: at the 1.4 it started with, the
+   marker sat almost under the first letter.) */
+.md-l{ margin:0 1.4em var(--s4) 0; padding-left:2.6em }
 .md-l .md-l{ margin:var(--s2) 0 0 }        /* a nested list continues its item */
 .md-i{ margin:0 0 var(--s2); white-space:pre-wrap; overflow-wrap:anywhere }
 .md-i::marker{ color:var(--fg-4) }
