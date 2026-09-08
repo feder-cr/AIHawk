@@ -54,6 +54,7 @@ import os
 import re
 import struct
 import sys
+import time
 import urllib.error
 import urllib.request
 import zlib
@@ -145,14 +146,38 @@ def check(wiki_dir: str | Path, repo: str) -> list[str]:
 
 
 def _api(url: str, token: str, data: bytes | None = None,
-         ctype: str = "application/json", method: str | None = None):
-    req = urllib.request.Request(url, data=data, method=method)
-    req.add_header("Authorization", "Bearer " + token)
-    req.add_header("Accept", "application/vnd.github+json")
-    if data is not None:
-        req.add_header("Content-Type", ctype)
-    with urllib.request.urlopen(req, timeout=120) as r:
-        return json.load(r)
+         ctype: str = "application/json", method: str | None = None,
+         tries: int = 5, sleep=time.sleep):
+    """One API call, with the secondary rate limit handled rather than met.
+
+    The first run on an existing corpus uploads one asset per page - 463 on
+    the engine - and GitHub throttles bursts of content-creating requests with
+    a 403 or 429 carrying `Retry-After`. Without this the first run is the one
+    that fails, and it fails BEFORE the wiki push, so a hiccup here would block
+    the publish entirely. Honouring the header is also what rule 11 asks for
+    everywhere else this project talks to GitHub.
+
+    A 404 is raised, not retried: `release()` reads one to decide the release
+    has to be created.
+    """
+    for attempt in range(tries):
+        req = urllib.request.Request(url, data=data, method=method)
+        req.add_header("Authorization", "Bearer " + token)
+        req.add_header("Accept", "application/vnd.github+json")
+        if data is not None:
+            req.add_header("Content-Type", ctype)
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as e:
+            last_try = attempt == tries - 1
+            if e.code not in (403, 429, 500, 502, 503) or last_try:
+                raise
+            wait = e.headers.get("Retry-After")
+            wait = int(wait) if wait and wait.isdigit() else 2 ** attempt
+            print("[pixels] %s from GitHub, waiting %ds (attempt %d of %d)"
+                  % (e.code, wait, attempt + 1, tries), file=sys.stderr)
+            sleep(wait)
 
 
 def release(repo: str, token: str) -> dict:
@@ -210,8 +235,15 @@ def sync(wiki_dir: str | Path, repo: str, token: str) -> int:
         return 0
     png = pixel_bytes()
     upload = rel["upload_url"].split("{")[0]
-    for name in missing:
+    for i, name in enumerate(missing, 1):
         _api("%s?name=%s.png" % (upload, name), token, png, "image/png", "POST")
+        # Paced, not raced. A tenth of a second puts the whole first run under
+        # a minute of added wall clock and keeps a 463-asset burst well inside
+        # what GitHub serves without throttling; the retry above is what
+        # catches it if this is not enough.
+        if i % 50 == 0:
+            print("[pixels] uploaded %d of %d" % (i, len(missing)))
+        time.sleep(0.1)
     print("[pixels] %d pages, uploaded %d new asset(s): %s"
           % (len(pages), len(missing), ", ".join(missing[:10])
              + (" ..." if len(missing) > 10 else "")))
@@ -223,7 +255,7 @@ def selftest() -> int:
     import tempfile
     repo = "feder-cr/invisible_playwright"
     good = pixel_tag(repo, "a-page")
-    casi = [
+    cases = [
         ("a page with its own pixel passes",
          {"a-page.md": "# T\n\n" + good + "\n"}, 0),
         ("a page with no pixel fails",
@@ -241,33 +273,80 @@ def selftest() -> int:
           "_Sidebar.md": pixel_tag(repo, "_Sidebar")}, 1),
     ]
     bad = []
-    for nome, files, attesi in casi:
+    for label, files, expected in cases:
         with tempfile.TemporaryDirectory() as d:
             for n, t in files.items():
                 (Path(d) / n).write_text(t, encoding="utf-8")
             got = len(check(d, repo))
-        ok = (got > 0) == (attesi > 0)
-        print("  %s  %s" % ("OK" if ok else "KO", nome))
+        ok = (got > 0) == (expected > 0)
+        print("  %s  %s" % ("OK" if ok else "KO", label))
         if not ok:
-            bad.append(nome)
+            bad.append(label)
 
     with tempfile.TemporaryDirectory() as d:
         for n in ("one.md", "two.md", "_Sidebar.md", "notes.txt"):
             (Path(d) / n).write_text("x", encoding="utf-8")
         names = page_names(d)
 
+    # The retry, against a server that throttles. Without these three cases the
+    # backoff would be code that has never once run: the path only opens on a
+    # 403 from a burst, which is exactly the run nobody gets to rehearse.
+    import io
+    real_urlopen = urllib.request.urlopen
+
+    class _Resp(io.BytesIO):
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+
+    def _fake_opener(sequence):
+        left = list(sequence)
+        def opener(req, timeout=None):
+            outcome = left.pop(0)
+            if outcome is None:
+                return _Resp(b'{"ok": true}')
+            raise urllib.error.HTTPError(req.full_url, outcome, "throttled",
+                                         {"Retry-After": "1"}, None)
+        return opener
+
+    slept = []
+    api_cases = []
+    for label, sequence, must_raise in (
+            ("a 403 with Retry-After is retried and then passes", [403, None], False),
+            ("a 429 is retried", [429, 429, None], False),
+            ("a 404 is NOT retried: it is how a missing release is found",
+             [404], True),
+            ("the attempts run out and the error comes through", [403, 403, 403], True),
+    ):
+        urllib.request.urlopen = _fake_opener(sequence)
+        try:
+            _api("https://example.invalid/x", "t", tries=3,
+                 sleep=lambda s: slept.append(s))
+            raised = False
+        except urllib.error.HTTPError:
+            raised = True
+        finally:
+            urllib.request.urlopen = real_urlopen
+        api_cases.append((label, raised == must_raise))
+    api_cases.append(("l'wait viene dall'header Retry-After",
+                      slept and all(s == 1 for s in slept)))
+    for label, ok in api_cases:
+        print("  %s  %s" % ("OK" if ok else "KO", label))
+        if not ok:
+            bad.append(label)
+
     png = pixel_bytes()
-    altri = (
+    extra = (
         ("the pixel is a PNG", png.startswith(b"\x89PNG\r\n\x1a\n")),
         ("the pixel is 1x1", struct.unpack(">II", png[16:24]) == (1, 1)),
         ("the pixel has an alpha channel", png[25] == 6),
         ("page_names lists the pages", names == ["one", "two"]),
     )
-    for nome, ok in altri:
-        print("  %s  %s" % ("OK" if ok else "KO", nome))
+    for label, ok in extra:
+        print("  %s  %s" % ("OK" if ok else "KO", label))
         if not ok:
-            bad.append(nome)
-    print("selftest: %d cases, %d broken" % (len(casi) + len(altri), len(bad)))
+            bad.append(label)
+    print("selftest: %d cases, %d broken"
+          % (len(cases) + len(extra) + len(api_cases), len(bad)))
     return 1 if bad else 0
 
 
