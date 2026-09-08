@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Render the Jekyll docs/ tree into a GitHub wiki checkout.
 
-Usage: build_wiki.py <docs_dir> <out_dir>
+Usage: build_wiki.py <docs_dir> <out_dir> [--pixels <owner/repo>]
 
 A GitHub wiki is a flat set of <Page>.md files with no Jekyll front matter and a
 _Sidebar.md for navigation. This converter, for every docs/*.md:
@@ -9,12 +9,31 @@ _Sidebar.md for navigation. This converter, for every docs/*.md:
   - rewrites internal links [x](slug.md[#a]) -> [x](slug[#a]) (wiki has no .md),
   - names the page by its slug (stable URLs matching the docs site), except
     index.md -> Home.md (the wiki landing page),
+  - and, with --pixels, gives the page its view counter (see
+    scripts/sync_article_pixels.py for what that number is and is not).
 and then generates _Sidebar.md mirroring the parent/has_children/nav_order tree.
+
+The pixel goes into the WIKI only, never back into docs/. The wiki is the
+surface that ranks and the surface readers land on; the .md in the repository
+is served as a JSON payload React mounts, and a counter there would measure
+almost nothing while putting markup into the source tree.
+
+Without --pixels (a local preview) no pixel is written at all, rather than one
+addressed to a guessed repository. A wiki published that way would count
+nothing while looking entirely normal, so publish-wiki.yml passes the flag AND
+runs `sync_article_pixels.py --check` over the output before pushing.
 """
 import os, re, sys
 
+from sync_article_pixels import pixel_tag
+
 DOCS = sys.argv[1]
 OUT = sys.argv[2]
+#: `owner/repo` the pixels address, or None. Not read from the environment
+#: here: the caller that knows it is the workflow, and a fallback to
+#: GITHUB_REPOSITORY would make a local run behave differently depending on
+#: what happens to be exported.
+PIXELS = sys.argv[sys.argv.index("--pixels") + 1] if "--pixels" in sys.argv else None
 
 def parse(path):
     t = open(path, encoding="utf-8").read()
@@ -90,11 +109,31 @@ def rewrite(body):
     # this pattern matched neither.
     return re.sub(r'\]\(([a-z0-9/\-]+)(?:\.md)?(#[A-Za-z0-9\-]+)?\)', repl, body)
 
+def with_pixel(name, body):
+    """Put the page's view counter just under its H1.
+
+    Under and not above: the H1 is what the reader and every renderer expect
+    first, and a wiki page whose source starts with an <img> renders an empty
+    first line in some previews. Every page in both corpora starts with an H1
+    once the front matter is off - measured, 524 of 524 - so this is a uniform
+    position rather than a heuristic, and a page that ever stops starting with
+    one gets its pixel appended instead of silently misplaced.
+    """
+    if not PIXELS:
+        return body
+    tag = pixel_tag(PIXELS, name)
+    lines = body.split("\n")
+    if lines and lines[0].startswith("# "):
+        return "\n".join([lines[0], "", tag] + lines[1:])
+    return body.rstrip("\n") + "\n\n" + tag
+
+
 os.makedirs(OUT, exist_ok=True)
 written = 0
 for slug, (fm, body) in pages.items():
     name = "Home" if slug == "index" else slug
-    open(os.path.join(OUT, name + ".md"), "w", encoding="utf-8", newline="\n").write(rewrite(body) + "\n")
+    open(os.path.join(OUT, name + ".md"), "w", encoding="utf-8", newline="\n").write(
+        with_pixel(name, rewrite(body)) + "\n")
     written += 1
 
 def title_of(slug):

@@ -44,7 +44,25 @@ jobs:
           python-version: "3.12"
 
       - name: Render docs/ into a wiki build directory
-        run: python scripts/build_wiki.py docs wiki_build
+        run: python scripts/build_wiki.py docs wiki_build --pixels "${{ github.repository }}"
+
+      # The view counters. Upload BEFORE the push, never after: a page that
+      # reaches the wiki without its asset serves a 404 for its own pixel and
+      # counts nothing until the next release. Uploading only what is missing
+      # makes this a no-op on a run that adds no pages.
+      - name: Give every new page its view pixel
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/sync_article_pixels.py --repo "${{ github.repository }}" wiki_build
+
+      # And the gate. `build_wiki.py` writes no pixel when it is not told which
+      # repository it is building for, which is the right default for a local
+      # preview and a silent disaster here: the wiki would publish, look
+      # perfectly normal, and count nothing. This is the step that notices.
+      - name: Check every page carries its own pixel
+        run: |
+          python scripts/sync_article_pixels.py --selftest
+          python scripts/sync_article_pixels.py --repo "${{ github.repository }}" --check wiki_build
 
       - name: Publish to the wiki
         env:
