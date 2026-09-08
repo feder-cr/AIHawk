@@ -925,38 +925,52 @@ async def test_two_calls_to_the_same_tool_keep_distinct_ids_and_results():
     assert [m["content"] for m in results] == ["read #1", "read #2"]
 
 
-def test_the_answer_is_asked_for_in_words_and_without_emoji():
-    """⛔ THE DECORATION COMES FROM THE MODEL, SO THE FIX IS THE PROMPT.
-
-    Asked for on 2026-09-08, looking at a real conversation: ticks, crosses and
-    a stop sign in front of most lines of an answer. Nothing in the interface
-    puts them there - the model writes them, because nothing told it not to, and
-    a renderer that stripped them would be a filter over a habit instead of an
+def test_the_answer_is_asked_for_the_way_a_person_would_write_it():
+    """⛔ THE WRITING COMES FROM THE MODEL, SO THE FIX IS THE PROMPT. A renderer
+    that stripped the decoration would be a filter over a habit instead of an
     instruction against it.
 
-    The prompt also has to say that markdown is welcome: it said "plain text",
-    which was true while the pane drew the marks as characters and became a lie
-    the moment it stopped.
+    ⛔ AND THE FIRST VERSION OF THIS ASKED FOR NONE OF IT, WHICH IS NOT WHAT WAS
+    ASKED FOR. "No emoji" is a ban; what was asked for was much less decoration
+    and answers that read like a person wrote them. The ban also bought nothing:
+    MEASURED against the model this product runs, on eight finished tasks with
+    the answer asked for three ways, the arm carrying no instruction at all
+    produced ONE emoji in eight. What it produced instead was 19 bold labels, 8
+    numbered checklists, 7 em dashes, 2 openings that announce what is coming
+    and 2 closings that summarise what was just said. Those are the tells, and
+    they are what the sentences in the prompt aim at. The same eight tasks with
+    them: 3 bold, 0 checklists, 0 em dashes, 0 preambles, 0 restatements.
 
-    Known-bad, two: drop the emoji sentence, and put an emoji in the prompt
-    itself - a prompt that decorates while asking for no decoration teaches the
-    habit it forbids.
+    ⛔ AND IT ASSERTED THE WORD `markdown`, WHERE THE REQUIREMENT IS A MEANING.
+    The prompt now names the marks it allows - a heading, a list, a table -
+    which says the same thing to a model and says it more precisely, and the old
+    assertion went red on the better prompt. A gate that checks a word instead
+    of what the word stood for is the comment-versus-code defect, moved into a
+    string.
+
+    Known-bad, four: drop the sentence about decoration; drop the marks it
+    names; ask for "plain text" again; and put an emoji or an em dash in the
+    prompt itself - one that decorates while asking for restraint teaches the
+    habit it is trying to curb.
     """
-    assert "emoji" in SYSTEM_PROMPT.lower(), (
-        "nothing tells the model to answer without emoji, and it will: %r"
-        % SYSTEM_PROMPT)
-    assert "markdown" in SYSTEM_PROMPT.lower(), (
-        "the pane draws markdown now, and the prompt has to say so or the model "
-        "is being asked for something else")
-    assert "plain text" not in SYSTEM_PROMPT.lower(), (
-        "asking for plain text and for markdown in the same breath is two "
+    low = SYSTEM_PROMPT.lower()
+    assert "emoji" in low, (
+        "nothing says anything about decoration, and the recap of a long task "
+        "is exactly where a model reaches for a tick: %r" % SYSTEM_PROMPT)
+    named = [mark for mark in ("heading", "list", "table") if mark in low]
+    assert len(named) == 3, (
+        "the pane draws these and the prompt names %s, so the model is guessing "
+        "which of them it may use" % (named or "none of them"))
+    assert "plain text" not in low, (
+        "asking for plain text and for a table in the same breath is two "
         "instructions that disagree")
+    for tell in ("the answer first", "say it once"):
+        assert tell in low, (
+            "the prompt no longer asks for the shape that was measured: %r" % tell)
     decorative = [c for c in SYSTEM_PROMPT
-                  if ord(c) > 0x2100 or c in "\u2705\u274c\u26d4"]
+                  if ord(c) > 0x2100 or c in "✅❌⛔—–"]
     assert not decorative, (
-        "the prompt asks for no emoji while using %r" % decorative)
-
-
+        "the prompt asks for restraint while using %r" % decorative)
 def test_a_reopened_conversation_gets_THIS_build_instructions():
     """⛔ A SAVED TRANSCRIPT CARRIES THE PROMPT OF THE DAY IT STARTED, and
     restoring it wholesale let the file win against the code.
