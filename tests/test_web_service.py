@@ -172,13 +172,21 @@ async def test_an_event_after_subscription_is_delivered_once_as_live():
         return json.loads(line.removeprefix(b"data: ").strip())
 
     assert payload(await anext(body))["kind"] == "model"
-    delivered = [payload(await anext(body))]
-    try:
-        delivered.append(payload(await asyncio.wait_for(anext(body), 0.1)))
-    except asyncio.TimeoutError:
-        pass
+    # ⛔ THREE, AND FILTERED BY KIND. This used to read exactly two events and
+    # compare the whole list, so it went red the day the stream gained a state
+    # event it says nothing about - and had it kept reading two while gaining
+    # one, a DUPLICATE would have arrived third and gone unseen, which is the
+    # only thing this test exists to catch. It is about how many times `said` is
+    # delivered, so it counts those and ignores the rest.
+    delivered = []
+    for _ in range(3):
+        try:
+            delivered.append(payload(await asyncio.wait_for(anext(body), 0.1)))
+        except asyncio.TimeoutError:
+            break
 
-    assert delivered == [{"kind": "said", "text": "only once"}]
+    assert [e for e in delivered if e["kind"] == "said"] == [
+        {"kind": "said", "text": "only once"}], delivered
 
 
 # --------------------------------------------------------------------------
@@ -720,21 +728,52 @@ async def test_a_page_that_joins_a_run_in_flight_is_told_the_run_is_in_flight():
     svc.stop()
 
 
-async def test_a_page_that_joins_an_idle_service_is_not_told_anything_about_busy():
-    """The other side, and the reason the event is conditional: a page starts
-    out believing it is idle, so saying so again is noise, and the page's own
-    handler treats `busy 0` as the end of a turn it never saw begin.
+async def test_a_page_that_joins_an_idle_service_is_told_the_turn_is_over():
+    """⛔ THIS TEST ASSERTED THE OPPOSITE UNTIL 2026-09-08, AND THE OPPOSITE COST
+    THE LAST ANSWER OF EVERY CONVERSATION SOMEBODY REOPENED.
 
-    Known-bad: sending the state unconditionally.
+    It read: a page starts out believing it is idle, so saying so again is
+    noise, and the page's own handler treats `busy 0` as the end of a turn it
+    never saw begin. Both halves are true and the conclusion was still wrong,
+    because after a REPLAY the turn being ended is one that really did end. The
+    page holds one narration line back so that a sentence followed by tool calls
+    reads as their lead-in and a sentence with nothing after it reads as the
+    answer, and the only event that resolves that lookahead is the end of the
+    turn. `emit` keeps `busy` out of the history on purpose, so a reopened
+    conversation replayed everything and then sat holding its last sentence,
+    forever, with nothing else coming.
+
+    Measured on the developer's own saved session: 257 events ending in `said`,
+    and the answer to the last thing they asked was not on the screen. Nothing
+    was red. The suite tests the routes and reads the page as a string, and the
+    page is correct here - it is the stream that never said the turn was over.
+
+    Known-bad: make the event conditional on `joining_a_run` again. The last
+    event below stops being a `busy`, and a person reopening a conversation
+    loses its answer.
     """
     svc = ChatService(FakeLink(), SilentBrain())
+    svc.history = [{"kind": "you", "text": "what is on the page"},
+                   {"kind": "said", "text": "Three roles, all remote."}]
     app = build_app(FakeLink(), Sessions.around(svc))
     events = [r for r in app.routes if r.path == "/chat/events"][0]
 
     resp = await events.endpoint(_Req())
     seen = await _first_events(resp)
 
-    assert [e for e in seen if e["kind"] == "busy"] == []
+    busy = [e for e in seen if e["kind"] == "busy"]
+    assert busy, (
+        "a page reopening a finished conversation was never told the turn "
+        "ended, so the last thing the model said stays held and is never "
+        "drawn: %r" % seen)
+    assert busy[0]["text"] == "0"
+    assert busy[0].get("replay"), (
+        "the end of a turn that finished before this listener existed must be "
+        "flagged as replay, or the page animates a row and redraws the session "
+        "list for a turn nobody watched")
+    said = [i for i, e in enumerate(seen) if e["kind"] == "said"]
+    assert said and seen.index(busy[0]) > said[-1], (
+        "the turn was declared over before the sentence it ends was replayed")
 
 
 # --------------------------------------------------------------------------

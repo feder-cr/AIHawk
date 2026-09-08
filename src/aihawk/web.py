@@ -240,8 +240,51 @@ code,pre,.g,.meta,.badge,#url,#tok{
       background:var(--hover); border:1px solid var(--line-1);
       border-radius:var(--r-lg) var(--r-lg) var(--r-sm) var(--r-lg);
       padding:9px 13px; white-space:pre-wrap; overflow-wrap:anywhere }
-.say   { color:var(--fg-2); white-space:pre-wrap; padding-left:var(--indent) }
-.answer{ color:var(--fg);   white-space:pre-wrap; padding-left:var(--indent) }
+/* ⛔ THE PRE-WRAP MOVED DOWN, and that is the whole reason the blocks below can
+   exist. While the answer was one pre-wrap box, every blank line the model left
+   between two paragraphs was drawn as an empty line - so a paragraph margin on
+   top of it would space the answer twice. Now the parser eats the blank lines
+   and the margins do the spacing, while pre-wrap survives exactly where a line
+   break belongs to the author: inside a paragraph, an item, a cell. */
+.say   { color:var(--fg-2); padding-left:var(--indent) }
+.answer{ color:var(--fg);   padding-left:var(--indent) }
+.say > :first-child, .answer > :first-child{ margin-top:0 }
+.say > :last-child,  .answer > :last-child { margin-bottom:0 }
+.md-p{ margin:0 0 var(--s3); white-space:pre-wrap; overflow-wrap:anywhere }
+h3.md-h, h4.md-h, h5.md-h, h6.md-h{
+      margin:var(--s4) 0 var(--s2); font-family:var(--sans); font-weight:600;
+      line-height:1.3; color:var(--fg) }
+/* `##` is what a model writes most, so h4 is the one that has to read as a
+   heading and not as a bold line: at 14px it was the size of the body text
+   under it, which is a hierarchy only the weight was carrying. */
+h3.md-h{ font-size:17px }
+h4.md-h{ font-size:15px }
+h5.md-h, h6.md-h{ font-size:13px; color:var(--fg-2) }
+/* A fenced block inside an answer is already inside the answer's indent, and
+   `.out` carries its own for the tool output it was written for: the two
+   stacked, so code sat a step to the right of the prose describing it. */
+.say > .out, .answer > .out{ margin-left:0 }
+.md-l{ margin:0 0 var(--s3); padding-left:1.4em }
+.md-l .md-l{ margin:var(--s1) 0 0 }        /* a nested list continues its item */
+.md-i{ margin:0 0 var(--s1); white-space:pre-wrap; overflow-wrap:anywhere }
+.md-i::marker{ color:var(--fg-4) }
+.md-q{ margin:0 0 var(--s3); padding-left:var(--s3); color:var(--fg-2);
+       box-shadow:inset 2px 0 0 var(--line-3) }
+.md-hr{ margin:var(--s4) 0; border:0; border-top:1px solid var(--line-2) }
+/* display:block so a wide table scrolls inside itself instead of widening the
+   whole conversation, which on this layout would push the live pane off. */
+.md-t{ display:block; overflow-x:auto; max-width:100%; margin:0 0 var(--s3);
+       border-collapse:collapse; font-size:var(--t-mono) }
+.md-t th, .md-t td{ padding:4px 14px 4px 0; text-align:left; vertical-align:top;
+                    white-space:pre-wrap; border-bottom:1px solid var(--line-1) }
+.md-t th{ font-family:var(--sans); font-size:var(--t-label); font-weight:600;
+          text-transform:uppercase; letter-spacing:.04em; color:var(--fg-3) }
+/* A link is SHOWN and never made clickable: this pane draws words chosen by
+   whatever page the agent last read, and the browser it drives is right there.
+   The address is printed next to them so an injected one is legible. */
+.lk  { color:var(--fg) }
+.href{ color:var(--fg-4); font:12px/1.5 var(--mono); overflow-wrap:anywhere }
+.href::before{ content:" " }
 .orph  { display:flex; gap:8px; font-size:var(--t-mono); color:var(--err);
          background:rgba(232,131,107,.08); border-radius:var(--r-sm);
          box-shadow:inset 2px 0 0 var(--err); padding:6px 10px }
@@ -532,35 +575,136 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
 
 <script>
 const $ = id => document.getElementById(id);
+/* ---- markdown, and the gate lifts everything down to the end of `rich` ----
+   These lines are the only ones in this file a JavaScript engine runs during
+   the tests: `test_the_answer_pane_draws_markdown.py` cuts the region out and
+   executes it against a DOM small enough to print. The markers exist so that
+   cut is exact - moving them means moving what is under test. */
 const el = (t,c,x) => { const e = document.createElement(t);
                         if(c) e.className = c; if(x != null) e.textContent = x; return e; };
 
 /* Markdown to NODES, never to a string of HTML.
-   The model answered `The main heading says **"Example Domain"**` and the page
-   drew the asterisks, because everything here is built with textContent - and
-   that invariant is not an oversight to correct, it is the reason this pane is
-   safe. The text arriving here was written by a model that has just read
-   arbitrary web pages, so it is chosen by whoever wrote the last page it
-   visited. Putting it through innerHTML is the documented road to exfiltration
-   by injected image, and no amount of sanitising makes that road shorter than
-   this one.
+   The text arriving here was written by a model that has just read arbitrary
+   web pages, so it is chosen by whoever wrote the last page it visited. Putting
+   it through innerHTML is the documented road to exfiltration by injected
+   image, and no amount of sanitising makes that road shorter than this one.
    So: the marks become elements, built by hand, and the text between them stays
    text. A `<script>` in the answer is still drawn as the characters of a
    script, because it never stops being a text node.
-   Deliberately absent: images, which are the exfiltration vector itself, and
-   links, which this pane has no reason to make clickable when the browser it
-   drives is right there. */
+   Images are absent on purpose - they are the exfiltration vector itself, and
+   an `<img>` fetches its source the instant it enters the document, with no
+   click and no error needed. A link is drawn but never made clickable, and its
+   destination is PRINTED rather than hidden behind words, so an injected
+   address is legible instead of invisible. */
 function inline(text, into){
-  for(const part of text.split(/(\*\*[^*\n]+\*\*|`[^`\n]+`|\*[^*\n]+\*)/)){
+  for(const part of text.split(/(\*\*[^*\n]+\*\*|`[^`\n]+`|\*[^*\n]+\*|!?\[[^\]\n]*\]\([^()\s]*\))/)){
     if(!part) continue;
     const two = part.length > 4 && part.startsWith('**') && part.endsWith('**');
     const tick = part.length > 2 && part.startsWith('`') && part.endsWith('`');
     const one = part.length > 2 && !two && part.startsWith('*') && part.endsWith('*');
+    const link = /^!?\[([^\]\n]*)\]\(([^()\s]*)\)$/.exec(part);
     if(two)       into.appendChild(el('strong', null, part.slice(2, -2)));
     else if(tick) into.appendChild(el('code', null, part.slice(1, -1)));
     else if(one)  into.appendChild(el('em', null, part.slice(1, -1)));
+    else if(link){ if(link[1]) into.appendChild(el('span','lk', link[1]));
+                   if(link[2]) into.appendChild(el('span','href', link[2])); }
     else          into.appendChild(document.createTextNode(part));
   }
+}
+
+/* The block marks, which are most of what a model writes: it answers in
+   headings and lists far more often than in the three inline marks this pane
+   understood until now, and every one of them was drawn as its own characters -
+   `## Roles` arrived on screen as a hash, a hash and a space. */
+const HEAD   = /^(#{1,6})\s+(.*)$/;
+const BULLET = /^(\s*)[-*+]\s+(.*)$/;
+const NUMBER = /^(\s*)\d+[.)]\s+(.*)$/;
+const QUOTE  = /^\s*>\s?(.*)$/;
+const RULE   = /^\s*([-*_])\s*(?:\1\s*){2,}$/;
+const CELLS  = /\|/;
+const DASHES = /^[\s:|-]*-[\s:|-]*$/;
+
+function blocks(text, into){
+  const lines = text.split('\n');
+  let i = 0;
+  while(i < lines.length){
+    const line = lines[i];
+    if(!line.trim()){ i++; continue; }
+    const head = HEAD.exec(line);
+    if(head){
+      /* `#` lands on h3: the page's own title is above this pane, and an answer
+         that opened at h1 would outrank it in the document outline. */
+      const h = el('h' + Math.min(head[1].length + 2, 6), 'md-h');
+      inline(head[2], h); into.appendChild(h); i++; continue;
+    }
+    if(RULE.test(line)){ into.appendChild(el('hr','md-hr')); i++; continue; }
+    if(QUOTE.test(line)){
+      const held = [];
+      while(i < lines.length && QUOTE.test(lines[i])) held.push(QUOTE.exec(lines[i++])[1]);
+      const q = el('blockquote','md-q');
+      blocks(held.join('\n'), q);          /* a quote holds blocks like any other */
+      into.appendChild(q); continue;
+    }
+    if(CELLS.test(line) && i + 1 < lines.length && DASHES.test(lines[i + 1])
+       && lines[i + 1].includes('-')){ i = tableAt(lines, i, into); continue; }
+    if(BULLET.test(line) || NUMBER.test(line)){ i = listAt(lines, i, into); continue; }
+    /* ⛔ THE FIRST LINE IS TAKEN WITHOUT ASKING, and that is what makes this
+       loop finish. Every branch above consumes; this one is the floor, so if
+       its condition ever excluded the line that got here the walker would sit
+       on it forever building empty paragraphs - a hung tab, not a bad render.
+       Measured while mutating the list branch away: the browser stops. */
+    const held = [lines[i++]];
+    while(i < lines.length && lines[i].trim() && !HEAD.test(lines[i])
+          && !RULE.test(lines[i]) && !QUOTE.test(lines[i])
+          && !BULLET.test(lines[i]) && !NUMBER.test(lines[i])) held.push(lines[i++]);
+    const p = el('p','md-p');
+    inline(held.join('\n'), p);
+    into.appendChild(p);
+  }
+}
+
+/* Both of these return the line to carry on from, so the walker above never has
+   to guess how much they ate - a block parser that advances by one and hopes is
+   how a list ends up inside itself. */
+function listAt(lines, i, into){
+  const first = BULLET.exec(lines[i]) || NUMBER.exec(lines[i]);
+  const base = first[1].length;
+  const ordered = !BULLET.test(lines[i]);
+  const box = el(ordered ? 'ol' : 'ul', 'md-l');
+  let item = null;
+  while(i < lines.length && lines[i].trim()){
+    const mark = BULLET.exec(lines[i]) || NUMBER.exec(lines[i]);
+    if(!mark){
+      /* A line under an item and not marked is the rest of that item. */
+      if(!item) break;
+      item.appendChild(document.createTextNode('\n' + lines[i].trim()));
+      i++; continue;
+    }
+    if(mark[1].length > base){ i = listAt(lines, i, item || box); continue; }
+    if(mark[1].length < base || !BULLET.test(lines[i]) !== ordered) break;
+    item = el('li','md-i');
+    inline(mark[2], item);
+    box.appendChild(item);
+    i++;
+  }
+  into.appendChild(box);
+  return i;
+}
+
+function tableAt(lines, i, into){
+  const cells = row => row.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split('|');
+  const box = el('table','md-t');
+  const head = el('tr','md-r');
+  for(const c of cells(lines[i])) inline(c.trim(), head.appendChild(el('th')));
+  box.appendChild(head);
+  i += 2;                                   /* the header row and its dashes */
+  while(i < lines.length && lines[i].trim() && CELLS.test(lines[i])){
+    const tr = el('tr','md-r');
+    for(const c of cells(lines[i])) inline(c.trim(), tr.appendChild(el('td')));
+    box.appendChild(tr); i++;
+  }
+  into.appendChild(box);
+  return i;
 }
 
 function rich(text){
@@ -570,10 +714,11 @@ function rich(text){
      is prose that changes shape when the closing fence arrives. */
   text.split('```').forEach((block, i) => {
     if(i % 2) frag.appendChild(el('pre','out', block.replace(/^[a-z]*\n/i, '')));
-    else if(block) inline(block, frag);
+    else if(block.trim()) blocks(block, frag);
   });
   return frag;
 }
+/* ---- end markdown ---- */
 
 /* Raw tool names read as the machine's word order. One table, two tenses. */
 const VERB = {
@@ -1690,9 +1835,30 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
                 # with no turn ceiling the stop button is the only thing that
                 # ends such a run. So it is sent as what it is, the present, and
                 # only when true: a page starts out believing it is idle.
+                # ⛔ AND IT IS SENT WHEN FALSE TOO, WHICH IS NOT SYMMETRY FOR
+                # ITS OWN SAKE: without it the last thing the model said was
+                # never drawn. The page holds one narration line back so that a
+                # sentence with tool calls after it reads as their lead-in and
+                # one with nothing after it reads as the answer, and the event
+                # that resolves that lookahead is the end of the turn - which
+                # is a `busy` going false. A replay carries no `busy` at all, so
+                # a page reopening a FINISHED conversation sat holding its last
+                # sentence forever. Measured on the developer's own saved
+                # session: 257 events ending in `said`, and the answer to the
+                # last thing they asked was not on the screen.
+                # Marked as replay so it flushes without animating one row and
+                # without redrawing the session list, exactly like the events
+                # above it.
+                # The two are NOT one line with a conditional inside: the live
+                # one must arrive unflagged or the page calls `waited()` where
+                # it should call `waiting()`, and a run in progress would lose
+                # its clock.
                 if joining_a_run:
                     yield b"data: " + json.dumps(
                         {"kind": "busy", "text": "1"}).encode() + b"\n\n"
+                else:
+                    yield b"data: " + json.dumps(
+                        {"kind": "busy", "text": "0", "replay": True}).encode() + b"\n\n"
                 # The meter is state too, and it was silent for exactly the
                 # same reason: a page joining after a turn ended showed no
                 # context size at all, on the one screen whose whole job is to
