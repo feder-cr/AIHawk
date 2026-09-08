@@ -374,3 +374,55 @@ async def test_every_request_the_page_makes_carries_the_conversation():
     assert "new EventSource(at('/chat/events'))" in script, (
         "the event stream is not addressed, so every page listens to the "
         "default conversation")
+
+
+@pytest.mark.filterwarnings("ignore")
+async def test_a_queued_message_is_not_lost_when_the_page_goes_away():
+    """⛔ TYPED TEXT MUST NOT VANISH SILENTLY, and this was the one thing in the
+    interface that did. The transcript is saved, the answer is saved, and the
+    instruction somebody wrote while the agent was working was held in a
+    JavaScript variable: a refresh, a crash or a closed laptop and the sentence
+    was gone with nothing said about it.
+
+    It is kept per conversation - switching sessions must not carry a pending
+    sentence into another chat - and it comes back into the COMPOSER rather than
+    into the queue, because the run it was waiting behind is over by then.
+
+    Read out of the page, and on the SHAPE rather than on the wording: what has
+    to stay true is that one function writes it and nothing else does, which is
+    exactly what went wrong when it was assigned in five places and saved in
+    none.
+
+    Known-bad: assign `queued = ...` anywhere outside `setQueued`.
+    """
+    import re
+
+    from aihawk.web import PAGE
+
+    script = PAGE[PAGE.index("<script"):]
+    code = re.sub(r"/\*.*?\*/", "", script, flags=re.S)
+
+    assert "function setQueued(" in code, "the queue has no single writer"
+    # ⛔ THE WHOLE LINE, NOT THE CALL. Asserting that `localStorage.setItem`
+    # appears passed a mutation that turned its condition into `if(false)`: the
+    # call was still there and wrote nothing. A source scan that cannot tell a
+    # reachable write from an unreachable one is not checking the write. Exact
+    # enough to break on reformatting, which is the trade being made knowingly:
+    # a page cannot be executed here, so the text is the only evidence.
+    assert "if(queued) localStorage.setItem(qkey(), queued);" in code, (
+        "the queued message is not written down where it can be read back, so "
+        "a reload loses it")
+    assert "localStorage.getItem(qkey())" in code, (
+        "nothing reads the queued message back, so saving it changes nothing")
+    assert "'aihawk.queued.' + here" in code, (
+        "the queue is not kept per conversation, so switching sessions carries "
+        "somebody's pending sentence into another chat")
+
+    # One writer. The declaration is the only other place the name may be
+    # assigned, and it is on the `let` line.
+    writes = [line.strip() for line in code.split(chr(10))
+              if re.search(r"(?<![.\w])queued\s*=(?!=)", line)]
+    stray = [w for w in writes if not w.startswith("let ") and "queued = text" not in w]
+    assert not stray, (
+        "these assign the queue outside its single writer, so they do not save "
+        "it: %s" % stray)

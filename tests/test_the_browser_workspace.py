@@ -319,6 +319,62 @@ def test_the_page_declares_no_identifier_twice():
         "syntax error that stops the whole file from running: %s" % sorted(set(twice)))
 
 
+def test_no_top_level_declaration_uses_a_name_declared_later():
+    """⛔ THE SAME DAMAGE BY A DIFFERENT MECHANISM, and the duplicate-name gate
+    above did not see it. `const QKEY = 'aihawk.queued.' + here;` was written
+    forty lines above `let here`, and a top-level binding read inside its own
+    dead zone throws when the script is evaluated - which kills the whole file:
+    no event stream, no session column, no workspace, and the page still
+    renders. All 440 tests were green with the page dead, the second time in
+    two days that a suite could not see a page a browser cannot run.
+
+    Both gates check the same thing from two sides: nothing at the top level of
+    this script may depend on the ORDER of the lines being right. The real fix
+    for a value that needs another is a function, which is evaluated when it is
+    called.
+
+    Only initialisers are read, not function bodies: a function may use anything
+    declared anywhere, because it runs after the script has finished.
+    """
+    script = PAGE[PAGE.index("<script"):]
+    lines = script.split(chr(10))
+
+    declared, order = {}, []
+    for n, line in enumerate(lines):
+        if line[:1] not in ("l", "c", "v"):
+            continue
+        m = re.match(r"(?:let|const|var)\s+(.+?)\s*=", line)
+        if not m:
+            continue
+        for part in m.group(1).split(","):
+            name = part.split("=")[0].strip()
+            if re.fullmatch(r"[A-Za-z_$][\w$]*", name or "") and name not in declared:
+                declared[name] = n
+                order.append((n, name, line))
+
+    early = []
+    for n, name, line in order:
+        init = line.split("=", 1)[1]
+        # ⛔ NOT INSIDE STRINGS AND REGEXES. The first version read the `i` of
+        # `/^(I will |...)/i` as the variable `i` and accused a line that is
+        # correct: a scan that cannot tell code from text is a gate that goes
+        # red for the wrong reason, which is how gates get widened until they
+        # see nothing.
+        init = re.sub(r"'[^']*'|\"[^\"]*\"|`[^`]*`", "''", init)
+        init = re.sub(r"/(?:[^/\
+]|\.)+/[gimsuy]*", "RE", init)
+        if "=>" in init or init.strip().startswith("function"):
+            # A function value: its body runs later, so it may name anything.
+            continue
+        for other, where in declared.items():
+            if where > n and re.search(r"(?<![.\w])%s(?![\w])" % re.escape(other), init):
+                early.append("%s uses %s, declared %d lines later" % (name, other, where - n))
+    assert not early, (
+        "these read a top-level name before it is declared, which throws when "
+        "the script is evaluated and stops the whole page from running: %s"
+        % early)
+
+
 async def test_waking_nothing_refuses():
     """A wake takes seven to fourteen seconds and starts an engine. Treating a
     missing id as "the current one" would make a bug in the page spend that on a

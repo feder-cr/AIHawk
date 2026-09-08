@@ -575,6 +575,42 @@ const LONG = 120;
 const thread = $('thread'), anchor = $('anchor'), log = $('log');
 let turn = null, live = null, hold = null, n = 0, t0 = 0, timer = 0;
 let busyNow = false, queued = null, pinned = false, settle = 0;
+
+/* ---------------- the queued message ----------------
+   ⛔ IT WAS A VARIABLE, AND A RELOAD ATE IT. Somebody types a follow-up while
+   the agent is working, the page reloads - a refresh, a crash, a laptop lid -
+   and the sentence they wrote is gone with nothing said. That is the one thing
+   this interface must not do to typed text: the transcript is saved, the
+   answer is saved, and the instruction that was waiting to run was the only
+   thing held in a variable.
+
+   Kept per conversation, because it belongs to one: switching sessions must
+   not carry somebody's pending sentence into another chat. Written through ONE
+   function rather than beside each of the five places that assign it - that is
+   how it went unsaved in the first place, and a sixth assignment somewhere
+   would go unsaved the same way.
+
+   Storage can refuse (a private window, site data blocked) and the page has to
+   work when it does: the queue simply goes back to being a variable. */
+/* ⛔ A FUNCTION AND NOT A CONSTANT, because a constant here read `here`
+   before `here` was declared - and a top-level binding used in its own dead
+   zone throws at parse time, which kills the WHOLE script: no event stream, no
+   session column, no workspace, and the page still renders. 440 tests green
+   with the page dead, for the second time in two days and by a different
+   mechanism than the first. Computed when called, the order of the lines stops
+   being something anybody has to keep right. */
+const qkey = () => 'aihawk.queued.' + here;
+function setQueued(text){
+  queued = text || null;
+  try {
+    if(queued) localStorage.setItem(qkey(), queued);
+    else localStorage.removeItem(qkey());
+  } catch(err){}
+  paint();
+}
+function queuedFromBefore(){
+  try { return localStorage.getItem(qkey()); } catch(err){ return null; }
+}
 let pend = null, pendTimer = 0;
 
 const dur = ms => ms < 1000 ? Math.round(ms) + 'ms' : (ms/1000).toFixed(1) + 's';
@@ -722,7 +758,7 @@ const onEvent = (e) => {
                        Redrawn on the end of a turn and not on its start: the
                        turn count beside the name is only right once. */
                     if(!r) drawChats();
-                    if(queued){ const t = queued; queued = null; send(t); } }
+                    if(queued){ const t = queued; setQueued(null); send(t); } }
       paint(); break;
     case 'you':   flush(false, r); live = null; newTurn();
                   put(el('div','you', m.text), r); break;
@@ -787,7 +823,7 @@ document.addEventListener('keydown', e => {
 });
 /* A pencil and not a cross: a cross would read as "cancel the queued message".
    This returns it to the composer to be edited. */
-chip.onclick = () => { i.value = queued; queued = null; i.focus();
+chip.onclick = () => { i.value = queued; setQueued(null); i.focus();
                        i.dispatchEvent(new Event('input')); };
 
 function send(text){
@@ -809,7 +845,7 @@ function wipe(){
      process stops believing in a run that died with the old one - which
      otherwise left the composer saying "queue for next turn" forever. */
   busyNow = false;
-  queued = null; paint();
+  setQueued(null);
 }
 fresh.onclick = () => fetch(at('/chat/fresh'), {method:'POST'});
 
@@ -819,7 +855,7 @@ f.onsubmit = (e) => {
   const t = i.value.trim();
   if(!t){ return; }
   i.value = ''; i.style.height = 'auto';
-  if(busyNow){ queued = t; paint(); return; }
+  if(busyNow){ setQueued(t); return; }
   send(t); paint();
 };
 
@@ -1170,6 +1206,14 @@ async function slowTick(){
 async function fleetPoll(){ await drawFleet(); setTimeout(fleetPoll, 3000); }
 
 $('addbrowser').onclick = openAnother;
+
+/* Whatever was waiting when the page went away comes back into the composer
+   rather than into the queue: the run it was queued behind is over, so the
+   honest place for it is where somebody can read it and press send. */
+const waiting_text = queuedFromBefore();
+if(waiting_text){ i.value = waiting_text; setQueued(null);
+                  i.style.height = 'auto';
+                  i.style.height = Math.min(i.scrollHeight, 200) + 'px'; }
 
 paint(); listen(); tick(); where(); drawChats(); fleetPoll(); slowTick();
 </script>
