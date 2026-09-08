@@ -20,7 +20,7 @@ from __future__ import annotations
 from typing import Awaitable, Callable
 
 from . import actions_help
-from .agent import Conversation
+from .agent import SYSTEM_PROMPT, Conversation
 from .link import Link
 
 Say = Callable[[str, str], Awaitable[None]]
@@ -76,9 +76,21 @@ class OpenRouterBrain(Brain):
         Written into the conversation this brain already has rather than by
         building a new one: the client and the model are this process's, and the
         file has no business deciding either.
+
+        ⛔ AND THE SYSTEM MESSAGE IS THIS PROCESS'S TOO, FOR THE SAME REASON.
+        A saved transcript carries the instructions as they were on the day the
+        conversation started, so restoring it wholesale put an OLD prompt back
+        and every change to `SYSTEM_PROMPT` reached new conversations only.
+        Found on 2026-09-08 while telling the model to stop decorating answers
+        with ticks and crosses: the change would have left every conversation
+        anybody had open still doing it, forever, and the file would have won
+        against the code with nothing saying so. The transcript is what was
+        SAID; the instructions are what this build asks for.
         """
         if messages:
-            self._convo.messages = list(messages)
+            self._convo.messages = (
+                [{"role": "system", "content": SYSTEM_PROMPT}]
+                + [m for m in messages if m.get("role") != "system"])
         if usage:
             self._convo.usage.update(usage)
 

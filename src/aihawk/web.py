@@ -202,8 +202,19 @@ code,pre,.g,.meta,.badge,#url,#tok{
    the measure and 680px is only one screen's worth of it: on a 1920 window the
    same column ran to about 92 characters, past the 80 the WCAG asks for and
    well past the 50 to 75 the readability research settles on. `ch` follows the
-   font instead of guessing at it. */
-#thread{ max-width:72ch; margin:0 auto }
+   font instead of guessing at it.
+
+   ⛔ BUT THE CAP WAS CENTRED, AND THE MEASURE IT CAPS IS NOT THE ONE IT SETS.
+   Centring splits the slack in two and puts half of it on the LEFT, where a
+   reader sees it as the column having been pushed away from the edge for no
+   reason - said in exactly those words on 2026-09-08, and visible in a
+   screenshot as 185px of nothing before the first character. And the number
+   itself was measuring the wrong thing: an answer carries `--indent` of its
+   own, about 4.7ch, so a 72ch container was giving 67 characters of prose,
+   under the range the comment above cites rather than over it. 84 minus the
+   indent lands at 79, inside the 80. Left aligned, so what is left over sits
+   on one side, next to the browser pane, instead of framing the text. */
+#thread{ max-width:84ch; margin:0 }
 
 /* Bottom-pinning with no scroll handler and no epsilon: the sentinel is the only
    anchor the browser may keep, so content inserted before it pushes the view
@@ -250,10 +261,18 @@ code,pre,.g,.meta,.badge,#url,#tok{
 .answer{ color:var(--fg);   padding-left:var(--indent) }
 .say > :first-child, .answer > :first-child{ margin-top:0 }
 .say > :last-child,  .answer > :last-child { margin-bottom:0 }
-.md-p{ margin:0 0 var(--s3); white-space:pre-wrap; overflow-wrap:anywhere }
+/* ⛔ THE RHYTHM IS THE FIRST THING THAT WAS WRONG once the blocks existed, and
+   it read as "everything is stuck together". The gap between two items was 4px
+   under a line 22px tall, so an item that wrapped ran into the next one and a
+   list of six looked like one paragraph with dots in it. The scale here is a
+   ladder rather than one value: 8 inside a list, 16 between blocks, 24 above a
+   heading - a heading needs more space ABOVE it than below, because the space
+   is what says the section starts, and a heading floating equidistant between
+   two paragraphs belongs to neither. */
+.md-p{ margin:0 0 var(--s4); white-space:pre-wrap; overflow-wrap:anywhere }
 h3.md-h, h4.md-h, h5.md-h, h6.md-h{
-      margin:var(--s4) 0 var(--s2); font-family:var(--sans); font-weight:600;
-      line-height:1.3; color:var(--fg) }
+      margin:calc(var(--s4) + var(--s2)) 0 var(--s2); font-family:var(--sans);
+      font-weight:600; line-height:1.35; color:var(--fg) }
 /* `##` is what a model writes most, so h4 is the one that has to read as a
    heading and not as a bold line: at 14px it was the size of the body text
    under it, which is a hierarchy only the weight was carrying. */
@@ -264,18 +283,22 @@ h5.md-h, h6.md-h{ font-size:13px; color:var(--fg-2) }
    `.out` carries its own for the tool output it was written for: the two
    stacked, so code sat a step to the right of the prose describing it. */
 .say > .out, .answer > .out{ margin-left:0 }
-.md-l{ margin:0 0 var(--s3); padding-left:1.4em }
-.md-l .md-l{ margin:var(--s1) 0 0 }        /* a nested list continues its item */
-.md-i{ margin:0 0 var(--s1); white-space:pre-wrap; overflow-wrap:anywhere }
+/* 1.9em, not the 1.4 it started at: at that width the marker sat almost under
+   the first letter and a list read as prose with dots in it. The step of the
+   indent has to be bigger than the space between two words or it is not a
+   step. */
+.md-l{ margin:0 0 var(--s4); padding-left:1.9em }
+.md-l .md-l{ margin:var(--s2) 0 0 }        /* a nested list continues its item */
+.md-i{ margin:0 0 var(--s2); white-space:pre-wrap; overflow-wrap:anywhere }
 .md-i::marker{ color:var(--fg-4) }
-.md-q{ margin:0 0 var(--s3); padding-left:var(--s3); color:var(--fg-2);
+.md-q{ margin:0 0 var(--s4); padding:2px 0 2px var(--s4); color:var(--fg-2);
        box-shadow:inset 2px 0 0 var(--line-3) }
-.md-hr{ margin:var(--s4) 0; border:0; border-top:1px solid var(--line-2) }
+.md-hr{ margin:var(--s5) 0; border:0; border-top:1px solid var(--line-2) }
 /* display:block so a wide table scrolls inside itself instead of widening the
    whole conversation, which on this layout would push the live pane off. */
-.md-t{ display:block; overflow-x:auto; max-width:100%; margin:0 0 var(--s3);
+.md-t{ display:block; overflow-x:auto; max-width:100%; margin:0 0 var(--s4);
        border-collapse:collapse; font-size:var(--t-mono) }
-.md-t th, .md-t td{ padding:4px 14px 4px 0; text-align:left; vertical-align:top;
+.md-t th, .md-t td{ padding:6px 18px 6px 0; text-align:left; vertical-align:top;
                     white-space:pre-wrap; border-bottom:1px solid var(--line-1) }
 .md-t th{ font-family:var(--sans); font-size:var(--t-label); font-weight:600;
           text-transform:uppercase; letter-spacing:.04em; color:var(--fg-3) }

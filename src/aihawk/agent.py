@@ -23,8 +23,10 @@ SYSTEM_PROMPT = (
     "browser_read_text / browser_snapshot / browser_read_html before acting on "
     "them. A person may be watching the browser while you work, so prefer one "
     "clear action at a time over long chains. When the task is done, reply with "
-    "the answer in plain text and do NOT call any more tools. Report only what "
-    "the page actually shows."
+    "the answer and do NOT call any more tools. Report only what the page "
+    "actually shows. Write the answer as prose, with markdown where it carries "
+    "structure the reader needs: a heading, a list, a table. No emoji, and no "
+    "tick or cross in front of a line - say what happened in words."
 )
 
 Say = Callable[[str, str], Awaitable[None]]

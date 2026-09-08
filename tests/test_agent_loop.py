@@ -923,3 +923,67 @@ async def test_two_calls_to_the_same_tool_keep_distinct_ids_and_results():
     results = tool_messages(model.requests[1])
     assert [m["tool_call_id"] for m in results] == ["c1", "c2"]
     assert [m["content"] for m in results] == ["read #1", "read #2"]
+
+
+def test_the_answer_is_asked_for_in_words_and_without_emoji():
+    """⛔ THE DECORATION COMES FROM THE MODEL, SO THE FIX IS THE PROMPT.
+
+    Asked for on 2026-09-08, looking at a real conversation: ticks, crosses and
+    a stop sign in front of most lines of an answer. Nothing in the interface
+    puts them there - the model writes them, because nothing told it not to, and
+    a renderer that stripped them would be a filter over a habit instead of an
+    instruction against it.
+
+    The prompt also has to say that markdown is welcome: it said "plain text",
+    which was true while the pane drew the marks as characters and became a lie
+    the moment it stopped.
+
+    Known-bad, two: drop the emoji sentence, and put an emoji in the prompt
+    itself - a prompt that decorates while asking for no decoration teaches the
+    habit it forbids.
+    """
+    assert "emoji" in SYSTEM_PROMPT.lower(), (
+        "nothing tells the model to answer without emoji, and it will: %r"
+        % SYSTEM_PROMPT)
+    assert "markdown" in SYSTEM_PROMPT.lower(), (
+        "the pane draws markdown now, and the prompt has to say so or the model "
+        "is being asked for something else")
+    assert "plain text" not in SYSTEM_PROMPT.lower(), (
+        "asking for plain text and for markdown in the same breath is two "
+        "instructions that disagree")
+    decorative = [c for c in SYSTEM_PROMPT
+                  if ord(c) > 0x2100 or c in "\u2705\u274c\u26d4"]
+    assert not decorative, (
+        "the prompt asks for no emoji while using %r" % decorative)
+
+
+def test_a_reopened_conversation_gets_THIS_build_instructions():
+    """⛔ A SAVED TRANSCRIPT CARRIES THE PROMPT OF THE DAY IT STARTED, and
+    restoring it wholesale let the file win against the code.
+
+    Found while adding the sentence that tells the model not to decorate answers
+    with ticks and crosses: the change would have reached new conversations
+    only, and every one anybody already had open would have kept doing it
+    forever, with nothing anywhere saying why. The transcript is what was SAID;
+    the instructions are what this build asks for, and there is exactly one
+    place they live.
+
+    Known-bad: `self._convo.messages = list(messages)`, which is what it did.
+    """
+    from aihawk.brain import OpenRouterBrain
+
+    brain = OpenRouterBrain(client=object(), model="m")
+    brain.remember([
+        {"role": "system", "content": "an old instruction, with emoji please"},
+        {"role": "user", "content": "open the listings"},
+        {"role": "assistant", "content": "three roles"},
+    ])
+
+    system = [m for m in brain.messages if m["role"] == "system"]
+    assert len(system) == 1, "a restored transcript must not stack up prompts"
+    assert system[0]["content"] == SYSTEM_PROMPT, (
+        "the conversation came back under the instructions saved in the file, "
+        "so changing the prompt reaches new conversations only")
+    assert brain.messages[0]["role"] == "system", "the prompt has to lead"
+    assert [m["content"] for m in brain.messages[1:]] == [
+        "open the listings", "three roles"], "the transcript itself was altered"
