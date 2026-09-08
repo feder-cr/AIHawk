@@ -50,6 +50,16 @@ def registry(monkeypatch):
     return reg
 
 
+#: Where a caller that names no browser is filed. The tests below put a session
+#: there BY HAND, so they have to spell the key the way the tools do or they set
+#: up one browser and then ask about another. Two of them went red the day the
+#: key was composed, which was the honest outcome; the third asserted that a
+#: password does not appear in the answer and went on passing, over an answer
+#: that had become "no browser is running yet". A test that stops reaching its
+#: subject does not report anything.
+HERE = server.addressed()
+
+
 async def test_with_nothing_running_it_says_so(registry):
     answer = await server.session_status()
 
@@ -64,11 +74,13 @@ async def test_asking_starts_nothing(registry):
     it as the side effect of a question."""
     await server.session_status()
 
-    assert registry.peek() is None, "asking who we are started a browser"
+    # Every key, not just the one it would have used: a browser started under
+    # any address at all is a browser this tool was not supposed to start.
+    assert registry.ids() == [], "asking who we are started a browser"
 
 
 async def test_it_reports_the_running_identity(registry):
-    await registry.restart(seed=4242, headless=True,
+    await registry.restart(HERE, seed=4242, headless=True,
                            proxy={"server": "socks5://exit-a.invalid:1080"},
                            profile_dir="C:/tmp/acct-a")
 
@@ -83,8 +95,8 @@ async def test_it_reports_the_running_identity(registry):
 async def test_it_reports_the_identity_of_a_browser_that_died(registry):
     """The case that made this tool necessary. After a crash the config is still
     known, so the answer is who the next tool will come back as - not silence."""
-    await registry.restart(seed=4242, headless=True)
-    await registry.drop()
+    await registry.restart(HERE, seed=4242, headless=True)
+    await registry.drop(HERE)
 
     answer = await server.session_status()
 
@@ -95,8 +107,15 @@ async def test_it_reports_the_identity_of_a_browser_that_died(registry):
 async def test_it_never_prints_a_proxy_password(registry):
     """A status line is the most quoted string in this surface: it goes into
     transcripts, bug reports and pasted logs."""
-    await registry.restart(seed=1, headless=True,
+    await registry.restart(HERE, seed=1, headless=True,
                            proxy={"server": "socks5://exit-a.invalid:1080",
                                   "username": "u", "password": "hunter2"})
 
-    assert "hunter2" not in await server.session_status()
+    answer = await server.session_status()
+    # The subject is checked before the absence: "hunter2 is not in this string"
+    # is true of every string that is not about a proxied session, so without
+    # this line the test passes hardest when it has stopped testing anything.
+    assert "exit-a.invalid" in answer, (
+        "the answer is not about the proxied session, so finding no password "
+        "in it means nothing: %r" % answer)
+    assert "hunter2" not in answer

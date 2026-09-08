@@ -31,7 +31,7 @@ from contextlib import asynccontextmanager
 from mcp.server.fastmcp import FastMCP, Image
 
 from . import actions, identity, plan
-from .registry import SessionRegistry
+from .registry import DEFAULT_SESSION_ID, SessionRegistry
 
 # Kept for callers that imported it from here. The implementation moved.
 _json_capped = actions.json_capped
@@ -139,26 +139,66 @@ in a way that gets the session blocked."""
 mcp = FastMCP("stealth", instructions=INSTRUCTIONS, lifespan=_lifespan)
 
 
-async def _retrying(fn, *args, **kwargs):
-    """Run an action, and on failure rebuild the session once and retry.
+#: The browser a caller means when it names nothing. Callers that were written
+#: before browsers had names send neither id and must keep behaving exactly as
+#: they did, so both defaults exist and resolve to one browser in one session.
+DEFAULT_BROWSER_ID = "main"
+
+#: Up to eight browsers in one session, and the ceiling is a measurement rather
+#: than a taste: eight live browsers were measured at 61 processes and 6,515 MB
+#: on 2026-09-08, with the eighth taking 13.6 s to start against the first one's
+#: 6.8. The design that goes with this number is in the workbench, under
+#: `docs_research/chat-ui-performance/30-PROGETTO-sessioni-e-otto-browser.md`.
+MAX_BROWSERS_PER_SESSION = 8
+
+
+def addressed(session_id: str | None = None, browser_id: str | None = None) -> str:
+    """The registry key for one browser inside one session.
+
+    ⛔ The registry stores browsers by string key and knows nothing about
+    sessions, and that is deliberate: everything it already gets right - one
+    lock per key so two callers racing start one browser rather than two, the
+    configuration remembered so a rebuild is the SAME PERSON with the same seed
+    and the same exit, tab numbering that does not restart across a rebuild -
+    starts working per BROWSER the moment the key names one. Composing here buys
+    all of it without touching a line of it.
+
+    Everything in this module addresses through this function. A single call
+    that still reaches for the bare default would look at one browser while its
+    neighbours wrote to another, and nothing would raise.
+    """
+    return "%s/%s" % (session_id or DEFAULT_SESSION_ID,
+                      browser_id or DEFAULT_BROWSER_ID)
+
+
+async def _retrying(fn, *args, session_id=None, browser_id=None, **kwargs):
+    """Run an action on one browser, and on failure rebuild it once and retry.
 
     A browser that died between two calls is the ordinary case here, not an
     exotic one: the object is still intact, so the failure surfaces inside the
     action rather than when the session was handed out.
+
+    The rebuild is addressed too. Dropping and re-ensuring the DEFAULT key while
+    the action was aimed at another browser would kill a browser nobody asked
+    about and hand back the wrong one, which is the same class of mistake as
+    rebuilding from the environment: it succeeds, and it succeeds at the wrong
+    thing.
     """
-    session = await registry.ensure()
+    at = addressed(session_id, browser_id)
+    session = await registry.ensure(at)
     try:
         return await fn(session, *args, **kwargs)
     except Exception:
-        await registry.drop()
-        session = await registry.ensure()
+        await registry.drop(at)
+        session = await registry.ensure(at)
         return await fn(session, *args, **kwargs)
 
 
 # --- who is browsing -------------------------------------------------------
 
 @mcp.tool()
-async def session_status() -> str:
+async def session_status(session_id: str | None = None,
+                         browser_id: str | None = None) -> str:
     """Who is browsing right now: the identity, the exit, the profile and the tabs.
 
     Ask whenever you need to know which person the browser currently is, or from
@@ -168,14 +208,18 @@ async def session_status() -> str:
 
     It starts nothing. If no browser is running yet it says so, because until
     one is running there is no identity to report.
+
+    session_id and browser_id are optional. Leave them out and this reports the
+    default browser, as before; name them when a session holds more than one.
     """
-    config = registry.config()
+    at = addressed(session_id, browser_id)
+    config = registry.config(at)
     if config is None:
         return ("no browser is running yet, so there is no identity to report. "
                 "The next tool that needs a page will start one, or call "
                 "session_start to choose who it is.")
 
-    session = registry.peek()
+    session = registry.peek(at)
     tabs = "no tabs open"
     if session is not None:
         try:
@@ -193,7 +237,9 @@ async def session_status() -> str:
 
 @mcp.tool()
 async def session_start(seed: int | None = None, proxy: str | None = None,
-                        profile: str | None = None) -> str:
+                        profile: str | None = None,
+                        session_id: str | None = None,
+                        browser_id: str | None = None) -> str:
     """Start a browsing session as a particular person, and say who that is.
 
     Call this when you want to control WHO is browsing: a fresh stranger, the
@@ -205,9 +251,10 @@ async def session_start(seed: int | None = None, proxy: str | None = None,
     session on its own; `session_status` then tells you who that turned out to
     be.
 
-    There is only ONE browser. Two identities are visited in turn, never at the
-    same time, so a task that needs both accounts live at once cannot be done
-    here and is worth saying so rather than half-starting.
+    A browser holds ONE identity, and this replaces it. Two identities in the
+    same browser are visited in turn, never at the same time, so a task that
+    needs both accounts live at once is worth saying so rather than
+    half-starting.
 
     seed     the browser identity. Same seed, same fingerprint, every time.
              Leave it out and one is drawn, and the answer tells you which, so
@@ -228,6 +275,10 @@ async def session_start(seed: int | None = None, proxy: str | None = None,
              one arriving on different hardware. You are warned when a profile's
              exit changes, but only when YOU change it - a provider that rotates
              its own addresses behind one host and port looks identical here.
+
+    session_id and browser_id are optional. Leave them out and this starts the
+    default browser, as before; name them to say WHICH browser becomes this
+    person, when a session holds more than one.
     """
     try:
         chosen = plan.plan_session(seed, proxy, profile, os.environ)
@@ -239,7 +290,7 @@ async def session_start(seed: int | None = None, proxy: str | None = None,
         return "refused: %s" % exc
 
     try:
-        await registry.restart(**chosen.kwargs)
+        await registry.restart(addressed(session_id, browser_id), **chosen.kwargs)
     except Exception as exc:
         # ⛔ Said plainly, because the dangerous reading is "that failed, carry
         # on". Nothing is running now, and every later tool will repeat this
@@ -256,41 +307,67 @@ async def session_start(seed: int | None = None, proxy: str | None = None,
 # --- pages -----------------------------------------------------------------
 
 @mcp.tool()
-async def session_new_page() -> str:
+async def session_new_page(session_id: str | None = None,
+                           browser_id: str | None = None) -> str:
     """Open a new tab and make it the active one. Returns its page id.
 
     Tabs persist across calls and across clients, so this is how you keep one
-    page while working on another rather than navigating back and forth."""
-    return await _retrying(actions.new_page)
+    page while working on another rather than navigating back and forth.
+
+    session_id and browser_id are optional. Leave them out and the tab opens in
+    the default browser, as before; name them when a session holds more than
+    one, because a tab belongs to the browser it was opened in."""
+    return await _retrying(actions.new_page,
+                           session_id=session_id, browser_id=browser_id)
 
 
 @mcp.tool()
-async def session_list_pages() -> str:
+async def session_list_pages(session_id: str | None = None,
+                             browser_id: str | None = None) -> str:
     """Every open tab: id, title, url, and which one is active.
 
     Use it before session_select_page: the id alone does not tell you which tab
-    you are switching to."""
-    return await actions.list_pages(await registry.ensure())
+    you are switching to.
+
+    session_id and browser_id are optional. Leave them out and this lists the
+    default browser's tabs, as before; name them when a session holds more than
+    one, since each browser numbers its own tabs."""
+    return await actions.list_pages(
+        await registry.ensure(addressed(session_id, browser_id)))
 
 
 @mcp.tool()
-async def session_select_page(page_id: str) -> str:
+async def session_select_page(page_id: str, session_id: str | None = None,
+                              browser_id: str | None = None) -> str:
     """Switch the active tab. Every other browser_* tool acts on it.
 
-    Take the id from session_list_pages or from session_new_page."""
-    return actions.select_page(await registry.ensure(), page_id)
+    Take the id from session_list_pages or from session_new_page.
+
+    session_id and browser_id are optional. Leave them out and this switches the
+    default browser's tab, as before; name them when a session holds more than
+    one, and use the browser the page id came from."""
+    return actions.select_page(
+        await registry.ensure(addressed(session_id, browser_id)), page_id)
 
 
 @mcp.tool()
-async def session_close_page(page_id: str = "") -> str:
-    """Close a tab, or the active one when page_id is left out."""
-    return await actions.close_page(await registry.ensure(), page_id)
+async def session_close_page(page_id: str = "", session_id: str | None = None,
+                             browser_id: str | None = None) -> str:
+    """Close a tab, or the active one when page_id is left out.
+
+    session_id and browser_id are optional. Leave them out and this closes a tab
+    of the default browser, as before; name them when a session holds more than
+    one."""
+    return await actions.close_page(
+        await registry.ensure(addressed(session_id, browser_id)), page_id)
 
 
 # --- reading ---------------------------------------------------------------
 
 @mcp.tool()
-async def browser_navigate(url: str, wait_until: str = "domcontentloaded") -> str:
+async def browser_navigate(url: str, wait_until: str = "domcontentloaded",
+                           session_id: str | None = None,
+                           browser_id: str | None = None) -> str:
     """Go to a url in the active tab, opening one if none exists.
 
     Answers with the HTTP status the server gave and the url actually landed
@@ -302,12 +379,18 @@ async def browser_navigate(url: str, wait_until: str = "domcontentloaded") -> st
     wait_until is "domcontentloaded" by default, which returns as soon as the
     markup is parsed. Use "load" when the page needs its images and stylesheets,
     or "networkidle" for a single-page app that fetches its content after
-    load."""
-    return await _retrying(actions.navigate, url, wait_until=wait_until)
+    load.
+
+    session_id and browser_id are optional. Leave them out and this drives the
+    default browser, as before; name them when a session holds more than one."""
+    return await _retrying(actions.navigate, url, wait_until=wait_until,
+                           session_id=session_id, browser_id=browser_id)
 
 
 @mcp.tool()
-async def browser_read_text(selector: str = "body", max_chars: int = 6000) -> str:
+async def browser_read_text(selector: str = "body", max_chars: int = 6000,
+                            session_id: str | None = None,
+                            browser_id: str | None = None) -> str:
     """The visible text of an element, with the markup gone.
 
     The cheapest way to read a page. Narrow the selector when you know where the
@@ -315,12 +398,18 @@ async def browser_read_text(selector: str = "body", max_chars: int = 6000) -> st
     browser_snapshot when you need something to click.
 
     Long text is cut at max_chars (6000 by default) and the cut is marked in
-    what comes back, so text that ends without that marker is the whole thing."""
-    return await actions.read_text(await registry.ensure(), selector, max_chars)
+    what comes back, so text that ends without that marker is the whole thing.
+
+    session_id and browser_id are optional. Leave them out and this reads the
+    default browser, as before; name them when a session holds more than one."""
+    return await actions.read_text(
+        await registry.ensure(addressed(session_id, browser_id)),
+        selector, max_chars)
 
 
 @mcp.tool()
-async def browser_snapshot(max_chars: int = 0) -> str:
+async def browser_snapshot(max_chars: int = 0, session_id: str | None = None,
+                           browser_id: str | None = None) -> str:
     """Title, url, and the interactive elements that are actually visible.
 
     Each element carries a `selector` when one can reach it: pass that string to
@@ -336,12 +425,17 @@ async def browser_snapshot(max_chars: int = 0) -> str:
     Not the accessibility tree: on a real sign-up page a single country
     `<select>` contributes about two hundred `<option>` nodes, which fill the
     character cap before the form the caller was looking for appears at all.
+
+    session_id and browser_id are optional: without them this snapshots the
+    default browser, as before. Name them to reach one of several.
     """
-    return await actions.snapshot(await registry.ensure(), max_chars)
+    return await actions.snapshot(
+        await registry.ensure(addressed(session_id, browser_id)), max_chars)
 
 
 @mcp.tool()
-async def browser_read_html(mode: str = "form") -> str:
+async def browser_read_html(mode: str = "form", session_id: str | None = None,
+                            browser_id: str | None = None) -> str:
     """The page's HTML, cleaned down to what is worth reading.
 
     Use this when the STRUCTURE matters - a form and its labels, a table, what
@@ -353,47 +447,67 @@ async def browser_read_html(mode: str = "form") -> str:
     the noise and the attribute soup removed.
 
     Unlike browser_read_text this is NOT capped: it returns the whole reduced
-    page, which on a large one is tens of thousands of characters. That is
-    deliberate, because cutting markup in the middle leaves tags that no longer
-    mean anything - but it means the answer can be long. Reach for
-    browser_snapshot when you only need something to click, or
-    browser_read_text when you only need the words.
+    page, tens of thousands of characters on a large one. Cutting markup in the
+    middle leaves tags that mean nothing, so it is not cut - but the answer can
+    be long. Reach for browser_snapshot when you only need something to click.
+
+    session_id and browser_id are optional: without them this reads the default
+    browser, as before. Name them to reach one of several.
     """
-    return await actions.read_html(await registry.ensure(), mode)
+    return await actions.read_html(
+        await registry.ensure(addressed(session_id, browser_id)), mode)
 
 
 @mcp.tool()
-async def browser_take_screenshot() -> Image:
-    """One screenshot of the active tab, on demand."""
-    png = await actions.screenshot_png(await registry.ensure())
+async def browser_take_screenshot(session_id: str | None = None,
+                                  browser_id: str | None = None) -> Image:
+    """One screenshot of the active tab, on demand.
+
+    session_id and browser_id are optional. Leave them out and this pictures the
+    default browser, as before; name them when a session holds more than one."""
+    png = await actions.screenshot_png(
+        await registry.ensure(addressed(session_id, browser_id)))
     return Image(data=png, format="png")
 
 
 @mcp.tool()
-async def browser_watch() -> Image:
+async def browser_watch(session_id: str | None = None,
+                        browser_id: str | None = None) -> Image:
     """The whole browser window as a person at the machine sees it: tab strip,
     address bar, the page and the pointer, from a live capture kept running on
     the active tab. For watching the work, not for acting on it: the picture
     is window pixels, so do not feed its coordinates to browser_click_at; use
-    browser_take_screenshot for that."""
-    jpeg = await actions.watch_jpeg(await registry.ensure())
+    browser_take_screenshot for that.
+
+    session_id and browser_id are optional. Leave them out and this watches the
+    default browser, as before; name them to watch one of several."""
+    jpeg = await actions.watch_jpeg(
+        await registry.ensure(addressed(session_id, browser_id)))
     return Image(data=jpeg, format="jpeg")
 
 
 # --- acting ----------------------------------------------------------------
 
 @mcp.tool()
-async def browser_click(selector: str) -> str:
+async def browser_click(selector: str, session_id: str | None = None,
+                        browser_id: str | None = None) -> str:
     """Click the first element matching a CSS selector.
 
     Scrolls it into view and waits for it to be clickable. When no selector can
     describe the target, use browser_click_at with coordinates from
-    browser_snapshot."""
-    return await actions.click(await registry.ensure(), selector)
+    browser_snapshot.
+
+    session_id and browser_id are optional. Leave them out and this clicks in
+    the default browser, as before; name them when a session holds more than
+    one, and use the browser the selector came from."""
+    return await actions.click(
+        await registry.ensure(addressed(session_id, browser_id)), selector)
 
 
 @mcp.tool()
-async def browser_click_at(x: float, y: float, hold_seconds: float = 0.0) -> Image:
+async def browser_click_at(x: float, y: float, hold_seconds: float = 0.0,
+                           session_id: str | None = None,
+                           browser_id: str | None = None) -> Image:
     """Click (or press-and-hold) a raw viewport coordinate instead of a
     selector - for targets a selector cannot reliably reach: a slider track, a
     canvas-drawn captcha, or a precise point inside a wider element. Moves the
@@ -411,42 +525,68 @@ async def browser_click_at(x: float, y: float, hold_seconds: float = 0.0) -> Ima
     image loading in above the fold. Nothing raises when that happens - the
     click simply lands on whatever is at that spot now. Take a fresh snapshot
     after anything that could have moved the page, and prefer browser_click with
-    the element's `selector` whenever it has one."""
-    png = await actions.click_at(await registry.ensure(), x, y, hold_seconds)
+    the element's `selector` whenever it has one.
+
+    session_id and browser_id are optional. Leave them out and this clicks in
+    the default browser, as before; name them when a session holds more than
+    one, and use the browser the coordinates came from."""
+    png = await actions.click_at(
+        await registry.ensure(addressed(session_id, browser_id)),
+        x, y, hold_seconds)
     return Image(data=png, format="png")
 
 
 @mcp.tool()
-async def browser_type(selector: str, text: str) -> str:
+async def browser_type(selector: str, text: str, session_id: str | None = None,
+                       browser_id: str | None = None) -> str:
     """Fill a field, replacing whatever it holds.
 
     This sets the value rather than typing key by key, so it will not fire the
     per-keystroke handlers an autocomplete needs. For those, click the field and
-    use browser_press_key."""
-    return await actions.type_text(await registry.ensure(), selector, text)
+    use browser_press_key.
+
+    session_id and browser_id are optional. Leave them out and this types into
+    the default browser, as before; name them when a session holds more than
+    one."""
+    return await actions.type_text(
+        await registry.ensure(addressed(session_id, browser_id)), selector, text)
 
 
 @mcp.tool()
-async def browser_select_option(selector: str, value: str) -> str:
+async def browser_select_option(selector: str, value: str,
+                                session_id: str | None = None,
+                                browser_id: str | None = None) -> str:
     """Choose an option in a dropdown (`<select>`), by its visible label or by
     its value.
 
     Use this rather than clicking the dropdown and pressing arrow keys: a click
     plus arrows cannot tell you which row it landed on, and setting the value
     through browser_evaluate changes it without the page seeing a real
-    interaction."""
-    return await actions.select_option(await registry.ensure(), selector, value)
+    interaction.
+
+    session_id and browser_id are optional. Leave them out and this chooses in
+    the default browser, as before; name them when a session holds more than
+    one."""
+    return await actions.select_option(
+        await registry.ensure(addressed(session_id, browser_id)), selector, value)
 
 
 @mcp.tool()
-async def browser_press_key(key: str) -> str:
+async def browser_press_key(key: str, session_id: str | None = None,
+                            browser_id: str | None = None) -> str:
     """Press a key on whatever has focus: "Enter", "Tab", "Escape",
-    "ArrowDown", "Control+a", or a single character."""
-    return await actions.press_key(await registry.ensure(), key)
+    "ArrowDown", "Control+a", or a single character.
+
+    session_id and browser_id are optional. Leave them out and the key goes to
+    the default browser, as before; name them when a session holds more than
+    one."""
+    return await actions.press_key(
+        await registry.ensure(addressed(session_id, browser_id)), key)
 
 
 @mcp.tool()
-async def browser_evaluate(expression: str) -> str:
+async def browser_evaluate(expression: str, session_id: str | None = None,
+                           browser_id: str | None = None) -> str:
     """READ from the page with JavaScript and get the result as JSON.
 
     For what the other tools cannot see: a computed style, a value held in a
@@ -462,8 +602,12 @@ async def browser_evaluate(expression: str) -> str:
 
     The refusal catches the obvious spellings, not every possible one. A script
     that slips past it is still the wrong way to do the thing: report it in your
-    answer rather than using it."""
-    return await actions.evaluate(await registry.ensure(), expression)
+    answer rather than using it.
+
+    session_id and browser_id are optional. Leave them out and this reads the
+    default browser, as before; name them when a session holds more than one."""
+    return await actions.evaluate(
+        await registry.ensure(addressed(session_id, browser_id)), expression)
 
 
 def main() -> None:

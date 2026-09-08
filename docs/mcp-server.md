@@ -160,6 +160,20 @@ Tool names mirror the Microsoft Playwright MCP, so prompts written for it work
 here too. Three groups: who is browsing and which tab, reading the page, and
 acting on it.
 
+**Every tool below also takes `session_id` and `browser_id`, both optional, and
+neither appears in the tables because the answer is the same for all of them.**
+Send neither and you get the default browser of the default session, which is
+what a client that never mentions either has always got and always will. Name
+them when a session holds more than one browser and the command has to reach a
+particular one.
+
+The two are not the same thing. A **session** is the piece of work: it owns a
+conversation and the browsers that belong to it. A **browser** is one running
+engine inside that session, with its own tabs, its own cookies and its own
+identity, and it does not share any of that with its neighbours. Tabs live
+inside a browser, which is why the tab tools take a page id and not a third
+address.
+
 ### Session and tabs
 
 | Tool | Arguments | What it does |
