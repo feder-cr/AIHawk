@@ -547,57 +547,69 @@ async def _first_events(resp, want=4, each=1.0):
     return seen
 
 
-async def test_the_frame_pause_is_shorter_than_the_capture_produces():
-    """Asking slower than the source means frames are made and thrown away.
+async def test_the_stage_asks_for_frames_at_a_rate_it_has_measured():
+    """Asking slower than the source means frames are made and thrown away, and
+    asking faster than the pipe can carry means every click queues behind a
+    picture. Both edges, and both numbers measured rather than chosen.
 
-    The capture pushes about ten frames a second (measured 9.6 at its own
-    callback), and a frame costs roughly 22 ms on the pipe, so a pause of P ms
-    makes a cycle of about P + 22. For the pane to show every frame the source
-    makes, that cycle has to fit inside the ~100 ms between frames.
+    ⛔ THE PACE IS NO LONGER ONE LITERAL, because the stage is no longer one
+    screen. It is a table of frames-a-second by how many screens are showing,
+    and the loop's pause is derived from it. The old gate read
+    `setTimeout(tick, 18)` and asserted on 18; that number does not exist any
+    more, so this reads the table instead - the same question asked of the
+    thing that now answers it.
 
-    It did not: the pause was 200 ms, and the pane ran at 4.6 fps against a
-    source giving 10. The comment above it had both halves of the fact - "the
-    engine produces ten" and "five a second" - and drew the wrong conclusion
-    from them.
+    ⛔ AND THE COST OF A FRAME WAS WRONG BY A FACTOR OF FOUR. This file said 22
+    ms of pipe, and everything about the old design followed from it: one live
+    pane, seven previews at one every 400 ms, and a comment explaining that
+    eight panes would need 2.3 seconds of pipe per second. Measured again on
+    2026-09-09 with four real browsers over the same Link the interface uses, a
+    frame costs 5 to 6 ms - the capture already runs inside the engine, and the
+    server hands over the latest picture rather than taking one. Four panes
+    polled as fast as the answers came back delivered 80 frames a second in
+    total, about 20 each, and an action still landed in 49 ms against 40 with a
+    single pane.
 
-    Known-bad: putting it back to 200, or to anything that leaves no room for
-    the round trip.
+    Known-bad, three: ask for fewer frames at one-up than the engine is told to
+    produce, which throws away what was made; raise the table until the total
+    passes what the pipe was measured to carry; or schedule the pump from a
+    second place, which is how a pace stops being a thing anybody can read.
     """
     import re
 
     # ⛔ THE CODE, NOT THE PROSE BESIDE IT, and this gate learned that the hard
     # way: a comment explaining why the pause is NOT 500 contained the literal
     # `setTimeout(tick, 500)`, and the scan read the explanation as the pump.
-    # It is the project's most repeated defect arriving from the other side -
-    # usually a gate is satisfied by a comment, here it was accused by one.
     code = re.sub(r"/\*.*?\*/", "", PAGE, flags=re.S)
     code = re.sub(r"^\s*//.*$", "", code, flags=re.M)
-    m = re.search(r"setTimeout\(tick,\s*(\d+)\)", code)
-    assert m, "the frame pump no longer paces itself with setTimeout(tick, ...)"
-    assert len(re.findall(r"setTimeout\(tick,\s*\d+\)", code)) == 1, (
+
+    assert len(re.findall(r"setTimeout\(tick,", code)) == 1, (
         "the pump is scheduled from more than one place, so its pace is no "
         "longer one number anybody can read")
-    pause_ms = int(m.group(1))
+    table = re.search(r"const FPS = \{([^}]*)\}", code)
+    assert table, "the stage no longer declares its frames a second"
+    fps = {int(k): int(v) for k, v in re.findall(r"(\d+)\s*:\s*(\d+)", table.group(1))}
+    assert set(fps) == {1, 2, 4}, "the layouts on offer are %s" % sorted(fps)
 
-    round_trip_ms = 22    # measured against the running interface
-
-    # ⛔ THE RATE IS READ FROM THE CODE THAT ASKS FOR IT, not written here. It
-    # was `source_period_ms = 100  # 10 fps` and the day the server started
-    # asking the engine for 25 that comment became a false number in a gate:
-    # the assertion would have stayed green while the pane collected twelve of
-    # the twenty-five frames it was being sent, which is the failure this test
-    # exists to catch, hidden inside the test itself.
     from aihawk.mcp.session import StealthSession
 
-    source_period_ms = 1000 / StealthSession.WATCH_FPS
+    assert fps[1] >= StealthSession.WATCH_FPS, (
+        "one screen is asked for %d frames a second while the engine is told to "
+        "produce %d: the difference is made, held and thrown away, which is the "
+        "defect this gate was written for"
+        % (fps[1], StealthSession.WATCH_FPS))
 
-    assert pause_ms + round_trip_ms <= source_period_ms, (
-        "a %d ms pause makes a %d ms cycle against a source asked for %d fps - "
-        "one frame every %.0f ms - so the pane would show about %.1f of them"
-        % (pause_ms, pause_ms + round_trip_ms, StealthSession.WATCH_FPS,
-           source_period_ms, 1000 / (pause_ms + round_trip_ms)))
-
-
+    #: Measured 2026-09-09, four browsers, this pipe. The ceiling is the rate at
+    #: which the measurement showed an action still landing promptly: 80 frames
+    #: a second cost about half the pipe, so half of that is the budget spent.
+    A_FRAME_MS, CEILING = 6, 40
+    for screens, each in fps.items():
+        total = screens * each
+        assert total <= CEILING, (
+            "%d screens at %d frames a second each is %d requests a second, and "
+            "at about %d ms of pipe apiece that is %d%% of it - the agent's "
+            "clicks go down the same pipe"
+            % (screens, each, total, A_FRAME_MS, total * A_FRAME_MS / 10))
 async def test_the_answer_is_built_from_nodes_and_never_from_html():
     """The model's Markdown is drawn, and it is drawn without `innerHTML`.
 

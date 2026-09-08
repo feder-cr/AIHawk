@@ -581,28 +581,67 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
                  white-space:nowrap }
 .thumb .cap .st{ flex:none; color:var(--fg-4) }
 
-#stage{ flex:1; min-height:0; padding:14px; display:grid; place-items:center;
+/* ⛔ THE STAGE IS A GRID NOW, AND HOW MANY CELLS IT HAS IS A MEASURED
+   DECISION. A frame costs 5 to 6 ms of pipe, not the 22 this file assumed
+   until it was measured again on 2026-09-09 with four real browsers: the
+   capture already runs inside the engine and the server hands over the latest
+   picture rather than taking one. Four panes at twenty frames a second each
+   deliver 80 a second in total, use about half the pipe, and an action still
+   lands in 49 ms against 40 with one pane. So four live screens are affordable
+   and eight are not, which is exactly the vocabulary a control room uses. */
+#stage{ flex:1; min-height:0; padding:14px; display:grid; gap:12px;
         container-type:size }
-#browser{ --arn:1.6; --chrome:38px;
-          width:min(100%, calc((100cqh - var(--chrome)) * var(--arn)));
-          max-height:100%; display:flex; flex-direction:column;
-          background:var(--raised); border:1px solid var(--line-2);
-          border-radius:10px; overflow:hidden; box-shadow:0 18px 50px -22px #000 }
-/* aspect-ratio and not flex:1. With flex the height came from the CONTENT, so
-   before the first frame the whole browser collapsed to a 20px strip with the
-   placeholder inside it, which reads as broken rather than as empty. Now the
-   frame keeps a browser's shape from the first paint, and --arn moves it to the
-   real one as soon as a frame lands. */
-#shot{ aspect-ratio:var(--arn); min-height:0; position:relative;
-       background:var(--well); display:grid; place-items:center }
-#frame{ width:100%; height:100%; object-fit:contain; object-position:top center;
-        display:block }
-/* Visibility rides the `hidden` property. The version before this one set
+#stage[data-grid="1"]{ grid-template-columns:1fr }
+#stage[data-grid="2"]{ grid-template-columns:1fr 1fr }
+#stage[data-grid="4"]{ grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr }
+.screen{ min-width:0; min-height:0; display:flex; flex-direction:column;
+         background:var(--raised); border:1px solid var(--line-2);
+         border-radius:10px; overflow:hidden; box-shadow:0 18px 50px -22px #000;
+         padding:0; font:inherit; color:inherit; text-align:left; cursor:pointer;
+         transition:border-color 120ms ease-out }
+.screen:hover{ border-color:var(--line-3) }
+/* The one you are looking at, when there is more than one to look at. */
+.screen[aria-current="true"]{ border-color:var(--fg-4) }
+.screen .shot{ flex:1; min-height:0; position:relative; background:var(--well);
+               display:grid; place-items:center }
+/* contain and not cover: cropping a browser window hides part of what the
+   agent is looking at, which is the thing this pane exists to show. The bands
+   are the same recessed colour as the frame, so they read as the frame. */
+/* ⛔ ANCHORED, NOT SIZED IN PERCENT. `height:100%` on a grid item whose parent
+   takes its height from a flex row does not resolve, so the picture fell back
+   on its own aspect ratio and came out 23px taller than the box it was in -
+   measured - which put it over the caption underneath. Absolute against the
+   shot gives it a definite box on both axes and `contain` does the rest. */
+.screen .shot img{ position:absolute; inset:0; width:100%; height:100%;
+                   object-fit:contain; object-position:top center; display:block }
+/* Visibility rides the `hidden` property. An earlier version set
    `style.display = ''` to show the image, which removes the inline value and
    falls back on a stylesheet rule hiding it: the pane stayed black with the
    pixels already decoded inside it, and every structural assertion passed. */
-#frame[hidden]{ display:none }
-#empty{ color:var(--fg-4); font-size:var(--t-ui) }
+.screen .shot img[hidden]{ display:none }
+.screen .ph{ color:var(--fg-4); font-size:var(--t-ui) }
+.screen .cap{ flex:none; display:flex; align-items:center; gap:7px;
+              padding:5px 9px; border-top:1px solid var(--line-1);
+              font-family:var(--mono); font-size:var(--t-label);
+              color:var(--fg-3) }
+.screen .cap .id{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis;
+                  white-space:nowrap }
+/* ⛔ STALE HAS TO LOOK STALE. In a grid most of what you see is a picture from
+   a moment ago by construction, and a control room's first rule is that a feed
+   which has stopped must not read as one that is running. Empty while the
+   frames keep coming, and a number in seconds the moment they do not. */
+.screen .cap .age{ flex:none; color:var(--err) }
+.screen .cap .dot{ flex:none; width:6px; height:6px; border-radius:50%;
+                   background:var(--ok, #6c9); box-shadow:0 0 0 2px var(--raised) }
+
+#grid{ flex:none; display:flex; gap:2px; background:var(--well);
+       border:1px solid var(--line-2); border-radius:var(--r-pill); padding:2px }
+#grid button{ min-width:24px; height:20px; padding:0 6px; border:0;
+              border-radius:var(--r-pill); background:none; cursor:pointer;
+              font:600 var(--t-label)/1 var(--mono); color:var(--fg-4);
+              transition:background-color 120ms ease-out, color 120ms ease-out }
+#grid button:hover{ color:var(--fg-2) }
+#grid button[aria-pressed="true"]{ background:var(--raised); color:var(--fg) }
 
 /* The small things whose absence is felt without being noticed. */
 :focus{ outline:none }
@@ -704,15 +743,16 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
       <button role="tab" aria-selected="false" data-v="hold" type="button">Frozen</button>
     </span>
     <span id="state" class="label" aria-live="polite">idle</span>
+    <!-- How many browsers are on the stage at once. The vocabulary of a
+         control room, because that is the job: one when you are watching the
+         work, four when you are keeping an eye on it. -->
+    <span id="grid" role="group" aria-label="Screens at once">
+      <button type="button" data-n="1" aria-pressed="true">1</button>
+      <button type="button" data-n="2" aria-pressed="false">2</button>
+      <button type="button" data-n="4" aria-pressed="false">4</button>
+    </span>
   </div>
-  <div id="stage">
-    <div id="browser">
-      <div id="shot">
-        <img id="frame" alt="live browser view" hidden>
-        <span id="empty">nothing running yet</span>
-      </div>
-    </div>
-  </div>
+  <div id="stage" data-grid="1"></div>
   <div id="thumbs" aria-label="The other browsers in this session"></div>
 </div>
 
@@ -1184,9 +1224,8 @@ function meter(json){
 }
 
 /* ---- the browser pane ---- */
-const img = $('frame'), empty = $('empty'), right = $('right'), stateEl = $('state'),
-      browser = $('browser'), urlEl = $('url');
-let frozen = false, lastArn = null;
+const right = $('right'), stateEl = $('state'), urlEl = $('url');
+let frozen = false;
 
 /* The second argument is the sentence behind a one-word state, shown on hover:
    an "error" with no reason is a thing to restart, an "error" that says the
@@ -1202,74 +1241,89 @@ $('mode').onclick = (e) => {
   say(frozen ? 'frozen' : 'live');
 };
 
-/* Whether the browser the big pane watches has anything to show. Unknown
-   until the first fleet poll lands, and "unknown" asks - the single-browser
-   case must not wait three seconds for its first frame. */
-function focusedHasNoPage(){
-  const b = fleet.find(x => x.id === focusHere);
-  return b && b.running && (b.urls || []).length === 0;
+
+/* ⛔ FRAMES A SECOND EACH, BY HOW MANY SCREENS ARE ON THE STAGE, and every one
+   of these numbers is measured rather than chosen. Four real browsers, this
+   same pipe, 2026-09-09: a frame costs 5 to 6 ms - not the 22 ms this file
+   assumed for months - because the capture already runs inside the engine and
+   the server hands over the latest picture instead of taking one. Polling as
+   fast as the answers came back, each pane got about 20 frames a second
+   whether there was one of them or four, so four panes moved 80 frames a
+   second and an action still landed in 49 ms against 40 with a single pane.
+   The pipe is the constraint at eight, not at four.
+
+   So the budget is spent deliberately and not to the limit: one screen gets
+   the 25 the engine is asked to produce, two get 20 each, four get 10 each -
+   40 requests a second at most, about a quarter of what the pipe can carry,
+   leaving the rest to the agent whose clicks share it. */
+const FPS = {1: 25, 2: 20, 4: 10};
+const pause = () => Math.round(1000 / (FPS[grid] * grid));
+
+/* One scheduler for the whole stage. It used to be two - a fast one for the
+   single live pane and a slow one for the previews - and with a grid that
+   would be two numbers describing one rate, which is how a pace stops being
+   something anybody can read off the page. */
+/* ⛔ THE SCHEDULER CANNOT BE ALLOWED TO DIE, and it died the first time this
+   ran. `ageAll` reached for the age label on the placeholder cell, which has
+   no caption, threw a TypeError, and because the throw was outside the fetch's
+   try the timer at the bottom was never reached: the pump stopped for good, in
+   silence, and what you see then is a pane that never updates - which reads as
+   a server that has stopped answering rather than as a page with a bug in it.
+   The body is a separate function now and the scheduling is the only thing
+   this one does, so no defect inside a pass can take the loop with it. */
+async function tick(){
+  try { await onePass(); } catch(err) {}
+  setTimeout(tick, pause());
 }
 
-async function tick(){
-  /* ⛔ ONE SCHEDULER, and the pace of the pump stays one number. The first
-     version of this skip scheduled its own slower `setTimeout(tick, 500)` and
-     the gate on the pump's pace caught it immediately: with two of them the
-     rate is no longer a thing anybody can read off the page. So the idle case
-     skips the REQUEST and falls through to the same timer as everything else -
-     a no-op every 60 ms costs nothing, since what costs is the round trip. */
-  if(focusedHasNoPage()){ img.hidden = true; empty.hidden = false; say('idle'); }
-  else if(!frozen) try {
-    const r = await fetch(at('/live/frame?t=' + Date.now()), {cache:'no-store'});
-    if(r.status === 204){ img.hidden = true; empty.hidden = false; say('idle'); }
-    else if(r.ok){
-      const blob = await r.blob(), old = img.src;
-      img.src = URL.createObjectURL(blob);
-      if(old.startsWith('blob:')) URL.revokeObjectURL(old);
-      img.hidden = false; empty.hidden = true; say('live');
-      /* Only when it actually changes. The window keeps its shape for a whole
-         session, so writing this ten times a second was ten style
-         invalidations a second to say the same number. */
-      if(img.naturalWidth){
-        const arn = (img.naturalWidth / img.naturalHeight).toFixed(4);
-        if(arn !== lastArn){ lastArn = arn; browser.style.setProperty('--arn', arn); }
+async function onePass(){
+  const cells = [...$('stage').children];
+  if(cells.length && !frozen){
+    const cell = cells[turnOf % cells.length];
+    turnOf++;
+    const id = cell.dataset.id;
+    if(cell.dataset.blank === '1'){ say(cells.length > 1 ? 'live' : 'idle'); }
+    else try {
+      const r = await fetch(at('/live/frame?b=' + encodeURIComponent(id)
+                               + '&t=' + Date.now()), {cache:'no-store'});
+      if(r.status === 204){ blank(cell, 'no page yet'); if(id === watched()) say('idle'); }
+      else if(r.ok){
+        const im = cell.querySelector('img'), blob = await r.blob(), old = im.src;
+        im.src = URL.createObjectURL(blob);
+        if(old && old.startsWith('blob:')) URL.revokeObjectURL(old);
+        im.hidden = false;
+        const ph = cell.querySelector('.ph'); if(ph) ph.hidden = true;
+        cell.dataset.at = String(Date.now());
+        if(id === watched()) say('live');
       }
-    }
-    /* The capture could not answer, and the body says why: no frame within the
-       server's wait (a minimised window is captured as nothing), or an engine
-       without the screencast. While the pane was a screenshot this was "busy",
-       because a page mid-load cannot be painted and every navigation produced
-       a few; the window is always there to be captured, so a 503 now is a
-       thing to read. The last frame stays on screen either way: a stale
-       picture of where the browser was beats a blank pane. */
-    else if(r.status === 503){ say('error', await reason(r)); }
-    else { say('error'); }
-  } catch(err){ say('offline'); }
-  /* Ask for the next frame only once this one has landed, or a browser slower
-     than the interval accumulates requests it can never serve.
+      /* The capture could not answer, and the body says why: no frame within
+         the server's wait (a minimised window is captured as nothing), or an
+         engine without the screencast. The last frame stays on screen either
+         way - a picture of where the browser was beats a blank pane - which is
+         exactly why the age below has to be told. */
+      else if(r.status === 503 && id === watched()){ say('error', await reason(r)); }
+      else if(id === watched()){ say('error'); }
+    } catch(err){ if(id === watched()) say('offline'); }
+    ageAll(cells);
+  }
+}
 
-     The pause used to be 200 ms, under a comment that knew the engine produces
-     ten frames a second and asked for five anyway, reasoning that asking faster
-     "would only show the same frame twice". Below the source rate that is
-     backwards: half the frames were made, held, and thrown away. Measured on
-     an animating page, same browser, interleaved rounds: 200 ms delivered
-     4.6 fps to the pane, 60 ms delivers 10.0, which is everything the capture
-     produces (9.6 fps measured at its own callback).
-
-     18 and not 0, and 18 rather than 60 since the server started asking the
-     engine for 25 frames a second instead of taking its default of 10. A frame
-     costs one round trip of about 22 ms on the pipe that ACTIONS also use, so
-     the cycle is about 40 ms: 25 requests a second for 25 frames, which is
-     roughly 55% of the pipe. That is a lot and it is bought deliberately - it
-     is the difference between a pane that moves and one that stutters - and
-     what it leaves is still far more than an agent needs, since an action
-     costs about 20 ms and an agent takes one or two a second. The slow
-     previews of the other browsers add about 5% more, by design: their cost
-     does not grow with how many there are.
-
-     Unpaced it would ask about 46 times a second, spend the pipe on duplicate
-     frames and make every click queue behind them. An action still waits at
-     most one frame. */
-  setTimeout(tick, 18);
+/* ⛔ A PICTURE THAT HAS STOPPED MUST NOT READ AS ONE THAT IS RUNNING. On a
+   healthy stage every screen is refreshed every 40 to 100 ms, so anything past
+   a couple of seconds means that browser has stopped answering - and the last
+   frame is still sitting there looking alive. Two seconds, because at four
+   screens a round is 100 ms and a hiccup of three or four rounds is not news. */
+function ageAll(cells){
+  const now = Date.now();
+  for(const c of cells){
+    /* The placeholder cell has no caption to write into, which is how this
+       function killed the pump the first time it ran. */
+    const lab = c.querySelector('.age');
+    if(!lab) continue;
+    const at2 = Number(c.dataset.at || 0), old = at2 && (now - at2) > 2000;
+    lab.textContent = old ? Math.round((now - at2) / 1000) + 's' : '';
+    lab.title = old ? 'no frame for this long' : '';
+  }
 }
 
 /* Built from elements with textContent and never innerHTML: this string comes
@@ -1416,6 +1470,7 @@ $('newchat').onclick = async () => {
    write it and its cost would be the thing the measurement forbids. */
 const SLOW_MS = 400;
 let fleet = [], nextPane = 0, focusHere = '';
+let grid = 1, turnOf = 0;
 
 /* ⛔ TWO DIFFERENT THINGS, AND THEY USED TO BE ONE. `focusHere` is the browser
    the AGENT drives - it lives on the server and only the agent moves it, by
@@ -1467,9 +1522,94 @@ function thumbFor(b){
    the view back to the agent, so there is a way out of a choice as well as in. */
 function watchThis(id){
   pinned2 = (pinned2 === id) ? null : id;
-  lastArn = null;
   drawFleet();
 }
+
+/* ---- the stage: one screen, or two, or four ----
+   Which browsers are on it and in what order: the one being watched first,
+   then the rest as the server lists them. So clicking any screen or any
+   preview brings that browser to the front, and at one-up that means it fills
+   the stage - which is what "click it and go to another screen" means. */
+function onStage(){
+  const w = watched();
+  const live = fleet.filter(b => b.running);
+  const first = live.filter(b => b.id === w);
+  return first.concat(live.filter(b => b.id !== w)).slice(0, grid);
+}
+
+function blank(cell, why){
+  const im = cell.querySelector('img'); if(im) im.hidden = true;
+  const ph = cell.querySelector('.ph');
+  if(ph){ ph.hidden = false; ph.textContent = why; }
+  cell.dataset.blank = '1';
+  cell.dataset.at = '';
+}
+
+function screenFor(b, current){
+  const cell = document.createElement('button');
+  cell.type = 'button'; cell.className = 'screen'; cell.dataset.id = b.id;
+  cell.setAttribute('aria-current', String(current));
+  cell.title = 'Watch ' + b.id;
+  const shot = el('div','shot');
+  const im = document.createElement('img'); im.alt = ''; im.hidden = true;
+  /* Three states and not two, and the third is the one that reads as a
+     failure: a browser that is RUNNING WITH NO TAB cannot be captured - the
+     engine answers "no such tab" - and asking anyway spends a round trip to be
+     told so. The tabs are already in the answer this was built from, so the
+     question is asked of data rather than of the pipe. */
+  const ph = el('span','ph', (b.urls || []).length ? '' : 'no page yet');
+  ph.hidden = (b.urls || []).length > 0;
+  shot.append(im, ph);
+  const cap = el('div','cap');
+  cap.appendChild(el('span','id', b.id));
+  cap.appendChild(el('span','age', ''));
+  if(b.id === focusHere){
+    const dot = el('span','dot');
+    dot.title = 'the agent is working here';
+    cap.appendChild(dot);
+  }
+  cell.append(shot, cap);
+  if(!(b.urls || []).length) cell.dataset.blank = '1';
+  cell.onclick = () => watchThis(b.id);
+  return cell;
+}
+
+function drawStage(){
+  const box = $('stage'), show = onStage();
+  box.dataset.grid = String(grid);
+  /* Only when the SET changes, or every poll would throw away the pictures and
+     make the whole stage flash once a second for no new fact. */
+  const sig = show.map(b => b.id + ((b.urls || []).length ? 'p' : '')
+                            + (b.id === focusHere ? 'a' : '')).join(',')
+              + '|' + grid + '|' + watched();
+  if(box.dataset.sig === sig) return;
+  box.dataset.sig = sig;
+  box.textContent = '';
+  turnOf = 0;
+  if(!show.length){
+    const cell = el('div','screen');
+    cell.dataset.blank = '1';
+    const shot = el('div','shot');
+    shot.appendChild(el('span','ph', 'nothing running yet'));
+    cell.append(shot, el('div','cap'));
+    box.appendChild(cell);
+    return;
+  }
+  for(const b of show) box.appendChild(screenFor(b, b.id === watched()));
+}
+
+const GRIDKEY = 'aihawk.grid';
+function setGrid(n){
+  grid = n;
+  for(const b of $('grid').children)
+    b.setAttribute('aria-pressed', String(Number(b.dataset.n) === n));
+  try { localStorage.setItem(GRIDKEY, String(n)); } catch(err){}
+  drawStage();
+}
+$('grid').onclick = (e) => {
+  const b = e.target.closest('button');
+  if(b) setGrid(Number(b.dataset.n));
+};
 
 async function drawFleet(){
   let got = {browsers: []};
@@ -1478,12 +1618,16 @@ async function drawFleet(){
   catch(err){ return; }
   fleet = got.browsers || [];
   focusHere = got.focus || '';
-  const others = fleet.filter(b => b.id !== watched());
+  drawStage();
+  /* The strip carries what the stage does not, so at four-up with four
+     browsers it is empty and at one-up with eight it holds seven. */
+  const up = new Set(onStage().map(b => b.id));
+  const others = fleet.filter(b => !up.has(b.id));
   const box = $('thumbs');
   /* Only when the SET changes. Redrawing on every poll would throw away the
      preview images and make the row flash once a second for no new fact. */
   const sig = others.map(b => b.id + (b.running ? '1' : '0') + (b.id === focusHere ? 'a' : ''))
-                    .join(',') + '|' + watched();
+                    .join(',') + '|' + watched() + '|' + grid;
   if(box.dataset.sig !== sig){
     box.dataset.sig = sig;
     box.textContent = '';
@@ -1602,6 +1746,10 @@ function splitter(){
     if($('left').style.width) splitTo(parseFloat($('left').style.width), false);
   });
 }
+
+let sawGrid = null;
+try { sawGrid = localStorage.getItem(GRIDKEY); } catch(err){}
+setGrid(FPS[Number(sawGrid)] ? Number(sawGrid) : 1);
 
 paint(); listen(); tick(); where(); fleetPoll(); slowTick(); splitter();
 if(!$('rail').hidden) drawChats();
