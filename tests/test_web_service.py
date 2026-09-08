@@ -158,13 +158,17 @@ async def test_an_event_after_subscription_is_delivered_once_as_live():
 
     class Req:
         query_params = {}
+        headers: dict = {}
 
     response = await route.endpoint(Req())
     await svc.emit("said", "only once")
     body = response.body_iterator
 
     def payload(chunk):
-        return json.loads(chunk.removeprefix(b"data: ").strip())
+        # A replayable event carries an `id:` line before its data, so a
+        # reconnection can say where it got to. State events do not.
+        line = [l for l in chunk.split(b"\n") if l.startswith(b"data: ")][0]
+        return json.loads(line.removeprefix(b"data: ").strip())
 
     assert payload(await anext(body))["kind"] == "model"
     delivered = [payload(await anext(body))]
@@ -296,6 +300,7 @@ async def test_the_live_view_asks_for_nothing_until_an_instruction_has_been_give
 
     class Req:
         query_params = {}
+        headers: dict = {}
 
     resp = await frame.endpoint(Req())
     assert resp.status_code == 204
@@ -479,8 +484,11 @@ async def test_the_page_shows_the_wait_and_ties_it_to_the_run():
 
 
 class _Req:
-    """The events route ignores its request; this is enough to call it."""
+    """Enough of a request for the events route: it reads one header."""
     query_params: dict = {}
+
+    def __init__(self, last_event_id: str = ""):
+        self.headers = {"last-event-id": last_event_id} if last_event_id else {}
 
 
 async def _first_events(resp, want=4, each=1.0):
@@ -497,7 +505,8 @@ async def _first_events(resp, want=4, each=1.0):
     try:
         while len(seen) < want:
             chunk = await asyncio.wait_for(it.__anext__(), each)
-            seen.append(json.loads(chunk.decode().removeprefix("data: ").strip()))
+            line = [l for l in chunk.decode().split("\n") if l.startswith("data: ")][0]
+            seen.append(json.loads(line.removeprefix("data: ").strip()))
     except (asyncio.TimeoutError, StopAsyncIteration):
         pass
     return seen
@@ -533,6 +542,63 @@ async def test_the_frame_pause_is_shorter_than_the_capture_produces():
         "frame every %d ms, so the pane would show about %.1f of the 10 fps it "
         "is being sent" % (pause_ms, pause_ms + round_trip_ms, source_period_ms,
                            1000 / (pause_ms + round_trip_ms)))
+
+
+async def test_a_reconnection_resumes_instead_of_replaying_the_whole_thing():
+    """`EventSource` reconnects by itself after any drop, and the page has no
+    de-duplication, so a server that answers every reconnection with the whole
+    transcript makes it appear twice.
+
+    ⛔ MEASURED 2026-09-08 against the running interface, before the fix: three
+    consecutive subscriptions each received all 21 events of the same
+    conversation, and no event ever carried an `id:`, so the browser had
+    nothing to resume from and the page nothing to skip.
+
+    Known-bad: dropping the `id:` line, or ignoring `Last-Event-ID`. The second
+    listener below then receives the whole history again.
+    """
+    svc = ChatService(FakeLink(), SilentBrain())
+    app = build_app(FakeLink(), svc)
+    events = [r for r in app.routes if r.path == "/chat/events"][0]
+
+    for text in ("first", "second", "third"):
+        await svc.emit("said", text)
+
+    fresh_eyes = await _first_events(await events.endpoint(_Req()), want=6)
+    said = [e for e in fresh_eyes if e["kind"] == "said"]
+    assert [e["text"] for e in said] == ["first", "second", "third"]
+
+    # What the browser would send back on a reconnection: the id of the last
+    # event it actually saw.
+    marker = "%s:%d" % (svc.epoch, len(svc.history) - 1)
+    again = await _first_events(await events.endpoint(_Req(marker)), want=4)
+
+    assert [e for e in again if e["kind"] == "said"] == [], \
+        "the whole conversation was replayed to a listener that already had it"
+    assert [e for e in again if e["kind"] == "fresh"] == [], \
+        "a resume inside the same conversation must not tell the page to wipe"
+
+
+async def test_a_reconnection_carrying_another_conversation_is_told_to_wipe():
+    """A position only means something inside one transcript. After a reset, or
+    after the process restarts, the same number points at something else, and
+    replaying from there would graft the new conversation onto the old one.
+
+    Known-bad: comparing only the index and ignoring the epoch.
+    """
+    svc = ChatService(FakeLink(), SilentBrain())
+    app = build_app(FakeLink(), svc)
+    events = [r for r in app.routes if r.path == "/chat/events"][0]
+    await svc.emit("said", "from the conversation that is gone")
+
+    stale = await _first_events(await events.endpoint(_Req("999999999999:0")), want=5)
+
+    kinds = [e["kind"] for e in stale]
+    assert "fresh" in kinds, "a page holding another transcript was not told to drop it"
+    assert kinds.index("fresh") < kinds.index("said"), \
+        "the wipe has to arrive before what replaces it"
+    assert [e["text"] for e in stale if e["kind"] == "said"] == \
+        ["from the conversation that is gone"]
 
 
 async def test_a_page_that_joins_a_run_in_flight_is_told_the_run_is_in_flight():
