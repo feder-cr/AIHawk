@@ -362,6 +362,38 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
    and a tall one fills the height. What is left over is stage, never a hole
    inside the frame. object-fit stays underneath for the one frame where the
    ratio is still the previous page's. */
+/* ---------------- the other browsers ----------------
+   A row of slow previews under the live pane, never a second live pane: eight
+   at full rate would want 2.3 seconds of pipe for every second that passes,
+   measured, and that is arithmetic rather than an optimisation problem. */
+#fleet{ flex:none; display:flex; align-items:flex-end; gap:8px;
+        padding:0 14px 12px }
+#thumbs{ flex:1; min-width:0; display:flex; gap:8px; overflow-x:auto }
+#addbrowser{ flex:none; align-self:center; padding:6px 10px; border-radius:8px;
+             border:1px solid var(--line-2); background:var(--raised);
+             color:var(--fg-3); font:inherit; font-size:var(--t-label);
+             cursor:pointer }
+#addbrowser:hover{ border-color:var(--line-3); color:var(--fg) }
+.thumb .cap .x{ flex:none; width:16px; height:16px; border-radius:3px;
+                color:var(--fg-4); text-align:center; line-height:16px }
+.thumb .cap .x:hover{ background:var(--line-2); color:var(--fg) }
+.thumb{ flex:none; width:168px; border:1px solid var(--line-2); border-radius:8px;
+        background:var(--raised); padding:0; cursor:pointer; overflow:hidden;
+        display:flex; flex-direction:column; text-align:left; font:inherit;
+        color:var(--fg-3) }
+.thumb:hover{ border-color:var(--line-3); color:var(--fg) }
+.thumb[aria-current="true"]{ border-color:var(--fg-4); color:var(--fg) }
+.thumb .pic{ width:100%; aspect-ratio:16/10; background:var(--well);
+             display:grid; place-items:center; overflow:hidden }
+.thumb .pic img{ width:100%; height:100%; object-fit:cover; display:block }
+.thumb .pic span{ font-size:var(--t-label); color:var(--fg-4); padding:4px;
+                  text-align:center }
+.thumb .cap{ display:flex; align-items:center; gap:6px; padding:5px 7px;
+             font-family:var(--mono); font-size:var(--t-label) }
+.thumb .cap .id{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis;
+                 white-space:nowrap }
+.thumb .cap .st{ flex:none; color:var(--fg-4) }
+
 #stage{ flex:1; min-height:0; padding:14px; display:grid; place-items:center;
         container-type:size }
 #browser{ --arn:1.6; --chrome:38px;
@@ -465,6 +497,10 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
         <span id="empty">nothing running yet</span>
       </div>
     </div>
+  </div>
+  <div id="fleet">
+    <div id="thumbs" aria-label="The other browsers in this session"></div>
+    <button id="addbrowser" type="button" title="Open another browser in this session">+ Browser</button>
   </div>
 </div>
 
@@ -816,8 +852,23 @@ $('mode').onclick = (e) => {
   say(frozen ? 'frozen' : 'live');
 };
 
+/* Whether the browser the big pane watches has anything to show. Unknown
+   until the first fleet poll lands, and "unknown" asks - the single-browser
+   case must not wait three seconds for its first frame. */
+function focusedHasNoPage(){
+  const b = fleet.find(x => x.id === focusHere);
+  return b && b.running && (b.urls || []).length === 0;
+}
+
 async function tick(){
-  if(!frozen) try {
+  /* ⛔ ONE SCHEDULER, and the pace of the pump stays one number. The first
+     version of this skip scheduled its own slower `setTimeout(tick, 500)` and
+     the gate on the pump's pace caught it immediately: with two of them the
+     rate is no longer a thing anybody can read off the page. So the idle case
+     skips the REQUEST and falls through to the same timer as everything else -
+     a no-op every 60 ms costs nothing, since what costs is the round trip. */
+  if(focusedHasNoPage()){ img.hidden = true; empty.hidden = false; say('idle'); }
+  else if(!frozen) try {
     const r = await fetch(at('/live/frame?t=' + Date.now()), {cache:'no-store'});
     if(r.status === 204){ img.hidden = true; empty.hidden = false; say('idle'); }
     else if(r.ok){
@@ -968,7 +1019,125 @@ $('newchat').onclick = async () => {
   location.search = '?s=' + encodeURIComponent(j.id);
 };
 
-paint(); listen(); tick(); where(); drawChats();
+/* ---------------- the workspace ----------------
+   ⛔ THE COST OF THE PREVIEWS DOES NOT GROW WITH THE NUMBER OF THEM, and that
+   is the whole design rather than a detail. A frame costs about 22 ms on the
+   pipe that ACTIONS share, and the pipe is serialised: eight panes each asking
+   thirteen times a second would want 2.3 seconds of pipe per second, so the
+   picture would be behind and every click would queue behind the pictures.
+
+   So there is ONE live pane - the focused one, at the full rate, in `tick` -
+   and ONE slow loop that refreshes a single other pane every 400 ms, taking
+   them in turn. Seven others therefore refresh about every three seconds, and
+   whether there are two panes or eight the previews cost the same two and a
+   half requests a second. A loop per pane would have been the obvious way to
+   write it and its cost would be the thing the measurement forbids. */
+const SLOW_MS = 400;
+let fleet = [], nextPane = 0, focusHere = '';
+
+function thumbFor(b){
+  const el2 = document.createElement('button');
+  el2.type = 'button'; el2.className = 'thumb'; el2.dataset.id = b.id;
+  el2.title = 'Send this session’s commands to ' + b.id;
+  const pic = el('div','pic');
+  /* Three states, not two, and the third is the one that read as a failure.
+     A browser that is RUNNING WITH NO TAB cannot be captured - the engine
+     answers "no such tab" - and asking anyway spends a round trip to be told
+     so, then paints ERROR over something that is simply empty. The tabs are
+     already in the answer this pane was built from, so the question is asked
+     of data rather than of the pipe. */
+  if(b.running && (b.urls || []).length){
+    const im = document.createElement('img'); im.alt = ''; pic.appendChild(im);
+  } else {
+    pic.appendChild(el('span', null, b.running ? 'no page yet' : 'not up'));
+  }
+  const cap = el('div','cap');
+  cap.appendChild(el('span','id', b.id));
+  cap.appendChild(el('span','st', b.running ? '' : 'idle'));
+  const shut = el('span','x','x');
+  shut.title = 'Close ' + b.id;
+  shut.onclick = (e) => { e.stopPropagation(); closeThis(b.id); };
+  cap.appendChild(shut);
+  el2.append(pic, cap);
+  el2.onclick = () => watchThis(b.id);
+  return el2;
+}
+
+async function closeThis(id){
+  if(!confirm('Close browser "' + id + '"? Its tabs go with it.')) return;
+  await fetch(at('/live/close'), {method:'POST', headers:{'Content-Type':'application/json'},
+                                  body: JSON.stringify({id})});
+  await drawFleet();
+}
+
+async function openAnother(){
+  const r = await fetch(at('/live/open'), {method:'POST'});
+  const j = await r.json().catch(() => ({}));
+  /* The server owns the ceiling and its refusal carries what eight browsers
+     cost, measured. Showing that sentence is the whole point of it saying so:
+     a page that turned it into "limit reached" would be the reason somebody
+     later raises the number without ever seeing the number. */
+  if(j.said && /already holds/.test(j.said)) alert(j.said);
+  await drawFleet();
+}
+
+async function watchThis(id){
+  await fetch(at('/live/watch'), {method:'POST', headers:{'Content-Type':'application/json'},
+                                  body: JSON.stringify({id})});
+  await drawFleet();
+}
+
+async function drawFleet(){
+  let got = {browsers: []};
+  try { const r = await fetch(at('/live/browsers'), {cache:'no-store'});
+        if(r.ok) got = await r.json(); }
+  catch(err){ return; }
+  fleet = got.browsers || [];
+  focusHere = got.focus || '';
+  const others = fleet.filter(b => b.id !== focusHere);
+  const box = $('thumbs');
+  /* Only when the SET changes. Redrawing on every poll would throw away the
+     preview images and make the row flash once a second for no new fact. */
+  const sig = others.map(b => b.id + (b.running ? '1' : '0')).join(',') + '|' + focusHere;
+  if(box.dataset.sig !== sig){
+    box.dataset.sig = sig;
+    box.textContent = '';
+    for(const b of others) box.appendChild(thumbFor(b));
+    nextPane = 0;
+  }
+  /* The row of previews disappears with one browser; the button to open
+     another does not, or a session could never grow past its first. */
+  box.hidden = others.length === 0;
+}
+
+async function slowTick(){
+  const box = $('thumbs');
+  /* Only running browsers are asked for a picture. A declared browser that has
+     not started is not a slow pane, it is a browser that does not exist yet,
+     and asking would START it - 800 MB and seven seconds to fill a thumbnail
+     nobody asked for. Same rule the live pane follows. */
+  const shown = [...box.children].filter(t => t.querySelector('img'));
+  if(shown.length){
+    const t = shown[nextPane % shown.length];
+    nextPane++;
+    try {
+      const r = await fetch(at('/live/frame?b=' + encodeURIComponent(t.dataset.id)
+                               + '&t=' + Date.now()), {cache:'no-store'});
+      if(r.ok && r.status !== 204){
+        const im = t.querySelector('img'), blob = await r.blob(), was = im.src;
+        im.src = URL.createObjectURL(blob);
+        if(was && was.startsWith('blob:')) URL.revokeObjectURL(was);
+      }
+    } catch(err){}
+  }
+  setTimeout(slowTick, SLOW_MS);
+}
+
+async function fleetPoll(){ await drawFleet(); setTimeout(fleetPoll, 3000); }
+
+$('addbrowser').onclick = openAnother;
+
+paint(); listen(); tick(); where(); drawChats(); fleetPoll(); slowTick();
 </script>
 """
 
@@ -1475,8 +1644,15 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
             # conversation, so opening a second chat does not launch an engine
             # to draw a pane for a session that has done nothing.
             return Response(status_code=204)
+        # ⛔ THE PANE SAYS WHICH BROWSER, and without that the workspace is one
+        # picture drawn eight times. `browser_id` is the caller's to choose here
+        # exactly as `session_id` is not: which SESSION a request belongs to is
+        # decided by the page's own url and imposed, while which BROWSER inside
+        # it a pane is watching is what the pane is for.
+        watching = request.query_params.get("b") or None
         try:
-            result = await seen.link.call("browser_watch")
+            result = await seen.link.call("browser_watch",
+                                          {"browser_id": watching} if watching else {})
         except Exception as exc:
             return JSONResponse({"error": str(exc)[:200]}, status_code=503)
         got = image_of(result)
@@ -1492,6 +1668,77 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
             return Response(status_code=204)
         jpeg, mime = got
         return Response(jpeg, media_type=mime, headers={"Cache-Control": "no-store"})
+
+    async def browsers(request: Request) -> JSONResponse:
+        """The panes to draw: which browsers this session holds, and where.
+
+        Asked of the server through the same tool an agent would call, because
+        the interface has no privileged path to the browsers - and it starts
+        nothing, so drawing the workspace can never cost an engine.
+
+        A conversation that has issued no instruction has no browsers by
+        definition, and asking would be the one question that creates what it
+        asks about. So it answers an empty workspace without going near the
+        server, which is the same rule the picture and the tab strip follow.
+        """
+        seen = which(request)
+        if not seen.link.touched:
+            return JSONResponse({"browsers": [], "focus": "", "limit": 0})
+        try:
+            got = json.loads(await seen.link.call_text("browser_list"))
+        except Exception:
+            # An older server answered this in prose. The workspace then draws
+            # nothing rather than half of something, and the single live pane -
+            # which does not need this - keeps working.
+            return JSONResponse({"browsers": [], "focus": "", "limit": 0})
+        if not isinstance(got, dict):
+            return JSONResponse({"browsers": [], "focus": "", "limit": 0})
+        return JSONResponse({"browsers": got.get("browsers") or [],
+                             "focus": got.get("focus") or "",
+                             "limit": got.get("limit") or 0})
+
+    async def watch(request: Request) -> JSONResponse:
+        """Make one browser the one this session's unaddressed commands go to.
+
+        The pane a person clicks becomes the live one, and that is the SAME
+        focus the agent uses - not a second idea of "current" kept by the page.
+        Two of those would disagree the first time the model opened a browser,
+        and the disagreement would show as commands landing in a pane nobody was
+        watching.
+        """
+        body = await request.json()
+        name = (body or {}).get("id", "")
+        if not name:
+            return JSONResponse({"error": "no id"}, status_code=400)
+        said = await which(request).link.call_text("browser_focus",
+                                                   {"browser_id": name})
+        return JSONResponse({"focused": name, "said": said})
+
+    async def open_browser(request: Request) -> JSONResponse:
+        """Open another browser in this session, from the workspace.
+
+        Creating and destroying browsers are first-class operations here and not
+        only in the tool surface: an interface where the only way to get a
+        second browser is to ask the model for one makes a measured feature
+        depend on a sentence being understood.
+
+        The server decides whether it is allowed - eight is its ceiling and its
+        refusal carries what eight cost - and the answer is passed through
+        rather than judged again here. Two places deciding the same limit is two
+        places to disagree about it.
+        """
+        said = await which(request).link.call_text("browser_open")
+        return JSONResponse({"said": said})
+
+    async def close_browser(request: Request) -> JSONResponse:
+        """Close one browser of this session and free what it held."""
+        body = await request.json()
+        name = (body or {}).get("id", "")
+        if not name:
+            return JSONResponse({"error": "no id"}, status_code=400)
+        said = await which(request).link.call_text("browser_close",
+                                                   {"browser_id": name})
+        return JSONResponse({"said": said})
 
     async def tabs(request: Request) -> JSONResponse:
         """Every tab, and which one is current.
@@ -1539,6 +1786,10 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         Route("/chat/fresh", fresh, methods=["POST"]),
         Route("/chat/events", events),
         Route("/live/frame", frame),
+        Route("/live/browsers", browsers),
+        Route("/live/watch", watch, methods=["POST"]),
+        Route("/live/open", open_browser, methods=["POST"]),
+        Route("/live/close", close_browser, methods=["POST"]),
         Route("/live/tabs", tabs),
         Route("/live/select", select, methods=["POST"]),
     ])

@@ -261,7 +261,11 @@ async def test_the_app_exposes_exactly_the_routes_the_page_calls():
                      "/sessions", "/sessions/new", "/sessions/rename",
                      "/sessions/forget",
                      "/chat/send", "/chat/stop", "/chat/fresh", "/chat/events",
-                     "/live/frame", "/live/tabs", "/live/select"}
+                     "/live/frame", "/live/tabs", "/live/select",
+                     # The workspace, added in 0.18.0: which browsers to draw a
+                     # pane for, and which one the commands go to.
+                     "/live/browsers", "/live/watch",
+                     "/live/open", "/live/close"}
 
     called = {m for m in re.findall(r"""fetch\(\s*[`'"]([^`'"?]+)""", PAGE)}
     unserved = sorted(called - paths)
@@ -547,8 +551,18 @@ async def test_the_frame_pause_is_shorter_than_the_capture_produces():
     """
     import re
 
-    m = re.search(r"setTimeout\(tick,\s*(\d+)\)", PAGE)
+    # ⛔ THE CODE, NOT THE PROSE BESIDE IT, and this gate learned that the hard
+    # way: a comment explaining why the pause is NOT 500 contained the literal
+    # `setTimeout(tick, 500)`, and the scan read the explanation as the pump.
+    # It is the project's most repeated defect arriving from the other side -
+    # usually a gate is satisfied by a comment, here it was accused by one.
+    code = re.sub(r"/\*.*?\*/", "", PAGE, flags=re.S)
+    code = re.sub(r"^\s*//.*$", "", code, flags=re.M)
+    m = re.search(r"setTimeout\(tick,\s*(\d+)\)", code)
     assert m, "the frame pump no longer paces itself with setTimeout(tick, ...)"
+    assert len(re.findall(r"setTimeout\(tick,\s*\d+\)", code)) == 1, (
+        "the pump is scheduled from more than one place, so its pace is no "
+        "longer one number anybody can read")
     pause_ms = int(m.group(1))
 
     round_trip_ms = 22    # measured against the running interface

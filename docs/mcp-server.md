@@ -183,7 +183,7 @@ address.
 |---|---|---|
 | `browser_open` | `browser_id`, `seed`, `proxy`, `profile`, all optional | Opens another browser in this session and makes it the one unaddressed commands go to. Each browser has its own tabs, cookies and identity and shares none of them. Refuses past eight, saying what eight cost when it was measured. |
 | `browser_close` | `browser_id` optional | Closes one browser and frees what it held. Its tabs go with it; the other browsers and the conversation do not. Forgets who it was, so the same name later is a new stranger rather than that person resumed. |
-| `browser_list` | `session_id` optional | Which browsers this session holds, where each one is, and which one commands go to. Starts nothing, so asking is free. |
+| `browser_list` | `session_id` optional | Which browsers this session holds, where each one is, and which one commands go to. **Answers JSON** since 0.18.0: `session`, `focus`, `limit`, `note`, and `browsers` with `id`, `running`, `focused` and the `urls` of each one's tabs. A browser that is not running is one this session declared and has not needed yet. Starts nothing, so asking is free. |
 | `browser_focus` | `browser_id` | Chooses which browser the commands that name none land on. Naming a browser still reaches it whatever the focus is. |
 | `session_list` | none | Every saved session and what each one holds. Sessions survive the server, so this is how you find the one you were in. Starts nothing. |
 | `session_forget` | `session_id` | Delete a saved session: its browsers are closed and it stops being listed. Not the same as closing browsers, which frees the engines and keeps the session. |

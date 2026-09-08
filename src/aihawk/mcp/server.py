@@ -484,34 +484,54 @@ async def browser_close(browser_id: str | None = None,
 
 @mcp.tool()
 async def browser_list(session_id: str | None = None) -> str:
-    """Which browsers this session holds, and which one commands go to.
+    """Which browsers this session holds, where each one is, and which one the
+    commands that name none go to.
+
+    Answers JSON: `session`, `focus`, `limit`, `note`, and `browsers` - each with
+    `id`, `running`, `focused` and the `urls` of its tabs. A browser that is not
+    running is one this session declared and has not needed yet; the next
+    command aimed at it starts it as the same person.
 
     Starts nothing: it reports what is running, so asking is free.
     """
     at_session = in_session(session_id)
     have = browsers_in(at_session)
-    if not have:
-        return ("session %s has no browser open yet. The next tool that needs a "
-                "page will open one, or call browser_open to choose who it is."
-                % at_session)
-
     here = focused(at_session)
     rows = []
     for name in have:
         session = registry.peek(addressed(at_session, name))
-        where = ""
-        if session is not None:
+        urls, running = [], session is not None
+        if running:
             try:
-                pages = await session.describe_pages()
-                where = "; ".join(p["url"] or "blank" for p in pages) or "no tabs"
+                urls = [p["url"] or "" for p in await session.describe_pages()]
             except Exception:
-                where = "tabs unreadable"
-        else:
-            where = "not up; the next command restarts it as the same person"
-        rows.append("%s%s: %s" % (name, " (commands go here)" if name == here else "",
-                                 where))
-    return "session %s holds %d of %d browsers. %s" % (
-        at_session, len(have), MAX_BROWSERS_PER_SESSION, " | ".join(rows))
+                # Readable as a state rather than as an absence: a browser whose
+                # tabs cannot be read is not a browser with no tabs, and a pane
+                # drawing "no tabs" over a live window would be a lie.
+                running, urls = True, None
+        rows.append({"id": name, "running": running, "focused": name == here,
+                     "urls": urls})
+    # ⛔ JSON, WHERE THIS ANSWERED PROSE UNTIL 0.18.0, and the reason is the
+    # stated architecture rather than taste: the interface is a client of these
+    # tools like anybody else, with no privileged path, so a workspace that has
+    # to draw one pane per browser needs this question answered in a shape a
+    # program can read. The alternative was the page parsing a sentence, which
+    # is two readers of one wire format, or a second tool saying the same thing,
+    # which is two sources for one fact. `session_list_pages` has answered JSON
+    # since 0.9.0 and models read it without trouble; `note` carries the
+    # sentence that used to be the whole answer, because "there is nothing here
+    # yet" is worth saying in words.
+    return actions.json_capped({
+        "session": at_session,
+        "focus": here,
+        "limit": MAX_BROWSERS_PER_SESSION,
+        "browsers": rows,
+        "note": ("no browser open yet. The next tool that needs a page will open "
+                 "one, or call browser_open to choose who it is."
+                 if not rows else
+                 "%d of %d browsers. Commands that name none go to %s."
+                 % (len(rows), MAX_BROWSERS_PER_SESSION, here)),
+    })
 
 
 @mcp.tool()

@@ -15,6 +15,8 @@ what a tool did is observable as the keys the registry ends up holding.
 """
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from aihawk.mcp import server
@@ -42,8 +44,12 @@ class _Recording:
 
 @pytest.fixture
 def registry(monkeypatch):
-    reg = SessionRegistry(factory=_Recording,
-                          defaults=lambda: {"seed": 7, "headless": True})
+    # The server's own constructor, not a bare one: a test that builds a
+    # registry the product does not have is testing something else, and the
+    # wiring that writes a session down would be exercised by nothing. Missed
+    # here when the file was reconstructed after the checkout was deleted.
+    reg = server.new_registry(factory=_Recording,
+                              defaults=lambda: {"seed": 7, "headless": True})
     monkeypatch.setattr(server, "registry", reg)
     # The focus is module state, so a test that set it must not reach the next.
     monkeypatch.setattr(server, "_focus", {})
@@ -196,4 +202,12 @@ async def test_asking_what_a_session_holds_starts_nothing(registry):
     said = await server.browser_list()
 
     assert registry.ids() == [], "asking what a session holds started a browser"
-    assert "no browser open yet" in said
+    # ⛔ ON THE SHAPE, NOT ON A SUBSTRING. This asserted `"no browser open yet"
+    # in said` and stayed green through the change from prose to JSON, because
+    # the sentence survived inside the `note` field: an assertion that passes on
+    # both answers a tool can give is not checking the answer. Same family as
+    # the 0.16.1 defect, caught this time before it shipped.
+    answer = json.loads(said)
+    assert answer["browsers"] == []
+    assert answer["limit"] == server.MAX_BROWSERS_PER_SESSION
+    assert "no browser open yet" in answer["note"]
