@@ -55,6 +55,7 @@ from .link import Link, image_of, text_of
 # backslashes through a shell heredoc: nothing errors, the text is just no
 # longer the text that was written.
 PAGE = r"""<!doctype html>
+<html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AIHawk</title>
@@ -252,7 +253,11 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
 #i{ flex:1; background:transparent; border:0; outline:none; resize:none; color:var(--fg);
     font:var(--t-body)/1.55 var(--sans); min-height:24px; max-height:200px;
     overflow-y:hidden; padding:0; caret-color:var(--accent) }
-#i::placeholder{ color:var(--fg-4) }
+/* --fg-3 and not --fg-4: the placeholder is the only hint the composer gives,
+   so it is text that has to be read, and --fg-4 sits at 2.2:1 against 4.5:1.
+   The step numbers keep --fg-4, which is what it was picked for: decoration
+   beside a label that carries the meaning. */
+#i::placeholder{ color:var(--fg-3) }
 #go, #halt{ width:32px; height:32px; flex:none; border:0; border-radius:50%; display:grid;
      place-items:center; cursor:pointer; background:var(--accent);
      box-shadow:inset 0 1px 0 rgba(255,255,255,.22);
@@ -375,8 +380,9 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
   </div>
   <button id="jump" hidden type="button">jump to latest</button>
   <form id="f" autocomplete="off">
-    <span id="chip" hidden>1 message queued <span aria-hidden="true">&#9998;</span></span>
+    <button id="chip" type="button" hidden>1 message queued <span aria-hidden="true">&#9998;</span></button>
     <div class="composer">
+      <label class="sr" for="i">What should the agent do?</label>
       <textarea id="i" rows="1" placeholder="What should the agent do?"></textarea>
       <button id="go" type="submit" aria-label="Send" disabled>
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
