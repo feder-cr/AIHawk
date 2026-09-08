@@ -151,16 +151,35 @@ async def test_two_sessions_do_not_share_their_browsers_or_their_focus(registry)
 
 
 async def test_the_count_is_read_from_the_registry_and_not_from_a_second_list(registry):
-    """A browser dropped underneath - which a failed retry does - has to free
-    its slot.
+    """What frees a slot is the registry forgetting a browser, and nothing else.
 
-    Known-bad: keeping the browsers in a list beside the registry. The dropped
-    one stays in it, and the ceiling then refuses a slot that is free.
+    ⛔ THE TWO HALVES ARE THE `drop`/`forget` DISTINCTION, COUNTED. A `drop` is
+    what a failed retry does: the engine is gone, the person is not, and the
+    next command aimed at that name brings the SAME browser back with its seed,
+    its exit and its profile. So it still holds its slot - eight slots that a
+    dead engine vacated would let a session own nine identities and call it
+    eight. Only `forget`, which is what closing a browser does, gives the slot
+    back, because after it there is nobody left to come back.
+
+    Known-bad, and it is the reason this test is phrased about the source of
+    the count rather than about either verb: keep the browsers in a list beside
+    the registry. The list has no idea what `forget` did, so the second half
+    goes red - a slot whose owner was deliberately closed stays taken forever.
     """
     for i in range(server.MAX_BROWSERS_PER_SESSION):
         await server.browser_open(browser_id="b%d" % i)
 
     await registry.drop("default/b3")
+
+    assert "b3" in server.browsers_in(), (
+        "a browser whose engine died stopped being one of the session's "
+        "browsers, so the identity it comes back as is now nobody's")
+    refused = await server.browser_open(browser_id="one-too-many")
+    assert "one-too-many" not in server.browsers_in(), (
+        "a dead engine handed its slot away while its owner still had it: %r"
+        % refused)
+
+    await registry.forget("default/b3")
 
     assert "b3" not in server.browsers_in()
     said = await server.browser_open(browser_id="replacement")

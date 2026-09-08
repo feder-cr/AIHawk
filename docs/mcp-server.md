@@ -143,6 +143,7 @@ between what the browser says it is and where it appears to be.
 | `STEALTHFOX_MCP_TRANSPORT` | `http` to serve over streamable HTTP instead of stdio. Default is stdio, which is what MCP clients expect. |
 | `STEALTHFOX_MCP_HOST` | Bind address for the HTTP transport. Default `127.0.0.1`. |
 | `STEALTHFOX_MCP_PORT` | Port for the HTTP transport. Default `8765`, which is also the AIHawk interface's default: change one of the two if you run both. |
+| `AIHAWK_HOME` | Where saved sessions are kept. Defaults to `%APPDATA%ihawk` on Windows, `~/Library/Application Support/aihawk` on macOS and `$XDG_DATA_HOME/aihawk` on Linux. Set it to put them on another disk. |
 
 Anything a tool call says wins over these. `session_start` can pick another
 seed, another exit or another profile for one session; the variables are what a
@@ -150,7 +151,8 @@ session gets when nobody says anything.
 
 ## Tools
 
-`session_status`, `session_start`, `session_new_page`, `session_list_pages`,
+`session_list`, `session_forget`, `session_status`, `session_start`,
+`session_new_page`, `session_list_pages`,
 `session_select_page`, `session_close_page`, `browser_open`, `browser_close`,
 `browser_list`, `browser_focus`, `browser_navigate`,
 `browser_read_text`, `browser_snapshot`, `browser_read_html`,
@@ -183,6 +185,8 @@ address.
 | `browser_close` | `browser_id` optional | Closes one browser and frees what it held. Its tabs go with it; the other browsers and the conversation do not. Forgets who it was, so the same name later is a new stranger rather than that person resumed. |
 | `browser_list` | `session_id` optional | Which browsers this session holds, where each one is, and which one commands go to. Starts nothing, so asking is free. |
 | `browser_focus` | `browser_id` | Chooses which browser the commands that name none land on. Naming a browser still reaches it whatever the focus is. |
+| `session_list` | none | Every saved session and what each one holds. Sessions survive the server, so this is how you find the one you were in. Starts nothing. |
+| `session_forget` | `session_id` | Delete a saved session: its browsers are closed and it stops being listed. Not the same as closing browsers, which frees the engines and keeps the session. |
 | `session_status` | none | Who is browsing right now: the seed, the exit, the profile and the open tabs. Starts nothing; if no browser is up it says so. |
 | `session_start` | `seed`, `proxy`, `profile`, all optional | Close whatever is open and start a browser as a particular person. Returns a sentence describing the session it actually started. |
 | `session_new_page` | none | Open a tab, make it the active one, return its id. |
@@ -192,8 +196,17 @@ address.
 
 You can ignore `session_start` entirely: the first tool that needs a page starts
 a session on its own, as a different stranger every time, which is the right
-default. There is one browser, so two identities are visited in turn, never at
-once; a task that needs two accounts live at the same time cannot be done here.
+default. A session holds up to eight browsers, so two accounts CAN be live at
+the same time: open a second browser with `browser_open` and address commands to
+whichever one you mean. `session_start` still replaces the browser you are in
+rather than adding one, which is the difference between the two.
+
+Sessions are written down as soon as one holds a browser, and what is written is
+the DECLARATION - which browsers a session has, who each one is, and where its
+tabs were pointing - not eight running engines. Reopening one gives the
+identities back immediately; each engine starts when a command is aimed at it,
+as the right person. Cookies and logins come back only where a browser had a
+`profile`, which is the mechanism that already exists for that.
 
 - **`seed`** is the identity. Same seed, same fingerprint, every time. Leave it
   out and one is drawn; the answer says which, so a session worth repeating can

@@ -48,9 +48,13 @@ def _is_usable(session) -> bool:
 class SessionRegistry:
     """Sessions by id, created on demand, closed on request or at shutdown."""
 
-    def __init__(self, factory=StealthSession, defaults=None) -> None:
+    def __init__(self, factory=StealthSession, defaults=None,
+                 on_change=None) -> None:
         self._factory = factory
         self._defaults = defaults
+        #: Called with a key whenever WHO that key is has changed - gained an
+        #: identity or lost one. See `_changed`.
+        self.on_change = on_change
         self._sessions: Dict[str, StealthSession] = {}
         #: What each id was last STARTED with, kept across the death of the
         #: session object so a rebuild can be the same person. See `ensure`.
@@ -75,6 +79,36 @@ class SessionRegistry:
     def config(self, session_id: str = DEFAULT_SESSION_ID) -> Optional[dict]:
         """What this id was started with, for callers that have to report it."""
         return self._configs.get(session_id)
+
+    def _changed(self, session_id: str) -> None:
+        """Say that this key's identity was gained or lost.
+
+        ⛔ THIS EXISTS SO THE SERVER DOES NOT HAVE TO REMEMBER TO REMEMBER. The
+        first version of persistence wrote the session down after `browser_open`,
+        `browser_close` and `browser_focus`, and that is three of the five places
+        a browser gets an identity: `session_start` was missed, and so was the
+        lazy auto-start every existing client uses - so the ONE session almost
+        everybody has was the one never written down. Adding the fourth and fifth
+        call would leave the same defect one refactor away, because the thing
+        that knows a browser became somebody is this class, not its callers.
+
+        Fired only where `_configs` actually gains or loses an entry, which is
+        rare: a browser starting or being deliberately forgotten. Not on `drop`,
+        which keeps the identity so the same person comes back, and not on
+        `close_all`, where every identity is discarded at once because the
+        PROCESS is ending - writing then would erase every saved session at
+        shutdown, which is the opposite of what saving them is for.
+
+        A callback that raises must not cost the caller their browser: the
+        browser is already built and correct, and failing to write a file down
+        is not a reason to hand back an error instead of it.
+        """
+        if self.on_change is None:
+            return
+        try:
+            self.on_change(session_id)
+        except Exception:
+            pass
 
     def _lock(self, session_id: str) -> asyncio.Lock:
         # One lock per id, so two clients racing to first-use the same session
@@ -119,6 +153,10 @@ class SessionRegistry:
         signal is a failure, not a pass, and failing loudly beats succeeding
         from the wrong address.
         """
+        # Whether this call is what gave the key an identity. Read after the
+        # lock is released, so the callback - which writes a file - runs with
+        # nobody waiting behind it.
+        became = False
         async with self._lock(session_id):
             existing = self._sessions.get(session_id)
             if existing is not None and not _is_usable(existing):
@@ -137,8 +175,12 @@ class SessionRegistry:
                 await session.start()
                 self._sessions[session_id] = session
                 self._configs[session_id] = config
-                return session
-            return existing
+                became = True
+            else:
+                session = existing
+        if became:
+            self._changed(session_id)
+        return session
 
     async def restart(self, session_id: str = DEFAULT_SESSION_ID,
                       **kwargs) -> StealthSession:
@@ -183,7 +225,8 @@ class SessionRegistry:
             # refused or failed start leaves the previous identity in place
             # rather than arming recovery with settings that do not launch.
             self._configs[session_id] = dict(kwargs)
-            return session
+        self._changed(session_id)
+        return session
 
     def _adopt_numbering(self, session_id: str, session) -> None:
         """Continue this id's tab numbering in the session replacing it."""
@@ -210,6 +253,33 @@ class SessionRegistry:
         async with self._lock(session_id):
             await self._discard(session_id)
 
+    def declare(self, session_id: str, config: dict) -> None:
+        """Say who a browser WILL be, without starting it.
+
+        ⛔ This is what makes reopening a saved session cheap. A browser costs
+        about 800 MB and seven to fourteen seconds to start, measured, so
+        reopening a session that declared eight of them must not start eight of
+        them: they are declared here, and the first command aimed at one is what
+        actually launches it - as the right person, because the config is
+        already remembered.
+
+        It writes `_configs` and nothing else, which is the same memory `ensure`
+        already consults and `drop` already preserves. A declared browser is
+        therefore indistinguishable from one whose browser died a moment ago,
+        and that is the point: the recovery path was already correct.
+
+        It does NOT fire `_changed`. This is how a session is READ BACK, and
+        reporting a change here would write straight back out what was just read
+        in - harmless, but it would make the hook mean "something happened"
+        instead of "somebody became somebody", which is the distinction the hook
+        exists to carry.
+        """
+        self._configs[session_id] = dict(config)
+
+    def declared(self) -> list:
+        """Every browser this registry knows of, running or only declared."""
+        return sorted(set(self._sessions) | set(self._configs))
+
     async def forget(self, session_id: str = DEFAULT_SESSION_ID) -> bool:
         """Close this browser and forget who it was. Answers whether it existed.
 
@@ -227,7 +297,9 @@ class SessionRegistry:
             await self._discard(session_id)
             self._configs.pop(session_id, None)
             self._refusals.pop(session_id, None)
-            return existed
+        if existed:
+            self._changed(session_id)
+        return existed
 
     async def close_all(self) -> None:
         """Shut every session down. Called when the PROCESS ends, not when a

@@ -60,13 +60,15 @@ class _Recording:
 def registry(monkeypatch):
     """The REAL registry, with nothing behind it that opens a browser.
 
-    Real on purpose. What the tools have to get right is the key they hand it,
-    and a stand-in would have to reimplement the per-key locking and discarding
-    the assertions below lean on - at which point the tests would be measuring
-    the stand-in.
+    Real on purpose, and built by the server's own constructor. What the tools
+    have to get right is the key they hand it, and a stand-in would have to
+    reimplement the per-key locking and discarding the assertions below lean on -
+    at which point the tests would be measuring the stand-in. `new_registry`
+    rather than `SessionRegistry` for the same reason one step further out: the
+    product's registry writes its sessions down, and a bare one does not.
     """
-    reg = SessionRegistry(factory=_Recording,
-                          defaults=lambda: {"seed": 7, "headless": True})
+    reg = server.new_registry(factory=_Recording,
+                              defaults=lambda: {"seed": 7, "headless": True})
     monkeypatch.setattr(server, "registry", reg)
     return reg
 
@@ -227,6 +229,37 @@ def test_the_registry_still_has_methods_worth_guarding():
         "calls, so the scan below guards nothing: %r" % sorted(ADDRESSABLE))
 
 
+def test_the_exempted_helpers_are_still_the_ones_they_name():
+    """An exemption that names nothing exempts nothing, and reads as though it
+    does - which is worse than no exemption at all, because the next reader
+    takes it for a description of the module.
+    """
+    absent = sorted(n for n in WALK_KEYS_THE_REGISTRY_ALREADY_HOLDS
+                    if not callable(getattr(server, n, None)))
+    assert not absent, (
+        "exempted from the address scan but no longer in the server: %r. "
+        "Either the function was renamed, in which case rename it here, or it "
+        "is gone, in which case delete the exemption." % absent)
+
+
+#: The two functions that walk keys the registry ALREADY holds, rather than
+#: composing one for a caller.
+#:
+#: ⛔ EXEMPTED BY NAME, for the same reason `browser_list` is exempted below:
+#: loosening the rule would cost it the case it exists for. `remember` iterates
+#: `registry.declared()`, whose entries are composed keys by construction, and
+#: asks `registry.config(key)` about each; `restore` writes one back with
+#: `registry.declare("%s/%s" % ...)`. Neither is answering a caller who named a
+#: browser - they are the persistence of the whole session - so `addressed()`
+#: has nothing to compose from, and requiring it there would mean writing a call
+#: that means nothing to satisfy a scanner.
+#:
+#: The names are asserted to still exist before they are trusted: an exemption
+#: that has rotted into a name nothing matches protects nothing while reading as
+#: though it does.
+WALK_KEYS_THE_REGISTRY_ALREADY_HOLDS = {"remember", "restore"}
+
+
 def _scan_registry_calls():
     """Every `registry.<addressable>(...)` in the server, and whether it carries
     an address.
@@ -239,6 +272,9 @@ def _scan_registry_calls():
     unaddressed, checked = [], {}
 
     for holder in ast.walk(tree):
+        if (isinstance(holder, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and holder.name in WALK_KEYS_THE_REGISTRY_ALREADY_HOLDS):
+            continue
         if not isinstance(holder, (ast.FunctionDef, ast.AsyncFunctionDef)):
             continue
         bound = set()
@@ -331,16 +367,21 @@ async def test_every_tool_that_reaches_a_browser_offers_a_way_to_name_it():
     the SCHEMA the server publishes, not the Python signature: a parameter the
     client cannot see is a parameter that does not exist.
 
-    ⛔ ONE EXEMPTION, and it is about the question rather than about the tool.
-    `browser_list` asks which browsers a SESSION holds, which is not a question
-    any one browser can answer, so it takes a session and no browser on purpose.
-    Exempting it by name rather than by loosening the rule to "one of the two"
+    ⛔ TWO EXEMPTIONS, and both are about the QUESTION rather than about the
+    tool. `browser_list` asks which browsers a SESSION holds and `session_forget`
+    deletes a whole session, closing every browser in it; neither is a question
+    one browser can answer, so both take a session and no browser on purpose.
+    They reach the registry per browser - that is what makes the scan find them -
+    but the browsers are the ones the session already has, not one a caller
+    named.
+
+    Exempting them by name rather than by loosening the rule to "one of the two"
     keeps the rule able to catch the case it exists for: a tool that acts on a
     browser and cannot say which.
 
     Known-bad: delete `session_id` and `browser_id` from any one tool.
     """
-    ASKS_ABOUT_THE_SESSION = {"browser_list"}
+    ASKS_ABOUT_THE_SESSION = {"browser_list", "session_forget"}
     needing = _tools_that_reach_a_browser() - ASKS_ABOUT_THE_SESSION
     assert len(needing) >= 18, (
         "only %d tools were found reaching a browser; has the module moved? %r"
@@ -348,6 +389,10 @@ async def test_every_tool_that_reaches_a_browser_offers_a_way_to_name_it():
 
     published = {t.name: set(t.inputSchema.get("properties", {}))
                  for t in await server.mcp.list_tools()}
+    gone = sorted(ASKS_ABOUT_THE_SESSION - set(published))
+    assert not gone, (
+        "exempted from needing a browser id, but the server no longer offers "
+        "them: %r. An exemption that names nothing exempts nothing." % gone)
     unknown = sorted(needing - set(published))
     assert not unknown, "found in the source but not registered: %r" % unknown
 

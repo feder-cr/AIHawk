@@ -35,6 +35,12 @@ async def test_server_registers_expected_tools():
         # `browser_list` takes a session and no browser on purpose - what a
         # session holds is not a question one browser can answer.
         "browser_open", "browser_close", "browser_list", "browser_focus",
+        # Added in 0.16.0, when sessions started surviving the process. Without
+        # these two a saved session could be reopened only by knowing its id
+        # already, and could never be deleted at all - so the directory of them
+        # grew forever with no way to see it or empty it from the surface that
+        # fills it.
+        "session_list", "session_forget",
     }
     # EXACT, not a subset. `expected <= names` passed while a tool nobody
     # meant to publish sat in the list, and the surface of an MCP server is

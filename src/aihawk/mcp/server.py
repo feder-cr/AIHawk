@@ -30,13 +30,28 @@ from contextlib import asynccontextmanager
 
 from mcp.server.fastmcp import FastMCP, Image
 
-from . import actions, identity, plan
+from . import actions, identity, plan, store
 from .registry import DEFAULT_SESSION_ID, SessionRegistry
 
 # Kept for callers that imported it from here. The implementation moved.
 _json_capped = actions.json_capped
 
-registry = SessionRegistry()
+def new_registry(**kwargs) -> SessionRegistry:
+    """A registry wired to write its sessions down.
+
+    ⛔ ONE CONSTRUCTOR, USED BY THE SERVER AND BY THE TESTS. A test that builds
+    a bare `SessionRegistry` is testing a registry the product does not have,
+    and the wiring below - the thing that makes a session survive the process -
+    would be exercised by nothing. It is a function rather than a line because
+    the tests need to build one with a factory that launches no browser, and
+    the alternative was each of them repeating the wiring or, more likely, not.
+    """
+    reg = SessionRegistry(**kwargs)
+    reg.on_change = lambda key: remember(key.split("/")[0])
+    return reg
+
+
+registry = new_registry()
 
 
 #: Set by main(). Over stdio the SDK enters the lifespan once per process, so
@@ -159,20 +174,132 @@ MAX_BROWSERS_PER_SESSION = 8
 _focus: dict = {}
 
 
+def in_session(session_id: str | None = None) -> str:
+    """The session a caller means, with whatever was saved of it read back in.
+
+    ⛔ TWO DUPLICATIONS COLLAPSED INTO ONE FUNCTION, AND THE SECOND ONE WAS A
+    DEFECT. Every entry point wrote `session_id or DEFAULT_SESSION_ID`, and
+    exactly one of them - `browsers_in` - also read the saved session first. So
+    a server that had just restarted gave back the right browsers to a client
+    that asked what the session HELD, and a brand new stranger to one that
+    simply navigated, which is what every existing client does. Nothing raised:
+    the browser worked, it was just somebody else, in a session whose real
+    identities sat unread on disk.
+
+    Reading is idempotent and guarded by `_loaded`, so putting it here costs a
+    set lookup on the calls that have already read theirs.
+    """
+    at_session = session_id or DEFAULT_SESSION_ID
+    restore(at_session)
+    return at_session
+
+
 def focused(session_id: str | None = None) -> str:
     """The browser this session's unaddressed commands go to."""
-    return _focus.get(session_id or DEFAULT_SESSION_ID, DEFAULT_BROWSER_ID)
+    return _focus.get(in_session(session_id), DEFAULT_BROWSER_ID)
+
+
+#: The launch settings that say WHO a browser is, and so the ones a saved
+#: session carries. Everything else in the launch kwargs describes the machine
+#: it ran on, and writing those down would restore a session onto the wrong one.
+#:
+#: ⛔ THESE ARE THE LAUNCH KWARGS' OWN NAMES, NOT THE TOOL ARGUMENTS' NAMES, and
+#: the difference is not cosmetic. This list said `profile` for its first day,
+#: which is what `browser_open` and `session_start` call it; the launch kwarg is
+#: `profile_dir`, so the filter matched nothing and the profile was the one
+#: field never saved - the one field that carries the cookies and the logins a
+#: reopened session is FOR. Nothing failed: every browser came back with the
+#: right seed and the right exit, logged out.
+#:
+#: `binary_path` is deliberately absent. It is a path on this machine, and a
+#: session reopened where that path means nothing must resolve an engine rather
+#: than insist on one that is not there.
+WHO_A_BROWSER_IS = ("seed", "proxy", "profile_dir", "headless")
+
+#: Sessions whose saved file has already been read into the registry. Loading
+#: is idempotent but not free, and a session that was loaded and then had a
+#: browser closed must not be re-loaded back into having it.
+_loaded: set = set()
 
 
 def browsers_in(session_id: str | None = None) -> list:
-    """The browsers this session has, by id.
+    """The browsers this session has, by id, running or only declared.
 
-    Read from the registry's keys rather than from a list kept beside them,
+    Read from the registry's own memory rather than from a list kept beside it,
     because a second list is a second truth: a browser dropped by a failed retry
     would still be in it, and the ceiling would refuse a slot that is free.
+
+    Declared counts. A browser restored from a saved session has not started
+    yet - it starts when something is aimed at it - but it holds a slot and it
+    is one of the session's browsers, so it is one here too.
     """
-    prefix = "%s/" % (session_id or DEFAULT_SESSION_ID)
-    return sorted(k[len(prefix):] for k in registry.ids() if k.startswith(prefix))
+    at_session = in_session(session_id)
+    prefix = "%s/" % at_session
+    return sorted(k[len(prefix):] for k in registry.declared()
+                  if k.startswith(prefix))
+
+
+def remember(session_id: str | None = None) -> None:
+    """Write this session down as it stands now.
+
+    Called after anything that changes what the session HOLDS rather than on a
+    timer, so the file on disk is never a version of the session that existed
+    only between two ticks. Two kinds of caller, and they cover different halves:
+
+    * the REGISTRY, through `new_registry`, whenever a browser gains or loses an
+      identity. That is every way a browser comes to exist, including the lazy
+      auto-start that clients which never call `browser_open` use, which is why
+      it is hooked there rather than listed here;
+    * the TOOLS, when the FOCUS moves. The registry cannot see that - the focus
+      is which browser unaddressed commands mean, and it lives in this module -
+      and it has to be written after the move, which is also why the tools call
+      this again after an open or a close rather than leaving it to the hook.
+
+    ⛔ A WRITE THAT FAILS COSTS THE SAVED SESSION AND NOTHING ELSE. By the time
+    this runs the browser is already built and correct, so a full disk or a home
+    directory somebody made read-only must not turn a working `browser_open`
+    into an error. Guarded here rather than at the call sites because this is
+    the only function that writes: a guard at the callers would be one per
+    caller, and the next caller would be the one without it.
+    """
+    at_session = session_id or DEFAULT_SESSION_ID
+    prefix = "%s/" % at_session
+    browsers = {}
+    for key in registry.declared():
+        if not key.startswith(prefix):
+            continue
+        config = registry.config(key) or {}
+        browsers[key[len(prefix):]] = {
+            k: v for k, v in config.items() if k in WHO_A_BROWSER_IS
+        }
+    try:
+        if not browsers:
+            store.erase(at_session)
+            return
+        store.save(at_session, browsers, focus=_focus.get(at_session))
+    except Exception:
+        pass
+
+
+def restore(session_id: str | None = None) -> bool:
+    """Read a saved session back, if there is one and it has not been read yet.
+
+    Declares its browsers rather than starting them: the identities come back
+    immediately and cost nothing, and the engines come back one at a time, when
+    something is actually aimed at one. Answers whether anything was read.
+    """
+    at_session = session_id or DEFAULT_SESSION_ID
+    if at_session in _loaded:
+        return False
+    _loaded.add(at_session)
+    saved = store.load(at_session)
+    if not saved:
+        return False
+    for name, config in (saved.get("browsers") or {}).items():
+        registry.declare("%s/%s" % (at_session, name), config)
+    if saved.get("focus"):
+        _focus[at_session] = saved["focus"]
+    return True
 
 
 def addressed(session_id: str | None = None, browser_id: str | None = None) -> str:
@@ -190,8 +317,8 @@ def addressed(session_id: str | None = None, browser_id: str | None = None) -> s
     that still reaches for the bare default would look at one browser while its
     neighbours wrote to another, and nothing would raise.
     """
-    return "%s/%s" % (session_id or DEFAULT_SESSION_ID,
-                      browser_id or focused(session_id))
+    at_session = in_session(session_id)
+    return "%s/%s" % (at_session, browser_id or focused(at_session))
 
 
 async def _retrying(fn, *args, session_id=None, browser_id=None, **kwargs):
@@ -217,6 +344,50 @@ async def _retrying(fn, *args, session_id=None, browser_id=None, **kwargs):
         return await fn(session, *args, **kwargs)
 
 
+# --- the sessions themselves -----------------------------------------------
+
+@mcp.tool()
+async def session_list() -> str:
+    """The saved sessions, and what each one holds.
+
+    A session is the piece of work: it owns browsers, and each browser owns its
+    own tabs, cookies and identity. They survive the server, so this is how you
+    find the one you were in.
+
+    Starts nothing, and opens no browser: a saved browser is a declaration of
+    who it will be, and it comes back when something is aimed at it.
+    """
+    saved = store.known()
+    if not saved:
+        return ("no saved sessions yet. Any session that opens a browser is "
+                "saved from that moment, and session_list finds it again.")
+    rows = []
+    for s in saved:
+        names = sorted((s.get("browsers") or {}))
+        rows.append("%s (%s): %s%s" % (
+            s.get("name") or s["id"], s["id"],
+            ", ".join(names) if names else "no browsers",
+            ", saved %s" % s["saved"] if s.get("saved") else ""))
+    return "%d saved session(s). %s" % (len(saved), " | ".join(rows))
+
+
+@mcp.tool()
+async def session_forget(session_id: str) -> str:
+    """Delete a saved session: its browsers are closed and it stops being listed.
+
+    This is not the same as closing browsers. Closing frees the engines and
+    keeps the session; this removes the session itself, so nothing about it
+    comes back.
+    """
+    restore(session_id)
+    for name in browsers_in(session_id):
+        await registry.forget(addressed(session_id, name))
+    _focus.pop(session_id, None)
+    existed = store.erase(session_id)
+    return ("session %s is gone." % session_id if existed
+            else "there is no saved session called %s." % session_id)
+
+
 # --- the browsers a session holds ------------------------------------------
 
 @mcp.tool()
@@ -237,7 +408,7 @@ async def browser_open(browser_id: str | None = None, seed: int | None = None,
     Opening one takes several seconds and costs real memory, so open what you
     need and close what you stop using: browser_close frees it.
     """
-    at_session = session_id or DEFAULT_SESSION_ID
+    at_session = in_session(session_id)
     have = browsers_in(at_session)
 
     if browser_id is None:
@@ -270,6 +441,7 @@ async def browser_open(browser_id: str | None = None, seed: int | None = None,
         return "browser %s could not start: %s" % (browser_id, exc)
 
     _focus[at_session] = browser_id
+    remember(at_session)
     return ("browser %s is open in session %s and is now the one unaddressed "
             "commands go to. %s" % (browser_id, at_session,
                                     plan.describe(registry.config(at) or {})))
@@ -287,13 +459,14 @@ async def browser_close(browser_id: str | None = None,
     name is a new stranger, not the same person resumed. That is deliberate -
     a browser somebody shut down should not come back wearing its old identity.
     """
-    at_session = session_id or DEFAULT_SESSION_ID
+    at_session = in_session(session_id)
     name = browser_id or focused(at_session)
     existed = await registry.forget(addressed(at_session, name))
 
     if _focus.get(at_session) == name:
         _focus.pop(at_session, None)
     left = browsers_in(at_session)
+    remember(at_session)
     if not existed:
         return "session %s has no browser called %s." % (at_session, name)
     return ("browser %s is closed. Still open in session %s: %s."
@@ -306,7 +479,7 @@ async def browser_list(session_id: str | None = None) -> str:
 
     Starts nothing: it reports what is running, so asking is free.
     """
-    at_session = session_id or DEFAULT_SESSION_ID
+    at_session = in_session(session_id)
     have = browsers_in(at_session)
     if not have:
         return ("session %s has no browser open yet. The next tool that needs a "
@@ -340,12 +513,13 @@ async def browser_focus(browser_id: str, session_id: str | None = None) -> str:
     only decides where the ones that name none land, so a run of commands on one
     browser does not have to repeat its id.
     """
-    at_session = session_id or DEFAULT_SESSION_ID
+    at_session = in_session(session_id)
     have = browsers_in(at_session)
     if browser_id not in have:
         return ("session %s has no browser called %s. Open: %s."
                 % (at_session, browser_id, ", ".join(have) if have else "none"))
     _focus[at_session] = browser_id
+    remember(at_session)
     return "commands without a browser_id now go to %s." % browser_id
 
 

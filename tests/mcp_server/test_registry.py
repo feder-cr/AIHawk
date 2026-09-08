@@ -158,3 +158,70 @@ async def test_close_all_closes_every_session():
 
 async def _noop():
     return None
+
+
+@pytest.mark.asyncio
+async def test_the_change_hook_fires_where_who_a_browser_is_actually_changes():
+    """The hook is how a session gets written down without every caller having
+    to remember to write it down. Which calls fire it is the whole contract, and
+    the two that must NOT fire are the ones that would do damage.
+
+    `drop` is recovery - the engine died, the person did not - so firing there
+    would record a browser as gone while its owner still holds it. `close_all`
+    discards every identity because the PROCESS is ending, and firing there
+    would write every session down as empty at shutdown, which for the server's
+    hook means erasing every saved session as its last act.
+
+    Known-bad: fire from `drop`, and fire from `close_all`.
+    """
+    fired = []
+    reg = SessionRegistry(factory=_Healthy, on_change=fired.append)
+
+    await reg.ensure("one")
+    assert fired == ["one"], "a browser gained an identity and nothing said so"
+
+    await reg.ensure("one")
+    assert fired == ["one"], "a browser that was already up fired the hook again"
+
+    await reg.restart("two", seed=1)
+    assert fired == ["one", "two"]
+
+    await reg.drop("two")
+    assert fired == ["one", "two"], (
+        "a browser whose engine died was reported as changed, but `drop` keeps "
+        "the identity so the same person comes back")
+
+    await reg.forget("two")
+    assert fired == ["one", "two", "two"], "forgetting an identity said nothing"
+
+    await reg.forget("never-existed")
+    assert fired == ["one", "two", "two"], "forgetting nothing fired the hook"
+
+    await reg.close_all()
+    assert fired == ["one", "two", "two"], (
+        "shutdown reported every session as changed; for the server's hook that "
+        "erases every saved session as the process ends")
+
+
+@pytest.mark.asyncio
+async def test_a_hook_that_raises_does_not_cost_the_caller_the_browser():
+    """By the time the hook runs the browser is built and correct. Whatever the
+    hook does - writing a file, on the server - failing at it must cost that and
+    nothing else.
+
+    â THIS IS NOT COVERED BY THE SERVER'S OWN TESTS, and that was measured: the
+    server's `remember` guards its own write, so removing this try/except left
+    every persistence test green. A guard nothing exercises is a guard nobody
+    knows is gone, and `on_change` is public - the next caller to set one need
+    not be as careful as this one.
+
+    Known-bad: remove the try/except from `SessionRegistry._changed`.
+    """
+    def _explode(_key):
+        raise OSError("no space left on device")
+
+    reg = SessionRegistry(factory=_Healthy, on_change=_explode)
+
+    session = await reg.ensure("one")
+    assert session is not None
+    assert reg.ids() == ["one"]
