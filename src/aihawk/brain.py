@@ -53,6 +53,16 @@ class OpenRouterBrain(Brain):
     def __init__(self, client, model: str) -> None:
         self._convo = Conversation(client, model)
 
+    def forget(self) -> None:
+        """Drop the transcript and start a new one, same client and model.
+
+        A new `Conversation` rather than a trimmed one: what makes the wait
+        grow is the transcript being resent whole every turn, and half a
+        transcript is a compromise nobody asked for - either the follow-up box
+        still means something or it does not.
+        """
+        self._convo = Conversation(self._convo.client, self._convo.model)
+
     @property
     def usage(self) -> dict:
         return self._convo.usage

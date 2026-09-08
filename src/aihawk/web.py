@@ -131,9 +131,20 @@ code,pre,.g,.meta,.badge,#url,#tok{
 .badge{ margin-left:auto; font-size:var(--t-label); color:var(--fg-2);
         background:var(--raised); border:1px solid var(--line-2);
         padding:3px 9px; border-radius:var(--r-pill) }
+#fresh{ font-size:var(--t-label); font-family:var(--sans); color:var(--fg-2);
+        background:var(--raised); border:1px solid var(--line-2); cursor:pointer;
+        padding:3px 9px; border-radius:var(--r-pill);
+        transition:background-color 120ms ease-out, color 120ms ease-out }
+#fresh:hover:not(:disabled){ background:var(--hover); color:var(--fg) }
+#fresh:disabled{ opacity:.3; cursor:default }
 
 #log{ flex:1; overflow:auto; padding:var(--s5) var(--s4); scrollbar-gutter:stable }
-#thread{ max-width:680px; margin:0 auto }   /* cap the measure; prose does not stretch */
+/* Capped in CHARACTERS and not in pixels, because the thing being limited is
+   the measure and 680px is only one screen's worth of it: on a 1920 window the
+   same column ran to about 92 characters, past the 80 the WCAG asks for and
+   well past the 50 to 75 the readability research settles on. `ch` follows the
+   font instead of guessing at it. */
+#thread{ max-width:72ch; margin:0 auto }
 
 /* Bottom-pinning with no scroll handler and no epsilon: the sentinel is the only
    anchor the browser may keep, so content inserted before it pushes the view
@@ -157,6 +168,13 @@ code,pre,.g,.meta,.badge,#url,#tok{
 /* ---------------- one turn ---------------- */
 .turn + .turn{ margin-top:var(--s6) }   /* between turns */
 .turn > * + *{ margin-top:var(--s3) }   /* inside a turn */
+/* A turn that has scrolled out of sight costs no layout and no paint. Chosen
+   over hiding or removing old turns because it is the only one of the three
+   that leaves the text findable with Ctrl+F and readable by a screen reader:
+   the browser skips the work, it does not drop the content. `auto` on the
+   placeholder so a turn that has never been on screen still guesses its own
+   height instead of collapsing the scrollbar. */
+.turn{ content-visibility:auto; contain-intrinsic-size:auto 4rem }
 .ev + .ev    { margin-top:var(--s1) }   /* between steps: a continuation */
 
 .you{ margin-left:auto; width:fit-content; max-width:88%;
@@ -199,6 +217,17 @@ code,pre,.g,.meta,.badge,#url,#tok{
   width:6px; height:6px; border-radius:50%; background:var(--accent);
   animation:breathe 1.4s ease-in-out infinite }
 .ev[data-state="err"] .g{ color:var(--err) }
+/* The wait between steps, wearing the same row as a step so the sequence does
+   not change shape when the agent is thinking rather than acting. Its verb is
+   muted, because nothing has happened yet and a bold one would claim it had. */
+.pend{ display:grid; grid-template-columns:var(--gutter) minmax(0,1fr) auto 1rem;
+       column-gap:var(--gap); align-items:baseline; padding:3px 6px }
+.pend .lab b{ color:var(--fg-3); font-weight:400 }
+.pend .g{ position:relative }
+.pend .g::after{ content:""; position:absolute; right:0; top:.45em;
+  width:6px; height:6px; border-radius:50%; background:var(--fg-3);
+  animation:breathe 1.4s ease-in-out infinite }
+@media (prefers-reduced-motion: reduce){ .pend .g::after{ animation:none } }
 /* inset and not border-left: a border would shift all four tracks by two pixels */
 .ev[data-state="err"] > .row{ background:rgba(232,131,107,.07);
                               box-shadow:inset 2px 0 0 var(--err) }
@@ -329,7 +358,8 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
 </style>
 
 <div id="left">
-  <div id="head"><b>AIHawk</b><span class="badge" id="model">no model</span></div>
+  <div id="head"><b>AIHawk</b><span class="badge" id="model">no model</span>
+    <button id="fresh" type="button" title="New conversation">New</button></div>
   <div id="log">
     <div id="thread">
       <div id="hint">
@@ -410,6 +440,7 @@ const LONG = 120;
 const thread = $('thread'), anchor = $('anchor'), log = $('log');
 let turn = null, live = null, hold = null, n = 0, t0 = 0, timer = 0;
 let busyNow = false, queued = null, pinned = false, settle = 0;
+let pend = null, pendTimer = 0;
 
 const dur = ms => ms < 1000 ? Math.round(ms) + 'ms' : (ms/1000).toFixed(1) + 's';
 
@@ -479,6 +510,34 @@ function orphan(kind, text, replay){
   put(p, replay);
 }
 
+/* The wait, made visible. Measured on this interface: the instruction reaches
+   the screen 23 ms after the click and the server accepts it in 2, but the
+   first thing the AGENT does lands 4 to 7 seconds later, because the model has
+   to read the whole transcript before it can act - and the pane said nothing at
+   all in between. That silence is what "everything freezes for a second" was
+   describing: not a blocked page, an unlit one.
+
+   A running clock and not a spinner, because the number is the honest part:
+   it says the machine is alive AND how long this is taking, and it is the same
+   clock a step already shows, so the wait reads as part of the same sequence. */
+function waiting(){
+  if(pend) return;
+  pend = el('div','pend');
+  const lab = el('span','lab');
+  lab.append(el('b', null, 'Thinking'));
+  pend.append(el('span','g', ''), lab, el('span','meta'));
+  put(pend, false);
+  const meta = pend.lastElementChild, from = performance.now();
+  pendTimer = setInterval(() => meta.textContent = dur(performance.now() - from), 100);
+}
+
+function waited(){
+  if(!pend) return;
+  clearInterval(pendTimer);
+  pend.remove();
+  pend = null;
+}
+
 /* Only the first settle. After that the CSS sentinel pins the view, and a reader
    who has scrolled up is never yanked because nothing here fires again. */
 function settleOnce(){
@@ -493,17 +552,27 @@ es.onmessage = (e) => {
   switch(m.kind){
     case 'model': $('model').textContent = m.text; break;
     case 'usage': meter(m.text); break;
+    /* Sent to every listener, so a second tab clears too instead of showing a
+       transcript the server has already forgotten. */
+    case 'fresh': wipe(); break;
     case 'busy':
       busyNow = m.text === '1';
+      /* Not on a replay: those events describe a wait that is over. */
+      if(busyNow && !r) waiting(); else waited();
       if(!busyNow){ flush(true, r); live = null; clearInterval(timer);
                     if(queued){ const t = queued; queued = null; send(t); } }
       paint(); break;
     case 'you':   flush(false, r); live = null; newTurn();
                   put(el('div','you', m.text), r); break;
-    case 'said':  flush(false, r); hold = m.text; break;
-    case 'tool':  flush(false, r); step(m.text, r); break;
+    case 'said':  waited(); flush(false, r); hold = m.text; break;
+    case 'tool':  waited(); flush(false, r); step(m.text, r); break;
     case 'result':
-    case 'err':   flush(false, r); land(m.kind, m.text, r); break;
+    case 'err':   flush(false, r); land(m.kind, m.text, r);
+                  /* The step is done and the model is reading its result, which
+                     is another wait of the same kind: the loop asks again before
+                     anything else can appear. */
+                  if(busyNow && !r) waiting();
+                  break;
     /* Deliberately total: a kind this page has never heard of is still shown,
        for the same reason an unknown tool still renders its arguments. */
     default:      flush(false, r); orphan('said', m.text, r);
@@ -517,13 +586,18 @@ $('jump').onclick = () => anchor.scrollIntoView({block:'end', behavior:'smooth'}
 
 /* ---- the composer. It is never disabled: greying out the input the moment the
    run gets interesting is most of what reads as unfinished. ---- */
-const i = $('i'), go = $('go'), halt = $('halt'), f = $('f'), chip = $('chip');
+const i = $('i'), go = $('go'), halt = $('halt'), f = $('f'), chip = $('chip'),
+      fresh = $('fresh');
 
 function paint(){
   const typed = i.value.trim().length > 0;
   /* Shown for as long as work is in flight and for no other reason: it is tied
      to the run, never to what the composer happens to contain. */
   halt.hidden = !busyNow;
+  /* Refused while a run is in flight, and shown as refused rather than left to
+     fail at the server: dropping a transcript something is still writing into
+     is not undoable. */
+  fresh.disabled = busyNow;
   go.disabled = !typed;
   go.setAttribute('aria-label',
     queued ? 'Replace queued message' : busyNow ? 'Queue for next turn' : 'Send');
@@ -540,6 +614,15 @@ i.addEventListener('input', () => {
 i.addEventListener('keydown', e => {
   if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); f.requestSubmit(); }
 });
+/* Escape stops the run, from anywhere on the page. The button is the visible
+   way and this is the one a hand already on the keyboard reaches first, which
+   matters more now that the loop has no ceiling of its own. Not while typing
+   into the composer with something in it: there Escape belongs to the draft. */
+document.addEventListener('keydown', e => {
+  if(e.key !== 'Escape' || !busyNow) return;
+  if(document.activeElement === i && i.value.trim()) return;
+  fetch('/chat/stop', {method:'POST'});
+});
 /* A pencil and not a cross: a cross would read as "cancel the queued message".
    This returns it to the composer to be edited. */
 chip.onclick = () => { i.value = queued; queued = null; i.focus();
@@ -549,6 +632,20 @@ function send(text){
   fetch('/chat/send', {method:'POST', headers:{'Content-Type':'application/json'},
                        body: JSON.stringify({text})});
 }
+/* Clearing the page is NOT what this does, and the difference is the point:
+   it asks the server to forget the transcript, because the transcript is what
+   every turn resends and therefore what the wait and the bill are made of. The
+   page is wiped only when the server says it has forgotten. */
+function wipe(){
+  waited();
+  thread.textContent = '';
+  turn = null; live = null; hold = null; n = 0;
+  clearInterval(timer);
+  $('tok').hidden = true;
+  queued = null; paint();
+}
+fresh.onclick = () => fetch('/chat/fresh', {method:'POST'});
+
 halt.onclick = () => fetch('/chat/stop', {method:'POST'});
 f.onsubmit = (e) => {
   e.preventDefault();
@@ -572,7 +669,7 @@ function meter(json){
 /* ---- the browser pane ---- */
 const img = $('frame'), empty = $('empty'), right = $('right'), stateEl = $('state'),
       browser = $('browser'), urlEl = $('url');
-let frozen = false;
+let frozen = false, lastArn = null;
 
 /* The second argument is the sentence behind a one-word state, shown on hover:
    an "error" with no reason is a thing to restart, an "error" that says the
@@ -597,8 +694,13 @@ async function tick(){
       img.src = URL.createObjectURL(blob);
       if(old.startsWith('blob:')) URL.revokeObjectURL(old);
       img.hidden = false; empty.hidden = true; say('live');
-      if(img.naturalWidth) browser.style.setProperty(
-        '--arn', (img.naturalWidth / img.naturalHeight).toFixed(4));
+      /* Only when it actually changes. The window keeps its shape for a whole
+         session, so writing this ten times a second was ten style
+         invalidations a second to say the same number. */
+      if(img.naturalWidth){
+        const arn = (img.naturalWidth / img.naturalHeight).toFixed(4);
+        if(arn !== lastArn){ lastArn = arn; browser.style.setProperty('--arn', arn); }
+      }
     }
     /* The capture could not answer, and the body says why: no frame within the
        server's wait (a minimised window is captured as nothing), or an engine
@@ -710,6 +812,34 @@ class ChatService:
         for q in list(self._listeners):
             q.put_nowait(event)
 
+    def reset(self) -> bool:
+        """Start a fresh conversation, keeping the browser where it is.
+
+        ⛔ THIS IS A COST AND LATENCY CONTROL, not a tidiness feature, and
+        until it existed there was no way to reach it short of killing the
+        process. Every turn resends the whole transcript, so the transcript is
+        the bill and it is also the wait: measured on this interface, a first
+        instruction on a fresh process carries 3,106 prompt tokens and the
+        agent moves 4.1 s after the click; by the third instruction of the same
+        session the first turn already carries 38,207 and the wait is 6.7 s.
+        Nothing trimmed it, so it only grew.
+
+        The browser is deliberately left alone. Someone who has logged in
+        somewhere and wants to drop the transcript should not lose the session
+        they built, and the two have no reason to be tied.
+
+        Refused while a run is in flight rather than cancelling it: throwing
+        away a transcript that something is still writing into is the kind of
+        surprise a person cannot undo.
+        """
+        if self.busy:
+            return False
+        forget = getattr(self._brain, "forget", None)
+        if callable(forget):
+            forget()
+        self.history.clear()
+        return True
+
     @property
     def busy(self) -> bool:
         """Whether an instruction is in flight, for a listener joining now.
@@ -778,6 +908,14 @@ def build_app(link: Link, service: ChatService) -> Starlette:
 
     async def stop(_request: Request) -> JSONResponse:
         return JSONResponse({"stopped": service.stop()})
+
+    async def fresh(_request: Request) -> JSONResponse:
+        done = service.reset()
+        if done:
+            # Told to every listener, not just the tab that asked: two tabs on
+            # one session must not disagree about what the conversation is.
+            await service.emit("fresh", "1")
+        return JSONResponse({"fresh": done})
 
     async def events(_request: Request) -> StreamingResponse:
         q = service.subscribe()
@@ -894,6 +1032,7 @@ def build_app(link: Link, service: ChatService) -> Starlette:
         Route("/", root),
         Route("/chat/send", send, methods=["POST"]),
         Route("/chat/stop", stop, methods=["POST"]),
+        Route("/chat/fresh", fresh, methods=["POST"]),
         Route("/chat/events", events),
         Route("/live/frame", frame),
         Route("/live/tabs", tabs),

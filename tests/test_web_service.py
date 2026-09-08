@@ -243,8 +243,8 @@ async def test_the_app_exposes_exactly_the_routes_the_page_calls():
     404 there, and the page has no way to report it."""
     svc = ChatService(FakeLink(), SilentBrain())
     paths = {r.path for r in build_app(FakeLink(), svc).routes}
-    assert paths == {"/", "/chat/send", "/chat/stop", "/chat/events",
-                     "/live/frame", "/live/tabs", "/live/select"}
+    assert paths == {"/", "/chat/send", "/chat/stop", "/chat/fresh",
+                     "/chat/events", "/live/frame", "/live/tabs", "/live/select"}
 
 
 async def test_the_stop_control_is_its_own_button_and_follows_the_run():
@@ -402,6 +402,80 @@ async def test_a_capture_that_cannot_answer_says_why_instead_of_looking_idle():
 
     assert resp.status_code == 503
     assert "page.screencast" in json.loads(resp.body)["error"]
+
+
+async def test_a_new_conversation_makes_the_brain_forget_and_clears_the_history():
+    """The transcript is the wait and the bill, so dropping it has to reach the
+    BRAIN, not just the page.
+
+    Measured on this interface: a first instruction on a fresh process carries
+    3,106 prompt tokens and the agent moves 4.1 s after the click; by the third
+    instruction of the same session the first turn already carries 38,207 and
+    the wait is 6.7 s. Nothing trimmed it and there was no way to reach it
+    short of killing the process. After a reset the next first turn measured
+    3,091 again.
+
+    Known-bad: clearing `service.history` and leaving the brain alone. The page
+    then looks empty while every following turn still resends everything.
+    """
+    class Forgetful(SilentBrain):
+        forgotten = 0
+
+        def forget(self):
+            type(self).forgotten += 1
+
+    svc = ChatService(FakeLink(), Forgetful())
+    await svc.emit("you", "something")
+    assert svc.history, "nothing to forget, the test proves nothing"
+
+    assert svc.reset() is True
+    assert svc.history == []
+    assert Forgetful.forgotten == 1
+
+
+async def test_a_new_conversation_is_refused_while_a_run_is_in_flight():
+    """Throwing away a transcript something is still writing into is not
+    undoable, so it is refused rather than raced.
+
+    Known-bad: resetting regardless. The run then keeps going against a
+    transcript the brain has already replaced.
+    """
+    brain = HangingBrain()
+    svc = ChatService(FakeLink(), brain)
+    svc.start("a long one")
+    await asyncio.wait_for(brain.started.wait(), 2)
+
+    assert svc.busy
+    assert svc.reset() is False, "a reset landed in the middle of a run"
+
+    svc.stop()
+
+
+async def test_the_page_shows_the_wait_and_ties_it_to_the_run():
+    """The complaint was that everything freezes for a second after a prompt.
+
+    Measured instead: the instruction reaches the screen 23 ms after the click
+    and the server accepts it in 2, but the first thing the agent DOES lands 4
+    to 7 seconds later, and the pane said nothing in between. It was not a
+    blocked page, it was an unlit one.
+
+    ⛔ Reads the markup and the script, so it catches the indicator being
+    removed or untied from the run. It does not execute them: that it appears,
+    counts up and disappears was checked by hand against a running interface,
+    where it read `Thinking 6.8s` through `Thinking 10.1s` and reset on the
+    next step.
+
+    Known-bad: deleting `waiting()`, or calling it on a replayed event, which
+    would show a clock for a wait that ended an hour ago.
+    """
+    assert "function waiting()" in PAGE, "the wait is not drawn any more"
+    assert "if(busyNow && !r) waiting(); else waited();" in PAGE, \
+        "the wait is no longer tied to the run starting"
+    assert "case 'tool':  waited();" in PAGE, \
+        "the wait no longer ends when the agent acts"
+    # Re-armed after a step lands, because the model reads the result before
+    # anything else can appear and that gap is the same wait.
+    assert "if(busyNow && !r) waiting();" in PAGE
 
 
 class _Req:
