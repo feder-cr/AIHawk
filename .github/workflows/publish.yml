@@ -149,3 +149,52 @@ jobs:
           pip install twine
           twine check dist/*
       - uses: pypa/gh-action-pypi-publish@release/v1
+
+  # ⛔ THE PAGE WAS THE STEP NOBODY AUTOMATED, AND THE GATE FOR IT REPORTS ONE
+  # RELEASE LATE. This workflow published to the index and stopped there, so the
+  # release page was left to whoever pushed the tag - and 0.22.0 shipped without
+  # one. Nothing said so at the time: the miss surfaced on the NEXT change,
+  # where `test_every_published_version_has_a_release_page` walks the index and
+  # found a version with no page, on a pull request that had nothing to do with
+  # it. A step that cannot be forgotten is worth more than a check that catches
+  # the forgetting afterwards.
+  #
+  # Its own job, and not a step inside `upload`: that one holds the OIDC trust
+  # and carries `id-token: write`, and the job that writes to this repository
+  # should not be the job that can speak to PyPI.
+  release_page:
+    needs: [already-published, upload]
+    if: needs.already-published.outputs.present != 'yes' && startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: the version that just shipped gets its page
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          # A page written by hand is better than anything a runner can compose,
+          # so an existing one is never touched: this only fills the hole.
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "::notice::$TAG already has a release page. Left alone."
+            exit 0
+          fi
+          # The body of the tagged commit, which is prose somebody already wrote
+          # about this change; its subject line is dropped because the title
+          # says the version. An empty body falls back to the subject rather
+          # than publishing a page with nothing in it - the release-page test
+          # counts an empty one as missing, and it is right to.
+          # ⛔ NOT `[ ! -s notes.md ]`. `%b` on a commit with no body writes one
+          # byte, a newline, so the file is not empty by size and the fallback
+          # never fires: the page would be created carrying a blank line, which
+          # the release-page test counts as missing - the exact hole this step
+          # exists to close. Measured by running this block.
+          git log -1 --format=%b > notes.md
+          if [ -z "$(tr -d '[:space:]' < notes.md)" ]; then
+            git log -1 --format=%s > notes.md
+          fi
+          gh release create "$TAG" --title "${TAG#v}" --notes-file notes.md
+          echo "::notice::created the release page for $TAG"
