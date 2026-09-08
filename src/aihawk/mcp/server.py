@@ -405,7 +405,10 @@ async def ready(session_id=None, browser_id=None):
             # session somebody cannot use.
             pass
     try:
-        _note_tabs(at, [p["url"] for p in await session.describe_pages()])
+        # The urls only. `describe_pages` also fetches each tab's TITLE, which
+        # is a round trip per tab, and this runs on every command - including
+        # every frame of the live view, twenty-five times a second.
+        _note_tabs(at, session.where_pages_are())
     except Exception:
         pass
     return session

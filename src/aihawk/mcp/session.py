@@ -90,6 +90,37 @@ class StealthSession:
                         self._active = pid
         return list(self._pages)
 
+    def where_pages_are(self) -> list[str]:
+        """The url of each tab, and nothing else.
+
+        ⛔ THE CHEAP HALF OF `describe_pages`, SPLIT OUT BECAUSE THE COST WAS
+        BEING PAID ON EVERY COMMAND. That method's own docstring says it: title
+        costs a round trip per tab and url does not. The server notes where a
+        browser is on every tool call so a session can be saved where it was,
+        and it was doing that by asking for the whole description - so every
+        action, and every frame of the live view, paid a round trip per tab for
+        a title nobody read.
+
+        ⛔ MEASURED, AND THE FIRST NUMBER I WROTE HERE WAS DEDUCED RATHER THAN
+        MEASURED. I read a low frame rate on a bench, inferred that each request
+        took 195 ms, and wrote that down. Splitting the time three ways said the
+        request was 13 ms and the low rate was the BENCH: a CSS animation in a
+        headless window repaints a few times a second, so most answers were the
+        same picture twice.
+
+        The real cost of the title, A-B-A on the same bench: 8.3 ms with urls
+        only, 29.5 ms with the title, 6.8 ms with urls again. Three and a half
+        times, on the request the live view makes twenty-five times a second.
+        """
+        out = []
+        for pid in self.list_pages():
+            page = self._pages.get(pid)
+            try:
+                out.append(page.url if page is not None else "")
+            except Exception:
+                out.append("")
+        return out
+
     async def describe_pages(self) -> list[dict]:
         """Each tab as id, title, url and whether it is the active one.
 

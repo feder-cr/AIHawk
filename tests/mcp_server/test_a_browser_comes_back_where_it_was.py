@@ -42,6 +42,13 @@ class _Recording:
         self.pages.append("")
         return "tab-%d" % len(self.pages)
 
+    def where_pages_are(self):
+        # The cheap half, added in 0.20.1 when it turned out the server was
+        # asking for page TITLES on every command. A stand-in without it makes
+        # `ready` raise into a `try/except` and the tabs quietly go unnoted,
+        # which reads as a browser that could not be read.
+        return list(self.pages)
+
     async def describe_pages(self):
         return [{"id": "tab-%d" % (i + 1), "url": u, "title": "", "active": False}
                 for i, u in enumerate(self.pages)]
@@ -186,3 +193,25 @@ async def test_the_retry_path_wakes_the_same_way(registry):
     got = await server._retrying(_once)
 
     assert json.loads(got) == ["http://a.test/"], got
+
+
+def test_the_server_only_asks_the_session_for_things_it_has():
+    """⛔ THE `try/except` AROUND NOTING THE TABS HIDES A MISSING METHOD, and it
+    has to: a tab mid-navigation legitimately refuses to be read, and one that
+    does must not cost the caller their browser. But that same handler swallows
+    an AttributeError, so a server calling a method the session does not have
+    looks exactly like a browser that could not be read - measured here, on a
+    stand-in that lacked `where_pages_are` and simply stopped noting anything.
+
+    So the contract is asserted directly instead of being left to a runtime
+    path that is designed not to complain.
+
+    Known-bad: rename `where_pages_are` on `StealthSession`.
+    """
+    from aihawk.mcp.session import StealthSession
+
+    for name in ("where_pages_are", "describe_pages", "new_page", "close"):
+        assert callable(getattr(StealthSession, name, None)), (
+            "the server calls session.%s() and the session has no such method; "
+            "at runtime that is swallowed and reads as a browser that could "
+            "not be read" % name)
