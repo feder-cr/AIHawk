@@ -25,9 +25,12 @@ AIHawk is an open-source AI web agent: you describe a task in plain
 language and it drives a real browser until the task is done. The
 repository sits at about 30,300 stars and 4,600 forks, has existed since
 August 2024, and is MIT licensed. The Python package `aihawk` is on PyPI
-at version 0.3.0, published 3 September 2026, requiring Python 3.11 or
-newer; the repository's main branch already carries 0.4.0, and the
-statements below that name a version say which one they describe.
+and needs Python 3.11 or newer. This review was written against what the
+index and the repository carried on 3 September 2026: 0.3.0 published,
+0.4.0 on the main branch. The package has shipped many times since, so
+[the PyPI page](https://pypi.org/project/aihawk/) is the current answer
+and this paragraph is not; the statements below that name a version say
+which one they describe.
 
 One factual line on where it came from, because the repository description
 still says it: the project was born as an AI web agent that applied to
