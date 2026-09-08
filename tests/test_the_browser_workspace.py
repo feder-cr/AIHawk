@@ -106,20 +106,31 @@ async def test_the_workspace_is_read_from_the_server_like_any_other_client():
     assert any(name == "browser_list" for name, _ in link.calls)
 
 
-async def test_a_conversation_that_has_done_nothing_draws_no_panes_and_asks_nothing():
-    """⛔ OR OPENING A CHAT COSTS AN ENGINE. Over MCP there is no way to ask "is
-    a browser running" without starting one, so a workspace drawn for a session
-    that has issued no instruction must answer from what it already knows.
+async def test_the_workspace_asks_the_one_question_that_starts_nothing():
+    """⛔ THE GUARD THAT BELONGS ON THE PICTURE DOES NOT BELONG HERE, and putting
+    it here cost the feature its whole point. The frame and the tab strip may not
+    ask before an instruction because asking STARTS a browser. `browser_list`
+    starts nothing - that is its promise and there is a test for it in the
+    server - so the workspace asks always.
 
-    Known-bad: drop the `touched` guard from the browsers route.
+    Copying the guard looked prudent and was a bug: a session reopened after a
+    restart has browsers it DECLARED and no instruction yet, so the workspace
+    would have been empty in exactly the case the declarations exist for, and
+    the panes offering to wake them would never have been drawn.
+
+    Known-bad: put `if not seen.link.touched: return empty` back at the top of
+    the browsers route.
     """
     link, sessions, client = _app()
 
     got = client.get("/live/browsers?s=mai-usata").json()
 
-    assert got["browsers"] == []
-    assert link.calls == [], (
-        "drawing an empty workspace reached the server: %r" % link.calls)
+    assert [b["id"] for b in got["browsers"]] == ["docs", "posta", "dormiente"], (
+        "a session that has issued no instruction was shown no panes, so a "
+        "reopened session cannot offer to wake the browsers it declared")
+    assert [name for name, _ in link.calls] == ["browser_list"], (
+        "drawing the workspace called something other than the question that "
+        "starts nothing: %r" % link.calls)
 
 
 async def test_an_older_server_leaves_the_workspace_empty_instead_of_breaking_the_pane():
@@ -221,10 +232,35 @@ def test_the_previews_cost_the_same_whether_there_are_two_or_eight():
         "no longer one thing")
 
     # And the function that BUILDS a pane starts no timer of its own.
-    builder = script[script.index("function thumbFor"):script.index("async function watchThis")]
+    #
+    # ⛔ BOUNDED BY BRACES, not by "up to the next function". The first version
+    # cut from `function thumbFor` to the name of whatever came next, so a
+    # function written between them was read as part of the builder: the wake's
+    # stopwatch tripped it, and a stopwatch that ticks during one click is not
+    # a pane refreshing itself. A slice that moves when unrelated code moves is
+    # a gate that goes red for the wrong reason, which teaches people to widen
+    # it - and the widened version would have stopped seeing the real thing.
+    start = script.index("function thumbFor")
+    depth, end = 0, start
+    for i in range(script.index("{", start), len(script)):
+        if script[i] == "{":
+            depth += 1
+        elif script[i] == "}":
+            depth -= 1
+            if depth == 0:
+                end = i
+                break
+    builder = script[start:end]
     assert "setTimeout" not in builder and "setInterval" not in builder, (
         "a pane schedules its own refresh, so the cost of the previews grows "
         "with the number of panes - which is the thing the arithmetic forbids")
+
+    # The wake's stopwatch is allowed and is not a refresh, but an interval that
+    # is never cleared is a leak that outlives the click that made it.
+    wake = script[script.index("async function wakeThis"):]
+    wake = wake[:wake.index(chr(10) + "}")]
+    assert "setInterval" not in wake or "clearInterval" in wake, (
+        "the wake starts a stopwatch it never stops")
 
 
 def test_a_pane_that_is_not_running_is_never_asked_for_a_picture():
@@ -281,3 +317,37 @@ def test_the_page_declares_no_identifier_twice():
     assert not twice, (
         "declared twice at the top level of the page's script, which is a "
         "syntax error that stops the whole file from running: %s" % sorted(set(twice)))
+
+
+async def test_waking_nothing_refuses():
+    """A wake takes seven to fourteen seconds and starts an engine. Treating a
+    missing id as "the current one" would make a bug in the page spend that on a
+    browser nobody asked about.
+
+    Known-bad: default the id instead of refusing.
+    """
+    _, sessions, client = _app()
+    assert client.post("/live/wake?s=lavoro", json={}).status_code == 400
+
+
+async def test_the_wake_is_the_first_command_aimed_at_the_browser():
+    """⛔ NO NEW TOOL FOR IT. The contract already says a declared browser starts
+    on the next command aimed at it, as the same person, with the tabs it had.
+    So the wake IS that command, and the interface stays a client of the tools
+    as they are rather than growing a verb only it can use.
+
+    Known-bad: have the route call `browser_open`. That opens a NEW browser
+    instead of starting the declared one, so the person waiting for their tabs
+    gets a stranger with none.
+    """
+    link, sessions, client = _app()
+    await sessions.get("lavoro").send("start something")
+    before = len(link.calls)
+
+    client.post("/live/wake?s=lavoro", json={"id": "dormiente"})
+
+    made = [c for c in link.calls[before:]]
+    assert ("session_list_pages",
+            {"browser_id": "dormiente", "session_id": "lavoro"}) in made, made
+    assert not any(name == "browser_open" for name, _ in made), (
+        "waking a declared browser opened a new one instead: %r" % made)

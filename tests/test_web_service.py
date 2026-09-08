@@ -265,7 +265,9 @@ async def test_the_app_exposes_exactly_the_routes_the_page_calls():
                      # The workspace, added in 0.18.0: which browsers to draw a
                      # pane for, and which one the commands go to.
                      "/live/browsers", "/live/watch",
-                     "/live/open", "/live/close"}
+                     "/live/open", "/live/close",
+                     # Waking a declared browser, added in 0.19.0.
+                     "/live/wake"}
 
     called = {m for m in re.findall(r"""fetch\(\s*[`'"]([^`'"?]+)""", PAGE)}
     unserved = sorted(called - paths)

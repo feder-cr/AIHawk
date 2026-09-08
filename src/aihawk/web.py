@@ -1059,8 +1059,34 @@ function thumbFor(b){
   shut.onclick = (e) => { e.stopPropagation(); closeThis(b.id); };
   cap.appendChild(shut);
   el2.append(pic, cap);
-  el2.onclick = () => watchThis(b.id);
+  /* A pane that is only declared has to be STARTED before it can be watched,
+     and the two are one gesture: clicking it means "work here". */
+  el2.onclick = () => b.running ? watchThis(b.id) : wakeThis(b.id, el2);
   return el2;
+}
+
+/* ⛔ THE WAIT IS SHOWN, because it is seven to fourteen seconds - measured, and
+   the eighth browser takes twice the first. An interface that goes quiet for
+   fourteen seconds is the defect this project fixed elsewhere with the Thinking
+   clock, and a pane that simply does not change is indistinguishable from a
+   click that did nothing. */
+async function wakeThis(id, pane){
+  const st = pane.querySelector('.st'), pic = pane.querySelector('.pic span');
+  const t0 = performance.now();
+  const beat = setInterval(() => {
+    st.textContent = ((performance.now() - t0) / 1000).toFixed(0) + 's';
+  }, 250);
+  if(pic) pic.textContent = 'starting';
+  pane.disabled = true;
+  try {
+    await fetch(at('/live/wake'), {method:'POST', headers:{'Content-Type':'application/json'},
+                                   body: JSON.stringify({id})});
+    await watchThis(id);
+  } finally {
+    clearInterval(beat);
+    pane.disabled = false;
+    await drawFleet();
+  }
 }
 
 async function closeThis(id){
@@ -1676,14 +1702,17 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         the interface has no privileged path to the browsers - and it starts
         nothing, so drawing the workspace can never cost an engine.
 
-        A conversation that has issued no instruction has no browsers by
-        definition, and asking would be the one question that creates what it
-        asks about. So it answers an empty workspace without going near the
-        server, which is the same rule the picture and the tab strip follow.
+        ⛔ AND IT ASKS EVEN WHEN THIS CONVERSATION HAS DONE NOTHING, which is
+        the opposite of what the picture and the tab strip do. Those may not ask
+        before an instruction because asking STARTS a browser; `browser_list` is
+        the one question that starts nothing, by construction and by its own
+        test. Copying the guard here looked prudent and was a bug: a session
+        reopened after a restart has browsers it declared and no instruction
+        yet, so the workspace would have been empty in exactly the case the
+        declarations exist for - and the panes offering to wake them would
+        never have been drawn.
         """
         seen = which(request)
-        if not seen.link.touched:
-            return JSONResponse({"browsers": [], "focus": "", "limit": 0})
         try:
             got = json.loads(await seen.link.call_text("browser_list"))
         except Exception:
@@ -1713,6 +1742,39 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         said = await which(request).link.call_text("browser_focus",
                                                    {"browser_id": name})
         return JSONResponse({"focused": name, "said": said})
+
+    async def wake(request: Request) -> JSONResponse:
+        """Start a browser this session declared but has not needed yet.
+
+        ⛔ NO NEW TOOL, BECAUSE THE CONTRACT ALREADY SAYS WHAT A WAKE IS: the
+        next command aimed at a declared browser starts it, as the same person,
+        and reopens the tabs it had. So the wake IS that command - asking it for
+        its tabs - and the interface stays a client of the tools as they are
+        rather than growing a verb that only it can use.
+
+        It takes seven to fourteen seconds, measured, so it answers when the
+        browser is up rather than immediately: the page shows a stopwatch on the
+        pane meanwhile, and a route that returned early would leave that
+        stopwatch to guess.
+
+        ⛔ A TOOL THAT FAILS REACHES A CLIENT AS AN ERROR RESULT, NOT AS AN
+        EXCEPTION, so catching exceptions alone reported a browser awake that
+        had never started - measured, on the first real wake: the route answered
+        `awake` in five seconds while the pane still said "not up", and nothing
+        anywhere said why. The reason is read off the result and handed back.
+        """
+        body = await request.json()
+        name = (body or {}).get("id", "")
+        if not name:
+            return JSONResponse({"error": "no id"}, status_code=400)
+        try:
+            got = await which(request).link.call("session_list_pages",
+                                                 {"browser_id": name})
+        except Exception as exc:
+            return JSONResponse({"error": str(exc)[:200]}, status_code=503)
+        if getattr(got, "isError", False):
+            return JSONResponse({"error": text_of(got)[:300]}, status_code=503)
+        return JSONResponse({"awake": name, "said": text_of(got)})
 
     async def open_browser(request: Request) -> JSONResponse:
         """Open another browser in this session, from the workspace.
@@ -1788,6 +1850,7 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         Route("/live/frame", frame),
         Route("/live/browsers", browsers),
         Route("/live/watch", watch, methods=["POST"]),
+        Route("/live/wake", wake, methods=["POST"]),
         Route("/live/open", open_browser, methods=["POST"]),
         Route("/live/close", close_browser, methods=["POST"]),
         Route("/live/tabs", tabs),

@@ -211,8 +211,11 @@ Sessions are written down as soon as one holds a browser, and what is written is
 the DECLARATION - which browsers a session has, who each one is, and where its
 tabs were pointing - not eight running engines. Reopening one gives the
 identities back immediately; each engine starts when a command is aimed at it,
-as the right person. Cookies and logins come back only where a browser had a
-`profile`, which is the mechanism that already exists for that.
+as the right person, **and reopens the tabs it had** - the urls are saved with
+the identity, and the first command aimed at a declared browser is what pays
+them back. That happens once: after it, the tabs are the browser's own business.
+Cookies and logins come back only where a browser had a `profile`, which is the
+mechanism that already exists for that.
 
 - **`seed`** is the identity. Same seed, same fingerprint, every time. Leave it
   out and one is drawn; the answer says which, so a session worth repeating can

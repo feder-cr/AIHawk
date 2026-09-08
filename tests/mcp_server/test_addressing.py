@@ -323,12 +323,62 @@ def test_no_registry_call_in_the_server_is_left_without_an_address():
     assert not unaddressed, (
         "these reach the registry with no browser named, so they act on the "
         "default one whatever the caller asked for: %s" % unaddressed)
-    # 20 today. A floor rather than the number, because the point is that the
-    # scan found the calls at all: a scan that matches nothing passes the
-    # assertion above without reading a line of the module.
-    assert len(checked) >= 18, (
+    # ⛔ THE FLOOR WENT FROM 18 TO 10 ON PURPOSE, AND THE SCAN GOT STRONGER
+    # RATHER THAN WEAKER. In 0.19.0 the fourteen tools that each wrote
+    # `registry.ensure(addressed(...))` for themselves were moved onto one
+    # funnel, `ready`, because "what it takes to hand somebody a usable browser"
+    # had stopped being just `ensure` - a declared browser now has tabs owed to
+    # it - and fifteen places would have had to learn the same new step. So
+    # there are fewer registry calls to guard because there are fewer places
+    # able to get it wrong. Lowering a floor is normally how a gate is quietly
+    # switched off, which is why the reason is written here and why the
+    # companion test below asserts that the funnel is what the tools use.
+    assert len(checked) >= 10, (
         "only %d registry calls were found in %s; has the module moved?"
         % (len(checked), SERVER_PY.name))
+
+
+def test_no_tool_reaches_for_a_browser_on_its_own():
+    """⛔ THE GUARANTEE THAT REPLACED THE ONE ABOVE, and it is stronger than
+    what it replaced. The floor on registry calls fell from 18 to 10 when the
+    tools were moved onto `ready`; a lower floor on its own is how a gate gets
+    switched off, so this says the thing the floor used to imply and says it
+    directly: no TOOL touches the registry itself.
+
+    It matters because `ready` is no longer a synonym for `ensure`. A browser
+    restored from a saved session has tabs owed to it, and a tool that called
+    `ensure` for itself would hand back that person's browser with none of that
+    person's pages - a browser that is right about who it is and wrong about
+    where it was.
+
+    Known-bad: put `await registry.ensure(addressed(session_id, browser_id))`
+    back into any one tool. The scan above still passes, because that call IS
+    addressed; only this one sees it.
+    """
+    tree = ast.parse(SERVER_PY.read_text(encoding="utf-8"))
+    #: The three that legitimately act on the registry rather than ask it for a
+    #: browser to drive: opening one, closing one, and choosing an identity.
+    NOT_DRIVING_A_PAGE = {"browser_open", "browser_close", "session_start",
+                          "session_forget", "session_status", "browser_list"}
+    rogue = []
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        decorated = any(
+            isinstance(d, ast.Call) and isinstance(d.func, ast.Attribute)
+            and d.func.attr == "tool" for d in node.decorator_list)
+        if not decorated or node.name in NOT_DRIVING_A_PAGE:
+            continue
+        for inner in ast.walk(node):
+            if (isinstance(inner, ast.Call)
+                    and isinstance(inner.func, ast.Attribute)
+                    and isinstance(inner.func.value, ast.Name)
+                    and inner.func.value.id == "registry"):
+                rogue.append("%s: registry.%s" % (node.name, inner.func.attr))
+    assert not rogue, (
+        "these reach the registry themselves instead of asking `ready` for a "
+        "browser, so a session restored from disk comes back without its "
+        "tabs: %s" % rogue)
 
 
 def _tools_that_reach_a_browser():
@@ -352,7 +402,8 @@ def _tools_that_reach_a_browser():
                     and inner.func.value.id == "registry"
                     and inner.func.attr in ADDRESSABLE):
                 found.add(node.name)
-            if isinstance(inner.func, ast.Name) and inner.func.id == "_retrying":
+            if (isinstance(inner.func, ast.Name)
+                    and inner.func.id in ("_retrying", "ready")):
                 found.add(node.name)
     return found
 

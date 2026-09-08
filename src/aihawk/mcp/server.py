@@ -269,9 +269,16 @@ def remember(session_id: str | None = None) -> None:
         if not key.startswith(prefix):
             continue
         config = registry.config(key) or {}
-        browsers[key[len(prefix):]] = {
-            k: v for k, v in config.items() if k in WHO_A_BROWSER_IS
-        }
+        wrote = {k: v for k, v in config.items() if k in WHO_A_BROWSER_IS}
+        # Where it was, so reopening gives back the work and not only the
+        # person. A browser that has never been looked at contributes nothing
+        # rather than an empty list: an empty list would mean "it had no tabs",
+        # which is a different thing from "nobody has asked yet" and would wipe
+        # the pages of a browser that is up and busy.
+        been = _seen_tabs.get(key)
+        if been:
+            wrote["urls"] = been
+        browsers[key[len(prefix):]] = wrote
     try:
         if not browsers:
             store.erase(at_session)
@@ -296,7 +303,17 @@ def restore(session_id: str | None = None) -> bool:
     if not saved:
         return False
     for name, config in (saved.get("browsers") or {}).items():
-        registry.declare("%s/%s" % (at_session, name), config)
+        key = "%s/%s" % (at_session, name)
+        # The identity is DECLARED - the browser does not start - and the tabs
+        # are OWED, to be reopened by the wake that starts it. Kept apart from
+        # the identity on purpose: `declare` writes the launch settings, and a
+        # list of urls is not one of them. Handing them to the registry would
+        # make it carry a fact about pages, which is the one thing it has
+        # deliberately never known.
+        owed = config.pop("urls", None)
+        registry.declare(key, config)
+        if owed:
+            _tabs_owed[key] = list(owed)
     if saved.get("focus"):
         _focus[at_session] = saved["focus"]
     return True
@@ -321,6 +338,79 @@ def addressed(session_id: str | None = None, browser_id: str | None = None) -> s
     return "%s/%s" % (at_session, browser_id or focused(at_session))
 
 
+#: Where each browser's tabs were, by composed key. Written whenever a browser
+#: is handed out or listed, read by `remember` when the session is written down.
+#:
+#: ⛔ A CACHE AND NOT A SECOND TRUTH, and the difference is which way it flows.
+#: The tabs live in the running browser; this only remembers what they were the
+#: last time anybody looked, because `remember` is called from a synchronous
+#: hook and asking a browser for its tabs is asynchronous. So it is at most one
+#: command stale, and a session that ends between two looks comes back one
+#: command behind rather than empty.
+_seen_tabs: dict = {}
+
+#: Tabs a saved session declared and that have not been reopened yet, by key.
+#: Emptied by the wake that uses them, so a browser is restored ONCE: after that
+#: its tabs are its own business and reopening them would fight the caller.
+_tabs_owed: dict = {}
+
+
+def _note_tabs(key: str, urls) -> None:
+    """Remember where this browser's tabs are, and write it down if it moved.
+
+    ⛔ ON THE CHANGE AND NOT ON EVERY COMMAND, and the difference is a disk
+    write thirteen times a second. Every tool call passes through `ready`, and
+    the live view's frames are tool calls: saving from there unconditionally
+    would put the session file in the path of the frame pump. Pages move rarely
+    compared to how often a browser is touched, so comparing first turns "every
+    command" into "every navigation", which is what the file is actually about.
+    """
+    if urls is None:
+        return
+    fresh = [u for u in urls if u]
+    if _seen_tabs.get(key) == fresh:
+        return
+    _seen_tabs[key] = fresh
+    remember(key.split("/")[0])
+
+
+async def ready(session_id=None, browser_id=None):
+    """This browser, started, and back where it was.
+
+    ⛔ ONE FUNNEL, AND THAT IS THE WHOLE POINT OF IT EXISTING. Every tool used to
+    write `registry.ensure(addressed(...))` for itself - fourteen of them, plus
+    the retry - so "what it takes to hand somebody a usable browser" was a fact
+    known in fifteen places. The moment it stopped being just `ensure` - a
+    declared browser now has tabs owed to it - fifteen places would have had to
+    learn the same new step, and the one that did not would hand back a browser
+    that came home empty. The rule this follows is the project's: after the fix,
+    the places that know a thing are one.
+
+    Reopening happens ONCE per browser and only for tabs a SAVED session
+    declared. A browser that has been woken owns its own tabs, and a wake that
+    kept reopening them would fight whoever is using it.
+    """
+    at = addressed(session_id, browser_id)
+    owed = _tabs_owed.pop(at, None)
+    session = await registry.ensure(at)
+    if owed:
+        try:
+            for url in owed:
+                await session.new_page()
+                await actions.navigate(session, url)
+        except Exception:
+            # A url that will not load must not cost the browser. It is up, it
+            # is the right person, and the tab it could not reopen is one tab -
+            # refusing to hand it back would turn a stale bookmark into a
+            # session somebody cannot use.
+            pass
+    try:
+        _note_tabs(at, [p["url"] for p in await session.describe_pages()])
+    except Exception:
+        pass
+    return session
+
+
 async def _retrying(fn, *args, session_id=None, browser_id=None, **kwargs):
     """Run an action on one browser, and on failure rebuild it once and retry.
 
@@ -335,12 +425,22 @@ async def _retrying(fn, *args, session_id=None, browser_id=None, **kwargs):
     thing.
     """
     at = addressed(session_id, browser_id)
-    session = await registry.ensure(at)
+    session = await ready(session_id, browser_id)
     try:
         return await fn(session, *args, **kwargs)
     except Exception:
+        # ⛔ THE TABS ARE OWED AGAIN, or the recovery gives back half a browser.
+        # `drop` keeps the identity on purpose - the replacement is the same
+        # person - and until this line the pages were not part of "the same":
+        # a browser that died mid-command came back correct and empty, and the
+        # only way to notice was to go looking for your own work. What it had
+        # is what was last seen, which is what would have been saved had the
+        # process ended instead.
+        been = _seen_tabs.get(at)
+        if been:
+            _tabs_owed[at] = list(been)
         await registry.drop(at)
-        session = await registry.ensure(at)
+        session = await ready(session_id, browser_id)
         return await fn(session, *args, **kwargs)
 
 
@@ -504,6 +604,7 @@ async def browser_list(session_id: str | None = None) -> str:
         if running:
             try:
                 urls = [p["url"] or "" for p in await session.describe_pages()]
+                _note_tabs(addressed(at_session, name), urls)
             except Exception:
                 # Readable as a state rather than as an absence: a browser whose
                 # tabs cannot be read is not a browser with no tabs, and a pane
@@ -691,7 +792,7 @@ async def session_list_pages(session_id: str | None = None,
     default browser's tabs, as before; name them when a session holds more than
     one, since each browser numbers its own tabs."""
     return await actions.list_pages(
-        await registry.ensure(addressed(session_id, browser_id)))
+        await ready(session_id, browser_id))
 
 
 @mcp.tool()
@@ -705,7 +806,7 @@ async def session_select_page(page_id: str, session_id: str | None = None,
     default browser's tab, as before; name them when a session holds more than
     one, and use the browser the page id came from."""
     return actions.select_page(
-        await registry.ensure(addressed(session_id, browser_id)), page_id)
+        await ready(session_id, browser_id), page_id)
 
 
 @mcp.tool()
@@ -717,7 +818,7 @@ async def session_close_page(page_id: str = "", session_id: str | None = None,
     of the default browser, as before; name them when a session holds more than
     one."""
     return await actions.close_page(
-        await registry.ensure(addressed(session_id, browser_id)), page_id)
+        await ready(session_id, browser_id), page_id)
 
 
 # --- reading ---------------------------------------------------------------
@@ -761,7 +862,7 @@ async def browser_read_text(selector: str = "body", max_chars: int = 6000,
     session_id and browser_id are optional. Leave them out and this reads the
     default browser, as before; name them when a session holds more than one."""
     return await actions.read_text(
-        await registry.ensure(addressed(session_id, browser_id)),
+        await ready(session_id, browser_id),
         selector, max_chars)
 
 
@@ -788,7 +889,7 @@ async def browser_snapshot(max_chars: int = 0, session_id: str | None = None,
     default browser, as before. Name them to reach one of several.
     """
     return await actions.snapshot(
-        await registry.ensure(addressed(session_id, browser_id)), max_chars)
+        await ready(session_id, browser_id), max_chars)
 
 
 @mcp.tool()
@@ -813,7 +914,7 @@ async def browser_read_html(mode: str = "form", session_id: str | None = None,
     browser, as before. Name them to reach one of several.
     """
     return await actions.read_html(
-        await registry.ensure(addressed(session_id, browser_id)), mode)
+        await ready(session_id, browser_id), mode)
 
 
 @mcp.tool()
@@ -824,7 +925,7 @@ async def browser_take_screenshot(session_id: str | None = None,
     session_id and browser_id are optional. Leave them out and this pictures the
     default browser, as before; name them when a session holds more than one."""
     png = await actions.screenshot_png(
-        await registry.ensure(addressed(session_id, browser_id)))
+        await ready(session_id, browser_id))
     return Image(data=png, format="png")
 
 
@@ -840,7 +941,7 @@ async def browser_watch(session_id: str | None = None,
     session_id and browser_id are optional. Leave them out and this watches the
     default browser, as before; name them to watch one of several."""
     jpeg = await actions.watch_jpeg(
-        await registry.ensure(addressed(session_id, browser_id)))
+        await ready(session_id, browser_id))
     return Image(data=jpeg, format="jpeg")
 
 
@@ -859,7 +960,7 @@ async def browser_click(selector: str, session_id: str | None = None,
     the default browser, as before; name them when a session holds more than
     one, and use the browser the selector came from."""
     return await actions.click(
-        await registry.ensure(addressed(session_id, browser_id)), selector)
+        await ready(session_id, browser_id), selector)
 
 
 @mcp.tool()
@@ -889,7 +990,7 @@ async def browser_click_at(x: float, y: float, hold_seconds: float = 0.0,
     the default browser, as before; name them when a session holds more than
     one, and use the browser the coordinates came from."""
     png = await actions.click_at(
-        await registry.ensure(addressed(session_id, browser_id)),
+        await ready(session_id, browser_id),
         x, y, hold_seconds)
     return Image(data=png, format="png")
 
@@ -907,7 +1008,7 @@ async def browser_type(selector: str, text: str, session_id: str | None = None,
     the default browser, as before; name them when a session holds more than
     one."""
     return await actions.type_text(
-        await registry.ensure(addressed(session_id, browser_id)), selector, text)
+        await ready(session_id, browser_id), selector, text)
 
 
 @mcp.tool()
@@ -926,7 +1027,7 @@ async def browser_select_option(selector: str, value: str,
     the default browser, as before; name them when a session holds more than
     one."""
     return await actions.select_option(
-        await registry.ensure(addressed(session_id, browser_id)), selector, value)
+        await ready(session_id, browser_id), selector, value)
 
 
 @mcp.tool()
@@ -939,7 +1040,7 @@ async def browser_press_key(key: str, session_id: str | None = None,
     the default browser, as before; name them when a session holds more than
     one."""
     return await actions.press_key(
-        await registry.ensure(addressed(session_id, browser_id)), key)
+        await ready(session_id, browser_id), key)
 
 
 @mcp.tool()
@@ -965,7 +1066,7 @@ async def browser_evaluate(expression: str, session_id: str | None = None,
     session_id and browser_id are optional. Leave them out and this reads the
     default browser, as before; name them when a session holds more than one."""
     return await actions.evaluate(
-        await registry.ensure(addressed(session_id, browser_id)), expression)
+        await ready(session_id, browser_id), expression)
 
 
 def main() -> None:
