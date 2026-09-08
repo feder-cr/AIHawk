@@ -32,8 +32,14 @@ class _FakeScreencast:
         self.stops = 0
         self.on_frame = None
 
-    async def start(self, on_frame=None, size=None, quality=None, path=None):
-        self.starts.append({"size": size, "quality": quality, "path": path})
+    async def start(self, on_frame=None, size=None, quality=None, path=None,
+                    fps=None):
+        # `fps` arrived in invisible-playwright 0.14.0 and the floor requires
+        # it. A stand-in that did not take it made every test here fail with a
+        # TypeError dressed up as "this engine has no screencast", which is the
+        # stand-in being the wrong shape rather than the code being wrong.
+        self.starts.append({"size": size, "quality": quality, "path": path,
+                            "fps": fps})
         self.on_frame = on_frame
 
     async def stop(self):
@@ -82,7 +88,8 @@ async def test_the_capture_starts_once_and_answers_the_latest_frame():
     first = await s.watch_frame()
     assert first.startswith(b"\xff\xd8\xff"), first
     assert page.screencast.starts == [{"size": {"width": 1280, "height": 800},
-                                       "quality": None, "path": None}]
+                                       "quality": None, "path": None,
+                                       "fps": StealthSession.WATCH_FPS}]
     page.screencast.deliver(b"\xff\xd8\xff frame-2")
     second = await s.watch_frame()
     assert second.endswith(b"frame-2"), "the LATEST frame, not the first"
@@ -171,3 +178,37 @@ def _jpeg_height(data: bytes) -> int:
         length = int.from_bytes(data[i + 2:i + 4], "big")
         i += 2 + length
     raise AssertionError("no SOF marker in the JPEG")
+
+
+@pytest.mark.asyncio
+async def test_the_capture_is_asked_for_the_rate_somebody_watching_needs():
+    """⛔ THE LAST LINK OF A CHAIN THAT WAS SLOW IN THREE PLACES. The engine
+    makes what it is asked for, the wrapper passes the request on since 0.14.0,
+    and this is where the number is chosen. Ten is the wrapper's default because
+    a batch job that never looks at a frame should not pay for a live view -
+    measured, ten costs 257 KB/s and twenty-five costs 629 - and here there IS
+    somebody looking.
+
+    Known-bad: drop `fps=self.WATCH_FPS` from the start call. Nothing fails, no
+    test turns red without this one, and the pane silently goes back to ten
+    frames a second while the page asks for twenty-five and gets duplicates.
+    """
+    s = StealthSession()
+    s._context = _FakeContext()
+    pid = await s.new_page()
+    page = s.page(pid)
+    # The frame can only be delivered once the capture has started, and the
+    # capture starts inside `watch_frame` - so it is fed from a task, the way
+    # the first test in this file does it.
+    async def feed():
+        await asyncio.sleep(0.02)
+        page.screencast.deliver(bytes([0xFF, 0xD8, 0xFF]) + b" frame")
+
+    asyncio.ensure_future(feed())
+    await s.watch_frame()
+
+    asked = page.screencast.starts[-1]
+    assert asked["fps"] == StealthSession.WATCH_FPS, asked
+    assert StealthSession.WATCH_FPS > 10, (
+        "the live view is asking for the wrapper's default, which is the rate "
+        "chosen for consumers that are not watching")

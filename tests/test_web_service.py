@@ -568,13 +568,22 @@ async def test_the_frame_pause_is_shorter_than_the_capture_produces():
     pause_ms = int(m.group(1))
 
     round_trip_ms = 22    # measured against the running interface
-    source_period_ms = 100  # 10 fps out of the capture
+
+    # ⛔ THE RATE IS READ FROM THE CODE THAT ASKS FOR IT, not written here. It
+    # was `source_period_ms = 100  # 10 fps` and the day the server started
+    # asking the engine for 25 that comment became a false number in a gate:
+    # the assertion would have stayed green while the pane collected twelve of
+    # the twenty-five frames it was being sent, which is the failure this test
+    # exists to catch, hidden inside the test itself.
+    from aihawk.mcp.session import StealthSession
+
+    source_period_ms = 1000 / StealthSession.WATCH_FPS
 
     assert pause_ms + round_trip_ms <= source_period_ms, (
-        "a %d ms pause makes a %d ms cycle against a source that produces one "
-        "frame every %d ms, so the pane would show about %.1f of the 10 fps it "
-        "is being sent" % (pause_ms, pause_ms + round_trip_ms, source_period_ms,
-                           1000 / (pause_ms + round_trip_ms)))
+        "a %d ms pause makes a %d ms cycle against a source asked for %d fps - "
+        "one frame every %.0f ms - so the pane would show about %.1f of them"
+        % (pause_ms, pause_ms + round_trip_ms, StealthSession.WATCH_FPS,
+           source_period_ms, 1000 / (pause_ms + round_trip_ms)))
 
 
 async def test_the_answer_is_built_from_nodes_and_never_from_html():

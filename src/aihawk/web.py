@@ -905,13 +905,21 @@ async function tick(){
      4.6 fps to the pane, 60 ms delivers 10.0, which is everything the capture
      produces (9.6 fps measured at its own callback).
 
-     60 and not 0: a frame costs one round trip of about 22 ms on the pipe that
-     ACTIONS also use, so the cycle is roughly 82 ms and asks about 13 times a
-     second for 10 frames - a little waste to keep the picture whole, against
-     the 46 a second an unpaced loop would ask, which would spend the pipe on
-     duplicates and make every click queue behind them. An action still waits
-     at most one frame. */
-  setTimeout(tick, 60);
+     18 and not 0, and 18 rather than 60 since the server started asking the
+     engine for 25 frames a second instead of taking its default of 10. A frame
+     costs one round trip of about 22 ms on the pipe that ACTIONS also use, so
+     the cycle is about 40 ms: 25 requests a second for 25 frames, which is
+     roughly 55% of the pipe. That is a lot and it is bought deliberately - it
+     is the difference between a pane that moves and one that stutters - and
+     what it leaves is still far more than an agent needs, since an action
+     costs about 20 ms and an agent takes one or two a second. The slow
+     previews of the other browsers add about 5% more, by design: their cost
+     does not grow with how many there are.
+
+     Unpaced it would ask about 46 times a second, spend the pipe on duplicate
+     frames and make every click queue behind them. An action still waits at
+     most one frame. */
+  setTimeout(tick, 18);
 }
 
 /* Built from elements with textContent and never innerHTML: this string comes

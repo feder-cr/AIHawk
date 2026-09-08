@@ -167,6 +167,20 @@ class StealthSession:
     #: whoever is watching, not a viewport size; the engine never scales up.
     WATCH_SIZE = {"width": 1280, "height": 800}
 
+    #: Frames a second to ask the engine for.
+    #:
+    #: ⛔ THE WRAPPER'S DEFAULT IS TEN AND THIS IS SOMEBODY WATCHING, which is
+    #: the case the parameter exists for. The default is ten because a batch
+    #: job that never looks at a frame should not pay for a live view: measured
+    #: 2026-09-08, ten costs 257 KB/s and twenty-five costs 629. Here there IS
+    #: somebody looking, so the bandwidth buys something.
+    #:
+    #: It is the last link of a chain that was slow in three places and is now
+    #: fast in all three: the engine makes what it is asked for, the wrapper
+    #: passes the request on (0.14.0, which the floor below requires), and the
+    #: page asks often enough to collect them.
+    WATCH_FPS = 25
+
     async def watch_frame(self, page_id: Optional[str] = None,
                           timeout: float = 3.0) -> bytes:
         """The latest JPEG frame of the WINDOW the active tab lives in.
@@ -179,8 +193,8 @@ class StealthSession:
         system, in the parent process, with nothing injected into the page.
 
         The capture is started on first use and kept running for the life of
-        the tab, so the frame answered here is at most a tenth of a second
-        old. Stopped with the tab in `close_page`.
+        the tab, so the frame answered here is at most a twenty-fifth of a
+        second old. Stopped with the tab in `close_page`.
         """
         page = self.page(page_id)
         pid = next(k for k, v in self._pages.items() if v is page)
@@ -194,7 +208,8 @@ class StealthSession:
 
             try:
                 await page.screencast.start(on_frame=on_frame,
-                                            size=dict(self.WATCH_SIZE))
+                                            size=dict(self.WATCH_SIZE),
+                                            fps=self.WATCH_FPS)
             except Exception as refused:
                 # The installed engine or wrapper predates the screencast.
                 # Say which feature is missing rather than surfacing a
