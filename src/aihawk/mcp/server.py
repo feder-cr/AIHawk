@@ -380,10 +380,19 @@ async def session_forget(session_id: str) -> str:
     comes back.
     """
     restore(session_id)
+    # ⛔ ASKED BEFORE ANYTHING IS CLOSED, and the order is the whole bug. Closing
+    # the last browser makes the registry report the change, which writes the
+    # session down, which - having no browsers left - ERASES the file. So by the
+    # time the erase below runs there is nothing left to erase, and reading the
+    # answer of that erase told the caller that a session it had just deleted
+    # had never existed. The deletion was always right; the sentence was not,
+    # and a model that reads "there is no saved session called X" concludes the
+    # name it used was wrong and goes looking for another one.
+    existed = store.load(session_id) is not None or bool(browsers_in(session_id))
     for name in browsers_in(session_id):
         await registry.forget(addressed(session_id, name))
     _focus.pop(session_id, None)
-    existed = store.erase(session_id)
+    store.erase(session_id)
     return ("session %s is gone." % session_id if existed
             else "there is no saved session called %s." % session_id)
 

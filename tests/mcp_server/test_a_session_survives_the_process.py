@@ -361,6 +361,14 @@ async def test_forgetting_a_session_closes_its_browsers_and_unlists_it(registry)
     browsers. They stay running, holding their memory and their profiles, with
     nothing left that names them - the leak being unreachable engines rather
     than a wrong answer.
+
+    ⛔ AND THE ASSERTION ON WHAT IT SAYS IS THE POINT OF THE THIRD LINE, because
+    the first version of it was `"work" in said` and that is satisfied by BOTH
+    sentences this tool can answer - including "there is no saved session called
+    work", which is what it really said for one release. The deletion was right
+    the whole time; the report was not, and only a check in a clean environment
+    caught it. An assertion that cannot tell a tool's two answers apart is not
+    checking the answer, it is checking that the id got echoed.
     """
     await server.browser_open(browser_id="docs", session_id="work")
     running = registry.peek("work/docs")
@@ -369,7 +377,9 @@ async def test_forgetting_a_session_closes_its_browsers_and_unlists_it(registry)
 
     assert running.closed, "the session was forgotten with its browser still up"
     assert store.load("work") is None
-    assert "work" in said
+    assert said == "session work is gone.", (
+        "a session that WAS deleted was reported as never having existed, so a "
+        "model reading this goes looking for a different name: %r" % said)
     assert server.browsers_in("work") == []
 
 
