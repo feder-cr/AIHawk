@@ -260,6 +260,26 @@ async def test_a_deleted_conversation_stays_deleted_while_a_page_is_still_open_o
     assert store.load_chat("lavoro") is None
 
 
+async def test_deleting_one_that_is_already_gone_is_not_reported_as_a_refusal():
+    """⛔ `forgotten:false` HAS ONE MEANING AND IT IS "IT IS STILL RUNNING". It
+    also used to mean "there was nothing there", and the page reads it to say
+    "that session is still working, so it was not deleted" - which for a session
+    somebody else deleted a moment ago is the wrong sentence in both halves. The
+    column does not poll, so a panel left open in another tab shows that row for
+    as long as it stays open, and its cross is what the person clicks.
+
+    Known-bad: answer `store.erase_chat(...) or service is not None` again.
+    """
+    link, sessions = _sessions()
+    await sessions.get("lavoro").send("log in somewhere")
+
+    assert await sessions.forget("lavoro") is True
+    assert await sessions.forget("lavoro") is True, (
+        "deleting one that is already gone was reported as a refusal, and the "
+        "page has exactly one sentence for a refusal")
+    assert await sessions.forget("mai-esistita") is True
+
+
 async def test_a_session_known_only_by_its_browsers_can_still_be_opened():
     """⛔ A SESSION IS A CONVERSATION AND ITS BROWSERS, AND EITHER HALF CAN BE THE
     ONLY ONE ON DISK. An agent client that opens a browser in session `work` and

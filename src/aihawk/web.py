@@ -2854,6 +2854,13 @@ class Sessions:
         half, and it exists for exactly this.
 
         Refused while that conversation is mid-run: the same reason `reset` is.
+
+        ⛔ AND `False` MEANS THAT AND NOTHING ELSE. It used to mean "there was
+        nothing to erase" as well, and the two are opposite news: the page reads
+        it and says "that session is still working, so it was not deleted", which
+        for a session somebody else had already deleted is the wrong sentence in
+        both halves. The caller asked for it to be gone; if it is gone, the
+        answer is yes.
         """
         service = self._live.get(session_id)
         if service is not None and service.busy:
@@ -2867,7 +2874,8 @@ class Sessions:
             # not work, when the half they were looking at did.
             pass
         self._live.pop(session_id, None)
-        return store.erase_chat(session_id) or service is not None
+        store.erase_chat(session_id)
+        return True
 
 
 def build_app(link: Link, sessions: "Sessions") -> Starlette:
