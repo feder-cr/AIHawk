@@ -489,7 +489,7 @@ def test_the_spine_is_part_of_the_frame_and_is_the_only_way_in():
     import re
 
     spine = PAGE.index('id="railtab"')
-    assert spine < PAGE.index('<div id="left"'), (
+    assert spine < PAGE.index('id="left"'), (
         "the control sits inside or after the conversation pane, so it reads as "
         "one of that pane's buttons rather than as part of the frame")
     opens = re.findall(r'aria-controls="rail"', PAGE)

@@ -283,7 +283,7 @@ code,pre,.g,.meta,.badge,#url,#tok{
           it inherited. A dangling token that renders plausibly is the kind
           nobody reports. */
        color:var(--fg-2); font:inherit; font-size:var(--t-body);
-       text-align:left; cursor:pointer }
+       text-align:left }
 .chat:hover{ background:var(--raised); color:var(--fg) }
 /* A mark on the edge rather than a filled row: the current session should be
    findable at a glance without the list turning into a row of blocks. */
@@ -294,18 +294,31 @@ code,pre,.g,.meta,.badge,#url,#tok{
    user agent's button chrome has to come off or it draws as a raised box with
    its text centred - which is what shipped in the first screenshot of this
    column. A row in a list looks like a row. */
-.chat .nm{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis;
+/* ⛔ THE POINTER GOES ON WHAT IS CLICKABLE. The row carried it and the row
+   has no handler: the padding around the name was a pointer cursor over
+   nothing, which is the honesty contract this file states for the browser bar
+   thirty lines earlier and did not keep here. */
+.chat .nm{ cursor:pointer; flex:1; min-width:0; overflow:hidden;
+           text-overflow:ellipsis;
            white-space:nowrap; border:0; background:none; color:inherit;
-           font:inherit; text-align:left; padding:0; cursor:pointer }
+           font:inherit; text-align:left; padding:0 }
+#chats .none{ margin:0; padding:var(--s3) var(--s2); color:var(--fg-3);
+              font-size:var(--t-label); line-height:1.5 }
 .chat .cnt{ flex:none; font-family:var(--mono); font-size:var(--t-label);
             color:var(--fg-3) }
 /* 24 and not 18: WCAG 2.2 puts the floor at 24px and this is the control
    that DELETES a conversation, so it is also the one where a near miss costs
    the most. */
+/* ⛔ HIDDEN FROM THE EYE, NOT FROM THE TAB ORDER. `visibility:hidden` takes
+   an element out of the focus order, and tabbing BACKWARD into a row then
+   skips it every time: the browser looks for the previous focusable while
+   that row is neither hovered nor focused, so the control that deletes a
+   conversation was reachable in one direction only. Transparent instead, and
+   it shows itself the moment it takes focus. */
 .chat .x{ flex:none; width:24px; height:24px; border:0; border-radius:4px;
           background:none; color:var(--fg-3); cursor:pointer; line-height:1;
-          visibility:hidden }
-.chat:hover .x, .chat:focus-within .x{ visibility:visible }
+          opacity:0; transition:opacity 120ms ease-out }
+.chat:hover .x, .chat:focus-within .x, .chat .x:focus-visible{ opacity:1 }
 .chat .x:hover{ background:var(--line-2); color:var(--fg) }
 
 
@@ -344,7 +357,7 @@ code,pre,.g,.meta,.badge,#url,#tok{
         border-bottom:1px solid var(--line-1) }
 #head .vr{ width:1px; height:18px; flex:none; background:var(--line-2);
            margin:0 var(--s1) }
-#head b{ font-size:var(--t-ui); font-weight:600 }
+#head h1{ margin:0; font-size:var(--t-ui); font-weight:600 }
 .badge{ font-size:var(--t-label); color:var(--fg-2);
         background:var(--raised); border:1px solid var(--line-2);
         padding:3px 9px; border-radius:var(--r-pill) }
@@ -496,19 +509,25 @@ h5.md-h, h6.md-h{ font-size:var(--t-h3); color:var(--fg-2) }
    house style of every framework and belongs to none of them; a tint plus a
    hairline in the same hue says the same thing without the costume. */
 .orph  { display:flex; gap:8px; font-size:var(--t-mono); color:var(--err);
-         background:rgba(232,139,118,.09); border-radius:var(--r-sm);
-         border:1px solid rgba(232,139,118,.32); padding:6px 10px }
+         background:color-mix(in srgb, var(--err) 9%, transparent);
+         border-radius:var(--r-sm);
+         border:1px solid color-mix(in srgb, var(--err) 32%, transparent);
+         padding:6px 10px }
 
 /* ONE grid: every row on the same rails, so nothing shifts as text changes. */
 .row{ display:grid; grid-template-columns:var(--gutter) minmax(0,1fr) auto 1rem;
       column-gap:var(--gap); align-items:baseline; padding:3px 6px;
-      list-style:none; cursor:pointer; user-select:none; border-radius:var(--r-sm);
+      list-style:none; cursor:pointer; border-radius:var(--r-sm);
       transition:background-color 120ms ease-out }
 .row::-webkit-details-marker{ display:none }
 .row:hover{ background:var(--raised) }
 .g   { grid-column:1; justify-self:end; font-size:var(--t-label); color:var(--fg-3) }
-.lab { grid-column:2; min-width:0; overflow:hidden; text-overflow:ellipsis;
-       white-space:nowrap; font-size:var(--t-mono) }
+/* Selectable: `user-select:none` on the whole row kept a double-click from
+   painting the line blue, and also made a truncated URL impossible to copy -
+   which is the one thing somebody wants from a row they cannot finish
+   reading. */
+.lab { user-select:text; grid-column:2; min-width:0; overflow:hidden;
+       text-overflow:ellipsis; white-space:nowrap; font-size:var(--t-mono) }
 .lab b   { font-family:var(--sans); font-weight:600; color:var(--fg) }  /* the verb */
 .lab code{ color:var(--accent) }                                        /* the object */
 .lab .inline{ color:var(--fg-3) }                    /* a short result, on the row */
@@ -541,8 +560,12 @@ h5.md-h, h6.md-h{ font-size:var(--t-h3); color:var(--fg-2) }
   animation:breathe 1.4s ease-in-out infinite }
 @media (prefers-reduced-motion: reduce){ .pend .g::after{ animation:none } }
 /* inset and not border-left: a border would shift all four tracks by two pixels */
-.ev[data-state="err"] > .row{ background:rgba(232,139,118,.08);
-                              box-shadow:inset 0 0 0 1px rgba(232,139,118,.3) }
+/* ⛔ THE TOKEN, MIXED - NOT THE TOKEN'S CURRENT VALUE TYPED OUT AGAIN. Seven
+   places had `--err` and `--well` re-expanded as rgba by hand, which is seven
+   surfaces that would keep the old hue the day either token moves. */
+.ev[data-state="err"] > .row{
+     background:color-mix(in srgb, var(--err) 8%, transparent);
+     box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--err) 30%, transparent) }
 
 .out{ margin:2px 0 var(--s2) var(--indent);
       max-height:290px; max-height:15lh; overflow:auto; overscroll-behavior:contain;
@@ -552,7 +575,8 @@ h5.md-h, h6.md-h{ font-size:var(--t-h3); color:var(--fg-2) }
       border-radius:0 var(--r-sm) var(--r-sm) 0; padding:8px 10px }
 
 /* ---------------- composer ---------------- */
-form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
+form{ position:relative; padding:var(--s3) var(--s4) var(--s4);
+      border-top:1px solid var(--line-1);
       background:var(--raised);
       box-shadow:0 -1px 0 rgba(0,0,0,.5), 0 -12px 28px -12px rgba(0,0,0,.65) }
 .composer{ display:flex; align-items:flex-end; gap:var(--s2);
@@ -646,7 +670,13 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
       padding:0 var(--s3); border-radius:var(--r); background:var(--well);
       border:1px solid var(--line-1); font-size:.75rem;
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-#url .dim{ color:var(--fg-3) }
+/* ⛔ BOTH FORMS, BECAUSE THE INTENT LIVED IN TWO PLACES AND MATCHED IN
+   NEITHER. The script sets `dim` on the address bar ITSELF when there is no
+   page, and the only rule was a descendant selector - so `no page yet`
+   rendered in the inherited ink and was the brightest thing on a bar that
+   was describing an empty room. The halves of a real URL are the descendant
+   case and keep working. */
+#url.dim, #url .dim{ color:var(--fg-3) }
 #url .host{ color:var(--fg) }
 #mode{ display:inline-flex; gap:2px; flex:none; height:var(--h-ctl);
        align-items:center; background:var(--base); border:1px solid var(--line-1);
@@ -720,13 +750,14 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
 /* The one the agent is driving, marked rather than selected: the person's eye
    and the agent's hand are two different things and the row says both. */
 .thumb .cap .dot, .chip .dot{ flex:none; width:6px; height:6px; border-radius:50%;
-                              background:var(--ok, #6c9) }
+                              background:var(--ok) }
 .chip{ flex:none; height:26px; display:flex; align-items:center; gap:7px;
        padding:0 10px; border:1px solid var(--line-2); border-radius:var(--r-pill);
        background:var(--raised); cursor:pointer; color:var(--fg-3);
        font:var(--t-label)/1 var(--mono); letter-spacing:.02em;
        transition:border-color 120ms ease-out, color 120ms ease-out }
 .chip:hover{ border-color:var(--line-3); color:var(--fg-2) }
+.chip[aria-current="true"]{ border-color:var(--fg-2); color:var(--fg-2) }
 .chip .off{ flex:none; width:6px; height:6px; border-radius:50%;
             box-shadow:inset 0 0 0 1px var(--fg-4) }
 
@@ -797,8 +828,9 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
    the only thing the pane has. */
 /* Deep enough that the words on it hold their contrast over a white page,
    shallow enough that the last frame stays evidence underneath. */
-.screen[data-state="stale"] .veil{ background:linear-gradient(rgba(11,13,16,.86),
-                                                             rgba(11,13,16,.93)) }
+.screen[data-state="stale"] .veil{
+     background:linear-gradient(color-mix(in srgb, var(--well) 86%, transparent),
+                                color-mix(in srgb, var(--well) 93%, transparent)) }
 .screen[data-state="error"] .veil b{ color:var(--err) }
 /* The pulse says the pane is trying, which is the difference between waiting
    and stopped - and it is the whole reason a spinner exists. */
@@ -825,7 +857,7 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
 .tag{ left:8px; color:var(--fg-2); max-width:calc(100% - 96px);
       overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .tag .dot{ flex:none; width:6px; height:6px; border-radius:50%;
-           background:var(--ok, #6c9) }
+           background:var(--ok) }
 /* ⛔ STALE HAS TO LOOK STALE. In a grid most of what you see is a picture from
    a moment ago by construction, and a control room's first rule is that a feed
    which has stopped must not read as one that is running. Nothing while the
@@ -862,9 +894,12 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
 /* The small things whose absence is felt without being noticed. */
 :focus{ outline:none }
 :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:inherit }
-::selection{ background:rgba(227,138,93,.30); color:#fff }
+/* The accent itself, mixed - it was a second orange one shade off the one
+   this page uses, and white ink in a palette whose own rule forbids it. */
+::selection{ background:color-mix(in srgb, var(--accent) 30%, transparent);
+             color:var(--fg) }
 :root{ accent-color:var(--accent) }
-*{ scrollbar-width:thin; scrollbar-color:#2f363e transparent }
+*{ scrollbar-width:thin; scrollbar-color:var(--top) transparent }
 
 @keyframes rise{ from{ opacity:0; transform:translateY(3px) } }
 @keyframes breathe{ 0%,100%{opacity:1} 50%{opacity:.35} }
@@ -906,14 +941,19 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
   <div id="chats" role="list"></div>
 </nav>
 
-<div id="left">
+<!-- Two landmarks, so somebody moving by region can go straight to the
+     conversation or to the browsers instead of walking the whole page. -->
+<main id="left" aria-label="Conversation">
   <!-- The meter lives up here with the other things that describe the
        conversation rather than under the box you type in. What is under the box
        should be the box: a number that grows all session long, sitting between
        the composer and the edge of the window, is the one place a person looks
        twenty times an hour for something else. -->
   <div id="head">
-    <b>AIHawk</b>
+    <!-- ⛔ A HEADING AND NOT A BOLD WORD. The page had no h1 at all, so the
+         answers' own headings - which start at h3 on the reasoning that the
+         product's name sits above them - hung under nothing. -->
+    <h1>AIHawk</h1>
     <span id="tok" hidden></span>
     <span class="badge" id="model">no model</span>
     <span class="vr" aria-hidden="true"></span>
@@ -956,7 +996,7 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
       </button>
     </div>
   </form>
-</div>
+</main>
 
 <!-- The split is a control, so it says so: a real separator with a value a
      screen reader can read and the arrow keys can move. Which pane deserves
@@ -967,7 +1007,7 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
      aria-label="Width of the conversation" aria-valuemin="420"
      aria-valuenow="530"></div>
 
-<div id="right" data-state="idle">
+<section id="right" data-state="idle" aria-label="The browsers this session holds">
   <div id="tabs" hidden></div>
   <div id="chrome">
     <span id="dot"></span>
@@ -1012,8 +1052,9 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
     </span>
   </div>
   <div id="stage" data-grid="1"></div>
-  <div id="thumbs" aria-label="The other browsers in this session"></div>
-</div>
+  <!-- role, or the label is ignored: a bare div takes no accessible name. -->
+  <div id="thumbs" role="group" aria-label="The other browsers in this session"></div>
+</section>
 
 <script>
 const $ = id => document.getElementById(id);
@@ -1066,7 +1107,16 @@ const RULE   = /^\s*([-*_])\s*(?:\1\s*){2,}$/;
 const CELLS  = /\|/;
 const DASHES = /^[\s:|-]*-[\s:|-]*$/;
 
-function blocks(text, into){
+/* ⛔ A FLOOR ON THE RECURSION, because this text was written by a model
+   that had just read arbitrary web pages. Measured against the extracted
+   parser: 20,000 `>` on one line, or a list indented 10,000 levels, throws
+   RangeError - and the throw does not land in the parser, it lands in the
+   event handler, where it strands the step clock, skips the redraw and eats
+   the queued instruction. Past this depth the marks are drawn as the text
+   they are, which is what nesting that deep actually is. */
+const DEEP = 24;
+function blocks(text, into, depth){
+  depth = depth || 0;
   const lines = text.split('\n');
   let i = 0;
   while(i < lines.length){
@@ -1080,16 +1130,18 @@ function blocks(text, into){
       inline(head[2], h); into.appendChild(h); i++; continue;
     }
     if(RULE.test(line)){ into.appendChild(el('hr','md-hr')); i++; continue; }
-    if(QUOTE.test(line)){
+    if(QUOTE.test(line) && depth < DEEP){
       const held = [];
       while(i < lines.length && QUOTE.test(lines[i])) held.push(QUOTE.exec(lines[i++])[1]);
       const q = el('blockquote','md-q');
-      blocks(held.join('\n'), q);          /* a quote holds blocks like any other */
+      blocks(held.join('\n'), q, depth + 1); /* a quote holds blocks like any other */
       into.appendChild(q); continue;
     }
     if(CELLS.test(line) && i + 1 < lines.length && DASHES.test(lines[i + 1])
        && lines[i + 1].includes('-')){ i = tableAt(lines, i, into); continue; }
-    if(BULLET.test(line) || NUMBER.test(line)){ i = listAt(lines, i, into); continue; }
+    if((BULLET.test(line) || NUMBER.test(line)) && depth < DEEP){
+      i = listAt(lines, i, into, depth); continue;
+    }
     /* ⛔ THE FIRST LINE IS TAKEN WITHOUT ASKING, and that is what makes this
        loop finish. Every branch above consumes; this one is the floor, so if
        its condition ever excluded the line that got here the walker would sit
@@ -1108,7 +1160,7 @@ function blocks(text, into){
 /* Both of these return the line to carry on from, so the walker above never has
    to guess how much they ate - a block parser that advances by one and hopes is
    how a list ends up inside itself. */
-function listAt(lines, i, into){
+function listAt(lines, i, into, depth){
   const first = BULLET.exec(lines[i]) || NUMBER.exec(lines[i]);
   const base = first[1].length;
   const ordered = !BULLET.test(lines[i]);
@@ -1122,7 +1174,9 @@ function listAt(lines, i, into){
       item.appendChild(document.createTextNode('\n' + lines[i].trim()));
       i++; continue;
     }
-    if(mark[1].length > base){ i = listAt(lines, i, item || box); continue; }
+    if(mark[1].length > base && (depth || 0) < DEEP){
+      i = listAt(lines, i, item || box, (depth || 0) + 1); continue;
+    }
     if(mark[1].length < base || !BULLET.test(lines[i]) !== ordered) break;
     item = el('li','md-i');
     inline(mark[2], item);
@@ -1156,7 +1210,7 @@ function rich(text){
      is prose that changes shape when the closing fence arrives. */
   text.split('```').forEach((block, i) => {
     if(i % 2) frag.appendChild(el('pre','out', block.replace(/^[a-z]*\n/i, '')));
-    else if(block.trim()) blocks(block, frag);
+    else if(block.trim()) blocks(block, frag, 0);
   });
   return frag;
 }
@@ -1183,7 +1237,14 @@ const VERB = {
   session_status:['Checking session','Checked session']
 };
 const LEAD = /^(I will |I'll |I am |I'm |Let me |Now I will |Now I'll )/i;
-const LONG = 120;
+/* ⛔ MEASURED IN CHARACTERS, SPENT IN PIXELS - the same defect this project
+   recorded when `ch` was mistaken for a character, one surface later. The
+   label track is 416px wide at the default split, the mono face is 7.15px a
+   character at 13px and the verb in front eats about 67, so the row shows
+   about FORTY-EIGHT. The branch accepted a hundred and twenty. Counted on a
+   live transcript: 43 rows of 108 were cut off AND had their disclosure
+   removed, so the one thing that could have shown the rest was gone. */
+const LONG = 48;
 
 const thread = $('thread'), anchor = $('anchor'), log = $('log');
 let turn = null, live = null, hold = null, n = 0, t0 = 0, timer = 0;
@@ -1243,7 +1304,18 @@ function flush(asAnswer, replay){
   const text = hold.replace(LEAD,'').replace(/^\w/, c => c.toUpperCase());
   hold = null;
   const box = el('div', asAnswer ? 'answer' : 'say');
-  box.appendChild(rich(text));
+  /* ⛔ A DEFECT INSIDE ONE ANSWER MUST NOT TAKE THE TURN WITH IT. This runs
+     from the event handler, and the caller goes on to clear the step clock,
+     redraw the column and send whatever was queued - so a throw here stranded
+     a 10 Hz timer for the life of the page and silently swallowed an
+     instruction somebody had typed. The text is shown as text rather than
+     lost: the same shape as the scheduler, which keeps doing its own job when
+     a pass inside it fails. */
+  try {
+    box.appendChild(rich(text));
+  } catch(err){
+    box.appendChild(el('pre','out', text));
+  }
   put(box, replay);
 }
 
@@ -1286,7 +1358,12 @@ function land(kind, text, replay){
     d.dataset.body = 'none';
     s.querySelector('.lab').append(' ', el('span','inline', text));
   } else {
+    /* Anything that does not fit keeps a body, so the chevron is present for
+       exactly the rows that need it. */
     d.appendChild(el('pre','out', text));
+    /* And the row says it on hover too: nobody should have to open a
+       disclosure to find out whether it is worth opening. */
+    s.querySelector('.lab').title = text.slice(0, 400);
   }
 }
 
@@ -1351,6 +1428,15 @@ function listen(){
   if(es) es.close();
   es = new EventSource(at('/chat/events'));
   es.onmessage = onEvent;
+  /* ⛔ A STREAM THAT DIED LOOKS EXACTLY LIKE AN AGENT WITH NOTHING TO SAY.
+     EventSource reconnects on its own, so this is not a retry - it is the
+     only signal that the silence is the connection and not the work. The dot
+     and the word beside it describe the BROWSER, and said `live` throughout. */
+  es.onerror = () => {
+    if(es.readyState === EventSource.CONNECTING) say('offline', 'reconnecting');
+    if(es.readyState === EventSource.CLOSED) say('offline', 'the stream closed');
+  };
+  es.onopen = () => { if(right.dataset.state === 'offline') say(frozen ? 'frozen' : 'live'); };
 }
 const onEvent = (e) => {
   const m = JSON.parse(e.data), r = m.replay;
@@ -1417,9 +1503,14 @@ function paint(){
   chip.hidden = !queued;
 }
 i.addEventListener('input', () => {
+  /* ⛔ ONE FORCED LAYOUT PER KEYSTROKE, NOT TWO. Reading scrollHeight after
+     writing height forces the layout; reading it a SECOND time after the
+     second write forces another, over a document holding the whole
+     transcript. The one number is enough to decide both. */
   i.style.height = 'auto';
-  i.style.height = Math.min(i.scrollHeight, 200) + 'px';
-  i.style.overflowY = i.scrollHeight >= 200 ? 'auto' : 'hidden';
+  const wants = i.scrollHeight;
+  i.style.height = Math.min(wants, 200) + 'px';
+  i.style.overflowY = wants >= 200 ? 'auto' : 'hidden';
   paint();
 });
 i.addEventListener('keydown', e => {
@@ -1432,7 +1523,11 @@ i.addEventListener('keydown', e => {
 document.addEventListener('keydown', e => {
   if(e.key !== 'Escape' || !busyNow) return;
   if(document.activeElement === i && i.value.trim()) return;
-  fetch(at('/chat/stop'), {method:'POST'});
+  /* Through the same door as the button: a hoisted declaration, so calling it
+     from above where it is written is safe and nothing here depends on the
+     order of the lines. */
+  ask('/chat/stop', undefined,
+      'The stop did not reach the agent - it is still running');
 });
 /* A pencil and not a cross: a cross would read as "cancel the queued message".
    This returns it to the composer to be edited. */
@@ -1477,9 +1572,39 @@ function wipe(){
   busyNow = false;
   setQueued(null);
 }
-fresh.onclick = () => fetch(at('/chat/fresh'), {method:'POST'});
+/* ⛔ ONE PLACE KNOWS WHAT TO DO WHEN A REQUEST DOES NOT ARRIVE. Six
+   `fetch` calls had no failure path at all, and the sharpest of them is the
+   stop button: this file says elsewhere that it is the only thing that ends a
+   run which will not converge, and a press that never reached the server
+   looked exactly like a press that did. `ask` returns the response when it
+   worked and says so on the page when it did not. */
+async function ask(path, body, whatFailed){
+  try {
+    const r = await fetch(at(path), body === undefined
+      ? {method:'POST'}
+      : {method:'POST', headers:{'Content-Type':'application/json'},
+         body: JSON.stringify(body)});
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    return r;
+  } catch(err){
+    orphan('err', whatFailed + ' (' + err.message + ').');
+    return null;
+  }
+}
 
-halt.onclick = () => fetch(at('/chat/stop'), {method:'POST'});
+/* ⛔ THE ONLY UNGUARDED DESTRUCTIVE CONTROL, AND IT SAT IN THE PERMANENT
+   HEADER. Deleting a whole session - rarer, and behind a closed panel - asked
+   first and named what went with it; clearing the transcript, which also
+   makes the model forget everything it has been told, went on one click. The
+   guard was on the wrong control. Named on the message, and named again on
+   the button. */
+fresh.onclick = () => {
+  if(!confirm('Clear this conversation? The agent forgets everything you have told it. Its browsers stay open.')) return;
+  ask('/chat/fresh', undefined, 'Could not clear this conversation');
+};
+
+halt.onclick = () => ask('/chat/stop', undefined,
+                         'The stop did not reach the agent - it is still running');
 f.onsubmit = (e) => {
   e.preventDefault();
   const t = i.value.trim();
@@ -1568,10 +1693,27 @@ const pause = () => Math.round(1000 / (fps(onScreen()) * onScreen()));
    a server that has stopped answering rather than as a page with a bug in it.
    The body is a separate function now and the scheduling is the only thing
    this one does, so no defect inside a pass can take the loop with it. */
+/* ⛔ NOTHING IS POLLED WHILE NOBODY IS LOOKING. Four loops ran flat out in
+   a background tab: the frame pump at up to 40 requests a second, the address
+   every two, the fleet every three, a preview every four hundred
+   milliseconds. That budget was measured against what the pipe can carry
+   while the AGENT is using it - and the agent keeps working when the tab is
+   hidden, which is exactly when the page was still spending its share on
+   pictures nobody could see. The loops keep their rhythm so a page coming
+   back is one tick away from current. */
+const looking = () => !document.hidden;
+
 async function tick(){
-  try { await onePass(); } catch(err) {}
+  if(looking()){ try { await onePass(); } catch(err) {} }
   setTimeout(tick, pause());
 }
+
+/* And the moment it is looked at again, before the next tick lands. */
+document.addEventListener('visibilitychange', () => {
+  if(!looking()) return;
+  onePass().catch(() => {});
+  paintWhere(); drawFleet();
+});
 
 async function onePass(){
   const cells = [...$('stage').children];
@@ -1591,7 +1733,10 @@ async function onePass(){
         im.hidden = false;
         shapeFrom(cell, im);
         setState(cell, 'live');
-        cell.dataset.at = String(Date.now());
+        /* The monotonic clock, like the step timer and the thinking timer:
+           a wall clock corrected by NTP or a DST step marks every screen
+           stale at once, or hides one that really is. */
+        cell.dataset.at = String(Math.round(performance.now()));
         if(id === watched()) say('live');
       }
       /* The capture could not answer, and the body says why: no frame within
@@ -1668,16 +1813,26 @@ function setState(cell, state, title, detail){
    frame is still sitting there looking alive. Two seconds, because at four
    screens a round is 100 ms and a hiccup of three or four rounds is not news. */
 function ageAll(cells){
-  const now = Date.now();
+  const now = performance.now();
   for(const c of cells){
     /* The empty stage has no stamp to write into, which is how this function
        killed the pump the first time it ran. */
     const lab = c.querySelector('.stamp');
     if(!lab) continue;
     const at2 = Number(c.dataset.at || 0), old = at2 && (now - at2) > 2000;
-    lab.hidden = !old;
-    lab.textContent = old ? Math.round((now - at2) / 1000) + 's' : '';
-    lab.title = old ? 'no frame for this long' : '';
+    /* ⛔ ONLY WHEN IT CHANGES. This runs at the end of every pass, so up to
+       forty times a second, and it wrote three properties per cell whether or
+       not anything had moved - about 480 DOM writes a second at four screens,
+       for a label that is empty 99% of the time. Assigning '' to textContent
+       still replaces the node's children. */
+    const says = old ? Math.round((now - at2) / 1000) + 's' : '';
+    if(lab.textContent !== says){
+      lab.textContent = says;
+      lab.title = old ? 'no frame for this long' : '';
+    }
+    /* Guarded separately: the text is unchanged between two fresh passes but
+       the visibility still has to be right the first time. */
+    if(lab.hidden !== !old) lab.hidden = !old;
     if(old && c.dataset.state === 'live') setState(c, 'stale');
     else if(!old && c.dataset.state === 'stale') setState(c, 'live');
   }
@@ -1716,8 +1871,7 @@ function paintTabs(rows){
    through the same tool an agent would call. */
 $('tabs').onclick = (e) => {
   const b = e.target.closest('button'); if(!b) return;
-  fetch(at('/live/select'), {method:'POST', headers:{'Content-Type':'application/json'},
-                         body: JSON.stringify({id: b.dataset.id})});
+  ask('/live/select', {id: b.dataset.id}, 'Could not switch to that tab');
 };
 
 /* ⛔ THE ADDRESS FOLLOWS THE SCREEN YOU ARE LOOKING AT, and with four of them
@@ -1738,7 +1892,7 @@ function severalOpen(n){
    until the next poll landed - two seconds showing one page's address over four
    screens. Calling `where` itself from a click would start a SECOND timer
    chain, which is how a pace stops being one number. */
-async function where(){ await paintWhere(); setTimeout(where, 2000); }
+async function where(){ if(looking()) await paintWhere(); setTimeout(where, 2000); }
 
 async function paintWhere(){
   const many = grid > 1 && !pinned2 && onStage().length > 1;
@@ -1774,19 +1928,32 @@ async function drawChats(){
   catch(err){ return; }
   const box = $('chats');
   box.textContent = '';
+  /* An empty column is a state, not a blank: on a first run there is exactly
+     one conversation and it is this one, so the panel would otherwise open on
+     nothing at all. */
+  if(!rows.length){
+    const none = el('p','none', 'No saved conversations yet. This one is saved '
+                    + 'as soon as you send an instruction.');
+    box.appendChild(none);
+  }
   for(const s of rows){
     const row = el('div','chat');
     row.setAttribute('role','listitem');
     if(s.id === here) row.setAttribute('aria-current','true');
     const open = el('button', 'nm', s.name || s.id);
     open.type = 'button';
-    open.title = s.name || s.id;
+
     /* Switching is a NAVIGATION, not a repaint: the transcript, the picture and
        the stream all belong to the conversation, and the server hands back the
        whole of it for an id. Rebuilding that by hand would be a second
        implementation of what a page load already does correctly. */
     open.onclick = () => { if(s.id !== here) location.search = '?s=' + encodeURIComponent(s.id); };
     open.ondblclick = () => renameChat(s.id, s.name || s.id);
+    /* ⛔ AND A KEY, because a double click is not a keyboard path and nothing
+       on the screen advertises it. F2 is what renames a thing in a list
+       everywhere else on this machine. */
+    open.onkeydown = (e) => { if(e.key === 'F2') renameChat(s.id, s.name || s.id); };
+    open.title = (s.name || s.id) + ' - F2 to rename';
     row.appendChild(open);
     if(s.turns) row.appendChild(el('span','cnt', String(s.turns)));
     const kill = el('button','x','x');
@@ -1826,8 +1993,13 @@ try { showRail(localStorage.getItem(RAILKEY) === '1'); } catch(err){ showRail(fa
 async function renameChat(id, was){
   const name = prompt('Name this session', was);
   if(name === null) return;
-  await fetch('/sessions/rename', {method:'POST', headers:{'Content-Type':'application/json'},
-                                   body: JSON.stringify({id, name})});
+  /* The server refuses a name that is only spaces and says so with
+     `renamed:false`; without reading it the column simply redrew the old
+     name, which reads as the rename having been ignored. */
+  const r = await ask('/sessions/rename', {id, name}, 'Could not rename it');
+  if(r && !(await r.json()).renamed){
+    orphan('err', 'A session needs a name with something in it.');
+  }
   drawChats();
 }
 
@@ -1857,9 +2029,15 @@ async function forgetChat(id, name){
   drawChats();
 }
 
-$('newchat').onclick = async () => {
-  const r = await fetch('/sessions/new', {method:'POST'});
-  if(!r.ok) return;
+$('newchat').onclick = async (e) => {
+  /* ⛔ AND ONLY ONCE. Two fast clicks made two sessions, the second
+     navigation won, and the first stayed behind as an empty conversation
+     nobody asked for and nobody would ever open. */
+  const b = e.currentTarget;
+  if(b.disabled) return;
+  b.disabled = true;
+  const r = await ask('/sessions/new', undefined, 'Could not start a session');
+  if(!r){ b.disabled = false; return; }
   const j = await r.json();
   location.search = '?s=' + encodeURIComponent(j.id);
 };
@@ -1904,6 +2082,10 @@ function thumbFor(b){
     const chip = document.createElement('button');
     chip.type = 'button'; chip.className = 'chip'; chip.dataset.id = b.id;
     chip.title = 'Watch ' + b.id;
+    /* Clicking a chip changes what the address bar and the stage follow, and
+       nothing said so: the identical control one row up, the preview card,
+       has carried this mark from the start. */
+    chip.setAttribute('aria-current', String(b.id === watched()));
     chip.append(el('span','off'), el('span','id', b.id));
     chip.onclick = () => watchThis(b.id);
     return chip;
@@ -2032,11 +2214,17 @@ function drawStage(){
   dropFrames(box);
   box.textContent = '';
   turnOf = 0;
-  right.dataset.empty = show.length ? '' : '1';
+  /* ⛔ THE QUESTION IS 'IS THERE ANYTHING TO SEE', NOT 'ARE THERE
+     BROWSERS'. With a browser running and no tab open, the bar stayed fully
+     armed - address, Live/Frozen, layout picker and the word IDLE - over a
+     stage whose own words were `no tab open`. A screen with nothing on it is
+     the same empty room to the person looking at it. */
+  const anything = show.some(b => (b.urls || []).length);
+  right.dataset.empty = anything ? '' : '1';
   /* Not decoration: `inert` removes them from the tab order and from the
      accessibility tree, which is what 'this control cannot do anything right
      now' has to mean for somebody who is not using a mouse. */
-  for(const box of [$('mode'), $('grid')]) box.inert = !show.length;
+  for(const box of [$('mode'), $('grid')]) box.inert = !anything;
   if(!show.length){
     /* An empty state that only reports the emptiness leaves the person to
        guess where the button is. There is no button - browsers are opened by
@@ -2110,7 +2298,7 @@ async function slowTick(){
      and asking would START it - 800 MB and seven seconds to fill a thumbnail
      nobody asked for. Same rule the live pane follows. */
   const shown = [...box.children].filter(t => t.querySelector('img'));
-  if(shown.length){
+  if(shown.length && looking()){
     const t = shown[nextPane % shown.length];
     nextPane++;
     try {
@@ -2126,7 +2314,7 @@ async function slowTick(){
   setTimeout(slowTick, SLOW_MS);
 }
 
-async function fleetPoll(){ await drawFleet(); setTimeout(fleetPoll, 3000); }
+async function fleetPoll(){ if(looking()) await drawFleet(); setTimeout(fleetPoll, 3000); }
 
 /* Whatever was waiting when the page went away comes back into the composer
    rather than into the queue: the run it was queued behind is over, so the
@@ -2183,6 +2371,7 @@ function splitter(){
   bar.addEventListener('pointerdown', e => {
     bar.setPointerCapture(e.pointerId);
     bar.dataset.drag = '1';
+    edge = $('left').getBoundingClientRect().left;
     /* ⛔ FOCUS BY HAND, BECAUSE THE LINE BELOW TAKES IT AWAY. preventDefault on
        pointerdown stops the drag from selecting the text beside it, and it also
        stops the browser from focusing what was pressed - so the separator could
@@ -2192,12 +2381,24 @@ function splitter(){
     bar.focus();
     e.preventDefault();
   });
+  /* ⛔ ONE WRITE PER FRAME, AND ONE TO DISK PER DRAG. Every pointermove read
+     the pane's box and then wrote a width and a value to localStorage: at a
+     120 Hz pointer that is 120 forced layouts and 120 synchronous storage
+     writes per second of dragging, for a number nobody reads until the drag
+     ends. The left edge does not move while dragging, so it is measured once
+     when the drag starts. */
+  let edge = 0, pending = 0;
   bar.addEventListener('pointermove', e => {
     if(!bar.dataset.drag) return;
-    splitTo(e.clientX - $('left').getBoundingClientRect().left, true);
+    const x = e.clientX;
+    if(pending) return;
+    pending = requestAnimationFrame(() => { pending = 0; splitTo(x - edge, false); });
   });
   bar.addEventListener('pointerup', e => {
     delete bar.dataset.drag;
+    if(pending){ cancelAnimationFrame(pending); pending = 0; }
+    /* Remembered once, at the end: the value it lands on is the choice. */
+    splitTo($('left').getBoundingClientRect().width, true);
     bar.releasePointerCapture(e.pointerId);
   });
   bar.addEventListener('dblclick', splitReset);

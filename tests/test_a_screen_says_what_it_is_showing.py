@@ -59,6 +59,8 @@ const document = { createElement: t => new N(t), createTextNode: t => { const n 
 const el = (t,c,x) => { const e = document.createElement(t);
                         if(c) e.className = c; if(x != null) e.textContent = x; return e; };
 let focusHere = 'b-two';
+let pinned2 = null;
+const watched = () => pinned2 || focusHere;
 function watchThis(){}
 function tree(n){ return {tag: n.tag, cls: n.className, hidden: n.hidden,
                           data: n.dataset, text: n._text,
@@ -204,7 +206,8 @@ def test_a_screen_says_how_old_its_picture_is():
         box.appendChild(el('div','veil')); box.appendChild(el('span','stamp'));
         cell.appendChild(box);
         cell.dataset.state = 'live';
-        cell.dataset.at = String(Date.now() - agoMs);
+        // Lo stesso orologio che usa la pagina: monotono, non da parete.
+        cell.dataset.at = String(Math.round(performance.now()) - agoMs);
         return cell; };
       const fresh = mk(300), old = mk(4200);
       ageAll([fresh, old]);

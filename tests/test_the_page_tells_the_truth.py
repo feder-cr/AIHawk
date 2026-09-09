@@ -77,7 +77,7 @@ def test_a_control_that_cannot_act_is_out_of_reach_of_the_keyboard_too():
 
     Known-bad: go back to dimming them and nothing else.
     """
-    assert "inert = !show.length" in CODE, (
+    assert "box.inert = !anything" in CODE, (
         "the disarmed controls are only dimmed, so they still answer the keyboard")
 
 
@@ -180,3 +180,107 @@ def test_a_step_names_the_browser_when_the_call_named_one():
     assert summarise("browser_open", {"browser_id": "walmart-jobs"}) == "walmart-jobs"
     # And it stays quiet when the call was quiet.
     assert summarise("browser_read_text", {"selector": "body"}) == "body"
+
+
+def test_every_request_that_can_fail_goes_through_one_door():
+    """Six POSTs had no failure path at all, and the sharpest was the stop
+    button: this page says elsewhere that it is the only thing that ends a run
+    which will not converge, and a press that never reached the server looked
+    exactly like a press that did.
+
+    Two calls keep their own recovery because it is more than a message - the
+    send puts the sentence back in the box, the delete reads whether the server
+    refused - and both are tested above.
+
+    Known-bad: add a bare `fetch(..., {method:'POST'})` anywhere else.
+    """
+    posts = re.findall(r"fetch\((?:at\()?'([^']+)'[^;]*?method:'POST'", CODE, re.S)
+    bespoke = {"/chat/send", "/sessions/forget"}
+    loose = [p for p in posts if p not in bespoke]
+    assert loose == [], (
+        "%d request(s) can fail silently: %s" % (len(loose), loose))
+    assert "async function ask(path, body, whatFailed)" in CODE, (
+        "the one door is gone, so every caller invents its own answer to a "
+        "failure and most of them will not")
+
+
+def test_no_colour_is_typed_out_instead_of_named():
+    """Seven surfaces carried `--err` and `--well` re-expanded as rgba by hand,
+    plus a second orange one shade off the accent, a sixth grey, and two dead
+    fallbacks that could never render. A token typed out is not that token: it
+    is a colour that resembles it until somebody moves the token.
+
+    Known-bad: put any of the hand-expanded values back.
+    """
+    css = CODE[CODE.index("<style>"):CODE.index("</style>")]
+    ladder = {"--fg": "#dfe4e8", "--fg-2": "#a6b0b8", "--fg-3": "#8d98a1",
+              "--accent": "#e0a35f", "--err": "#e88b76", "--well": "#0b0d10",
+              "--base": "#101317", "--raised": "#171b21"}
+    for name, value in ladder.items():
+        # the declaration itself is the one legitimate occurrence
+        assert css.count(value) == 1, (
+            "%s is written out %d times; every use but the declaration should "
+            "name the token" % (name, css.count(value)))
+    channels = re.findall(r"rgba\((\d+),\s*(\d+),\s*(\d+)", css)
+    for r, g, b in channels:
+        assert r == g == b, (
+            "rgba(%s,%s,%s) is a hue written by hand; the edges of this page are "
+            "translucent WHITE by rule, and anything with a hue belongs to a "
+            "token" % (r, g, b))
+
+
+def test_nothing_is_polled_while_nobody_is_looking():
+    """Four loops ran flat out in a background tab - the frame pump at up to
+    forty requests a second - and that budget was measured against what the pipe
+    can carry while the AGENT is using it. The agent keeps working when the tab
+    is hidden, which is exactly when the page was still spending its share on
+    pictures nobody could see.
+
+    Known-bad: drop the guard from any of the four.
+    """
+    assert "const looking = () => !document.hidden" in CODE, (
+        "nothing asks whether the page is being looked at")
+    assert CODE.count("looking()") >= 5, (
+        "only %d of the four loops check, plus the definition"
+        % (CODE.count("looking()") - 1))
+    assert "visibilitychange" in CODE, (
+        "coming back to the tab waits for the next tick instead of catching up")
+
+
+def test_the_parser_has_a_floor():
+    """⛔ THE TEXT CAME FROM A MODEL THAT HAD JUST READ ARBITRARY WEB PAGES.
+    Measured against the extracted parser: 20,000 `>` on one line, or a list
+    indented 10,000 levels, threw RangeError - and the throw landed in the event
+    handler, where it stranded the step clock, skipped the redraw and ate the
+    queued instruction.
+
+    Known-bad: remove the depth check, or the try around the render.
+    """
+    assert "const DEEP" in CODE, "the recursion has no floor"
+    assert CODE.count("depth < DEEP") + CODE.count("(depth || 0) < DEEP") >= 3, (
+        "the floor is declared and not applied at every recursion")
+    flush = CODE[CODE.index("function flush(asAnswer, replay)"):]
+    flush = flush[:flush.index(chr(10) + "}")]
+    assert "try {" in flush and "catch" in flush, (
+        "a defect inside one answer still takes the whole turn with it")
+
+
+def test_a_row_is_only_collapsed_when_it_actually_fits():
+    """The threshold was 120 characters into a track that shows about 48, so 43
+    rows of a live transcript were cut off AND had their disclosure removed. A
+    count in one unit standing in for a fit in another is the same defect this
+    project recorded when `ch` was mistaken for a character.
+
+    Known-bad: raise the threshold back above what the box holds.
+    """
+    got = re.search(r"const LONG = (\d+);", CODE)
+    assert got, "the threshold is gone"
+    assert int(got.group(1)) <= 60, (
+        "a row keeps its whole output on one line up to %s characters, in a "
+        "track that shows about 48" % got.group(1))
+    assert ".lab').title = text" in CODE, (
+        "a row that does not fit says nothing on hover either")
+    assert "user-select:text; grid-column:2" in CODE, (
+        "the label cannot be selected, so a truncated address cannot even be "
+        "copied out")
+
