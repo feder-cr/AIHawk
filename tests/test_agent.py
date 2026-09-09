@@ -60,11 +60,11 @@ class _FakeClient:
 def test_result_text_falls_back_for_non_text_content():
     none_text = type("Content", (), {"text": None})()
     result_with_none_text = type("Result", (), {"content": [none_text]})()
-    assert _result_text(result_with_none_text) == "[non-text result]"
+    assert _result_text(result_with_none_text)[0] == "[non-text result]"
 
     no_text_attr = type("Content", (), {})()
     result_without_text_attr = type("Result", (), {"content": [no_text_attr]})()
-    assert _result_text(result_without_text_attr) == "[non-text result]"
+    assert _result_text(result_without_text_attr)[0] == "[non-text result]"
 
 
 def test_mcp_tools_to_openai_shape():

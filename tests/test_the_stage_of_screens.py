@@ -176,8 +176,17 @@ def test_the_state_word_says_nothing_when_it_would_repeat_the_tab():
     Known-bad: print every state, which is what it did.
     """
     code = re.sub(r"/\*.*?\*/", "", PAGE, flags=re.S)
-    assert "stateEl.hidden = (s === 'live' || s === 'frozen')" in code, (
-        "the state word is shown even when it only repeats the selected tab")
+    assert "stateEl.classList.toggle('sr', s === 'live' || s === 'frozen')" in code, (
+        "the state word is shown even when it only repeats the selected switch")
+    # ⛔ AND IT GOES OFF-SCREEN, NOT AWAY. `hidden` is display:none, and a live
+    # region mutated inside a display:none subtree announces nothing - so the one
+    # transition that matters, live to error, was silent for a screen reader
+    # exactly because the word had been redundant a moment before.
+    #
+    # Known-bad: go back to `stateEl.hidden = ...`.
+    assert "stateEl.hidden" not in code, (
+        "the state word is removed from the accessibility tree, so the change "
+        "that matters is never announced")
 
 
 def test_the_pump_cannot_be_killed_by_a_bad_pass():

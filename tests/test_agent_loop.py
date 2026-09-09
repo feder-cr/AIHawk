@@ -377,18 +377,18 @@ def test_no_tools_produces_an_empty_list():
 # --------------------------------------------------------------------------
 
 def test_result_text_returns_the_text_of_a_text_content():
-    assert _result_text(text_result("hello-from-the-page")) == "hello-from-the-page"
+    assert _result_text(text_result("hello-from-the-page"))[0] == "hello-from-the-page"
 
 
 def test_result_text_is_empty_for_empty_or_missing_content():
     """Known-bad: indexing content[0] unguarded, which raises IndexError and
     kills the run on a tool that legitimately returns nothing."""
-    assert _result_text(mt.CallToolResult(content=[])) == ""
+    assert _result_text(mt.CallToolResult(content=[]))[0] == ""
 
     class _NoContent:
         pass
 
-    assert _result_text(_NoContent()) == ""
+    assert _result_text(_NoContent())[0] == ""
 
 
 def test_result_text_labels_a_non_text_content_instead_of_crashing():
@@ -401,7 +401,7 @@ def test_result_text_labels_a_non_text_content_instead_of_crashing():
     shot = mt.CallToolResult(
         content=[mt.ImageContent(type="image", data="aGk=", mimeType="image/png")]
     )
-    assert _result_text(shot) == "[non-text result]"
+    assert _result_text(shot)[0] == "[non-text result]"
 
 
 def test_result_text_reads_only_the_first_content_block():
@@ -417,8 +417,8 @@ def test_result_text_reads_only_the_first_content_block():
             mt.TextContent(type="text", text="SECOND"),
         ]
     )
-    assert _result_text(multi) == "FIRST"
-    assert "SECOND" not in _result_text(multi)
+    assert _result_text(multi)[0] == "FIRST"
+    assert "SECOND" not in _result_text(multi)[0]
 
 
 def test_an_empty_text_block_is_reported_as_a_non_text_result():
@@ -426,7 +426,7 @@ def test_an_empty_text_block_is_reported_as_a_non_text_result():
     tool that correctly found nothing (an empty element read by
     browser_read_text) is described to the model as a non-text result, which is
     a different fact."""
-    assert _result_text(text_result("")) == "[non-text result]"
+    assert _result_text(text_result(""))[0] == "[non-text result]"
 
 
 # --------------------------------------------------------------------------
@@ -873,6 +873,50 @@ async def test_an_error_flagged_result_is_still_fed_back_as_text():
 
     assert out == "could not click"
     assert tool_messages(model.requests[1])[0]["content"] == "selector #missing not found"
+
+
+async def test_a_tool_that_answers_with_an_error_is_narrated_as_an_error():
+    """⛔ MCP REPORTS A FAILED TOOL AS A RESULT, NOT AS AN EXCEPTION, and the
+    loop read the text and threw the flag away. Every failure then reached the
+    page as `result`, which the step row draws in the past tense that asserts the
+    thing happened: `Navigated https://...` in the colour of an ordinary answer,
+    with `NS_ERROR_UNKNOWN_HOST` printed after it. Measured on a live session, no
+    row had ever reached the error state the page has always known how to draw.
+
+    For an agent that acts on real websites this is worse than a gap in the log:
+    it is a lie, and it costs the reader the ability to trust any other row.
+
+    Known-bad: go back to `say("result", ...)` for every answer that does not
+    raise.
+    """
+    bad = mt.CallToolResult(
+        content=[mt.TextContent(type="text", text="Page.goto: NS_ERROR_UNKNOWN_HOST")],
+        isError=True,
+    )
+    mcp = ScriptedMCP(tools=tools_result(tool("browser_navigate", "Go to a url.")),
+                      results={"browser_navigate": bad})
+    model = ScriptedModel([
+        assistant_tool_calls(("c1", "browser_navigate",
+                              '{"url": "https://nope.invalid"}')),
+        assistant_answer("that host does not resolve"),
+    ])
+    said = []
+
+    async def watch(kind, text):
+        said.append((kind, text))
+
+    convo = Conversation(model, "m")
+    out = await convo.run("go to nope.invalid", mcp.call_tool,
+                          (await mcp.list_tools()).tools, say=watch)
+
+    assert out == "that host does not resolve"
+    kinds = [k for k, _ in said]
+    assert "err" in kinds, "a failed tool was narrated as %s" % kinds
+    assert "result" not in kinds, "the failure was also announced as a result"
+    assert any("NS_ERROR_UNKNOWN_HOST" in text for k, text in said if k == "err"), (
+        "the error row does not carry the reason the tool gave")
+    # And the model still sees it, or it cannot recover from what it cannot read.
+    assert "NS_ERROR_UNKNOWN_HOST" in tool_messages(model.requests[1])[0]["content"]
 
 
 async def test_a_screenshot_reaches_the_model_as_a_placeholder_only():

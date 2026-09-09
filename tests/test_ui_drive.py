@@ -889,11 +889,11 @@ def test_a_click_at_coordinates_lands_but_reaches_the_model_as_no_content(browse
     assert browser.call("browser_read_text", selector="#out") == "clicked 1"
 
     # And what the agent would put in the model's transcript for that call.
-    assert _result_text(result) == "[non-text result]"
+    assert _result_text(result)[0] == "[non-text result]"
 
     shot = browser.call_result("browser_take_screenshot", {}, timeout=60.0)
     assert not shot.isError, _result_text_all(shot)
-    assert _result_text(shot) == "[non-text result]"
+    assert _result_text(shot)[0] == "[non-text result]"
 
 
 # --- what the live pane receives --------------------------------------------

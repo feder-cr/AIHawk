@@ -496,9 +496,21 @@ def test_the_spine_is_part_of_the_frame_and_is_the_only_way_in():
     assert len(opens) == 1, (
         "%d controls open the sessions column; two of them can disagree about "
         "whether it is open" % len(opens))
-    style = PAGE[PAGE.index("#railtab"):PAGE.index("@media (max-width:900px){ #railtab")]
+    style = PAGE[PAGE.index("#railtab{"):PAGE.index("/* Open: the spine lifts")]
     assert "writing-mode:vertical-rl" in style, (
         "the word runs across a column 34px wide, so it is not readable at all")
     assert "rotate(180deg)" in style, (
         "vertical-rl alone reads top to bottom; a spine in this alphabet reads "
         "bottom to top, which is what the drawing showed")
+
+    # ⛔ AND IT IS NEVER HIDDEN. The panel and its only opener used to be
+    # dropped by the same media query, and `#newchat` lives inside the panel: a
+    # window snapped to half a 1366-wide laptop lost every session control at
+    # once, and the only route left was hand-editing `?s=` in the address bar.
+    # The panel is an overlay, so folding it costs nothing at any width.
+    #
+    # Known-bad: hide `#railtab` or `#rail` at any breakpoint.
+    hidden = re.findall(r"#rail(?:tab)?\{[^}]*display:\s*none", PAGE)
+    assert not hidden, (
+        "%d rule(s) hide the sessions column or the only way into it: %s"
+        % (len(hidden), hidden))

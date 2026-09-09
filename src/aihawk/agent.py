@@ -64,11 +64,28 @@ def mcp_tools_to_openai(tools) -> List[dict]:
     return out
 
 
-def _result_text(result) -> str:
+def _result_text(result) -> tuple[str, bool]:
+    """What the tool said, and whether it was a failure.
+
+    ⛔ MCP REPORTS A FAILED TOOL AS A RESULT, NOT AS AN EXCEPTION. A tool
+    that cannot do the thing answers with `isError` set and the reason in its
+    text; only a broken transport raises. Reading the text and ignoring the
+    flag made every failure arrive at the page as a success: the step row
+    kept the past tense that asserts the thing happened - `Navigated
+    https://...` - with the error printed after it in the colour of an
+    ordinary result. Measured on a live transcript: a `NS_ERROR_UNKNOWN_HOST`
+    drawn at `data-state="ok"`, and zero rows in the whole session had ever
+    reached the error state the page has always known how to draw.
+
+    For an agent that acts on real websites this is the worst kind of defect
+    in a log: not a gap, a lie, and it costs the reader the ability to trust
+    any other row.
+    """
+    failed = bool(getattr(result, "isError", False))
     if not getattr(result, "content", None):
-        return ""
+        return "", failed
     first = result.content[0]
-    return getattr(first, "text", None) or "[non-text result]"
+    return (getattr(first, "text", None) or "[non-text result]"), failed
 
 
 class Conversation:
@@ -185,12 +202,12 @@ class Conversation:
                 await say("tool", f"{name} {describe(name, args)}".strip()
                           if describe else name)
                 try:
-                    text = _result_text(await call_tool(name, args))
+                    text, failed = _result_text(await call_tool(name, args))
                 except Exception as exc:
                     text = f"{type(exc).__name__}: {exc}"
                     await say("err", text)
                 else:
-                    await say("result", text[:1200])
+                    await say("err" if failed else "result", text[:1200])
                 self.messages.append({"role": "tool", "tool_call_id": call.id,
                                       "content": text[:8000]})
 
