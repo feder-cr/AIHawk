@@ -438,43 +438,53 @@ def test_every_handler_the_page_wires_up_exists():
 
 
 def test_the_answer_measure_is_inside_the_range_every_source_agrees_on():
-    """⛔ THIS NUMBER HAS BEEN WRONG TWICE, THE SAME WAY BOTH TIMES: computed in
-    `ch` and read as characters.
+    """⛔ THIS NUMBER HAS BEEN WRONG THREE TIMES, TWICE THE SAME WAY: computed
+    in `ch` and read as characters.
 
     `ch` is the advance width of the digit zero. In a proportional font that is
     much wider than an average letter, so a cap written in `ch` looks like a
-    character count and is not one. Measured on this font with a canvas, on real
-    prose in both languages this interface serves: `0` is 7.55px at 14px
-    system-ui, the average character of a sentence is 6.11px, so one `ch` is
-    1.24 characters.
+    character count and is not one. Measured on this font with a canvas: `0` is
+    7.55px at 14px system-ui and the average character of a sentence is 6.11px,
+    so one `ch` is 1.24 characters. First the cap was 72ch believing it was 72
+    characters, and was 83; then 84ch to make up for an indent, and was 98.
 
-    First the cap was 72ch believing it was 72 characters, and minus the indent
-    an answer carries it was 83. Then it was widened to 84ch to make up for that
-    indent, in `ch` again, and became 98 - past 65-72 (chat design guidance), 75
-    (Baymard's upper bound) and 80 (WCAG 2.1 AAA, SC 1.4.8).
+    ⛔ THE THIRD TIME THERE WAS NO CAP LEFT TO CHECK. It came off: the measure
+    is the width of the pane now and the separator is the control that sets it,
+    because a fixed number widened nothing when somebody dragged the pane in
+    order to read more - reported twice, the second time with a screenshot.
 
-    So the conversion lives here rather than in a comment, and it reads the page
-    instead of repeating it: change the cap or the gutter and this recomputes.
+    What still has to hold is the DEFAULT, the width the pane opens at for
+    anybody who never drags. So that is what this computes, from the pane's own
+    declared ceiling rather than from a number written down anywhere.
 
-    Known-bad, both real at the cap's new home: 66ch gives 82 and 50ch gives 62,
-    and both go red.
+    Known-bad, three: widen the default pane past what the measure allows; put a
+    cap back on the transcript; drop the log's padding so the text runs to the
+    edge.
     """
     import re
 
-    # ⛔ AND THE CAP MOVED, WHICH MOVED THE ARITHMETIC WITH IT. It used to sit
-    # on `#thread`, OUTSIDE the indent an answer carries, so the indent came off
-    # the text. It sits on the answer's own blocks now - inside that indent, so
-    # nothing comes off - because on `#thread` it also capped the step rows, and
-    # dragging the pane wider then widened nothing at all.
-    cap = float(re.search(r"\.answer > \*, \.say\{ max-width:([\d.]+)ch", PAGE)
-                .group(1))
+    pane = float(re.search(r"#left \{ width:clamp\([\d.]+px, ?\d+%, ?([\d.]+)px\)",
+                           PAGE).group(1))
+    assert re.search(r"#log\{[^}]*padding:var\(--s5\) var\(--s4\)", PAGE), (
+        "the transcript no longer states its own padding, so this cannot be "
+        "computed from the file")
+    pad = float(re.search(r"--s4:([\d.]+)px", PAGE).group(1))
+    gutter = float(re.search(r"--gutter:([\d.]+)rem", PAGE).group(1))
+    gap = float(re.search(r"--gap:([\d.]+)rem", PAGE).group(1))
+    body = float(re.search(r"--t-body:([\d.]+)rem", PAGE).group(1))
 
-    #: Both measured in the browser, on the font the page actually declares.
-    CH_PX, AVG_CHAR_PX, ROOT_PX = 7.55, 6.11, 16.0
+    #: Measured in the browser on the face this page declares, at 14px.
+    AVG_AT_14, ROOT_PX = 6.11, 16.0
+    avg = AVG_AT_14 * (body * ROOT_PX) / 14.0     # same face, one size up
 
-    chars = cap * CH_PX / AVG_CHAR_PX
+    indent = (gutter + gap) * ROOT_PX             # --indent, which an answer carries
+    chars = (pane - pad * 2 - indent) / avg
     assert 65 <= chars <= 80, (
-        "the answer is %.0f characters per line. Under 65 the eye returns too "
-        "often; over 80 it loses the line, and 80 is the WCAG 2.1 AAA cap. "
-        "The cap is %.0fch, which is NOT %.0f characters: one ch is 1.24 of "
-        "them in this font" % (chars, cap, cap))
+        "the answer opens at %.0f characters a line, outside the 65 to 80 that "
+        "chat design guidance, Baymard and WCAG 2.1 AAA all land inside" % chars)
+
+    # And nothing pins it there once somebody drags, which is the whole point of
+    # the pane being the control.
+    assert not re.search(r"#thread\{[^}]*max-width", PAGE), (
+        "the transcript is capped again, so dragging the pane widens nothing")
+

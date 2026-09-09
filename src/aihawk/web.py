@@ -156,8 +156,23 @@ PAGE = r"""<!doctype html>
 
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:32px;
   --r-sm:4px; --r:8px; --r-lg:12px; --r-pill:999px;
-  --spine:44px;                               /* the sessions rail */
-  --topbar:50px;                              /* every header, one height */
+  /* ⛔ BOTH OF THESE ARE ON THE 4px GRID NOW, AND ONE OF THEM WAS NOT. This
+     file declares a 4px base and spends it everywhere else, and the header sat
+     at 50 - twelve and a half steps, which is not a step. A spacing system with
+     one number off it is the clearest sign there is no system, and it is the
+     kind of number nobody questions because it looks round in decimal.
+
+     48 for the rail: a step wider than it was, and the figure Material puts on
+     a touch target, so the strip is comfortable for a hand without taking width
+     the conversation can use. 56 for the headers: six pixels taller, on the
+     grid, and the height an app bar has almost everywhere - which by Jakob's
+     law is the height a person's eye is already expecting.
+
+     The control height stays 28, which is exactly half of 56: the bar and the
+     things in it are now one ratio rather than two numbers that happened to
+     leave enough room. */
+  --spine:48px;                               /* the sessions rail */
+  --topbar:56px;                              /* every header, one height */
   --h-ctl:28px;                               /* every control on a bar */
   --gutter:1.75rem;                            /* three digits of 11px mono */
   --gap:.55rem;
@@ -491,12 +506,19 @@ code,pre,.g,.meta,.badge,#url{
    compound starting with `h3.md-h` sits earlier in the file than the heading's
    own rule, and two gates that read this stylesheet as text then find this one
    first and check the wrong declarations. */
-/* 58ch and not 66: the cap used to sit OUTSIDE the answer's indent and now
-   sits inside it, so the same number would buy 82 characters where it used to
-   buy 75. Recomputed rather than carried over - that arithmetic is exactly
-   what this page has already got wrong twice. */
-.answer > *, .say{ max-width:58ch }
-.answer > .md-t, .answer > pre, .answer > .md-pre{ max-width:100% }
+/* ⛔ AND THEN THE CAP CAME OFF THE PROSE TOO, BECAUSE IT WAS THE PROSE THE
+   OWNER WAS LOOKING AT. Moving it off the transcript widened the step rows and
+   left the answer exactly where it was, which is the text a person actually
+   reads: dragged wide, the sentences still wrapped at the same place. Said
+   twice, the second time with a screenshot.
+
+   So the measure is not a number this file picks any more - it is the width of
+   the pane, and the separator is the control that sets it. That is a better
+   answer than a cap in either place: the person reading decides how wide their
+   own reading is, which is the one thing a fixed number can never get right for
+   everybody. The DEFAULT still lands inside 65-80 characters for anybody who
+   never drags, and there is a gate that recomputes exactly that from the pane's
+   own declared width rather than from a number written down here. */
 
 
 /* Bottom-pinning with no scroll handler and no epsilon: the sentinel is the only

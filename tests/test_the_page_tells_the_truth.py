@@ -111,10 +111,14 @@ def test_dragging_the_pane_wider_widens_something():
         "the cap is back on the whole transcript, so widening the pane widens "
         "nothing: %s" % thread.group(1))
 
-    prose = re.search(r"\.answer > \*, \.say\{[^}]*max-width:([\d.]+)ch", CODE)
-    assert prose, (
-        "nothing caps the prose, so an answer runs the full width of a pane "
-        "somebody dragged wide")
+    # ⛔ AND NO CAP ON THE PROSE EITHER, WHICH IS WHERE THIS GATE FIRST LANDED.
+    # Moving the cap off the transcript widened the step rows and left the
+    # answer exactly where it was - the text a person actually reads - so the
+    # report came back a second time, with a screenshot. The pane IS the
+    # measure now; the default width is what keeps it sane, and that is
+    # checked where it can be computed, in the workspace gate.
+    assert not re.search(r"\.answer > \*[^}]*max-width", CODE), (
+        "the prose is capped again, so the sentences wrap in the same place however wide the pane is dragged")
 
     row = re.search(r"\.row\{([^}]*)\}", CODE)
     assert row and "minmax(0,1fr)" in row.group(1), (
