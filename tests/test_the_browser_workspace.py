@@ -456,19 +456,23 @@ def test_the_answer_measure_is_inside_the_range_every_source_agrees_on():
     So the conversion lives here rather than in a comment, and it reads the page
     instead of repeating it: change the cap or the gutter and this recomputes.
 
-    Known-bad, both real: 84ch gives 98 and 72ch gives 83, and both go red.
+    Known-bad, both real at the cap's new home: 66ch gives 82 and 50ch gives 62,
+    and both go red.
     """
     import re
 
-    cap = float(re.search(r"#thread\{ max-width:([\d.]+)ch", PAGE).group(1))
-    gutter = float(re.search(r"--gutter:([\d.]+)rem", PAGE).group(1))
-    gap = float(re.search(r"--gap:([\d.]+)rem", PAGE).group(1))
+    # ⛔ AND THE CAP MOVED, WHICH MOVED THE ARITHMETIC WITH IT. It used to sit
+    # on `#thread`, OUTSIDE the indent an answer carries, so the indent came off
+    # the text. It sits on the answer's own blocks now - inside that indent, so
+    # nothing comes off - because on `#thread` it also capped the step rows, and
+    # dragging the pane wider then widened nothing at all.
+    cap = float(re.search(r"\.answer > \*, \.say\{ max-width:([\d.]+)ch", PAGE)
+                .group(1))
 
     #: Both measured in the browser, on the font the page actually declares.
     CH_PX, AVG_CHAR_PX, ROOT_PX = 7.55, 6.11, 16.0
 
-    indent = (gutter + gap) * ROOT_PX          # --indent, which an answer carries
-    chars = (cap * CH_PX - indent) / AVG_CHAR_PX
+    chars = cap * CH_PX / AVG_CHAR_PX
     assert 65 <= chars <= 80, (
         "the answer is %.0f characters per line. Under 65 the eye returns too "
         "often; over 80 it loses the line, and 80 is the WCAG 2.1 AAA cap. "

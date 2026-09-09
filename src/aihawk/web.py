@@ -256,7 +256,9 @@ code,pre,.g,.meta,.badge,#url{
    grow a second icon without anything being re-thought. */
 #railtab{ flex:none; width:var(--spine); padding:11px 0 0; cursor:pointer; border:0;
           position:relative; background:var(--base); color:var(--fg-3);
-          box-shadow:inset -1px 0 0 var(--accent);
+          /* Half the weight it was: a hairline that says where the room ends
+             rather than a rule that draws attention to itself. */
+          box-shadow:inset -.5px 0 0 var(--accent);
           display:flex; justify-content:center; align-items:flex-start;
           transition:background-color 120ms ease-out, color 120ms ease-out }
 #railtab svg{ flex:none; display:block }
@@ -347,10 +349,12 @@ code,pre,.g,.meta,.badge,#url{
    hands the rest to the right. Only desktops run this, so the floor is the
    narrow end of a laptop and there is no phone case to carry.
 
-   The ceiling is derived, not chosen: the thread caps at 66ch, which is 498px
-   in this font, plus the 32px of log padding it sits in. Anything wider would
-   be slack inside this pane rather than measure, and it is worth more to the
-   picture on the right. */
+   The ceiling here is the DEFAULT, not a limit: it is where the pane starts on
+   a screen nobody has dragged, chosen so the prose sits at its measure without
+   taking width the picture on the right can use. The splitter goes well past
+   it - up to the window minus 480 - and since the measure cap moved off the
+   transcript onto the prose, every pixel past this one goes to the step rows,
+   which is where it does something. Dragging used to widen nothing at all. */
 #left { width:clamp(420px, 44%, 530px); display:flex; flex-direction:column;
         position:relative }
 /* The separator carries the line that used to be `#left`'s right border, so
@@ -468,7 +472,32 @@ code,pre,.g,.meta,.badge,#url{
    half on the LEFT, which reads as the column having been pushed away from the
    edge for no reason - 185px of nothing before the first character, in a
    screenshot. */
-#thread{ max-width:66ch; margin:0 }
+/* ⛔ THE MEASURE BELONGS TO THE PROSE, NOT TO THE COLUMN. The cap used to sit
+   here, on the whole transcript, so widening the pane widened NOTHING: dragged
+   from 530 to 1440, the conversation stopped growing at 534 and the rest of the
+   pane became margin. A control that offers a range in which nothing happens is
+   a control that lies, and this one was measured doing it.
+
+   Prose keeps the cap, because 200 characters a line is unreadable whatever the
+   window is. The step rows do NOT: they are monospace data, they were already
+   cut off at 48 characters with the rest behind a disclosure, and every pixel
+   the drag gives them is a pixel of address a person can read without opening
+   anything. Same for code blocks and tables, which scroll in their own box.
+
+   So dragging wider now widens the thing that was actually short. */
+#thread{ margin:0 }
+/* Every block of an answer, and then the two that are not prose taken back
+   out. Written as `> *` and not as a list of element selectors on purpose: a
+   compound starting with `h3.md-h` sits earlier in the file than the heading's
+   own rule, and two gates that read this stylesheet as text then find this one
+   first and check the wrong declarations. */
+/* 58ch and not 66: the cap used to sit OUTSIDE the answer's indent and now
+   sits inside it, so the same number would buy 82 characters where it used to
+   buy 75. Recomputed rather than carried over - that arithmetic is exactly
+   what this page has already got wrong twice. */
+.answer > *, .say{ max-width:58ch }
+.answer > .md-t, .answer > pre, .answer > .md-pre{ max-width:100% }
+
 
 /* Bottom-pinning with no scroll handler and no epsilon: the sentinel is the only
    anchor the browser may keep, so content inserted before it pushes the view

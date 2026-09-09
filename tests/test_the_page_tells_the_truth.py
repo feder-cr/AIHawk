@@ -88,6 +88,40 @@ def test_every_event_the_server_can_send_is_drawn():
         "lands in the transcript as raw JSON" % missing)
 
 
+def test_dragging_the_pane_wider_widens_something():
+    """⛔ A CONTROL THAT OFFERS A RANGE WHERE NOTHING HAPPENS IS A CONTROL THAT
+    LIES. The measure cap sat on the whole transcript, so the separator could be
+    dragged from 530px to 1440 and the conversation stopped growing at 534: the
+    rest of the pane turned into margin. Reported by the owner as "the chat does
+    not get wider", and measured exactly that.
+
+    The cap belongs to the PROSE, which is unreadable at 200 characters a line
+    whatever the window is. It does not belong to the step rows, which are
+    monospace data already cut off at 48 characters with the rest behind a
+    disclosure: measured after, the track goes from 416px at the default width to
+    1326px dragged wide, and an address that was truncated fits whole.
+
+    Known-bad, three: put the cap back on `#thread`; take it off the prose so a
+    line runs the whole pane; pin the row's middle column to something fixed so
+    the slack stops reaching it.
+    """
+    thread = re.search(r"#thread\{([^}]*)\}", CODE)
+    assert thread, "the transcript has no rule of its own"
+    assert "max-width" not in thread.group(1), (
+        "the cap is back on the whole transcript, so widening the pane widens "
+        "nothing: %s" % thread.group(1))
+
+    prose = re.search(r"\.answer > \*, \.say\{[^}]*max-width:([\d.]+)ch", CODE)
+    assert prose, (
+        "nothing caps the prose, so an answer runs the full width of a pane "
+        "somebody dragged wide")
+
+    row = re.search(r"\.row\{([^}]*)\}", CODE)
+    assert row and "minmax(0,1fr)" in row.group(1), (
+        "the step row no longer takes the slack, so the width the drag hands "
+        "over stops before the one thing that was short: %s"
+        % (row.group(1) if row else "no rule"))
+
 def test_the_heading_survives_being_invisible():
     """⛔ IT READS AS DEAD MARKUP AND IT IS LOAD-BEARING. The product's name was
     taken off the screen because it said what the tab, the window and the
