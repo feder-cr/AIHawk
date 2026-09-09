@@ -149,13 +149,13 @@ PAGE = r"""<!doctype html>
 body{ margin:0; height:100vh; display:flex; position:relative;
       background:var(--base); color:var(--fg);
       font:var(--t-body)/1.55 var(--sans); }
-code,pre,.g,.meta,.badge,#url,#tok{
+code,pre,.g,.meta,.badge,#url{
   font-family:var(--mono);
   /* Not cosmetic: a step reads `#email <- ada@example.com`, and a mono face with
      contextual alternates draws `<-` as one arrow. The text on screen would stop
      being the text the model emitted. */
   font-variant-ligatures:none; }
-.meta,.g,#tok{ font-variant-numeric:tabular-nums }
+.meta,.g{ font-variant-numeric:tabular-nums }
 /* ⛔ `--fg-4` IS DECLARED DECORATIVE AT 2.4:1 AND THIS CLASS PUT WORDS ON IT.
    Measured on the running page: the state beside the browser read at 2.23:1,
    the meter at 2.71, the placeholder inside a screen at 2.51, the layout icons
@@ -362,6 +362,15 @@ code,pre,.g,.meta,.badge,#url,#tok{
         border-bottom:1px solid var(--line-1) }
 #head .vr{ width:1px; height:18px; flex:none; background:var(--line-2);
            margin:0 var(--s1) }
+/* ⛔ THE GROUP STAYS ON THE RIGHT, AND THE THING THAT KEPT IT THERE WAS THE
+   METER. `margin-left:auto` lived on the meter, so removing it dropped the
+   model and Clear against the left edge, under the transcript's own margin and
+   nowhere near the edge they had always sat on. The push belongs to the first
+   of whatever survives, not to whichever element happened to be there. */
+#head #model{ margin-left:auto }
+/* The heading is out of flow (`.sr` is absolute), so it is not one of the
+   things being pushed, and this rule only describes the size it is announced
+   at rather than drawn at. */
 #head h1{ margin:0; font-size:var(--t-ui); font-weight:600 }
 .badge{ font-size:var(--t-label); color:var(--fg-2);
         background:var(--raised); border:1px solid var(--line-2);
@@ -634,8 +643,6 @@ form{ position:relative; padding:var(--s3) var(--s4) var(--s4);
        background:var(--hover); border:1px solid var(--line-2); color:var(--fg-2);
        font-size:var(--t-label); padding:3px 9px; border-radius:var(--r-pill);
        cursor:pointer }
-#tok{ margin-left:auto; display:inline-flex; align-items:center; gap:6px;
-      font-size:var(--t-label); color:var(--fg-3) }
 
 /* ---------------- browser pane ---------------- */
 /* The strip only exists when there is more than one tab: a single tab labelled
@@ -960,17 +967,15 @@ form{ position:relative; padding:var(--s3) var(--s4) var(--s4);
 <!-- Two landmarks, so somebody moving by region can go straight to the
      conversation or to the browsers instead of walking the whole page. -->
 <main id="left" aria-label="Conversation">
-  <!-- The meter lives up here with the other things that describe the
-       conversation rather than under the box you type in. What is under the box
-       should be the box: a number that grows all session long, sitting between
-       the composer and the edge of the window, is the one place a person looks
-       twenty times an hour for something else. -->
   <div id="head">
-    <!-- ⛔ A HEADING AND NOT A BOLD WORD. The page had no h1 at all, so the
-         answers' own headings - which start at h3 on the reasoning that the
-         product's name sits above them - hung under nothing. -->
-    <h1>AIHawk</h1>
-    <span id="tok" hidden></span>
+    <!-- ⛔ THE HEADING IS OFF-SCREEN, NOT ABSENT, AND IT IS LOAD-BEARING WHERE
+         IT CANNOT BE SEEN. The answers' own headings start at h3 on the
+         reasoning that the product's name sits above them, so deleting this
+         leaves every one of them hanging under nothing and the document with no
+         outline at all. It reads as dead markup and it is not: a gate holds it
+         here. What was removed is the NAME ON THE SCREEN, which said the same
+         thing as the tab, the window and the address bar. -->
+    <h1 class="sr">AIHawk</h1>
     <span class="badge" id="model">no model</span>
     <span class="vr" aria-hidden="true"></span>
     <button id="fresh" type="button" title="Clear this conversation">Clear</button></div>
@@ -1463,7 +1468,6 @@ const onEvent = (e) => {
   const m = JSON.parse(e.data), r = m.replay;
   switch(m.kind){
     case 'model': $('model').textContent = m.text; break;
-    case 'usage': meter(m.text); break;
     /* Sent to every listener, so a second tab clears too instead of showing a
        transcript the server has already forgotten. */
     case 'fresh': wipe(); break;
@@ -1586,7 +1590,6 @@ function wipe(){
   thread.textContent = '';
   turn = null; live = null; hold = null; n = 0;
   clearInterval(timer);
-  $('tok').hidden = true;
   /* Idle until told otherwise. On a reconnection the server sends this wipe
      first and the run state after it, so a page that reconnects to a RESTARTED
      process stops believing in a run that died with the old one - which
@@ -1675,15 +1678,6 @@ f.onsubmit = (e) => {
   send(t); paint();
 };
 
-/* The meter reads the LAST turn's prompt, never a sum: every turn is sent the
-   whole transcript, so the newest prompt IS the current occupancy. */
-function meter(json){
-  let u; try { u = JSON.parse(json); } catch(err) { return; }
-  const k = v => v >= 1000 ? (v/1000).toFixed(1) + 'k' : String(v);
-  $('tok').hidden = false;
-  $('tok').textContent = k(u.last_prompt || 0) + ' ctx  /  ' +
-                         k((u.prompt || 0) + (u.completion || 0)) + ' total';
-}
 
 /* ---- the browser pane ---- */
 const right = $('right'), stateEl = $('state'), urlEl = $('url');
@@ -2591,10 +2585,10 @@ class ChatService:
 
     async def emit(self, kind: str, text: str) -> None:
         event = {"kind": kind, "text": text}
-        # `busy` and `usage` are STATE, not conversation: replaying them to
-        # somebody who opens the page later would show a spinner for work that
-        # finished an hour ago, and a meter for a turn nobody is watching.
-        if kind not in ("busy", "usage"):
+        # `busy` is STATE, not conversation: replaying it to somebody who
+        # opens the page later would show a spinner for work that finished
+        # an hour ago.
+        if kind != "busy":
             self.history.append(event)
         for q in list(self._listeners):
             q.put_nowait(event)
@@ -2635,10 +2629,13 @@ class ChatService:
 
     @property
     def usage(self) -> dict:
-        """What the meter would show right now, for a listener joining late.
+        """What this conversation has cost, for the file it is saved into.
 
         Read through the brain rather than kept here: the brain owns the
-        transcript, so it owns what the transcript has cost.
+        transcript, so it owns what the transcript has cost. It is no longer
+        sent anywhere - the meter that drew it is gone - but it is still counted
+        and still saved, so putting a number back on the screen is a question of
+        where to draw it and not of measuring it again.
         """
         got = getattr(self._brain, "usage", None)
         return dict(got) if isinstance(got, dict) else {}
@@ -2965,7 +2962,6 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         # Taken with the snapshot, for the same reason: whether a run is in
         # flight is part of the state this listener is joining.
         joining_a_run = service.busy
-        current_usage = service.usage
 
         # ⛔ WHERE THIS LISTENER GOT TO, AND WHETHER IT IS EVEN THE SAME
         # CONVERSATION. `EventSource` reconnects by itself after any drop, and
@@ -3039,20 +3035,13 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
                 else:
                     yield b"data: " + json.dumps(
                         {"kind": "busy", "text": "0", "replay": True}).encode() + b"\n\n"
-                # The meter is state too, and it was silent for exactly the
-                # same reason: a page joining after a turn ended showed no
-                # context size at all, on the one screen whose whole job is to
-                # say how big the transcript has become.
-                if current_usage.get("calls"):
-                    yield b"data: " + json.dumps(
-                        {"kind": "usage", "text": json.dumps(current_usage)}).encode() + b"\n\n"
                 while True:
                     event = await q.get()
                     # Only what the history keeps is numbered: an id moves the
-                    # resume point, and `busy` or `usage` are not places to
-                    # resume from. Leaving the field out keeps the last one,
+                    # resume point, and `busy` is not a place to resume from.
+                    # Leaving the field out keeps the last one,
                     # which is what the spec says and what is wanted here.
-                    if event["kind"] in ("busy", "usage", "fresh"):
+                    if event["kind"] in ("busy", "fresh"):
                         yield b"data: " + json.dumps(event).encode() + b"\n\n"
                     else:
                         yield (b"id: " + ("%s:%d" % (service.epoch,

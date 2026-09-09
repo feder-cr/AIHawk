@@ -181,8 +181,12 @@ class Conversation:
                 tools=self.tool_defs, tool_choice="auto", temperature=0,
                 max_tokens=self.max_tokens,
             )
+            # Counted, saved with the transcript, and not announced:
+            # the page drew it in a meter that is gone. The accounting
+            # stays, because it is what the conversation cost; the
+            # event went, because an event nobody draws is drawn as
+            # raw JSON at the end of the transcript.
             self._note_usage(resp)
-            await say("usage", json.dumps(self.usage))
             msg = resp.choices[0].message
             self.messages.append(msg.model_dump())
 

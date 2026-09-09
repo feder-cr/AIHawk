@@ -143,7 +143,11 @@ class ScriptedModel:
     silently measures the end. That was observed here before the copy was added.
     """
 
-    def __init__(self, replies, *, repeat_last: bool = False):
+    def __init__(self, replies, *, repeat_last: bool = False, usage=None):
+        # The response carries the token counts, not the client: the loop
+        # reads `resp.usage`, so a stand-in that keeps them anywhere else
+        # lets the accounting look untested while it is untouched.
+        self.usage = usage
         self.replies = list(replies)
         self.repeat_last = repeat_last
         self.requests: list[dict] = []
@@ -162,6 +166,7 @@ class ScriptedModel:
         msg = self.replies[i]
         return ChatCompletion(
             id="chatcmpl-test",
+            usage=self.usage,
             created=0,
             model=kwargs.get("model", "stub"),
             object="chat.completion",
@@ -968,6 +973,42 @@ async def test_two_calls_to_the_same_tool_keep_distinct_ids_and_results():
     assert [m["tool_call_id"] for m in results] == ["c1", "c2"]
     assert [m["content"] for m in results] == ["read #1", "read #2"]
 
+
+async def test_the_turn_is_counted_even_though_nothing_announces_it():
+    """⛔ THE MEASURING OUTLIVED THE METER, AND THAT IS THE RISKY HALF. The
+    page drew these numbers in a header meter and no longer does, so the `usage`
+    EVENT went with it. The counting stayed, because it is what the transcript
+    is saved with and what any number put back anywhere would read - and an
+    accounting nobody watches is exactly the kind that stops working with
+    nothing going red.
+
+    Known-bad, two: drop `_note_usage` along with the event it used to feed,
+    and put the announcement back.
+    """
+    from openai.types import CompletionUsage
+
+    mcp = ScriptedMCP(tools=tools_result(tool("browser_navigate")))
+    model = ScriptedModel([assistant_answer("done")],
+                          usage=CompletionUsage(prompt_tokens=120,
+                                               completion_tokens=8,
+                                               total_tokens=128))
+    said = []
+
+    async def watch(kind, text):
+        said.append((kind, text))
+
+    convo = Conversation(model, "m")
+    await convo.run("open it", mcp.call_tool,
+                    (await mcp.list_tools()).tools, say=watch)
+
+    assert convo.usage["calls"] == 1, (
+        "the turn was not counted: %r" % convo.usage)
+    assert convo.usage["prompt"] == 120 and convo.usage["completion"] == 8
+    assert convo.usage["last_prompt"] == 120, (
+        "the last turn's prompt is what occupancy is read from")
+    assert "usage" not in [k for k, _ in said], (
+        "the numbers are announced again, and nothing on the page draws them - "
+        "an event with no case is written into the transcript as raw JSON")
 
 def test_the_answer_is_asked_for_the_way_a_person_would_write_it():
     """⛔ THE WRITING COMES FROM THE MODEL, SO THE FIX IS THE PROMPT. A renderer

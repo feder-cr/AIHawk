@@ -115,17 +115,19 @@ async def test_a_turn_brackets_itself_with_busy():
 
 
 async def test_state_is_not_transcript():
-    """`busy` and `usage` must NOT be replayed to somebody who opens the page an
-    hour later: a spinner for work that finished, and a meter for a turn nobody
-    is watching. Everything else is the conversation and is kept.
+    """`busy` must NOT be replayed to somebody who opens the page an hour later:
+    a spinner for work that finished. Everything else is the conversation and is
+    kept.
+
+    It said `busy` and `usage`, and the second one is gone with the meter that
+    drew it: the numbers are still counted and still saved with the transcript,
+    they are simply not an event any more.
     """
     svc = ChatService(FakeLink(), TalkingBrain())
     await svc.send("go")
-    await svc.emit("usage", json.dumps({"last_prompt": 10}))
 
     kinds = [e["kind"] for e in svc.history]
     assert "busy" not in kinds
-    assert "usage" not in kinds
     assert kinds == ["you", "said", "tool", "result"]
 
 

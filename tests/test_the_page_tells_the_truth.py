@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import re
 
+from pathlib import Path
+
 from aihawk.web import PAGE
 
 #: ⛔ BOTH COMMENT SYNTAXES. This page explains its own rules in prose
@@ -50,6 +52,74 @@ def test_a_refused_delete_is_not_drawn_as_a_delete():
     body = body[:body.index("\n}")]
     assert "forgotten" in body, "the answer to the delete is never read"
     assert "orphan(" in body, "a refused delete says nothing to the person who asked"
+
+
+def test_every_event_the_server_can_send_is_drawn():
+    """⛔ AN EVENT WITH NO CASE IS DRAWN AS RAW JSON, and the suite cannot see
+    it. The page ends its switch with a `default` that appends the text to the
+    transcript, which is right for a kind added on the server before the page
+    learns it - a row of prose beats silence. It is wrong for a kind the page
+    used to draw and stopped: removing the meter left `usage` falling through,
+    and the transcript ended with
+    `{"prompt": 2341240, "completion": 19714, "calls": 75, ...}` under the last
+    answer. 528 tests were green. It was found by opening the page.
+
+    So the two sides are compared here instead: whatever the server can emit,
+    the page names.
+
+    Known-bad: emit a kind the page does not name, or drop a case for one it
+    does.
+    """
+    web = (Path(__file__).resolve().parents[1]
+           / "src" / "aihawk" / "web.py").read_bytes().decode("utf-8")
+    loop = (Path(__file__).resolve().parents[1]
+            / "src" / "aihawk" / "agent.py").read_bytes().decode("utf-8")
+    # Comments stripped from both sides, because this project has recorded the
+    # gate-accused-by-a-comment defect more times than any other.
+    server = re.sub(r"#[^\n]*", "", web + loop)
+    sends = set(re.findall(r"(?:emit|say)\(\s*\"([a-z]+)\"", server))
+    sends |= set(re.findall(r'"kind":\s*"([a-z]+)"', server))
+    sends -= {"kind"}
+    drawn = set(re.findall(r"case '([a-z]+)':", CODE))
+    assert sends, "found no event kinds at all, so this gate is not looking"
+    missing = sorted(sends - drawn)
+    assert not missing, (
+        "the server can send %s and the page names none of them, so each one "
+        "lands in the transcript as raw JSON" % missing)
+
+
+def test_the_heading_survives_being_invisible():
+    """⛔ IT READS AS DEAD MARKUP AND IT IS LOAD-BEARING. The product's name was
+    taken off the screen because it said what the tab, the window and the
+    address bar already said. The heading stayed, because the answers' own
+    headings start at h3 on the reasoning that a name sits above them: delete it
+    and every one of them hangs under nothing and the document has no outline at
+    all. An h1 nobody can see is the single most deletable-looking line on this
+    page, so it is held here.
+
+    And it is hidden the ONE way that keeps it: `display:none` and
+    `visibility:hidden` take an element out of the accessibility tree as well as
+    off the screen, which would delete it in the only sense that still mattered.
+    Same family as `pointer-events` versus `inert` elsewhere in this file - the
+    property that hides has to be the one that hides only what was meant.
+
+    Known-bad: drop the class and it is visible again; drop the heading and the
+    outline goes; hide it with `display:none` and it is gone for a reader.
+    """
+    assert re.search(r'<h1[^>]*>', CODE), (
+        "the page has no heading, so every answer's own headings hang under "
+        "nothing")
+    assert re.search(r'<h1 class="sr">', CODE), (
+        "the heading is either back on the screen or hidden by some other means")
+    assert "h3.md-h" in CODE, (
+        "the answers no longer start at h3, so the reason this heading has to "
+        "exist may have changed - check before touching it")
+    rule = re.search(r"\.sr\{([^}]*)\}", CODE)
+    assert rule, "the class that hides the heading is gone"
+    for kills in ("display:none", "visibility:hidden"):
+        assert kills not in rule.group(1).replace(" ", ""), (
+            "`.sr` uses %r, which takes the heading out of the accessibility "
+            "tree too: %r" % (kills, rule.group(1)))
 
 
 def test_the_transcript_is_announced_and_not_only_drawn():
