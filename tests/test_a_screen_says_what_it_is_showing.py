@@ -206,7 +206,7 @@ def test_a_screen_says_how_old_its_picture_is():
         box.appendChild(el('div','veil')); box.appendChild(el('span','stamp'));
         cell.appendChild(box);
         cell.dataset.state = 'live';
-        // Lo stesso orologio che usa la pagina: monotono, non da parete.
+        // The same clock the page reads: monotonic, not the wall.
         cell.dataset.at = String(Math.round(performance.now()) - agoMs);
         return cell; };
       const fresh = mk(300), old = mk(4200);
