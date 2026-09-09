@@ -64,6 +64,25 @@ def test_the_drawn_icons_share_one_stroke():
         % (len(widths), ", ".join(sorted(widths))))
 
 
+def test_an_icon_draws_the_stroke_it_declares():
+    """⛔ THE ONE-STROKE RULE WAS TRUE IN THE ATTRIBUTE AND FALSE ON THE SCREEN.
+    An `svg` drawn at 12px from a 16-unit viewBox scales everything inside it by
+    three quarters, so `stroke-width="1.6"` reaches the glass at 1.2 - beside
+    icons drawing 1.6. The gate above counts the attribute and passed it happily.
+
+    So the viewBox has to match the drawn size. Then the number in the file is
+    the number on the screen, and one stroke means one stroke.
+
+    Known-bad: draw any icon at a size its viewBox does not have.
+    """
+    icons = re.findall(r'<svg width="(\d+)" height="(\d+)" viewBox="0 0 (\d+) (\d+)"',
+                       PAGE)
+    assert icons, "the page draws no icons at all, so this gate is not looking"
+    off = [(w, h, vw, vh) for w, h, vw, vh in icons if (w, h) != (vw, vh)]
+    assert not off, (
+        "%d icon(s) are drawn at a size their viewBox does not have, so their "
+        "stroke is scaled away from the one they declare: %s" % (len(off), off))
+
 def test_no_callout_wears_a_coloured_bar_down_its_left_edge():
     """⛔ THE 2px STRIPE IS A COSTUME. A coloured bar on the left of an alert is
     the house style of every framework and belongs to none of them; a tint plus

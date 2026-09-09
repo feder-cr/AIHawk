@@ -130,50 +130,49 @@ PAGE = r"""<!doctype html>
      accessibility guidance marks `font-size: 16px` "Don't" and `1rem` "Do" for
      exactly this. Same pixels at the default 16px root, so nothing moves for
      anybody who never changed it. */
-  /* ⛔ ONE RATIO, AND THE STEPS ARE STEPS. Measured on the running page, the
-     left column drew NINE size/weight pairs at 11, 12, 13, 14 and 16px: four
-     sizes inside three pixels, which is a scale in name only. A step of 1.08
-     is not a step - the eye reads it as an accident - and the fix is not more
-     sizes but fewer, with weight and colour carrying the tiers that size no
-     longer does.
+  /* ⛔ EVERY SIZE HERE IS A PUBLISHED NUMBER, NOT A JUDGEMENT. Asked for in
+     those words, and it is the right way round: a scale somebody invents is a
+     scale nobody can check.
 
-     Three prose steps on ~1.2: 12 / 15 / 18. Body is 15 because this column
-     exists to be read and 14 is under the floor every source gives for reading
-     text. */
+       16px body    Material's default body size and the web's, and the number
+                    every one of the sources names first.
+       12px label   the comfortable floor for labels and captions; 11 is the
+                    absolute minimum and this is a step above it.
+       20px heading 1.25 from the body, inside the 1.2 to 1.333 ratio band all
+                    of them give for a type scale.
+
+     12 / 16 / 20, so the steps are 1.33 and 1.25. Levels that share a size are
+     separated by weight and colour, which those sources prefer to size anyway.
+
+     ⛔ MONO IS OFF THIS SCALE BY DECISION, at the 13px those same sources put
+     on code - a mono face runs wider and reads larger at the same pixel, and
+     the step track is MEASURED against it, so moving it moves a threshold a
+     gate checks. */
   --t-label:.75rem;                            /* 12 - labels, meta, counts */
-  --t-body:.9375rem;                           /* 15 - prose, and the base */
-  --t-ui:.9375rem;                             /* 15 - chrome reads as prose */
-  /* ⛔ MONO IS OFF THIS SCALE BY DECISION, NOT BY OVERSIGHT. A mono face runs
-     wider and reads larger at the same pixel, so it does not belong on a scale
-     built for a proportional one - and the step track is MEASURED against it:
-     `LONG` is how many characters fit in 416px at this size, so moving it moves
-     a threshold that a gate checks. It is the data face, and it says so here. */
+  --t-body:1rem;                               /* 16 - prose, and the base */
+  --t-ui:1rem;                                 /* 16 - chrome reads as prose */
   --t-mono:.8125rem;                           /* 13 - steps, code, addresses */
-  /* The answer's headings. One size above the body, then weight and colour:
-     three sizes a pixel apart carried nothing that 600 and a quieter ink do
-     not carry better. `--t-h1` is the off-screen page heading's size too. */
-  --t-h1:1.125rem; --t-h2:.9375rem; --t-h3:.9375rem;
+  --t-h1:1.25rem; --t-h2:1rem; --t-h3:1rem;    /* 20, then weight and colour */
 
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:32px;
   --r-sm:4px; --r:8px; --r-lg:12px; --r-pill:999px;
-  /* ⛔ BOTH OF THESE ARE ON THE 4px GRID NOW, AND ONE OF THEM WAS NOT. This
-     file declares a 4px base and spends it everywhere else, and the header sat
-     at 50 - twelve and a half steps, which is not a step. A spacing system with
-     one number off it is the clearest sign there is no system, and it is the
-     kind of number nobody questions because it looks round in decimal.
+  /* ⛔ AND SO IS EVERY BOX, FOR THE SAME REASON.
 
-     48 for the rail: a step wider than it was, and the figure Material puts on
-     a touch target, so the strip is comfortable for a hand without taking width
-     the conversation can use. 56 for the headers: six pixels taller, on the
-     grid, and the height an app bar has almost everywhere - which by Jakob's
-     law is the height a person's eye is already expecting.
+       48px rail    Material's touch target, and the width a strip of icon
+                    buttons has in every product that ships one.
+       56px bar     Material's top app bar. By Jakob's law that is the height
+                    an eye already expects at the top of a window.
+       40px control the standard button height these sources give (36 to 40),
+                    taken at the top so a pill in a bar is comfortable rather
+                    than merely legal.
 
-     The control height stays 28, which is exactly half of 56: the bar and the
-     things in it are now one ratio rather than two numbers that happened to
-     leave enough room. */
+     All three are multiples of the 4px base this file spends everywhere else.
+     The header used to be 50 - twelve and a half steps, which is not a step,
+     and the kind of number nobody questions because it looks round in decimal. */
   --spine:48px;                               /* the sessions rail */
+  --drawer:256px;                             /* the standard drawer's width */
   --topbar:56px;                              /* every header, one height */
-  --h-ctl:28px;                               /* every control on a bar */
+  --h-ctl:40px;                               /* every control on a bar */
   --gutter:1.75rem;                            /* three digits of 11px mono */
   --gap:.55rem;
   --indent:calc(var(--gutter) + var(--gap));   /* ONE source for the step indent */
@@ -234,18 +233,22 @@ code,pre,.g,.meta,.badge,#url{
    Anchored to the spine's own width so the two are one object, and lifted with
    a shadow rather than a border, because what says "this is over that" is the
    shadow. */
-#rail { position:absolute; top:0; bottom:0; left:var(--spine); width:224px;
+/* Under the bar, like the rail that opens it: the band across the top is not
+   something a drawer may cover. */
+#rail { position:absolute; top:var(--topbar); bottom:0; left:0; width:var(--drawer);
         z-index:5; display:flex; flex-direction:column;
         background:var(--well); border-right:1px solid var(--line-1);
         box-shadow:14px 0 34px -18px #000 }
 /* The header of the column lines up with the header of the conversation beside
    it: same height, same padding, so the two read as one row across the app. */
+/* The left padding is the button's: it is drawn over this header now, so the
+   word starts after it instead of under it. */
 #railhead{ flex:none; height:var(--topbar); display:flex; align-items:center;
-           gap:8px; padding:0 var(--s3) 0 var(--s4);
+           gap:8px; padding:0 var(--s3) 0 var(--spine);
            border-bottom:1px solid var(--line-1) }
 #railhead .label{ flex:1 }
-#newchat{ flex:none; width:26px; height:26px; display:grid;
-          place-items:center; padding:0; border-radius:7px;
+#newchat{ flex:none; width:48px; height:48px; display:grid;
+          place-items:center; padding:0; border-radius:var(--r);
           border:1px solid transparent; background:none;
           color:var(--fg-3); cursor:pointer;
           transition:background-color 120ms ease-out, color 120ms ease-out }
@@ -269,8 +272,18 @@ code,pre,.g,.meta,.badge,#url{
    The icon sits at the TOP and not in the middle. That is where a rail's first
    control goes in every product that has one, and it leaves the strip able to
    grow a second icon without anything being re-thought. */
-#railtab{ flex:none; width:var(--spine); padding:11px 0 0; cursor:pointer; border:0;
-          position:relative; background:var(--base); color:var(--fg-3);
+/* ⛔ THE BAR RUNS THE WHOLE WIDTH AND THE RAIL HANGS UNDER IT. From the
+   owner's drawing: the horizontal band is the top of the room, unbroken from
+   edge to edge, and the vertical strip starts below it - so the rail cannot
+   be a column in the same row as the panes, or it would cut the band in two
+   at the left and the header would start 48px in.
+
+   Out of the flow, then, and the conversation carries the width it used to
+   take as a margin. Same pixels, different owner. */
+#railtab{ position:absolute; top:var(--topbar); left:0; bottom:0; z-index:4;
+          width:var(--spine); padding:11px 0 0; cursor:pointer; border:0;
+          background:var(--base); color:var(--fg-3);
+
           /* Half the weight it was: a hairline that says where the room ends
              rather than a rule that draws attention to itself. */
           box-shadow:inset -.5px 0 0 var(--accent);
@@ -291,7 +304,30 @@ code,pre,.g,.meta,.badge,#url{
    on the thing you press, where a hand already is - and the word goes quiet,
    because the column beside it is now saying its own name. */
 #railtab:hover{ background:var(--raised); color:var(--fg) }
-#railtab[aria-expanded="true"]{ background:var(--raised); color:var(--fg) }
+/* ⛔ OPEN, THE RAIL GIVES ITS WIDTH AWAY. A 48px strip beside an open column is
+   48px that says nothing: the column beside it already carries the name, the
+   state and the way out. So the button leaves the flow - the conversation gets
+   those pixels back and the panel starts at the edge of the window - and is
+   drawn over the panel's own header, in the same place on screen it was a
+   moment ago.
+
+   Moved, not duplicated. It is the same button, and it has to be: a second
+   control that opens the same column is a second thing to keep in step with the
+   first, which this page carried for half an hour once and a gate now forbids.
+   It is also the only thing that CLOSES the column, so it cannot simply be
+   hidden. */
+/* ⛔ ABOVE THE PANEL, AND 5 IS THE PANEL. Both were 5, and the panel comes
+   later in the document, so it painted over the button: the icon was exactly
+   where it belonged, 48 by 56 at the top-left corner, and invisible. The
+   ladder this page uses is 2 for the jump button, 5 for the panel, 6 above it,
+   20 for the skip link. */
+#railtab[aria-expanded="true"]{ position:absolute; top:var(--topbar); left:0;
+                                z-index:6; bottom:auto;
+                                width:var(--spine); height:var(--topbar);
+                                padding:0; display:grid; place-items:center;
+                                background:transparent; box-shadow:none;
+                                color:var(--fg-2) }
+#railtab[aria-expanded="true"]:hover{ color:var(--fg); background:transparent }
 #railtab[aria-expanded="true"]::after{ content:none }
 /* ⛔ THE PANEL FOLDS, THE WAY IN DOES NOT. Both used to disappear at the
    same breakpoint, and `#newchat` lives inside the panel - so a window snapped
@@ -438,7 +474,7 @@ code,pre,.g,.meta,.badge,#url{
         padding:3px 9px; border-radius:var(--r-pill) }
 /* 24px is the floor WCAG 2.2 sets for a target, and these three sat at 21,
    22 and 23 - close enough to look fine and short enough to fail. */
-#fresh{ min-height:24px; font-size:var(--t-label); font-family:var(--sans);
+#fresh{ min-height:var(--h-ctl); font-size:var(--t-label); font-family:var(--sans);
         color:var(--fg-2);
         background:var(--raised); border:1px solid var(--line-2); cursor:pointer;
         padding:3px 9px; border-radius:var(--r-pill);
@@ -456,7 +492,17 @@ code,pre,.g,.meta,.badge,#url{
    One rule, so the look follows the mechanism rather than whoever remembers. */
 [inert]{ opacity:.3 }
 
-#log{ flex:1; overflow:auto; padding:var(--s5) var(--s4); scrollbar-gutter:stable }
+#log{ flex:1; overflow:auto; scrollbar-gutter:stable;
+      padding:var(--s5) var(--s4) var(--s5) calc(var(--s4) + var(--spine));
+      transition:padding-left 180ms cubic-bezier(.23,1,.32,1) }
+/* ⛔ IT PUSHES, IT DOES NOT COVER. An overlay drawer is the phone pattern;
+   on a desktop the standard one moves the content over, and covering it here
+   sliced every line of the conversation down the middle - readable text with
+   a panel sitting on its first 224 pixels. The header is not moved: it lives
+   above the drawer, which is what the drawing asked for. */
+#rail:not([hidden]) ~ #left #log,
+#rail:not([hidden]) ~ #left form{
+  padding-left:calc(var(--s4) + var(--drawer)) }
 /* Capped in CHARACTERS and not in pixels, because the thing being limited is
    the measure and 680px is only one screen's worth of it: on a 1920 window the
    same column ran to about 92 characters, past the 80 the WCAG asks for and
@@ -693,7 +739,8 @@ h5.md-h, h6.md-h{ font-size:var(--t-h3); font-weight:600; color:var(--fg-2) }
       border-radius:0 var(--r-sm) var(--r-sm) 0; padding:8px 10px }
 
 /* ---------------- composer ---------------- */
-form{ position:relative; padding:var(--s3) var(--s4) var(--s4);
+form{ position:relative;
+      padding:var(--s3) var(--s4) var(--s4) calc(var(--s4) + var(--spine));
       border-top:1px solid var(--line-1);
       background:var(--raised);
       box-shadow:0 -1px 0 rgba(0,0,0,.5), 0 -12px 28px -12px rgba(0,0,0,.65) }
@@ -781,7 +828,7 @@ form{ position:relative; padding:var(--s3) var(--s4) var(--s4);
    nothing in here gets a pointer cursor except what does. */
 #chrome, #chrome *{ cursor:default; user-select:none }
 #url{ user-select:text }
-#mode button{ cursor:pointer; min-height:24px }
+#mode button{ cursor:pointer; min-height:var(--h-ctl) }
 #dot{ width:7px; height:7px; flex:none; border-radius:50%; background:var(--fg-4) }
 [data-state="live"]  #dot{ background:var(--ok); animation:breathe 1.8s ease-in-out infinite }
 [data-state="busy"]  #dot{ background:var(--accent); animation:breathe .9s ease-in-out infinite }
@@ -1058,10 +1105,10 @@ form{ position:relative; padding:var(--s3) var(--s4) var(--s4);
      pointer or the keyboard arrives, so the two can never disagree. -->
 <button id="railtab" type="button" aria-expanded="false" aria-controls="rail"
         aria-label="Sessions" data-tip="Sessions">
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    <rect x="1.8" y="2.8" width="12.4" height="10.4" rx="2"
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect x="2.8" y="4.4" width="18.4" height="15.2" rx="3"
           stroke="currentColor" stroke-width="1.6"/>
-    <path d="M6.1 2.8v10.4" stroke="currentColor" stroke-width="1.6"/>
+    <path d="M9.2 4.4v15.2" stroke="currentColor" stroke-width="1.6"/>
   </svg></button>
 
 <nav id="rail" aria-labelledby="railtitle" hidden>
@@ -1077,8 +1124,8 @@ form{ position:relative; padding:var(--s3) var(--s4) var(--s4);
   <div id="railhead">
     <span class="label" id="railtitle">Sessions</span>
     <button id="newchat" type="button" aria-label="New session" title="New session">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor"
-           stroke-width="1.6" stroke-linecap="round"><path d="M7 2.5v9M2.5 7h9"/></svg>
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor"
+           stroke-width="1.6" stroke-linecap="round"><path d="M9 3.5v11M3.5 9h11"/></svg>
     </button>
   </div>
   <div id="chats" role="list"></div>
@@ -1124,21 +1171,21 @@ form{ position:relative; padding:var(--s3) var(--s4) var(--s4);
          it floats above. -->
     <button id="jump" hidden type="button">jump to latest</button>
     <button id="chip" type="button" hidden>1 message queued
-      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"
            stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
            stroke-linejoin="round"><path d="M10.6 2.9l2.5 2.5L5.6 12.9 2.5 13.5l.6-3.1z"/></svg></button>
     <div class="composer">
       <label class="sr" for="i">What should the agent do?</label>
       <textarea id="i" rows="1" placeholder="What should the agent do?"></textarea>
       <button id="go" type="submit" aria-label="Send" disabled>
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
              stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
              stroke-linejoin="round">
-          <path d="M7 12V2M2.5 6.5L7 2l4.5 4.5"/></svg>
+          <path d="M9 15.5V2.5M3.5 8L9 2.5l5.5 5.5"/></svg>
       </button>
       <button id="halt" type="button" hidden aria-label="Stop">
-        <svg width="12" height="12" viewBox="0 0 12 12">
-          <rect width="12" height="12" rx="2" fill="currentColor"/></svg>
+        <svg width="14" height="14" viewBox="0 0 14 14">
+          <rect width="14" height="14" rx="3" fill="currentColor"/></svg>
       </button>
     </div>
   </form>
