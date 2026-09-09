@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AIHawk</title>
+<style>/*__CSS__*/</style>
+
+<!-- The spine. It is the first thing in the document and the leftmost thing on
+     the screen, it is always there, and it is the only way in or out of the
+     column: closed it is the word, open it is the word next to the list.
+     Drawn on a napkin on 2026-09-09 after a bar in the header turned out not to
+     be it - a control that is part of the frame reads as permanent, where one
+     among the header's other controls reads as one more button. -->
+<!-- ⛔ THE COMPOSER IS THE 112th TAB STOP. Every step of every run is a
+     <summary>, so the only input on the page - the reason the page exists -
+     sits behind the entire transcript, and the queue grows with the run. One
+     link, first in the document, off-screen until it is focused. -->
+<a class="skip" href="#i">Skip to the message box</a>
+<!-- ⛔ THE NAME IS AN `aria-label` HERE AND THAT IS NOT THE DEFECT IT WAS.
+     While the word was ON the button, a label REPLACED it: a screen reader read
+     something that was not on screen and a voice user could not say what they
+     saw. With a drawn icon there is no visible word to contradict, so the label
+     IS the name - and `data-tip` puts the same word on screen the moment a
+     pointer or the keyboard arrives, so the two can never disagree. -->
+<button id="railtab" type="button" aria-expanded="false" aria-controls="rail"
+        aria-label="Sessions" data-tip="Sessions">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect x="2.8" y="4.4" width="18.4" height="15.2" rx="3"
+          stroke="currentColor" stroke-width="1.6"/>
+    <path d="M9.2 4.4v15.2" stroke="currentColor" stroke-width="1.6"/>
+  </svg></button>
+
+<nav id="rail" aria-labelledby="railtitle" hidden>
+  <!-- No title here any more: the spine to the left of this column carries the
+       word, and with the column open the two sat twenty pixels apart saying the
+       same thing. The row keeps its height from its padding, so it still lines
+       up with the app header beside it. -->
+  <!-- ⛔ THE WORD LIVES HERE NOW. It used to be on the rail, and this span was
+       deliberately empty because the two sat twenty pixels apart saying the same
+       thing. The rail draws an icon since 2026-09-10, so nothing carried the word
+       any more: the column opened with a plus button and no title, which is a
+       rule that stopped being enforced one step past where it was written. -->
+  <div id="railhead">
+    <span class="label" id="railtitle">Sessions</span>
+    <button id="newchat" type="button" aria-label="New session" title="New session">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor"
+           stroke-width="1.6" stroke-linecap="round"><path d="M9 3.5v11M3.5 9h11"/></svg>
+    </button>
+  </div>
+  <div id="chats" role="list"></div>
+</nav>
+
+<!-- Two landmarks, so somebody moving by region can go straight to the
+     conversation or to the browsers instead of walking the whole page. -->
+<main id="left" aria-label="Conversation">
+  <div id="head">
+    <!-- ⛔ THE HEADING IS OFF-SCREEN, NOT ABSENT, AND IT IS LOAD-BEARING WHERE
+         IT CANNOT BE SEEN. The answers' own headings start at h3 on the
+         reasoning that the product's name sits above them, so deleting this
+         leaves every one of them hanging under nothing and the document with no
+         outline at all. It reads as dead markup and it is not: a gate holds it
+         here. What was removed is the NAME ON THE SCREEN, which said the same
+         thing as the tab, the window and the address bar. -->
+    <h1 class="sr">AIHawk</h1>
+    <span class="badge" id="model">no model</span>
+    <span class="vr" aria-hidden="true"></span>
+    <button id="fresh" type="button" title="Clear this conversation">Clear</button></div>
+  <div id="log">
+    <!-- ⛔ role=log, OR THE WHOLE PRODUCT IS SILENT. Everything the agent
+         does arrives here by appending a node, and the only live region on the
+         page carried the word `idle`. Somebody who cannot see the screen was
+         told nothing, ever - and the other channel, the picture, ships with an
+         empty alt on purpose. -->
+    <div id="thread" role="log" aria-live="polite" aria-relevant="additions">
+      <div id="hint">
+        <p>Tell it what to do, in a sentence. It opens the pages, reads them and
+           clicks, and you watch on the right.</p>
+        <p class="eg">Go to example.com and tell me the main heading.</p>
+        <p class="sm">Plain language: the model works out the clicks. One
+           instruction at a time works best.</p>
+      </div>
+    </div>
+    <div id="anchor"></div>
+  </div>
+  <form id="f" autocomplete="off">
+    <!-- Inside the composer and anchored to its top edge: it used to sit at a
+         hard 110px from the bottom, which is a guess at the height of a box
+         that GROWS with what is typed into it and again with the reader's font
+         size, so at 200% with a queued message it landed on top of the thing
+         it floats above. -->
+    <button id="jump" hidden type="button">jump to latest</button>
+    <button id="chip" type="button" hidden>1 message queued
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"
+           stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+           stroke-linejoin="round"><path d="M10.6 2.9l2.5 2.5L5.6 12.9 2.5 13.5l.6-3.1z"/></svg></button>
+    <div class="composer">
+      <label class="sr" for="i">What should the agent do?</label>
+      <textarea id="i" rows="1" placeholder="What should the agent do?"></textarea>
+      <button id="go" type="submit" aria-label="Send" disabled>
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+             stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+             stroke-linejoin="round">
+          <path d="M9 15.5V2.5M3.5 8L9 2.5l5.5 5.5"/></svg>
+      </button>
+      <button id="halt" type="button" hidden aria-label="Stop">
+        <svg width="14" height="14" viewBox="0 0 14 14">
+          <rect width="14" height="14" rx="3" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </form>
+</main>
+
+<!-- The split is a control, so it says so: a real separator with a value a
+     screen reader can read and the arrow keys can move. Which pane deserves
+     the room is a property of the TASK - reading a long answer wants one
+     ratio, watching a form being filled wants another - so it is not a number
+     this file gets to decide once. -->
+<div id="split" role="separator" aria-orientation="vertical" tabindex="0"
+     aria-label="Width of the conversation" aria-valuemin="420"
+     aria-valuenow="530"></div>
+
+<section id="right" data-state="idle" aria-label="The browsers this session holds">
+  <div id="tabs" hidden></div>
+  <div id="chrome">
+    <span id="dot"></span>
+    <span id="url" class="dim">no page yet</span>
+    <!-- ⛔ A GROUP OF TOGGLES, NOT TABS. `role="tablist"` promises panels this
+         page does not have and a keyboard pattern it does not implement: arrow
+         keys did nothing, `aria-controls` pointed at nothing, and a screen
+         reader announced "tab, 1 of 2" for a switch. Its neighbour, the layout
+         picker, already had this right. -->
+    <span id="mode" role="group" aria-label="Whether the picture keeps updating">
+      <button aria-pressed="true" data-v="live" type="button"
+              title="Keep the picture updating">Live</button>
+      <button aria-pressed="false" data-v="hold" type="button"
+              title="Stop updating the picture. The agent keeps working.">Frozen</button>
+    </span>
+    <span id="state" class="label" aria-live="polite">idle</span>
+    <!-- How many browsers are on the stage at once. The vocabulary of a
+         control room, because that is the job: one when you are watching the
+         work, four when you are keeping an eye on it. -->
+    <!-- Drawn rather than numbered: the icon IS the layout, where a digit is a
+         label for it. Each carries its own name because there is no text in it
+         to read - the opposite of the sessions spine, where the word is the
+         name and an aria-label would replace it. -->
+    <span id="grid" role="group" aria-label="Screens at once">
+      <button type="button" data-n="1" aria-pressed="true"
+              aria-label="One screen" title="One screen">
+        <svg viewBox="0 0 18 12" width="18" height="12" fill="none"
+             stroke="currentColor" stroke-width="1.6">
+          <rect x="1" y="1" width="16" height="10" rx="1.6"/></svg></button>
+      <button type="button" data-n="2" aria-pressed="false"
+              aria-label="Two screens" title="Two screens">
+        <svg viewBox="0 0 18 12" width="18" height="12" fill="none"
+             stroke="currentColor" stroke-width="1.6">
+          <rect x="1" y="1" width="16" height="10" rx="1.6"/>
+          <path d="M9 1v10"/></svg></button>
+      <button type="button" data-n="4" aria-pressed="false"
+              aria-label="Four screens" title="Four screens">
+        <svg viewBox="0 0 18 12" width="18" height="12" fill="none"
+             stroke="currentColor" stroke-width="1.6">
+          <rect x="1" y="1" width="16" height="10" rx="1.6"/>
+          <path d="M9 1v10M1 6h16"/></svg></button>
+    </span>
+  </div>
+  <div id="stage" data-grid="1"></div>
+  <!-- role, or the label is ignored: a bare div takes no accessible name. -->
+  <div id="thumbs" role="group" aria-label="The other browsers in this session"></div>
+</section>
+
+<script>//__JS__</script>

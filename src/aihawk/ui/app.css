@@ -1,0 +1,1023 @@
+
+:root{
+  color-scheme: dark;
+
+  /* Surfaces as a ladder rather than two greys. The steps widen going up
+     (5,7,7,8) because equal hex steps read as progressively smaller the lighter
+     they get. */
+  --well:   #0b0d10;   /* recessed: behind the frame, the deepest thing here */
+  --base:   #101317;   /* the ground */
+  --raised: #171b21;   /* composer, header, browser chrome, expanded output */
+  --hover:  #1e232a;   /* row hover, and the user's own bubble */
+  --top:    #262c34;   /* a control sitting on --hover */
+
+  /* Edges are translucent white, never a hex: rgba composites correctly on
+     every rung, so a component can move up the ladder without its border being
+     picked again. */
+  --line-1: rgba(255,255,255,.06);
+  --line-2: rgba(255,255,255,.09);
+  --line-3: rgba(255,255,255,.14);
+  --lip:    inset 0 1px 0 rgba(255,255,255,.045);
+
+  /* ⛔ THE LADDER IS PICKED FROM THE USE SCENE, NOT FROM THE CATEGORY. This
+     interface is watched during long runs in a room with the lights off - the
+     screen is the only light - so the ground stays near black and nothing on it
+     is pure white: a full white on a dark ground at night is a lamp pointed at
+     the reader. The accent moves off coral onto amber for the same reason, that
+     being the warm end that disturbs dark-adapted eyes least, and every rung
+     gains headroom over the floor rather than sitting on it.
+
+     Ink, with the contrast each one carries against --base. */
+  --fg:   #dfe4e8;   /* 14.5:1  what the user typed, what the model answered */
+  --fg-2: #a6b0b8;   /*  8.4:1  narration and chrome labels */
+  --fg-3: #8d98a1;   /*  6.3:1  tool output and arguments, and every quiet word */
+  /* ⛔ AND `--fg-4` NEVER COLOURS WORDS. It was carrying the count beside a
+     conversation, the address under a link, the timing on a step, the marker of
+     a list, the dim halves of the URL and the placeholder inside a preview -
+     nine rules, all of them text, all of them at 2.4:1 where AA asks 4.5. The
+     worst was the address: it is printed precisely so an injected link can be
+     read, and it was the hardest thing on the page to read. */
+  --fg-4: #6b747d;   /*  3.9:1  decoration only - a dot, a chevron, never a word.
+                                Three to one and not two: a chevron and an idle
+                                dot MEAN something, and a graphic that carries
+                                meaning has a floor of its own.
+                                ⛔ AND MEASURED WHERE IT IS PAINTED, not
+                                against the ground. All three of its uses sit on
+                                --raised: the idle dot in the browser bar, the
+                                chevron of a hovered row, the ring on a stopped
+                                browser's chip. At the old value that was 2.96:1
+                                - the same defect this ladder fixed for text,
+                                repeated one rung up. */
+
+  --accent:    #e0a35f;   /* 8.5:1 */
+  --accent-hi: #ecb377;   /* the same amber a step up, for hover */
+  --stop:      #d94f45;   /* the one red that is a CONTROL and not a state */
+  --stop-hi:   #e0655a;
+  --on-accent: #151005;
+  --ok:  #79bf94;         /* 8.6:1 */
+  --err: #e88b76;         /* 7.4:1 */
+
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas,
+          "Liberation Mono", "DejaVu Sans Mono", monospace;
+  /* ⛔ rem AND NOT px, WHICH IS THE DIFFERENCE BETWEEN HONOURING AND IGNORING
+     A SETTING SOMEBODY CHANGED FOR THEIR EYES. A default font size set in the
+     browser or the system does nothing to a page whose sizes are absolute -
+     page zoom still works, but that is a different control and it scales the
+     browser view on the right along with the text. web.dev's typography
+     accessibility guidance marks `font-size: 16px` "Don't" and `1rem` "Do" for
+     exactly this. Same pixels at the default 16px root, so nothing moves for
+     anybody who never changed it. */
+  /* ⛔ EVERY SIZE HERE IS A PUBLISHED NUMBER, NOT A JUDGEMENT. Asked for in
+     those words, and it is the right way round: a scale somebody invents is a
+     scale nobody can check.
+
+       16px body    Material's default body size and the web's, and the number
+                    every one of the sources names first.
+       12px label   the comfortable floor for labels and captions; 11 is the
+                    absolute minimum and this is a step above it.
+       20px heading 1.25 from the body, inside the 1.2 to 1.333 ratio band all
+                    of them give for a type scale.
+
+     12 / 16 / 20, so the steps are 1.33 and 1.25. Levels that share a size are
+     separated by weight and colour, which those sources prefer to size anyway.
+
+     ⛔ MONO IS OFF THIS SCALE BY DECISION, at the 13px those same sources put
+     on code - a mono face runs wider and reads larger at the same pixel, and
+     the step track is MEASURED against it, so moving it moves a threshold a
+     gate checks. */
+  --t-label:.75rem;                            /* 12 - labels, meta, counts */
+  --t-body:1rem;                               /* 16 - prose, and the base */
+  --t-ui:1rem;                                 /* 16 - chrome reads as prose */
+  --t-mono:.8125rem;                           /* 13 - steps, code, addresses */
+  --t-h1:1.25rem; --t-h2:1rem; --t-h3:1rem;    /* 20, then weight and colour */
+
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:32px;
+  --r-sm:4px; --r:8px; --r-lg:12px; --r-pill:999px;
+  /* ⛔ AND SO IS EVERY BOX, FOR THE SAME REASON.
+
+       48px rail    Material's touch target, and the width a strip of icon
+                    buttons has in every product that ships one.
+       56px bar     Material's top app bar. By Jakob's law that is the height
+                    an eye already expects at the top of a window.
+       40px control the standard button height these sources give (36 to 40),
+                    taken at the top so a pill in a bar is comfortable rather
+                    than merely legal.
+
+     All three are multiples of the 4px base this file spends everywhere else.
+     The header used to be 50 - twelve and a half steps, which is not a step,
+     and the kind of number nobody questions because it looks round in decimal. */
+  --spine:48px;                               /* the sessions rail */
+  --drawer:256px;                             /* the standard drawer's width */
+  --topbar:56px;                              /* every header, one height */
+  --h-ctl:40px;                               /* every control on a bar */
+  --gutter:1.75rem;                            /* three digits of 11px mono */
+  --gap:.55rem;
+  --indent:calc(var(--gutter) + var(--gap));   /* ONE source for the step indent */
+}
+
+*{ box-sizing:border-box }
+body{ margin:0; height:100vh; display:flex; position:relative;
+      background:var(--base); color:var(--fg);
+      font:var(--t-body)/1.55 var(--sans); }
+code,pre,.g,.meta,.badge,#url{
+  font-family:var(--mono);
+  /* Not cosmetic: a step reads `#email <- ada@example.com`, and a mono face with
+     contextual alternates draws `<-` as one arrow. The text on screen would stop
+     being the text the model emitted. */
+  font-variant-ligatures:none; }
+.meta,.g{ font-variant-numeric:tabular-nums }
+/* ⛔ `--fg-4` IS DECLARED DECORATIVE AT 2.4:1 AND THIS CLASS PUT WORDS ON IT.
+   Measured on the running page: the state beside the browser read at 2.23:1,
+   the meter at 2.71, the placeholder inside a screen at 2.51, the layout icons
+   at 2.51. WCAG AA wants 4.5:1 for text and 3:1 for a graphic that carries
+   meaning, and the token's own comment in this file says what it is for. A
+   label is a small word, not a faint one: `--fg-3` is 4.8:1 and still reads as
+   quieter than the thing it labels. */
+.label{ font-size:var(--t-label); font-weight:600; letter-spacing:.07em;
+        text-transform:uppercase; color:var(--fg-3); line-height:1 }
+.sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%) }
+.skip{ position:absolute; left:var(--s2); top:var(--s2); z-index:20;
+       padding:8px 12px; background:var(--top); color:var(--fg);
+       border:1px solid var(--line-3); border-radius:var(--r);
+       font-size:var(--t-ui); text-decoration:none;
+       transform:translateY(-200%); transition:transform 120ms ease-out }
+.skip:focus{ transform:none }
+/* `hidden` must beat any display an id or class sets, or an element the script
+   believes it has hidden stays on screen. This shipped once on the live image
+   and again on the queued-message chip: both were "hidden" and both were
+   visible, because a rule with an id selector outranks the user agent's
+   [hidden]. One line, and the whole class is gone. */
+[hidden]{ display:none !important }
+
+/* ---------------- panes ---------------- */
+/* The session column is FIXED width and the two panes beside it share what is
+   left, because the column holds names and a name does not get more readable
+   with more room, while the transcript and the picture both do. It collapses
+   below 900px rather than squeezing the two things that matter. */
+/* ⛔ CLOSED UNTIL SOMEBODY ASKS FOR IT. A column of sessions standing open
+   beside a conversation somebody is reading is a list nobody needed yet taking
+   a fifth of the width; open by default it reads as scaffolding rather than as
+   a choice. It is one keystroke away, it remembers what you last did with it,
+   and the toggle lives IN the header row rather than above the list - a control
+   floating over a panel is what "bolted on" looks like. */
+/* ⛔ IT FLOATS OVER THE CONVERSATION, IT DOES NOT PUSH IT. As a flex sibling
+   the column took its width out of the room and everything to its right moved
+   the moment it opened, which for a panel you open and shut twenty times an
+   hour is the whole layout twitching. Out of flow it costs nothing: the
+   conversation stays exactly where it was, the panel lies on top of the near
+   edge of it, and because the panel is narrower than the conversation the rest
+   of the words are still there to come back to.
+   Anchored to the spine's own width so the two are one object, and lifted with
+   a shadow rather than a border, because what says "this is over that" is the
+   shadow. */
+#rail { position:absolute; top:0; bottom:0; left:0; width:var(--drawer);
+        z-index:5; display:flex; flex-direction:column;
+        background:var(--well); border-right:1px solid var(--line-1);
+        box-shadow:14px 0 34px -18px #000 }
+/* The header of the column lines up with the header of the conversation beside
+   it: same height, same padding, so the two read as one row across the app. */
+/* The left padding is the button's: it is drawn over this header now, so the
+   word starts after it instead of under it. */
+#railhead{ flex:none; height:var(--topbar); display:flex; align-items:center;
+           gap:8px; padding:0 var(--s3) 0 var(--spine);
+           border-bottom:1px solid var(--line-1) }
+#railhead .label{ flex:1 }
+#newchat{ flex:none; width:48px; height:48px; display:grid;
+          place-items:center; padding:0; border-radius:var(--r);
+          border:1px solid transparent; background:none;
+          color:var(--fg-3); cursor:pointer;
+          transition:background-color 120ms ease-out, color 120ms ease-out }
+#newchat:hover{ background:var(--raised); color:var(--fg);
+                border-color:var(--line-2) }
+
+/* ⛔ AN ICON, AND THE WORD WHEN IT IS WANTED. The rail carried SESSIONS set
+   vertically, and the word was the whole objection: it is the only thing on
+   this page a person has to tilt their head for, and it names a category where
+   everything else on screen names an action - Clear, Live, Frozen, jump to
+   latest. Chosen from four variants drawn side by side at real proportions,
+   which is how it finally got decided after two guesses were wrong: a bar in
+   the header, and then leaving it alone.
+
+   44px instead of 54, so ten pixels go back to the conversation. The target is
+   still the full height of the window, as far above the 24px WCAG floor and the
+   44px Fitts figure as a target gets, and the accent on the edge stays: it was
+   asked for, and a line that is always there is the edge of the room rather
+   than a state indicator competing with the background.
+
+   The icon sits at the TOP and not in the middle. That is where a rail's first
+   control goes in every product that has one, and it leaves the strip able to
+   grow a second icon without anything being re-thought. */
+/* ⛔ THE RAIL IS THE FULL HEIGHT OF THE WINDOW AND STARTS AT THE TOP, so the
+   icon sits in the corner ABOVE the header's line rather than under it. Tried
+   the other way round for one commit - band across the whole width, rail
+   hanging below - and the owner asked for this one back. It is also the older
+   of the two: the strip belongs to the room, not to the pane beside it. */
+#railtab{ flex:none; width:var(--spine); padding:11px 0 0; cursor:pointer; border:0;
+          position:relative; background:var(--base); color:var(--fg-3);
+
+          /* Half the weight it was: a hairline that says where the room ends
+             rather than a rule that draws attention to itself. */
+          box-shadow:inset -.5px 0 0 var(--accent);
+          display:flex; justify-content:center; align-items:flex-start;
+          transition:background-color 120ms ease-out, color 120ms ease-out }
+#railtab svg{ flex:none; display:block }
+/* The word, on screen, the moment a pointer or the keyboard arrives. Drawn
+   rather than left to `title`: the native tooltip waits about a second, takes
+   the operating system's colours, and never appears for a keyboard at all. */
+#railtab::after{ content:attr(data-tip); position:absolute; left:calc(100% + var(--s2));
+                 top:9px; white-space:nowrap; pointer-events:none; z-index:6;
+                 background:var(--top); color:var(--fg); font-size:var(--t-label);
+                 padding:4px 8px; border-radius:var(--r-sm);
+                 box-shadow:0 2px 8px rgba(0,0,0,.4);
+                 opacity:0; transition:opacity 125ms ease-out }
+#railtab:hover::after, #railtab:focus-visible::after{ opacity:1 }
+/* Open: the rail lifts a rung and the icon goes to full ink. The state is drawn
+   on the thing you press, where a hand already is - and the word goes quiet,
+   because the column beside it is now saying its own name. */
+#railtab:hover{ background:var(--raised); color:var(--fg) }
+/* ⛔ OPEN, THE RAIL GIVES ITS WIDTH AWAY. A 48px strip beside an open column is
+   48px that says nothing: the column beside it already carries the name, the
+   state and the way out. So the button leaves the flow - the conversation gets
+   those pixels back and the panel starts at the edge of the window - and is
+   drawn over the panel's own header, in the same place on screen it was a
+   moment ago.
+
+   Moved, not duplicated. It is the same button, and it has to be: a second
+   control that opens the same column is a second thing to keep in step with the
+   first, which this page carried for half an hour once and a gate now forbids.
+   It is also the only thing that CLOSES the column, so it cannot simply be
+   hidden. */
+/* ⛔ ABOVE THE PANEL, AND 5 IS THE PANEL. Both were 5, and the panel comes
+   later in the document, so it painted over the button: the icon was exactly
+   where it belonged, 48 by 56 at the top-left corner, and invisible. The
+   ladder this page uses is 2 for the jump button, 5 for the panel, 6 above it,
+   20 for the skip link. */
+#railtab[aria-expanded="true"]{ position:absolute; top:0; left:0; z-index:6;
+                                width:var(--spine); height:var(--topbar);
+                                padding:0; display:grid; place-items:center;
+                                background:transparent; box-shadow:none;
+                                color:var(--fg-2) }
+#railtab[aria-expanded="true"]:hover{ color:var(--fg); background:transparent }
+#railtab[aria-expanded="true"]::after{ content:none }
+/* ⛔ THE PANEL FOLDS, THE WAY IN DOES NOT. Both used to disappear at the
+   same breakpoint, and `#newchat` lives inside the panel - so a window snapped
+   to half a 1366-wide laptop lost every session control at once, with the only
+   route left being hand-editing `?s=` in the address bar. The panel is an
+   overlay: it costs nothing at any width. */
+@media (max-width:900px){ #rail{ width:min(84vw, 224px) } }
+#chats{ flex:1; min-height:0; overflow-y:auto; padding:var(--s2) var(--s2) var(--s3);
+        /* A long list is cheap to skip past: the rows below the fold are not
+           laid out until they are scrolled to, and Ctrl+F still finds them. */
+        content-visibility:auto; contain-intrinsic-size:auto 600px }
+.chat{ position:relative; display:flex; align-items:center; gap:6px; width:100%;
+       padding:7px 8px 7px 10px; border:0; border-radius:8px; background:none;
+       /* --t-body and not --t-small: the latter was referenced here, exactly
+          once, and declared nowhere, so the size silently fell back to what
+          it inherited. A dangling token that renders plausibly is the kind
+          nobody reports. */
+       color:var(--fg-2); font:inherit; font-size:var(--t-body);
+       text-align:left }
+.chat:hover{ background:var(--raised); color:var(--fg) }
+/* A mark on the edge rather than a filled row: the current session should be
+   findable at a glance without the list turning into a row of blocks. */
+.chat[aria-current="true"]{ color:var(--fg) }
+.chat[aria-current="true"]::before{ content:""; position:absolute; left:0;
+       top:7px; bottom:7px; width:2px; border-radius:2px; background:var(--fg-3) }
+/* The name is a button so it can be reached by keyboard, and the whole of the
+   user agent's button chrome has to come off or it draws as a raised box with
+   its text centred - which is what shipped in the first screenshot of this
+   column. A row in a list looks like a row. */
+/* ⛔ THE POINTER GOES ON WHAT IS CLICKABLE. The row carried it and the row
+   has no handler: the padding around the name was a pointer cursor over
+   nothing, which is the honesty contract this file states for the browser bar
+   thirty lines earlier and did not keep here. */
+/* 24px tall, because 23 is a miss. WCAG 2.5.8 puts the floor at 24 CSS px and
+   this row was one pixel under it - measured on the running page, not guessed.
+   The height comes from a min-height rather than padding: the row is a flex
+   child and padding would move the text off the baseline it shares with the
+   count beside it. */
+.chat .nm{ cursor:pointer; flex:1; min-width:0; overflow:hidden;
+           text-overflow:ellipsis; min-height:24px; display:flex;
+           align-items:center;
+           white-space:nowrap; border:0; background:none; color:inherit;
+           font:inherit; text-align:left; padding:0 }
+#chats .none{ margin:0; padding:var(--s3) var(--s2); color:var(--fg-3);
+              font-size:var(--t-label); line-height:1.5 }
+.chat .cnt{ flex:none; font-family:var(--mono); font-size:var(--t-label);
+            color:var(--fg-3) }
+/* 24 and not 18: WCAG 2.2 puts the floor at 24px and this is the control
+   that DELETES a conversation, so it is also the one where a near miss costs
+   the most. */
+/* ⛔ HIDDEN FROM THE EYE, NOT FROM THE TAB ORDER. `visibility:hidden` takes
+   an element out of the focus order, and tabbing BACKWARD into a row then
+   skips it every time: the browser looks for the previous focusable while
+   that row is neither hovered nor focused, so the control that deletes a
+   conversation was reachable in one direction only. Transparent instead, and
+   it shows itself the moment it takes focus. */
+.chat .x{ flex:none; width:24px; height:24px; border:0; border-radius:4px;
+          background:none; color:var(--fg-3); cursor:pointer; line-height:1;
+          opacity:0; transition:opacity 120ms ease-out }
+.chat:hover .x, .chat:focus-within .x, .chat .x:focus-visible{ opacity:1 }
+.chat .x:hover{ background:var(--line-2); color:var(--fg) }
+
+
+/* ⛔ A PERCENTAGE ALONE GIVES THE SURPLUS TO THE WRONG PANE. The conversation
+   stops getting better past its measure cap - a wider column is a longer line,
+   not more text - while the browser view is a picture and gets better with
+   every pixel. At 44% of a 2560 screen this column was 1126px around a 634px
+   thread: 460px of nothing, taken from the pane that could have used it. The
+   clamp holds the column at what the thread plus its gutters actually need and
+   hands the rest to the right. Only desktops run this, so the floor is the
+   narrow end of a laptop and there is no phone case to carry.
+
+   The ceiling here is the DEFAULT, not a limit: it is where the pane starts on
+   a screen nobody has dragged, chosen so the prose sits at its measure without
+   taking width the picture on the right can use. The splitter goes well past
+   it - up to the window minus 480 - and since the measure cap moved off the
+   transcript onto the prose, every pixel past this one goes to the step rows,
+   which is where it does something. Dragging used to widen nothing at all. */
+#left { width:clamp(420px, 44%, 530px); display:flex; flex-direction:column;
+        position:relative }
+/* The separator carries the line that used to be `#left`'s right border, so
+   the thing you drag and the thing you see are the same thing. Wider than the
+   line it draws: a 1px target is a 1px target, and this one is grabbed by
+   hand. */
+#split{ flex:0 0 9px; cursor:col-resize; position:relative; background:none;
+        border:0; padding:0; touch-action:none }
+/* ⛔ NINE PIXELS OF LINE, TWENTY-FIVE OF TARGET. WCAG 2.2 puts the floor at
+   24px and none of its exceptions cover a separator: the arrow keys are a
+   path, not a control. The grab area reaches into the two panes it divides,
+   which is where a hand aims anyway, and nothing about the layout moves. */
+#split::before{ content:""; position:absolute; inset:0 -8px; cursor:col-resize }
+#split::after{ content:""; position:absolute; top:0; bottom:0; left:4px; width:1px;
+               background:var(--line-1); transition:background-color 120ms ease-out }
+#split:hover::after{ background:var(--line-3) }
+#split:focus-visible{ outline:none }
+#split:focus-visible::after, #split[data-drag]::after{ background:var(--accent); width:2px }
+#right{ flex:1; min-width:0; display:flex; flex-direction:column; background:var(--well) }
+/* ⛔ UNDER 720px THE TWO PANES STOP BEING SIDE BY SIDE, or the right one is
+   allotted nothing and its bar spills out of the window. Measured in a frame
+   320px wide, which is what WCAG 1.4.10 asks a layout to survive: the document
+   scrolled sideways to 482px, the conversation was squeezed to 270 and the
+   browser pane was FOUR HUNDRED AND EIGHTY-TWO minus everything, which is to
+   say zero, with the Live/Frozen pair and the layout picker drawn past the
+   edge of the screen.
+
+   Stacked, both halves keep a full width and the page scrolls in one direction
+   only. The spine stays where it is - it belongs to the frame, and that was
+   decided - so it keeps the conversation company on the first row.
+
+   ⛔ AND THE MEASUREMENT NEEDED A REAL VIEWPORT. The `zoom` property scales
+   what is drawn and does NOT move the CSS viewport, so media queries do not
+   fire under it: a first pass "at 400%" reported a failure that was an artefact
+   of the instrument. An iframe of a fixed width has a viewport of its own, and
+   that is what these numbers come from. */
+@media (max-width:720px){
+  body{ flex-wrap:wrap }
+  /* `min-width:0` or the pane refuses to go under its content's own minimum,
+     the flex line overflows, and the pane wraps to a row of its own - leaving
+     the spine alone above it as a 93px stub with the word clipped inside. */
+  #left{ width:calc(100% - var(--spine)); min-width:0; height:60vh }
+  #split{ display:none }
+  #right{ flex:1 0 100%; height:40vh }
+}
+/* Three groups and not four things in a row: the name, then what this
+   conversation is costing and running, then the one thing you can do to it.
+   The rule that separates the last is the same hairline the panes use. */
+#head { flex:none; height:var(--topbar); display:flex; align-items:center;
+        gap:var(--s2); padding:0 var(--s4);
+        border-bottom:1px solid var(--line-1) }
+#head .vr{ width:1px; height:18px; flex:none; background:var(--line-2);
+           margin:0 var(--s1) }
+/* ⛔ THE GROUP STAYS ON THE RIGHT, AND THE THING THAT KEPT IT THERE WAS THE
+   METER. `margin-left:auto` lived on the meter, so removing it dropped the
+   model and Clear against the left edge, under the transcript's own margin and
+   nowhere near the edge they had always sat on. The push belongs to the first
+   of whatever survives, not to whichever element happened to be there. */
+#head #model{ margin-left:auto }
+/* The heading is out of flow (`.sr` is absolute), so it is not one of the
+   things being pushed, and this rule only describes the size it is announced
+   at rather than drawn at. */
+#head h1{ margin:0; font-size:var(--t-ui); font-weight:600 }
+/* ⛔ ONE RULE FOR BOTH, BECAUSE TWO RULES THAT MUST AGREE DO NOT. The badge and
+   the Clear button sit side by side on the same bar and were declared
+   separately: putting the control height on one of them and not the other left
+   a 40px pill beside a 20px one, same radius, visibly different shapes. Written
+   once, they cannot drift again.
+
+   Height from the control token, text at the body size - 12px on a bar control
+   is a caption size, and these are things you read and press. */
+.badge, #fresh{ height:var(--h-ctl); display:inline-flex; align-items:center;
+                font-size:var(--t-ui); color:var(--fg-2);
+                background:var(--raised); border:1px solid var(--line-2);
+                padding:0 var(--s3); border-radius:var(--r-pill) }
+
+/* 24px is the floor WCAG 2.2 sets for a target, and these three sat at 21,
+   22 and 23 - close enough to look fine and short enough to fail. */
+#fresh{ font-family:var(--sans); cursor:pointer;
+        transition:background-color 120ms ease-out, color 120ms ease-out }
+#fresh:hover:not(:disabled){ background:var(--hover); color:var(--fg) }
+#fresh:disabled{ opacity:.3; cursor:default }
+
+/* ⛔ `inert` HAS NO LOOK, AND A CONTROL THAT CANNOT BE USED MUST NOT LOOK
+   USABLE. This page already spells that `opacity:.3` on a disabled button, and
+   then said the same thing about whole SUBTREES with `inert` and drew them as
+   if nothing had happened. It was already wrong before the case that found it:
+   the Live/Frozen pair and the layout picker go inert whenever there is nothing
+   to see, and stayed fully lit the whole time. Seen on the running page, a
+   deleted conversation left a composer inviting a sentence it could not send.
+   One rule, so the look follows the mechanism rather than whoever remembers. */
+[inert]{ opacity:.3 }
+
+#log{ flex:1; overflow:auto; scrollbar-gutter:stable;
+      padding:var(--s5) var(--s4);
+      transition:padding-left 180ms cubic-bezier(.23,1,.32,1) }
+/* ⛔ IT PUSHES, IT DOES NOT COVER. An overlay drawer is the phone pattern;
+   on a desktop the standard one moves the content over, and covering it here
+   sliced every line of the conversation down the middle - readable text with
+   a panel sitting on its first 224 pixels. The header is not moved: it lives
+   above the drawer, which is what the drawing asked for. */
+#rail:not([hidden]) ~ #left #log,
+#rail:not([hidden]) ~ #left form{
+  padding-left:calc(var(--s4) + var(--drawer) - var(--spine)) }
+/* Capped in CHARACTERS and not in pixels, because the thing being limited is
+   the measure and 680px is only one screen's worth of it: on a 1920 window the
+   same column ran to about 92 characters, past the 80 the WCAG asks for and
+   well past the 50 to 75 the readability research settles on. `ch` follows the
+   font instead of guessing at it.
+
+   ⛔ AND `ch` IS NOT A CHARACTER. It is the advance width of the digit zero,
+   which in a proportional font is much wider than an average letter, so a
+   number written in `ch` reads like a character count and is not one.
+   MEASURED on this font with a canvas, on real prose in both languages this
+   interface serves: `0` is 7.55px at 14px system-ui, while the average
+   character of a sentence is 6.11px. One `ch` is 1.24 characters.
+
+   What that turned into, twice. The cap started at 72ch believing it was 72
+   characters: minus the indent an answer carries, it was really 83. Then it
+   was widened to 84ch on the reasoning that the indent made the column too
+   NARROW - the arithmetic was done in `ch` again, and the result was 98
+   characters per line, past every source that has a number: 65-72 in the chat
+   design guidance, 75 as Baymard's upper bound, 80 as the WCAG 2.1 AAA cap.
+
+   66ch is 498px here; minus the 37px indent that is 461px of text, and at
+   6.11px a character that is 75 characters. The unit stays `ch` because it
+   tracks the font's own metrics if the font ever changes; the number comes
+   from the measurement, and the conversion is written down here so the next
+   person does not redo it in the wrong unit for the third time.
+
+   Left aligned rather than centred: centring splits the slack in two and puts
+   half on the LEFT, which reads as the column having been pushed away from the
+   edge for no reason - 185px of nothing before the first character, in a
+   screenshot. */
+/* ⛔ THE MEASURE BELONGS TO THE PROSE, NOT TO THE COLUMN. The cap used to sit
+   here, on the whole transcript, so widening the pane widened NOTHING: dragged
+   from 530 to 1440, the conversation stopped growing at 534 and the rest of the
+   pane became margin. A control that offers a range in which nothing happens is
+   a control that lies, and this one was measured doing it.
+
+   Prose keeps the cap, because 200 characters a line is unreadable whatever the
+   window is. The step rows do NOT: they are monospace data, they were already
+   cut off at 48 characters with the rest behind a disclosure, and every pixel
+   the drag gives them is a pixel of address a person can read without opening
+   anything. Same for code blocks and tables, which scroll in their own box.
+
+   So dragging wider now widens the thing that was actually short. */
+#thread{ margin:0 }
+/* Every block of an answer, and then the two that are not prose taken back
+   out. Written as `> *` and not as a list of element selectors on purpose: a
+   compound starting with `h3.md-h` sits earlier in the file than the heading's
+   own rule, and two gates that read this stylesheet as text then find this one
+   first and check the wrong declarations. */
+/* ⛔ AND THEN THE CAP CAME OFF THE PROSE TOO, BECAUSE IT WAS THE PROSE THE
+   OWNER WAS LOOKING AT. Moving it off the transcript widened the step rows and
+   left the answer exactly where it was, which is the text a person actually
+   reads: dragged wide, the sentences still wrapped at the same place. Said
+   twice, the second time with a screenshot.
+
+   So the measure is not a number this file picks any more - it is the width of
+   the pane, and the separator is the control that sets it. That is a better
+   answer than a cap in either place: the person reading decides how wide their
+   own reading is, which is the one thing a fixed number can never get right for
+   everybody. The DEFAULT still lands inside 65-80 characters for anybody who
+   never drags, and there is a gate that recomputes exactly that from the pane's
+   own declared width rather than from a number written down here. */
+
+
+/* Bottom-pinning with no scroll handler and no epsilon: the sentinel is the only
+   anchor the browser may keep, so content inserted before it pushes the view
+   down, and a reader who has scrolled up is left alone because an anchor off
+   screen is not chosen. */
+#log > *{ overflow-anchor:none }
+#anchor{ height:1px; overflow-anchor:auto }
+
+#hint{ color:var(--fg-3); max-width:46ch; margin:var(--s6) auto 0; text-align:center }
+#hint p{ margin:0 0 var(--s4) }
+#hint .eg{ font:var(--t-mono)/1.9 var(--mono); color:var(--fg-2);
+           background:var(--raised); border:1px solid var(--line-1);
+           border-radius:var(--r); padding:var(--s3) var(--s4); text-align:left }
+#hint .sm{ font-size:var(--t-label); color:var(--fg-3) }
+
+#jump{ position:absolute; bottom:100%; margin-bottom:var(--s2);
+       left:50%; transform:translateX(-50%); z-index:2;
+       background:var(--top); border:1px solid var(--line-2); color:var(--fg);
+       font:var(--t-ui)/1 var(--sans); padding:7px 13px;
+       border-radius:var(--r-pill); cursor:pointer }
+
+/* ---------------- one turn ---------------- */
+.turn + .turn{ margin-top:var(--s6) }   /* between turns */
+.turn > * + *{ margin-top:var(--s3) }   /* inside a turn */
+/* A turn that has scrolled out of sight costs no layout and no paint. Chosen
+   over hiding or removing old turns because it is the only one of the three
+   that leaves the text findable with Ctrl+F and readable by a screen reader:
+   the browser skips the work, it does not drop the content. `auto` on the
+   placeholder so a turn that has never been on screen still guesses its own
+   height instead of collapsing the scrollbar. */
+.turn{ content-visibility:auto; contain-intrinsic-size:auto 4rem }
+.ev + .ev    { margin-top:var(--s1) }   /* between steps: a continuation */
+
+.you{ margin-left:auto; width:fit-content; max-width:88%;
+      background:var(--hover); border:1px solid var(--line-1);
+      border-radius:var(--r-lg) var(--r-lg) var(--r-sm) var(--r-lg);
+      padding:9px 13px; white-space:pre-wrap; overflow-wrap:anywhere }
+/* ⛔ THE PRE-WRAP MOVED DOWN, and that is the whole reason the blocks below can
+   exist. While the answer was one pre-wrap box, every blank line the model left
+   between two paragraphs was drawn as an empty line - so a paragraph margin on
+   top of it would space the answer twice. Now the parser eats the blank lines
+   and the margins do the spacing, while pre-wrap survives exactly where a line
+   break belongs to the author: inside a paragraph, an item, a cell. */
+.say   { color:var(--fg-2); padding-left:var(--indent) }
+.answer{ color:var(--fg);   padding-left:var(--indent) }
+.say > :first-child, .answer > :first-child{ margin-top:0 }
+.say > :last-child,  .answer > :last-child { margin-bottom:0 }
+/* ⛔ THE RHYTHM IS THE FIRST THING THAT WAS WRONG once the blocks existed, and
+   it read as "everything is stuck together". The gap between two items was 4px
+   under a line 22px tall, so an item that wrapped ran into the next one and a
+   list of six looked like one paragraph with dots in it. The scale here is a
+   ladder rather than one value: 8 inside a list, 16 between blocks, 24 above a
+   heading - a heading needs more space ABOVE it than below, because the space
+   is what says the section starts, and a heading floating equidistant between
+   two paragraphs belongs to neither. */
+/* 1.6 rather than the 1.55 the rest of the app uses: this is the only place
+   somebody reads paragraphs rather than scans rows, and the guidance for
+   long-form chat answers puts the comfortable leading at about 1.6. WCAG 2.2
+   asks 1.5 as a floor, so both pass; this one is the reading surface. */
+.md-p, .md-i{ line-height:1.6 }
+.md-p{ margin:0 0 var(--s4); white-space:pre-wrap; overflow-wrap:anywhere }
+h3.md-h, h4.md-h, h5.md-h, h6.md-h{
+      margin:calc(var(--s4) + var(--s2)) 0 var(--s2); font-family:var(--sans);
+      font-weight:600; line-height:1.35; color:var(--fg) }
+/* `##` is what a model writes most, so h4 is the one that has to read as a
+   heading and not as a bold line: at 14px it was the size of the body text
+   under it, which is a hierarchy only the weight was carrying. */
+h3.md-h{ font-size:var(--t-h1) }
+h4.md-h{ font-size:var(--t-h2); font-weight:600 }
+h5.md-h, h6.md-h{ font-size:var(--t-h3); font-weight:600; color:var(--fg-2) }
+/* A fenced block inside an answer is already inside the answer's indent, and
+   `.out` carries its own for the tool output it was written for: the two
+   stacked, so code sat a step to the right of the prose describing it. */
+.say > .out, .answer > .out{ margin-left:0 }
+/* ⛔ A LIST IS SET APART ON BOTH SIDES, and only stepping the left is why it
+   still read as prose with dots in it. Measured on a real answer: the items
+   began 26px in from the paragraph above and ended at 548, the SAME pixel the
+   paragraph ended on, so the block was indented on one edge and flush on the
+   other - which the eye reads as the same column, slightly ragged, rather than
+   as something set inside it. 2.6em in and 1.4em back gives it two edges of its
+   own. (1.9 was already the second attempt: at the 1.4 it started with, the
+   marker sat almost under the first letter.) */
+.md-l{ margin:0 1.4em var(--s4) 0; padding-left:2.6em }
+.md-l .md-l{ margin:var(--s2) 0 0 }        /* a nested list continues its item */
+.md-i{ margin:0 0 var(--s2); white-space:pre-wrap; overflow-wrap:anywhere }
+.md-i::marker{ color:var(--fg-3) }
+.md-q{ margin:0 0 var(--s4); padding:2px 0 2px var(--s4); color:var(--fg-2);
+       box-shadow:inset 2px 0 0 var(--line-3) }
+.md-hr{ margin:var(--s5) 0; border:0; border-top:1px solid var(--line-2) }
+/* display:block so a wide table scrolls inside itself instead of widening the
+   whole conversation, which on this layout would push the live pane off. */
+.md-t{ display:block; overflow-x:auto; max-width:100%; margin:0 0 var(--s4);
+       border-collapse:collapse; font-size:var(--t-mono) }
+.md-t th, .md-t td{ padding:6px 18px 6px 0; text-align:left; vertical-align:top;
+                    white-space:pre-wrap; border-bottom:1px solid var(--line-1) }
+.md-t th{ font-family:var(--sans); font-size:var(--t-label); font-weight:600;
+          text-transform:uppercase; letter-spacing:.04em; color:var(--fg-3) }
+/* A link is SHOWN and never made clickable: this pane draws words chosen by
+   whatever page the agent last read, and the browser it drives is right there.
+   The address is printed next to them so an injected one is legible. */
+.lk  { color:var(--fg) }
+.href{ color:var(--fg-3); font:.75rem/1.5 var(--mono); overflow-wrap:anywhere }
+.href::before{ content:" " }
+/* ⛔ NO COLOURED BAR DOWN THE LEFT EDGE. A 2px stripe on a callout is the
+   house style of every framework and belongs to none of them; a tint plus a
+   hairline in the same hue says the same thing without the costume. */
+.orph  { display:flex; gap:8px; font-size:var(--t-mono); color:var(--err);
+         background:color-mix(in srgb, var(--err) 9%, transparent);
+         border-radius:var(--r-sm);
+         border:1px solid color-mix(in srgb, var(--err) 32%, transparent);
+         padding:6px 10px }
+
+/* ONE grid: every row on the same rails, so nothing shifts as text changes. */
+.row{ display:grid; grid-template-columns:var(--gutter) minmax(0,1fr) auto 1rem;
+      column-gap:var(--gap); align-items:baseline; padding:3px 6px;
+      list-style:none; cursor:pointer; border-radius:var(--r-sm);
+      transition:background-color 120ms ease-out }
+.row::-webkit-details-marker{ display:none }
+.row:hover{ background:var(--raised) }
+.g   { grid-column:1; justify-self:end; font-size:var(--t-label); color:var(--fg-3) }
+/* Selectable: `user-select:none` on the whole row kept a double-click from
+   painting the line blue, and also made a truncated URL impossible to copy -
+   which is the one thing somebody wants from a row they cannot finish
+   reading. */
+.lab { user-select:text; grid-column:2; min-width:0; overflow:hidden;
+       text-overflow:ellipsis; white-space:nowrap; font-size:var(--t-mono) }
+.lab b   { font-family:var(--sans); font-weight:600; color:var(--fg) }  /* the verb */
+.lab code{ color:var(--accent) }                                        /* the object */
+.lab .inline{ color:var(--fg-3) }                    /* a short result, on the row */
+.meta{ grid-column:3; white-space:nowrap; font-size:var(--t-label); color:var(--fg-3) }
+
+/* The chevron is the row's own pseudo-element in its own track: no svg, no icon
+   font, and it cannot shift the label when it turns. */
+.row::after{ content:""; grid-column:4; justify-self:end; align-self:center;
+             width:5px; height:5px; margin-top:-2px;
+             border-right:1.5px solid var(--fg-4); border-bottom:1.5px solid var(--fg-4);
+             transform:rotate(-45deg); transition:transform 150ms ease }
+.ev[open] > .row::after{ transform:rotate(45deg); margin-top:-4px }
+.ev[data-body="none"] > .row{ cursor:default }
+.ev[data-body="none"] > .row::after{ visibility:hidden }
+
+.ev[data-state="run"] .g{ color:transparent; position:relative }
+.ev[data-state="run"] .g::after{ content:""; position:absolute; right:0; top:.45em;
+  width:6px; height:6px; border-radius:50%; background:var(--accent);
+  animation:breathe 1.4s ease-in-out infinite }
+.ev[data-state="err"] .g{ color:var(--err) }
+/* The wait between steps, wearing the same row as a step so the sequence does
+   not change shape when the agent is thinking rather than acting. Its verb is
+   muted, because nothing has happened yet and a bold one would claim it had. */
+.pend{ display:grid; grid-template-columns:var(--gutter) minmax(0,1fr) auto 1rem;
+       column-gap:var(--gap); align-items:baseline; padding:3px 6px }
+.pend .lab b{ color:var(--fg-3); font-weight:400 }
+.pend .g{ position:relative }
+.pend .g::after{ content:""; position:absolute; right:0; top:.45em;
+  width:6px; height:6px; border-radius:50%; background:var(--fg-3);
+  animation:breathe 1.4s ease-in-out infinite }
+@media (prefers-reduced-motion: reduce){ .pend .g::after{ animation:none } }
+/* inset and not border-left: a border would shift all four tracks by two pixels */
+/* ⛔ THE TOKEN, MIXED - NOT THE TOKEN'S CURRENT VALUE TYPED OUT AGAIN. Seven
+   places had `--err` and `--well` re-expanded as rgba by hand, which is seven
+   surfaces that would keep the old hue the day either token moves. */
+.ev[data-state="err"] > .row{
+     background:color-mix(in srgb, var(--err) 8%, transparent);
+     box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--err) 30%, transparent) }
+
+.out{ margin:2px 0 var(--s2) var(--indent);
+      max-height:290px; max-height:15lh; overflow:auto; overscroll-behavior:contain;
+      white-space:pre-wrap; overflow-wrap:anywhere;
+      font:.75rem/1.5 var(--mono); color:var(--fg-3);
+      background:var(--raised); border-left:2px solid var(--line-2);
+      border-radius:0 var(--r-sm) var(--r-sm) 0; padding:8px 10px }
+
+/* ---------------- composer ---------------- */
+form{ position:relative; padding:var(--s3) var(--s4) var(--s4);
+      border-top:1px solid var(--line-1);
+      background:var(--raised);
+      box-shadow:0 -1px 0 rgba(0,0,0,.5), 0 -12px 28px -12px rgba(0,0,0,.65) }
+.composer{ display:flex; align-items:flex-end; gap:var(--s2);
+           background:var(--base); border:1px solid var(--line-2);
+           border-radius:var(--r-lg); padding:10px 10px 10px var(--s3);
+           box-shadow:var(--lip); transition:border-color 120ms ease-out }
+.composer:focus-within{ border-color:var(--line-3) }
+#i{ flex:1; background:transparent; border:0; outline:none; resize:none; color:var(--fg);
+    font:var(--t-body)/1.55 var(--sans); min-height:24px; max-height:200px;
+    overflow-y:hidden; padding:0; caret-color:var(--accent) }
+/* --fg-3 and not --fg-4: the placeholder is the only hint the composer gives,
+   so it is text that has to be read, and --fg-4 sits at 2.4:1 against 4.5:1.
+   This was the first rule to be moved and it stayed the only one for a while;
+   the other nine went the same way once somebody counted them. */
+#i::placeholder{ color:var(--fg-3) }
+/* ⛔ `currentColor` INHERITED THE PAGE'S INK ONTO THE ACCENT: the arrow
+   inside the only primary control on the page measured 1.71:1 against the
+   button it sits on, where a graphic that is a button's whole label wants
+   3:1. `--on-accent` was declared for exactly this and used nowhere; on the
+   accent it reads 8.6:1. */
+#go, #halt{ width:32px; height:32px; flex:none; border:0; border-radius:50%; display:grid;
+     place-items:center; cursor:pointer; background:var(--accent);
+     color:var(--on-accent);
+     box-shadow:inset 0 1px 0 rgba(255,255,255,.22);
+     transition:background 120ms ease-out, transform 80ms ease-out }
+/* ⛔ THE PRIMARY CONTROL HAD NO HOVER AT ALL: the one button the whole
+   page exists for gave the pointer no answer until it was already pressed.
+   Everything else on the page hovers. */
+#go:hover:not(:disabled){ background:var(--accent-hi) }
+#halt:hover{ background:var(--stop-hi) }
+#go:active, #halt:active{ transform:scale(.92); box-shadow:none }
+#go:disabled{ opacity:.3; cursor:default }
+/* Its own button, not a mode of the send button. As a mode it disappeared the
+   moment somebody typed, because the same control then meant "queue this for
+   the next turn" - and the loop has no turn ceiling, so this button is the only
+   thing that ends a run that will not converge. It follows the RUN. */
+#halt{ background:var(--stop) }
+#chip{ display:inline-flex; align-items:center; gap:6px; margin-bottom:var(--s2);
+       background:var(--hover); border:1px solid var(--line-2); color:var(--fg-2);
+       font-size:var(--t-label); padding:3px 9px; border-radius:var(--r-pill);
+       cursor:pointer }
+
+/* ---------------- browser pane ---------------- */
+/* The strip only exists when there is more than one tab: a single tab labelled
+   with its own title is chrome that says nothing the address bar below it does
+   not already say. */
+/* ⛔ THE STRIP IS THE TOP OF THE BAR, NOT A THING FLOATING OVER IT. It sat
+   on the same surface as the bar with the SELECTED tab cut out in a darker
+   one, so the current page read as a hole punched in the header, and its left
+   edge started 4px before the address below it. Now the strip stands on the
+   page's ground and the selected tab is the bar's own surface, which is what
+   makes a tab look attached to what it opens - and both share one padding. */
+#tabs{ flex:none; display:flex; gap:2px; padding:6px var(--s3) 0;
+       background:var(--base); overflow-x:auto; scrollbar-width:none }
+#tabs button{ flex:0 1 190px; min-width:80px; height:28px; display:flex;
+              align-items:center; gap:6px; border:0; cursor:pointer;
+              border-radius:var(--r) var(--r) 0 0;
+              background:transparent; color:var(--fg-3); padding:0 10px;
+              font:var(--t-label)/1.4 var(--sans); white-space:nowrap;
+              overflow:hidden; text-overflow:ellipsis }
+#tabs button:hover{ background:var(--hover); color:var(--fg-2) }
+#tabs button[aria-selected="true"]{ background:var(--raised); color:var(--fg) }
+#tabs .t{ overflow:hidden; text-overflow:ellipsis }
+
+/* The same height as the conversation's header beside it. They were 38 and
+   50, so the top edge of the product broke by twelve pixels on its main
+   seam - the one place a misalignment is read as the whole thing being
+   loose rather than as one box being wrong. */
+/* ⛔ IT WRAPS, AND THE HEIGHT IS A FLOOR RATHER THAN A CEILING. Measured at
+   400% zoom, which WCAG 1.4.10 asks a layout to survive and which is the same
+   thing as a 320px window: this bar was the only place on the page that pushed
+   the document sideways. The address can shrink to nothing, but the Live/Frozen
+   pair and the layout picker cannot, so three fixed-width groups in a row on a
+   fixed 50px line had nowhere to go and went past the edge. A `height` would
+   then have clipped the second row, so it is a `min-height`: the bar is one
+   line whenever one line fits, and it is the bar's own business when it does
+   not. Found by the reflow check and not by looking - at 100% there is room,
+   so nothing shows. */
+#chrome{ flex:none; min-height:var(--topbar); display:flex; align-items:center;
+         flex-wrap:wrap; row-gap:var(--s1);
+         gap:var(--s2); padding:var(--s1) var(--s3); background:var(--raised);
+         border-bottom:1px solid var(--line-1) }
+/* The honesty contract: nothing in here is interactive except what is, so
+   nothing in here gets a pointer cursor except what does. */
+#chrome, #chrome *{ cursor:default; user-select:none }
+#url{ user-select:text }
+#mode button{ cursor:pointer; min-height:var(--h-ctl) }
+#dot{ width:7px; height:7px; flex:none; border-radius:50%; background:var(--fg-4) }
+[data-state="live"]  #dot{ background:var(--ok); animation:breathe 1.8s ease-in-out infinite }
+[data-state="busy"]  #dot{ background:var(--accent); animation:breathe .9s ease-in-out infinite }
+[data-state="frozen"]#dot{ background:var(--fg-2) }
+[data-state="offline"] #dot, [data-state="error"] #dot{ background:var(--err) }
+/* ⛔ ONE HEIGHT FOR EVERYTHING IN THIS BAR. The address was 24 tall, the
+   Live/Frozen pair 30 and the layout picker 30, so three controls on one line
+   sat on three different rhythms - the kind of thing nobody names and everybody
+   reads as unfinished. And the address is a FIELD, so it gets the field's
+   corner: a pill is for a badge, and using both shapes for everything is what
+   made this bar look assembled rather than designed. */
+#url{ flex:1; min-width:0; height:var(--h-ctl); line-height:calc(var(--h-ctl) - 2px);
+      padding:0 var(--s3); border-radius:var(--r); background:var(--well);
+      border:1px solid var(--line-1); font-size:var(--t-mono);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+/* ⛔ BOTH FORMS, BECAUSE THE INTENT LIVED IN TWO PLACES AND MATCHED IN
+   NEITHER. The script sets `dim` on the address bar ITSELF when there is no
+   page, and the only rule was a descendant selector - so `no page yet`
+   rendered in the inherited ink and was the brightest thing on a bar that
+   was describing an empty room. The halves of a real URL are the descendant
+   case and keep working. */
+#url.dim, #url .dim{ color:var(--fg-3) }
+#url .host{ color:var(--fg) }
+#mode{ display:inline-flex; gap:2px; flex:none; height:var(--h-ctl);
+       align-items:center; background:var(--base); border:1px solid var(--line-1);
+       border-radius:var(--r); padding:0 2px }
+#mode button{ border:0; background:transparent; color:var(--fg-3);
+              border-radius:var(--r-sm); padding:2px 9px;
+              font:500 var(--t-label)/1.5 var(--sans);
+              transition:color 120ms ease-out }
+#mode button:hover:not([aria-pressed="true"]){ color:var(--fg-2) }
+#mode button[aria-pressed="true"]{ background:var(--top); color:var(--fg);
+                                    box-shadow:0 1px 2px rgba(0,0,0,.35) }
+/* ⛔ A CONTROL THAT CANNOT DO ANYTHING DOES NOT LOOK READY. With no browser
+   open, Live/Frozen, the layout picker and the address are three armed controls
+   over an empty room: the bar looked identical whether the product was working
+   or waiting to be told what to do. */
+#right[data-empty="1"] #url,
+#right[data-empty="1"] #mode,
+#right[data-empty="1"] #grid{ opacity:.4 }
+/* ⛔ AND `pointer-events` IS NOT A DISABLED STATE. It only stops the
+   mouse: the five buttons kept their place in the tab order, kept the focus
+   ring, and Enter still fired the handler - so a keyboard could operate five
+   controls that look dead, and a screen reader announced them as ordinary
+   enabled buttons. `inert` takes them out of both. */
+#right[data-empty="1"] #mode,
+#right[data-empty="1"] #grid{ pointer-events:none }
+/* And the state word goes altogether: with nothing running it said IDLE, in
+   capitals, and was the brightest thing on a bar describing an empty room -
+   while the room itself already says what it is. */
+#right[data-empty="1"] #state{ position:absolute; width:1px; height:1px;
+                              overflow:hidden; clip-path:inset(50%) }
+
+/* The frame is solved from the available height, so a wide shot fills the width
+   and a tall one fills the height. What is left over is stage, never a hole
+   inside the frame. object-fit stays underneath for the one frame where the
+   ratio is still the previous page's. */
+/* ---------------- the other browsers ----------------
+   A row under the stage, never a second live pane: eight at full rate would
+   want more pipe than there is, and that is arithmetic rather than an
+   optimisation problem.
+
+   ⛔ AND A BROWSER WITH NO PICTURE DOES NOT GET A PICTURE FRAME. Six declared
+   but stopped browsers used to draw six 168x133 cards, each holding the words
+   `not up` in the middle of an empty grey rectangle: a wall of nothing, 133px
+   tall, in the place where the running ones live. A thing with no image is a
+   NAME, so it is drawn as one - a 26px chip - and the row goes from a gallery
+   of failures to a list of what this session has. */
+/* ⛔ NO CONTROLS HERE. Browsers are opened and closed by ASKING - "open
+   another browser", "close the second one" - because the agent is what drives
+   this and a button beside it is a second way to do the same thing, in a place
+   where the two can disagree about which browser is current. The panes are
+   views: clicking one changes what YOU are looking at and tells the agent
+   nothing. */
+#thumbs{ flex:none; display:flex; align-items:flex-end; gap:var(--s2);
+         padding:0 var(--s3) var(--s3); overflow-x:auto }
+.thumb{ flex:none; width:150px; border:1px solid var(--line-2);
+        border-radius:var(--r); background:var(--raised); padding:0;
+        cursor:pointer; overflow:hidden; display:flex; flex-direction:column;
+        text-align:left; font:inherit; color:var(--fg-3);
+        transition:border-color 120ms ease-out }
+.thumb:hover{ border-color:var(--line-3); color:var(--fg-2) }
+.thumb[aria-current="true"]{ border-color:var(--fg-2); color:var(--fg-2) }
+.thumb .pic{ width:100%; aspect-ratio:16/10; background:var(--well);
+             display:grid; place-items:center; overflow:hidden }
+.thumb .pic img{ width:100%; height:100%; object-fit:cover; display:block }
+.thumb .pic span{ font-size:var(--t-label); color:var(--fg-3); padding:4px;
+                  text-align:center }
+.thumb .cap{ display:flex; align-items:center; gap:6px; padding:5px 8px;
+             font-family:var(--mono); font-size:var(--t-label) }
+.thumb .cap .id{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis;
+                 white-space:nowrap }
+/* The one the agent is driving, marked rather than selected: the person's eye
+   and the agent's hand are two different things and the row says both. */
+.thumb .cap .dot, .chip .dot{ flex:none; width:6px; height:6px; border-radius:50%;
+                              background:var(--ok) }
+.chip{ flex:none; height:26px; display:flex; align-items:center; gap:7px;
+       padding:0 10px; border:1px solid var(--line-2); border-radius:var(--r-pill);
+       background:var(--raised); cursor:pointer; color:var(--fg-3);
+       font:var(--t-label)/1 var(--mono); letter-spacing:.02em;
+       transition:border-color 120ms ease-out, color 120ms ease-out }
+.chip:hover{ border-color:var(--line-3); color:var(--fg-2) }
+.chip[aria-current="true"]{ border-color:var(--fg-2); color:var(--fg-2) }
+.chip .off{ flex:none; width:6px; height:6px; border-radius:50%;
+            box-shadow:inset 0 0 0 1px var(--fg-4) }
+
+/* ---------------- the stage ----------------
+   ⛔ THE CARD IS THE PICTURE, NOT THE CELL, and getting that backwards is what
+   made this pane look unfinished. A cell used to be a full-height box with a
+   border and a shadow, and the picture floated in the middle of it: measured on
+   the bench, a 1280x688 window in a one-up cell drew 40% of the card as black,
+   and at two-up the two cards were the same size while their pictures were not,
+   so the smaller one read as broken rather than as a narrower window. Now the
+   frame SHRINK-WRAPS the picture - the border, the corner and the shadow belong
+   to the image - and the cell is only the space it is centred in.
+
+   How, without measuring anything: the picture sizes itself against the cell
+   with container units, and the browser's own chrome is cut with a NEGATIVE
+   MARGIN in percent. A percentage margin resolves against the containing
+   block's width, so `--cut` is the chrome expressed as a fraction of the
+   picture's WIDTH, and the frame's height ends up being the cropped height by
+   construction. No getBoundingClientRect, nothing to recompute on resize, and
+   the old two-number cache disappears with it. */
+#stage{ flex:1; min-height:0; padding:var(--s3); display:grid; gap:var(--s3) }
+#stage[data-grid="1"]{ grid-template-columns:1fr }
+#stage[data-grid="2"]{ grid-template-columns:1fr 1fr }
+/* Three on a 2x2 with one slot empty, because three equal screens and a gap
+   is what a control room does: the alternative makes one of them special. */
+#stage[data-grid="3"],
+#stage[data-grid="4"]{ grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr }
+
+.screen{ container-type:size; min-width:0; min-height:0;
+         display:grid; place-items:center; overflow:hidden;
+         background:none; border:0; padding:0; margin:0;
+         font:inherit; color:inherit; text-align:left; cursor:pointer }
+.frame{ position:relative; overflow:hidden; border:1px solid var(--line-2);
+        border-radius:var(--r-lg); background:var(--well);
+        box-shadow:0 12px 30px -20px #000;
+        transition:border-color 120ms ease-out }
+.screen:hover .frame{ border-color:var(--line-3) }
+/* The one you are looking at, when there is more than one to look at. A border
+   that carries meaning wants 3:1, and --fg-2 is 8.6. */
+.screen[aria-current="true"] .frame{ border-color:var(--fg-2) }
+/* ⛔ AND THE FRAME IS THE LARGEST BOX OF THE PICTURE'S SHAPE THAT THE CELL
+   CAN HOLD, which is one line of CSS and the whole reason the cells stopped
+   being loose. The first attempt let the image size itself and the frame
+   shrink-wrap it: correct for a picture bigger than the cell, and wrong for
+   every other case, because an image is never scaled UP to fill a box - so a
+   small capture sat at its natural size in the middle of a large pane and the
+   cell looked empty again, which is the defect this was meant to end.
+   `--arn` is the picture's shape AFTER the crop and `--cut` the crop itself,
+   both set once per shape by the frame that arrives. */
+.frame{ aspect-ratio:var(--arn, 1.6);
+        width:min(100cqw, calc(100cqh * var(--arn, 1.6))) }
+.frame img{ position:absolute; left:0; top:0; width:100%; height:auto;
+            margin-top:calc(var(--cut, 0%) * -1) }
+.frame img[hidden]{ display:none }
+
+/* ⛔ WAITING, EMPTY, STOPPED AND FAILED ARE FOUR STATES AND THEY USED TO DRAW
+   ONE BLACK RECTANGLE. On the bench, a browser whose capture answered 503 and
+   one that simply had not sent its first frame were pixel-identical, and both
+   read as a product that is broken. Whatever the pane cannot show, it says. */
+.veil{ position:absolute; inset:0; display:grid; place-content:center;
+       justify-items:center; gap:6px; padding:0 var(--s4); text-align:center;
+       background:var(--well) }
+.veil b{ font:600 var(--t-ui)/1.4 var(--sans); color:var(--fg-2) }
+.veil span{ font-size:var(--t-label); color:var(--fg-3); max-width:34ch }
+.veil[hidden]{ display:none }
+/* Over a picture that is still there, the veil is a scrim and not a wall: the
+   last frame is evidence, and hiding it to announce that it is old throws away
+   the only thing the pane has. */
+/* Deep enough that the words on it hold their contrast over a white page,
+   shallow enough that the last frame stays evidence underneath. */
+.screen[data-state="stale"] .veil{
+     background:linear-gradient(color-mix(in srgb, var(--well) 86%, transparent),
+                                color-mix(in srgb, var(--well) 93%, transparent)) }
+.screen[data-state="error"] .veil b{ color:var(--err) }
+/* The pulse says the pane is trying, which is the difference between waiting
+   and stopped - and it is the whole reason a spinner exists. */
+.veil .pulse{ width:56px; height:2px; border-radius:2px; background:var(--line-3);
+              overflow:hidden; position:relative }
+.veil .pulse::after{ content:""; position:absolute; inset:0 auto 0 0; width:40%;
+                     background:var(--fg-3); border-radius:2px;
+                     animation:slide 1.4s ease-in-out infinite }
+@keyframes slide{ 0%{ left:0 } 50%{ left:60% } 100%{ left:0 } }
+
+/* The name rides ON the picture. It used to be a 28px bar bolted under the
+   card, which put the label of a thing outside the thing and cost a row of
+   height in every cell of a 2x2. */
+/* ⛔ THE PLATE CARRIES ITS OWN GROUND. These two sit on a live capture of
+   somebody else's website, so a translucent backdrop makes their contrast a
+   function of that page's stylesheet: measured over a white page the id read
+   3.9:1 and the staleness 3.4:1, both under the floor, and most of the web is
+   white. Opaque, with a hairline so it still reads as sitting on top. */
+.tag, .stamp{ position:absolute; top:8px; height:20px; display:flex;
+              align-items:center; gap:6px; padding:0 8px; pointer-events:none;
+              border-radius:var(--r-sm); background:var(--well);
+              box-shadow:0 0 0 1px rgba(255,255,255,.14);
+              font:var(--t-label)/1 var(--mono); letter-spacing:.02em }
+.tag{ left:8px; color:var(--fg-2); max-width:calc(100% - 96px);
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.tag .dot{ flex:none; width:6px; height:6px; border-radius:50%;
+           background:var(--ok) }
+/* ⛔ STALE HAS TO LOOK STALE. In a grid most of what you see is a picture from
+   a moment ago by construction, and a control room's first rule is that a feed
+   which has stopped must not read as one that is running. Nothing while the
+   frames keep coming, a number in seconds the moment they do not. */
+.stamp{ right:8px; color:var(--err) }
+.stamp[hidden]{ display:none }
+
+/* The empty stage is not a void with a sentence in it: it is the one place
+   that has to say how a browser gets opened, because there is no button that
+   does it - they are opened by asking, on purpose. */
+.empty{ grid-column:1 / -1; grid-row:1 / -1; display:grid; place-content:center;
+        justify-items:center; gap:var(--s2); text-align:center; padding:var(--s4) }
+.empty b{ font:600 var(--t-h2)/1.3 var(--sans); color:var(--fg-2) }
+.empty span{ font-size:var(--t-ui); color:var(--fg-3); max-width:38ch }
+.empty code{ font:var(--t-mono)/1.9 var(--mono); color:var(--fg-2);
+             background:var(--raised); border:1px solid var(--line-1);
+             border-radius:var(--r); padding:6px var(--s3); margin-top:var(--s1) }
+
+/* The second half of the address bar when nobody has picked a screen: the count
+   is the fact, this is what to do about it. */
+#url .hint{ color:var(--fg-3); font-family:var(--sans); font-size:var(--t-label) }
+#url .hint::before{ content:"  -  "; white-space:pre }
+
+#grid{ flex:none; display:flex; align-items:center; gap:2px; height:var(--h-ctl);
+       background:var(--well); border:1px solid var(--line-2);
+       border-radius:var(--r); padding:0 2px }
+#grid button{ min-width:30px; height:24px; padding:0 5px; border:0;
+              border-radius:var(--r-sm); background:none; cursor:pointer;
+              display:grid; place-items:center; color:var(--fg-3);
+              transition:background-color 120ms ease-out, color 120ms ease-out }
+#grid button:hover{ color:var(--fg-2) }
+#grid button[aria-pressed="true"]{ background:var(--raised); color:var(--fg) }
+
+/* The small things whose absence is felt without being noticed. */
+:focus{ outline:none }
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:inherit }
+/* The accent itself, mixed - it was a second orange one shade off the one
+   this page uses, and white ink in a palette whose own rule forbids it. */
+::selection{ background:color-mix(in srgb, var(--accent) 30%, transparent);
+             color:var(--fg) }
+:root{ accent-color:var(--accent) }
+*{ scrollbar-width:thin; scrollbar-color:var(--top) transparent }
+
+@keyframes rise{ from{ opacity:0; transform:translateY(3px) } }
+@keyframes breathe{ 0%,100%{opacity:1} 50%{opacity:.35} }
+#thread .turn, #thread .ev, #thread .say, #thread .answer{
+  animation:rise 140ms cubic-bezier(.2,.6,.3,1) both }
+#thread [data-replay]{ animation:none }
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{ animation-duration:.01ms !important;
+    animation-iteration-count:1 !important; transition-duration:.01ms !important }
+}
