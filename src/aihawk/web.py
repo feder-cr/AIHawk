@@ -233,9 +233,7 @@ code,pre,.g,.meta,.badge,#url{
    Anchored to the spine's own width so the two are one object, and lifted with
    a shadow rather than a border, because what says "this is over that" is the
    shadow. */
-/* Under the bar, like the rail that opens it: the band across the top is not
-   something a drawer may cover. */
-#rail { position:absolute; top:var(--topbar); bottom:0; left:0; width:var(--drawer);
+#rail { position:absolute; top:0; bottom:0; left:0; width:var(--drawer);
         z-index:5; display:flex; flex-direction:column;
         background:var(--well); border-right:1px solid var(--line-1);
         box-shadow:14px 0 34px -18px #000 }
@@ -272,17 +270,13 @@ code,pre,.g,.meta,.badge,#url{
    The icon sits at the TOP and not in the middle. That is where a rail's first
    control goes in every product that has one, and it leaves the strip able to
    grow a second icon without anything being re-thought. */
-/* ⛔ THE BAR RUNS THE WHOLE WIDTH AND THE RAIL HANGS UNDER IT. From the
-   owner's drawing: the horizontal band is the top of the room, unbroken from
-   edge to edge, and the vertical strip starts below it - so the rail cannot
-   be a column in the same row as the panes, or it would cut the band in two
-   at the left and the header would start 48px in.
-
-   Out of the flow, then, and the conversation carries the width it used to
-   take as a margin. Same pixels, different owner. */
-#railtab{ position:absolute; top:var(--topbar); left:0; bottom:0; z-index:4;
-          width:var(--spine); padding:11px 0 0; cursor:pointer; border:0;
-          background:var(--base); color:var(--fg-3);
+/* ⛔ THE RAIL IS THE FULL HEIGHT OF THE WINDOW AND STARTS AT THE TOP, so the
+   icon sits in the corner ABOVE the header's line rather than under it. Tried
+   the other way round for one commit - band across the whole width, rail
+   hanging below - and the owner asked for this one back. It is also the older
+   of the two: the strip belongs to the room, not to the pane beside it. */
+#railtab{ flex:none; width:var(--spine); padding:11px 0 0; cursor:pointer; border:0;
+          position:relative; background:var(--base); color:var(--fg-3);
 
           /* Half the weight it was: a hairline that says where the room ends
              rather than a rule that draws attention to itself. */
@@ -321,8 +315,7 @@ code,pre,.g,.meta,.badge,#url{
    where it belonged, 48 by 56 at the top-left corner, and invisible. The
    ladder this page uses is 2 for the jump button, 5 for the panel, 6 above it,
    20 for the skip link. */
-#railtab[aria-expanded="true"]{ position:absolute; top:var(--topbar); left:0;
-                                z-index:6; bottom:auto;
+#railtab[aria-expanded="true"]{ position:absolute; top:0; left:0; z-index:6;
                                 width:var(--spine); height:var(--topbar);
                                 padding:0; display:grid; place-items:center;
                                 background:transparent; box-shadow:none;
@@ -493,7 +486,7 @@ code,pre,.g,.meta,.badge,#url{
 [inert]{ opacity:.3 }
 
 #log{ flex:1; overflow:auto; scrollbar-gutter:stable;
-      padding:var(--s5) var(--s4) var(--s5) calc(var(--s4) + var(--spine));
+      padding:var(--s5) var(--s4);
       transition:padding-left 180ms cubic-bezier(.23,1,.32,1) }
 /* ⛔ IT PUSHES, IT DOES NOT COVER. An overlay drawer is the phone pattern;
    on a desktop the standard one moves the content over, and covering it here
@@ -502,7 +495,7 @@ code,pre,.g,.meta,.badge,#url{
    above the drawer, which is what the drawing asked for. */
 #rail:not([hidden]) ~ #left #log,
 #rail:not([hidden]) ~ #left form{
-  padding-left:calc(var(--s4) + var(--drawer)) }
+  padding-left:calc(var(--s4) + var(--drawer) - var(--spine)) }
 /* Capped in CHARACTERS and not in pixels, because the thing being limited is
    the measure and 680px is only one screen's worth of it: on a 1920 window the
    same column ran to about 92 characters, past the 80 the WCAG asks for and
@@ -739,8 +732,7 @@ h5.md-h, h6.md-h{ font-size:var(--t-h3); font-weight:600; color:var(--fg-2) }
       border-radius:0 var(--r-sm) var(--r-sm) 0; padding:8px 10px }
 
 /* ---------------- composer ---------------- */
-form{ position:relative;
-      padding:var(--s3) var(--s4) var(--s4) calc(var(--s4) + var(--spine));
+form{ position:relative; padding:var(--s3) var(--s4) var(--s4);
       border-top:1px solid var(--line-1);
       background:var(--raised);
       box-shadow:0 -1px 0 rgba(0,0,0,.5), 0 -12px 28px -12px rgba(0,0,0,.65) }
