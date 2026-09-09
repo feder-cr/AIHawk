@@ -502,36 +502,54 @@ async def test_a_queued_message_is_not_lost_when_the_page_goes_away():
         "it: %s" % stray)
 
 
-def test_the_sessions_control_is_named_by_the_word_on_it():
-    """⛔ AN aria-label REPLACES THE VISIBLE NAME, IT DOES NOT ADD TO IT.
+def test_the_sessions_control_says_the_same_word_it_is_called():
+    """⛔ A NAME AND A LABEL MAY NEVER DISAGREE, and which of the two is the
+    defect depends on what is drawn.
 
-    The control was three lines and an `aria-label` reading "Show sessions" /
-    "Hide sessions", which was the only name it had. On 2026-09-09 it became a
-    bar with the word Sessions written on it, and the label became a defect:
-    a screen reader would announce a word that is not on the button, and
-    somebody driving by voice who says "Sessions" would find nothing to click.
-    WCAG 2.5.3 Label in Name is the criterion, and the open state is carried by
-    `aria-expanded`, which is the attribute for it.
+    First the control was three lines with an `aria-label` reading "Show
+    sessions", which was the only name it had. Then it became a bar with the
+    word Sessions written on it, and the label became the defect: a screen
+    reader announced a word that was not on the button and a voice user saying
+    "Sessions" found nothing to click. WCAG 2.5.3, Label in Name.
 
-    Found by reading the live DOM after the change rather than the source:
-    taking the attribute out of the markup left the script putting it back on
-    every open and close.
+    On 2026-09-10 the word came off the wall - it was the only thing on the page
+    a person had to tilt their head for - and an `aria-label` stopped being a
+    defect the moment there was no visible word left to contradict. So this gate
+    asks the question that survives both shapes: is there a name, and does
+    everything that says a name say the SAME one.
 
-    Known-bad, two: put `aria-label` back on the button, and put the
-    `setAttribute('aria-label', ...)` line back in `showRail`.
+    Known-bad, four: drop the label from an icon-only button; drop the tip so
+    the word is never on screen; make the two say different words; put the
+    `setAttribute('aria-label', ...)` line back in `showRail`, where it wrote a
+    changing name over a fixed one on every open and close.
     """
     import re
 
     button = re.search(r"<button id=\"railtab\"[^>]*>(.*?)</button>", PAGE, re.S)
     assert button, "the sessions control is gone"
-    assert "aria-label" not in button.group(0), (
-        "the control carries an aria-label as well as a visible word, and the "
-        "label is what a screen reader reads instead of the word: %s"
-        % button.group(0))
-    assert "Sessions" in button.group(1), (
-        "the control has no visible word, so it has no accessible name either")
-    assert 'aria-expanded' in button.group(0), (
-        "nothing says whether the column is open")
+    whole, inside = button.group(0), button.group(1)
+    visible = re.sub(r"<[^>]+>", "", inside).strip()
+    label = re.search(r'aria-label="([^"]*)"', whole)
+    tip = re.search(r'data-tip="([^"]*)"', whole)
+
+    if visible:
+        assert not label, (
+            "the control has the word %r on it AND an aria-label, and the label "
+            "is what a screen reader reads instead of the word" % visible)
+    else:
+        assert label, (
+            "the control draws an icon and carries no name at all, so it is "
+            "announced as `button` and cannot be reached by voice")
+        assert tip, (
+            "the name exists only for a screen reader: nothing puts the word on "
+            "screen for a pointer or the keyboard")
+        assert label.group(1) == tip.group(1), (
+            "the control is called %r and shows %r"
+            % (label.group(1), tip.group(1)))
+        assert "Sessions" in label.group(1), (
+            "the name is not the word the column is called: %r" % label.group(1))
+
+    assert "aria-expanded" in whole, "nothing says whether the column is open"
 
     script = PAGE[PAGE.index("<script"):]
     code = re.sub(r"/\*.*?\*/", "", script, flags=re.S)
@@ -541,8 +559,8 @@ def test_the_sessions_control_is_named_by_the_word_on_it():
     # walked straight through it.
     sets = re.findall(r"\$\('railtab'\)\s*\.setAttribute\(\s*'aria-label'", code)
     assert not sets, (
-        "the script puts an aria-label back on the control, which replaces the "
-        "word written on it every time the column opens or closes")
+        "the script writes an aria-label on every open and close, so the name "
+        "changes under the word that is meant to be fixed")
 
 
 def test_the_spine_is_part_of_the_frame_and_is_the_only_way_in():
@@ -556,8 +574,8 @@ def test_the_spine_is_part_of_the_frame_and_is_the_only_way_in():
     that for half an hour.
 
     Known-bad, three: move the button after `<div id="left"`; add a second
-    control with `aria-controls="rail"`; drop the vertical writing so the word
-    runs across a 34px column.
+    control with `aria-controls="rail"`; put a word back on the wall instead of
+    a drawn icon.
     """
     import re
 
@@ -569,12 +587,16 @@ def test_the_spine_is_part_of_the_frame_and_is_the_only_way_in():
     assert len(opens) == 1, (
         "%d controls open the sessions column; two of them can disagree about "
         "whether it is open" % len(opens))
-    style = PAGE[PAGE.index("#railtab{"):PAGE.index("/* Open: the spine lifts")]
-    assert "writing-mode:vertical-rl" in style, (
-        "the word runs across a column 34px wide, so it is not readable at all")
-    assert "rotate(180deg)" in style, (
-        "vertical-rl alone reads top to bottom; a spine in this alphabet reads "
-        "bottom to top, which is what the drawing showed")
+    # ⛔ IT DRAWS, IT DOES NOT SET TYPE SIDEWAYS. The word used to run bottom
+    # to top down the strip, and that rotation was the whole reason it went: the
+    # only thing on this page a reader had to tilt their head for. What replaces
+    # it has to be a drawn mark, not the same word turned some other way.
+    style = PAGE[PAGE.index("#railtab{"):PAGE.index("/* Open: the rail lifts")]
+    assert "writing-mode" not in style, (
+        "the rail sets type sideways again")
+    assert "<svg" in PAGE[PAGE.index('id="railtab"'):PAGE.index("</button>",
+                                                                PAGE.index('id="railtab"'))], (
+        "the rail carries no drawn mark, so there is nothing on it to press")
 
     # ⛔ AND IT IS NEVER HIDDEN. The panel and its only opener used to be
     # dropped by the same media query, and `#newchat` lives inside the panel: a

@@ -156,7 +156,7 @@ PAGE = r"""<!doctype html>
 
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:32px;
   --r-sm:4px; --r:8px; --r-lg:12px; --r-pill:999px;
-  --spine:54px;                               /* the sessions band */
+  --spine:44px;                               /* the sessions rail */
   --topbar:50px;                              /* every header, one height */
   --h-ctl:28px;                               /* every control on a bar */
   --gutter:1.75rem;                            /* three digits of 11px mono */
@@ -237,57 +237,45 @@ code,pre,.g,.meta,.badge,#url{
 #newchat:hover{ background:var(--raised); color:var(--fg);
                 border-color:var(--line-2) }
 
-/* ⛔ THE THREE LINES WERE A GUESS AND THE WORD IS NOT, and the word belongs on
-   the EDGE. A hamburger says "there is a menu here" only to somebody who has
-   already learned that it does. Written into the frame instead, the full height
-   of the window, it is not a control among the header's other controls: it is
-   part of the room, always there, and the only way in or out of the column.
-   The type is `.label`'s, so the spine and the column it opens read as one word
-   in one voice.
-   `vertical-rl` turned upside down gives the word bottom to top, which is the
-   direction every spine on a shelf uses in this alphabet, and the direction the
-   napkin had it. */
-/* The accent runs the full height of the spine and stays there whether the
-   column is open or shut: asked for on 2026-09-09, and it is the better of the
-   two - a line that appears and disappears is a state indicator competing with
-   the background, while a line that is always there is the edge of the room,
-   and the open state has the background and the ink to say it. It also replaces
-   the hairline that used to separate this from what follows. */
-#railtab{ flex:none; width:var(--spine); padding:0; cursor:pointer; border:0;
+/* ⛔ AN ICON, AND THE WORD WHEN IT IS WANTED. The rail carried SESSIONS set
+   vertically, and the word was the whole objection: it is the only thing on
+   this page a person has to tilt their head for, and it names a category where
+   everything else on screen names an action - Clear, Live, Frozen, jump to
+   latest. Chosen from four variants drawn side by side at real proportions,
+   which is how it finally got decided after two guesses were wrong: a bar in
+   the header, and then leaving it alone.
+
+   44px instead of 54, so ten pixels go back to the conversation. The target is
+   still the full height of the window, as far above the 24px WCAG floor and the
+   44px Fitts figure as a target gets, and the accent on the edge stays: it was
+   asked for, and a line that is always there is the edge of the room rather
+   than a state indicator competing with the background.
+
+   The icon sits at the TOP and not in the middle. That is where a rail's first
+   control goes in every product that has one, and it leaves the strip able to
+   grow a second icon without anything being re-thought. */
+#railtab{ flex:none; width:var(--spine); padding:11px 0 0; cursor:pointer; border:0;
           position:relative; background:var(--base); color:var(--fg-3);
           box-shadow:inset -1px 0 0 var(--accent);
-          /* The chevron and the word are two rows of one grid, centred
-             together: pinned to the top the arrow sat 450px from the word and
-             the two read as separate things on the same strip. */
-          display:grid; align-content:center; justify-items:center; gap:12px;
+          display:flex; justify-content:center; align-items:flex-start;
           transition:background-color 120ms ease-out, color 120ms ease-out }
-/* ⛔ A WORD ON A WALL IS NOT A BUTTON. At 34px with nothing but letters it read
-   as a label somebody had printed on the frame, which is the one thing it must
-   not read as - said in those words on 2026-09-09. Wider, and with the same
-   chevron the step rows use, drawn from borders rather than an icon: it points
-   into the room when the column is shut and back out when it is open, so the
-   thing you press also says which way it goes. */
-#railtab::before{ content:""; width:5px; height:5px;
-                  border-right:1.5px solid currentColor;
-                  border-bottom:1.5px solid currentColor;
-                  transform:rotate(-45deg) translate(-1px, -1px);
-                  transition:transform 150ms ease }
-#railtab[aria-expanded="true"]::before{ transform:rotate(135deg) translate(-1px, -1px) }
-/* ⛔ THE TEXT TURNS, NOT THE BUTTON. `transform` on the button would rotate the
-   whole box with it, so the border and the accent below would be drawn on the
-   edge away from the column instead of the one beside it - correct in the
-   element's own coordinates and backwards on the screen. */
-/* On the label step like every other tracked uppercase word on the page: it
-   was the last size in this column that belonged to no scale. The tracking
-   stays wider than `.label` because the letters are stacked, not set. */
-#railtab span{ writing-mode:vertical-rl; transform:rotate(180deg);
-               font:600 var(--t-label)/1 var(--sans); letter-spacing:.2em;
-               text-transform:uppercase }
+#railtab svg{ flex:none; display:block }
+/* The word, on screen, the moment a pointer or the keyboard arrives. Drawn
+   rather than left to `title`: the native tooltip waits about a second, takes
+   the operating system's colours, and never appears for a keyboard at all. */
+#railtab::after{ content:attr(data-tip); position:absolute; left:calc(100% + var(--s2));
+                 top:9px; white-space:nowrap; pointer-events:none; z-index:6;
+                 background:var(--top); color:var(--fg); font-size:var(--t-label);
+                 padding:4px 8px; border-radius:var(--r-sm);
+                 box-shadow:0 2px 8px rgba(0,0,0,.4);
+                 opacity:0; transition:opacity 125ms ease-out }
+#railtab:hover::after, #railtab:focus-visible::after{ opacity:1 }
+/* Open: the rail lifts a rung and the icon goes to full ink. The state is drawn
+   on the thing you press, where a hand already is - and the word goes quiet,
+   because the column beside it is now saying its own name. */
 #railtab:hover{ background:var(--raised); color:var(--fg) }
-/* Open: the spine lifts a rung and the word goes to full ink. The state is
-   drawn on the thing you press, where a hand already is. */
 #railtab[aria-expanded="true"]{ background:var(--raised); color:var(--fg) }
-#railtab[aria-expanded="true"] span{ display:none }
+#railtab[aria-expanded="true"]::after{ content:none }
 /* ⛔ THE PANEL FOLDS, THE WAY IN DOES NOT. Both used to disappear at the
    same breakpoint, and `#newchat` lives inside the panel - so a window snapped
    to half a 1366-wide laptop lost every session control at once, with the only
@@ -320,8 +308,14 @@ code,pre,.g,.meta,.badge,#url{
    has no handler: the padding around the name was a pointer cursor over
    nothing, which is the honesty contract this file states for the browser bar
    thirty lines earlier and did not keep here. */
+/* 24px tall, because 23 is a miss. WCAG 2.5.8 puts the floor at 24 CSS px and
+   this row was one pixel under it - measured on the running page, not guessed.
+   The height comes from a min-height rather than padding: the row is a flex
+   child and padding would move the text off the baseline it shares with the
+   count beside it. */
 .chat .nm{ cursor:pointer; flex:1; min-width:0; overflow:hidden;
-           text-overflow:ellipsis;
+           text-overflow:ellipsis; min-height:24px; display:flex;
+           align-items:center;
            white-space:nowrap; border:0; background:none; color:inherit;
            font:inherit; text-align:left; padding:0 }
 #chats .none{ margin:0; padding:var(--s3) var(--s2); color:var(--fg-3);
@@ -1005,16 +999,32 @@ form{ position:relative; padding:var(--s3) var(--s4) var(--s4);
      sits behind the entire transcript, and the queue grows with the run. One
      link, first in the document, off-screen until it is focused. -->
 <a class="skip" href="#i">Skip to the message box</a>
+<!-- ⛔ THE NAME IS AN `aria-label` HERE AND THAT IS NOT THE DEFECT IT WAS.
+     While the word was ON the button, a label REPLACED it: a screen reader read
+     something that was not on screen and a voice user could not say what they
+     saw. With a drawn icon there is no visible word to contradict, so the label
+     IS the name - and `data-tip` puts the same word on screen the moment a
+     pointer or the keyboard arrives, so the two can never disagree. -->
 <button id="railtab" type="button" aria-expanded="false" aria-controls="rail"
-        title="Sessions"><span>Sessions</span></button>
+        aria-label="Sessions" data-tip="Sessions">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <rect x="1.8" y="2.8" width="12.4" height="10.4" rx="2"
+          stroke="currentColor" stroke-width="1.6"/>
+    <path d="M6.1 2.8v10.4" stroke="currentColor" stroke-width="1.6"/>
+  </svg></button>
 
-<nav id="rail" aria-label="Sessions" hidden>
+<nav id="rail" aria-labelledby="railtitle" hidden>
   <!-- No title here any more: the spine to the left of this column carries the
        word, and with the column open the two sat twenty pixels apart saying the
        same thing. The row keeps its height from its padding, so it still lines
        up with the app header beside it. -->
+  <!-- ⛔ THE WORD LIVES HERE NOW. It used to be on the rail, and this span was
+       deliberately empty because the two sat twenty pixels apart saying the same
+       thing. The rail draws an icon since 2026-09-10, so nothing carried the word
+       any more: the column opened with a plus button and no title, which is a
+       rule that stopped being enforced one step past where it was written. -->
   <div id="railhead">
-    <span class="label" aria-hidden="true"></span>
+    <span class="label" id="railtitle">Sessions</span>
     <button id="newchat" type="button" aria-label="New session" title="New session">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor"
            stroke-width="1.6" stroke-linecap="round"><path d="M7 2.5v9M2.5 7h9"/></svg>
