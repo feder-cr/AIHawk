@@ -130,10 +130,29 @@ PAGE = r"""<!doctype html>
      accessibility guidance marks `font-size: 16px` "Don't" and `1rem` "Do" for
      exactly this. Same pixels at the default 16px root, so nothing moves for
      anybody who never changed it. */
-  --t-label:.6875rem; --t-mono:.8125rem; --t-ui:.8125rem; --t-body:.875rem;
-  /* Steps that read as steps: 17 and 15 sat a single pixel apart from the body
-     under them, so the hierarchy was carried by weight alone. */
-  --t-h1:1.125rem; --t-h2:1rem; --t-h3:.8125rem;       /* the answer's headings */
+  /* ⛔ ONE RATIO, AND THE STEPS ARE STEPS. Measured on the running page, the
+     left column drew NINE size/weight pairs at 11, 12, 13, 14 and 16px: four
+     sizes inside three pixels, which is a scale in name only. A step of 1.08
+     is not a step - the eye reads it as an accident - and the fix is not more
+     sizes but fewer, with weight and colour carrying the tiers that size no
+     longer does.
+
+     Three prose steps on ~1.2: 12 / 15 / 18. Body is 15 because this column
+     exists to be read and 14 is under the floor every source gives for reading
+     text. */
+  --t-label:.75rem;                            /* 12 - labels, meta, counts */
+  --t-body:.9375rem;                           /* 15 - prose, and the base */
+  --t-ui:.9375rem;                             /* 15 - chrome reads as prose */
+  /* ⛔ MONO IS OFF THIS SCALE BY DECISION, NOT BY OVERSIGHT. A mono face runs
+     wider and reads larger at the same pixel, so it does not belong on a scale
+     built for a proportional one - and the step track is MEASURED against it:
+     `LONG` is how many characters fit in 416px at this size, so moving it moves
+     a threshold that a gate checks. It is the data face, and it says so here. */
+  --t-mono:.8125rem;                           /* 13 - steps, code, addresses */
+  /* The answer's headings. One size above the body, then weight and colour:
+     three sizes a pixel apart carried nothing that 600 and a quieter ink do
+     not carry better. `--t-h1` is the off-screen page heading's size too. */
+  --t-h1:1.125rem; --t-h2:.9375rem; --t-h3:.9375rem;
 
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:32px;
   --r-sm:4px; --r:8px; --r-lg:12px; --r-pill:999px;
@@ -258,8 +277,11 @@ code,pre,.g,.meta,.badge,#url{
    whole box with it, so the border and the accent below would be drawn on the
    edge away from the column instead of the one beside it - correct in the
    element's own coordinates and backwards on the screen. */
+/* On the label step like every other tracked uppercase word on the page: it
+   was the last size in this column that belonged to no scale. The tracking
+   stays wider than `.label` because the letters are stacked, not set. */
 #railtab span{ writing-mode:vertical-rl; transform:rotate(180deg);
-               font:600 .875rem/1 var(--sans); letter-spacing:.2em;
+               font:600 var(--t-label)/1 var(--sans); letter-spacing:.2em;
                text-transform:uppercase }
 #railtab:hover{ background:var(--raised); color:var(--fg) }
 /* Open: the spine lifts a rung and the word goes to full ink. The state is
@@ -440,7 +462,7 @@ code,pre,.g,.meta,.badge,#url{
 #hint .eg{ font:var(--t-mono)/1.9 var(--mono); color:var(--fg-2);
            background:var(--raised); border:1px solid var(--line-1);
            border-radius:var(--r); padding:var(--s3) var(--s4); text-align:left }
-#hint .sm{ font-size:.75rem; color:var(--fg-3) }
+#hint .sm{ font-size:var(--t-label); color:var(--fg-3) }
 
 #jump{ position:absolute; bottom:100%; margin-bottom:var(--s2);
        left:50%; transform:translateX(-50%); z-index:2;
@@ -495,8 +517,8 @@ h3.md-h, h4.md-h, h5.md-h, h6.md-h{
    heading and not as a bold line: at 14px it was the size of the body text
    under it, which is a hierarchy only the weight was carrying. */
 h3.md-h{ font-size:var(--t-h1) }
-h4.md-h{ font-size:var(--t-h2) }
-h5.md-h, h6.md-h{ font-size:var(--t-h3); color:var(--fg-2) }
+h4.md-h{ font-size:var(--t-h2); font-weight:600 }
+h5.md-h, h6.md-h{ font-size:var(--t-h3); font-weight:600; color:var(--fg-2) }
 /* A fenced block inside an answer is already inside the answer's indent, and
    `.out` carries its own for the tool output it was written for: the two
    stacked, so code sat a step to the right of the prose describing it. */
@@ -691,7 +713,7 @@ form{ position:relative; padding:var(--s3) var(--s4) var(--s4);
    made this bar look assembled rather than designed. */
 #url{ flex:1; min-width:0; height:var(--h-ctl); line-height:calc(var(--h-ctl) - 2px);
       padding:0 var(--s3); border-radius:var(--r); background:var(--well);
-      border:1px solid var(--line-1); font-size:.75rem;
+      border:1px solid var(--line-1); font-size:var(--t-mono);
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
 /* ⛔ BOTH FORMS, BECAUSE THE INTENT LIVED IN TWO PLACES AND MATCHED IN
    NEITHER. The script sets `dim` on the address bar ITSELF when there is no

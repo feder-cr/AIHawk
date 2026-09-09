@@ -118,16 +118,49 @@ def test_the_surfaces_the_browser_would_have_picked_are_picked_here():
 
 
 def test_the_type_scale_has_steps_a_reader_can_see():
-    """Two heading sizes a single pixel apart are one size with two names: the
-    hierarchy then rests on weight alone, which is one signal doing two jobs.
+    """⛔ EITHER THE SAME SIZE OR A REAL STEP, NEVER A HAIR APART. Measured on
+    the running page, this column drew NINE size/weight pairs at 11, 12, 13, 14
+    and 16px - four sizes inside three pixels. A 1.08 step is not read as a
+    step, it is read as an accident, and a scale that fine is a scale in name
+    only.
 
-    Known-bad: move the two headings back within a pixel of each other.
+    So two levels may share a size, and then weight or colour separates them,
+    which is the stronger signal anyway. What is forbidden is the middle: one or
+    two pixels, carrying nothing and costing a step.
+
+    This gate used to demand every pair be at least 1.9px apart, which forbade
+    the sharing as well as the hair. That was the wrong half to forbid.
+
+    Known-bad, three: put two levels one pixel apart; drop the body under the
+    reading floor; give two levels the same size AND the same weight.
     """
-    got = {name: float(v) for name, v in
-           re.findall(r"--t-(h1|h2|h3|body):([\d.]+)rem", CODE)}
-    assert {"h1", "h2", "body"} <= set(got), "the type scale lost a role: %s" % got
-    for big, small in (("h1", "h2"), ("h2", "body")):
-        step = (got[big] - got[small]) * 16
-        assert step >= 1.9, (
-            "%s and %s are %.1fpx apart, which is not a step anybody sees"
-            % (big, small, step))
+    got = {name: float(v) * 16 for name, v in
+           re.findall(r"--t-(h1|h2|h3|body|label):([\d.]+)rem", CODE)}
+    assert {"h1", "h2", "body", "label"} <= set(got), (
+        "the type scale lost a role: %s" % got)
+
+    assert got["body"] >= 15, (
+        "the body is %.0fpx on a column that exists to be read, and every "
+        "source puts the floor at 15" % got["body"])
+
+    for big, small in (("h1", "h2"), ("h2", "body"), ("body", "label")):
+        step = got[big] - got[small]
+        assert step == 0 or step >= 2, (
+            "%s and %s are %.1fpx apart: too far to be one level, too close to "
+            "read as two" % (big, small, step))
+
+    # One ratio: the distinct sizes, in order, step by a consistent amount.
+    sizes = sorted(set(got.values()))
+    for a, b in zip(sizes, sizes[1:]):
+        assert 1.15 <= b / a <= 1.35, (
+            "%.0f to %.0f is a ratio of %.2f, off the scale this page declares "
+            "(~1.2)" % (a, b, b / a))
+
+    # A level that shares a size has to say what carries it instead.
+    for role in ("h2", "h3"):
+        if got.get(role) == got["body"]:
+            rule = re.search(r"h[45]\.md-h[^{]*\{([^}]*)\}", CODE) if role == "h3" \
+                else re.search(r"h4\.md-h\{([^}]*)\}", CODE)
+            assert rule and ("font-weight" in rule.group(1)
+                             or "color" in rule.group(1)), (
+                "%s is the body's size and nothing else separates it" % role)
