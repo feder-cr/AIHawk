@@ -81,22 +81,33 @@ PAGE = r"""<!doctype html>
   --line-3: rgba(255,255,255,.14);
   --lip:    inset 0 1px 0 rgba(255,255,255,.045);
 
-  /* Ink, with the contrast each one carries against --base. */
-  --fg:   #e8ebed;   /* 15.6:1  what the user typed, what the model answered */
-  --fg-2: #a8b1b9;   /*  8.6:1  narration and chrome labels */
-  --fg-3: #78828a;   /*  4.8:1  tool output and arguments, and now every quiet word */
+  /* ⛔ THE LADDER IS PICKED FROM THE USE SCENE, NOT FROM THE CATEGORY. This
+     interface is watched during long runs in a room with the lights off - the
+     screen is the only light - so the ground stays near black and nothing on it
+     is pure white: a full white on a dark ground at night is a lamp pointed at
+     the reader. The accent moves off coral onto amber for the same reason, that
+     being the warm end that disturbs dark-adapted eyes least, and every rung
+     gains headroom over the floor rather than sitting on it.
+
+     Ink, with the contrast each one carries against --base. */
+  --fg:   #dfe4e8;   /* 14.5:1  what the user typed, what the model answered */
+  --fg-2: #a6b0b8;   /*  8.4:1  narration and chrome labels */
+  --fg-3: #8d98a1;   /*  6.3:1  tool output and arguments, and every quiet word */
   /* ⛔ AND `--fg-4` NEVER COLOURS WORDS. It was carrying the count beside a
      conversation, the address under a link, the timing on a step, the marker of
      a list, the dim halves of the URL and the placeholder inside a preview -
      nine rules, all of them text, all of them at 2.4:1 where AA asks 4.5. The
      worst was the address: it is printed precisely so an injected link can be
      read, and it was the hardest thing on the page to read. */
-  --fg-4: #4a545c;   /*  2.4:1  decoration only - a dot, a chevron, never a word */
+  --fg-4: #5d666e;   /*  3.2:1  decoration only - a dot, a chevron, never a word.
+                                Three to one and not two: a chevron and an idle
+                                dot MEAN something, and a graphic that carries
+                                meaning has a floor of its own. */
 
-  --accent:    #e38a5d;
-  --on-accent: #101317;
-  --ok:  #6cc08b;
-  --err: #e8836b;
+  --accent:    #e0a35f;   /* 8.5:1 */
+  --on-accent: #151005;
+  --ok:  #79bf94;         /* 8.6:1 */
+  --err: #e88b76;         /* 7.4:1 */
 
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas,
@@ -110,7 +121,9 @@ PAGE = r"""<!doctype html>
      exactly this. Same pixels at the default 16px root, so nothing moves for
      anybody who never changed it. */
   --t-label:.6875rem; --t-mono:.8125rem; --t-ui:.8125rem; --t-body:.875rem;
-  --t-h1:1.0625rem; --t-h2:.9375rem; --t-h3:.8125rem;  /* the answer's headings */
+  /* Steps that read as steps: 17 and 15 sat a single pixel apart from the body
+     under them, so the hierarchy was carried by weight alone. */
+  --t-h1:1.125rem; --t-h2:1rem; --t-h3:.8125rem;       /* the answer's headings */
 
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:32px;
   --r-sm:4px; --r:8px; --r-lg:12px; --r-pill:999px;
@@ -454,9 +467,12 @@ h5.md-h, h6.md-h{ font-size:var(--t-h3); color:var(--fg-2) }
 .lk  { color:var(--fg) }
 .href{ color:var(--fg-3); font:.75rem/1.5 var(--mono); overflow-wrap:anywhere }
 .href::before{ content:" " }
+/* ⛔ NO COLOURED BAR DOWN THE LEFT EDGE. A 2px stripe on a callout is the
+   house style of every framework and belongs to none of them; a tint plus a
+   hairline in the same hue says the same thing without the costume. */
 .orph  { display:flex; gap:8px; font-size:var(--t-mono); color:var(--err);
-         background:rgba(232,131,107,.08); border-radius:var(--r-sm);
-         box-shadow:inset 2px 0 0 var(--err); padding:6px 10px }
+         background:rgba(232,139,118,.09); border-radius:var(--r-sm);
+         border:1px solid rgba(232,139,118,.32); padding:6px 10px }
 
 /* ONE grid: every row on the same rails, so nothing shifts as text changes. */
 .row{ display:grid; grid-template-columns:var(--gutter) minmax(0,1fr) auto 1rem;
@@ -500,8 +516,8 @@ h5.md-h, h6.md-h{ font-size:var(--t-h3); color:var(--fg-2) }
   animation:breathe 1.4s ease-in-out infinite }
 @media (prefers-reduced-motion: reduce){ .pend .g::after{ animation:none } }
 /* inset and not border-left: a border would shift all four tracks by two pixels */
-.ev[data-state="err"] > .row{ background:rgba(232,131,107,.07);
-                              box-shadow:inset 2px 0 0 var(--err) }
+.ev[data-state="err"] > .row{ background:rgba(232,139,118,.08);
+                              box-shadow:inset 0 0 0 1px rgba(232,139,118,.3) }
 
 .out{ margin:2px 0 var(--s2) var(--indent);
       max-height:290px; max-height:15lh; overflow:auto; overscroll-behavior:contain;
@@ -857,13 +873,17 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
   </div>
   <button id="jump" hidden type="button">jump to latest</button>
   <form id="f" autocomplete="off">
-    <button id="chip" type="button" hidden>1 message queued <span aria-hidden="true">&#9998;</span></button>
+    <button id="chip" type="button" hidden>1 message queued
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"
+           stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+           stroke-linejoin="round"><path d="M10.6 2.9l2.5 2.5L5.6 12.9 2.5 13.5l.6-3.1z"/></svg></button>
     <div class="composer">
       <label class="sr" for="i">What should the agent do?</label>
       <textarea id="i" rows="1" placeholder="What should the agent do?"></textarea>
       <button id="go" type="submit" aria-label="Send" disabled>
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
-             stroke="#101317" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+             stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+             stroke-linejoin="round">
           <path d="M7 12V2M2.5 6.5L7 2l4.5 4.5"/></svg>
       </button>
       <button id="halt" type="button" hidden aria-label="Stop">
@@ -904,18 +924,18 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
       <button type="button" data-n="1" aria-pressed="true"
               aria-label="One screen" title="One screen">
         <svg viewBox="0 0 18 12" width="18" height="12" fill="none"
-             stroke="currentColor" stroke-width="1.3">
+             stroke="currentColor" stroke-width="1.6">
           <rect x="1" y="1" width="16" height="10" rx="1.6"/></svg></button>
       <button type="button" data-n="2" aria-pressed="false"
               aria-label="Two screens" title="Two screens">
         <svg viewBox="0 0 18 12" width="18" height="12" fill="none"
-             stroke="currentColor" stroke-width="1.3">
+             stroke="currentColor" stroke-width="1.6">
           <rect x="1" y="1" width="16" height="10" rx="1.6"/>
           <path d="M9 1v10"/></svg></button>
       <button type="button" data-n="4" aria-pressed="false"
               aria-label="Four screens" title="Four screens">
         <svg viewBox="0 0 18 12" width="18" height="12" fill="none"
-             stroke="currentColor" stroke-width="1.3">
+             stroke="currentColor" stroke-width="1.6">
           <rect x="1" y="1" width="16" height="10" rx="1.6"/>
           <path d="M9 1v10M1 6h16"/></svg></button>
     </span>
