@@ -418,7 +418,8 @@ code,pre,.g,.meta,.badge,#url,#tok{
            border-radius:var(--r); padding:var(--s3) var(--s4); text-align:left }
 #hint .sm{ font-size:.75rem; color:var(--fg-3) }
 
-#jump{ position:absolute; bottom:110px; left:50%; transform:translateX(-50%); z-index:2;
+#jump{ position:absolute; bottom:100%; margin-bottom:var(--s2);
+       left:50%; transform:translateX(-50%); z-index:2;
        background:var(--top); border:1px solid var(--line-2); color:var(--fg);
        font:var(--t-ui)/1 var(--sans); padding:7px 13px;
        border-radius:var(--r-pill); cursor:pointer }
@@ -975,8 +976,13 @@ form{ position:relative; padding:var(--s3) var(--s4) var(--s4);
     </div>
     <div id="anchor"></div>
   </div>
-  <button id="jump" hidden type="button">jump to latest</button>
   <form id="f" autocomplete="off">
+    <!-- Inside the composer and anchored to its top edge: it used to sit at a
+         hard 110px from the bottom, which is a guess at the height of a box
+         that GROWS with what is typed into it and again with the reader's font
+         size, so at 200% with a queued message it landed on top of the thing
+         it floats above. -->
+    <button id="jump" hidden type="button">jump to latest</button>
     <button id="chip" type="button" hidden>1 message queued
       <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"
            stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
