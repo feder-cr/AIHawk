@@ -178,7 +178,7 @@ code,pre,.g,.meta,.badge,#url,#tok{
    the hairline that used to separate this from what follows. */
 #railtab{ flex:none; width:44px; padding:0; cursor:pointer; border:0;
           position:relative; background:var(--base); color:var(--fg-3);
-          box-shadow:inset -2px 0 0 var(--accent);
+          box-shadow:inset -1.5px 0 0 var(--accent);
           /* The chevron and the word are two rows of one grid, centred
              together: pinned to the top the arrow sat 450px from the word and
              the two read as separate things on the same strip. */
@@ -201,7 +201,7 @@ code,pre,.g,.meta,.badge,#url,#tok{
    edge away from the column instead of the one beside it - correct in the
    element's own coordinates and backwards on the screen. */
 #railtab span{ writing-mode:vertical-rl; transform:rotate(180deg);
-               font:600 var(--t-label)/1 var(--sans); letter-spacing:.16em;
+               font:600 .75rem/1 var(--sans); letter-spacing:.18em;
                text-transform:uppercase }
 #railtab:hover{ background:var(--raised); color:var(--fg) }
 /* Open: the spine lifts a rung and the word goes to full ink. The state is
@@ -500,8 +500,11 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
        background:var(--hover); border:1px solid var(--line-2); color:var(--fg-2);
        font-size:var(--t-label); padding:3px 9px; border-radius:var(--r-pill);
        cursor:pointer }
-#under{ display:flex; align-items:center; justify-content:space-between;
-        gap:var(--s2); padding:var(--s2) var(--s1) 0 }
+/* flex-end and not space-between: with the label gone there is one thing in
+   this row, and space-between would leave it on the LEFT, which is where the
+   word used to be. */
+#under{ display:flex; align-items:center; justify-content:flex-end;
+        gap:var(--s2); padding:var(--s2) var(--s1) 0; min-height:1lh }
 #tok{ display:inline-flex; align-items:center; gap:6px;
       font-size:var(--t-label); color:var(--fg-3) }
 
@@ -717,8 +720,11 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
           <rect width="12" height="12" rx="2" fill="#fff"/></svg>
       </button>
     </div>
+    <!-- No word here any more. It said `agent`, which is what the whole left
+         column is: a label that names the thing you are already looking at
+         earns nothing and takes a line of the frame. The meter keeps the row,
+         pushed to its end. -->
     <div id="under">
-      <span class="label">agent</span>
       <span id="tok" hidden></span>
     </div>
   </form>
