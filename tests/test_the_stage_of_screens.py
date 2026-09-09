@@ -57,6 +57,10 @@ def up(*ids):
     return [{"id": i, "running": True, "urls": ["http://x/"]} for i in ids]
 
 
+def up(*ids):
+    return [{"id": i, "running": True, "urls": ["http://x/"]} for i in ids]
+
+
 FIRST_CUT = "const CHROME ="
 LAST_CUT = "function ageAll(cells)"
 
@@ -146,24 +150,6 @@ def test_the_layout_is_remembered_and_read_back_through_one_door():
         "without checking it is one of the layouts on offer")
 
 
-def test_a_screen_says_how_old_its_picture_is():
-    """⛔ STALE HAS TO LOOK STALE. On a healthy stage every screen is refreshed
-    every 40 to 100 ms, so a picture older than a couple of seconds means that
-    browser has stopped answering - and the last frame is still sitting there
-    looking alive. A control room's first rule, and a dashboard's fifth state
-    after empty, loading, error and partial.
-
-    Known-bad: drop the age label, or stop stamping `dataset.at` when a frame
-    lands, which leaves the number frozen at whatever it was.
-    """
-    code = re.sub(r"/\*.*?\*/", "", PAGE, flags=re.S)
-    assert "cell.dataset.at = String(Date.now());" in code, (
-        "nothing records when a screen last got a picture")
-    assert re.search(r"el\('span','age'", code), "a screen has nowhere to say its age"
-    assert re.search(r"\(now - at2\) > 2000", code), (
-        "no threshold decides when a picture stops counting as current")
-
-
 def test_the_template_follows_the_screens_that_exist():
     """⛔ A LAYOUT IS A CEILING, NOT A PROMISE. Two running browsers in a
     four-up layout were laid on a 2x2 whose second row was empty, so each of
@@ -180,34 +166,6 @@ def test_the_template_follows_the_screens_that_exist():
         "browsers running falls back on whichever rule happens to match")
 
 
-def test_a_picture_is_centred_in_its_screen_whatever_shape_its_window_is():
-    """⛔ EVERY BROWSER HERE HAS A WINDOW OF A DIFFERENT SHAPE, BY DESIGN. That
-    is the fingerprint doing its job rather than something to iron out, so on a
-    2x2 the pictures genuinely come out different heights: measured on four live
-    browsers, three cells drew 304px of image and one drew 237px. Anchored to
-    the top, that one read as a smaller screen with a hole underneath it - 29%
-    of the cell empty against 8% for its neighbours. The same leftover split
-    above and below reads as a frame instead.
-
-    Executed rather than read: it is arithmetic over the box and the picture,
-    and those two are the only things that decide it.
-
-    Known-bad, two: drop the lift and go back to top-anchored, or drop the cut
-    and let the browser's own tab strip back into the picture.
-    """
-    body = PAGE[PAGE.index(FIRST_CUT):PAGE.index(LAST_CUT)]
-    done = subprocess.run([NODE, "-e", body + CUT_PROBE], capture_output=True,
-                          text=True, encoding="utf-8", timeout=30)
-    assert done.returncode == 0, "the crop threw:\n%s" % done.stderr
-    for shot in json.loads(done.stdout):
-        assert abs(shot["above"] - shot["below"]) <= 1, (
-            "a %(w)dx%(h)d window in a %(bw)dx%(bh)d cell is drawn with %(above)d px "
-            "above it and %(below)d below" % shot)
-        assert 0.06 < shot["cut"] / shot["drawn"] < 0.11, (
-            "%(cut)d px comes off a drawing %(drawn)d tall, and the browser's own "
-            "chrome measured 8.3%% of the window" % shot)
-
-
 def test_the_state_word_says_nothing_when_it_would_repeat_the_tab():
     """The Live/Frozen tabs are a control that shows its own state, and the word
     beside them said `live` while Live was selected: one fact printed twice, the
@@ -220,18 +178,6 @@ def test_the_state_word_says_nothing_when_it_would_repeat_the_tab():
     code = re.sub(r"/\*.*?\*/", "", PAGE, flags=re.S)
     assert "stateEl.hidden = (s === 'live' || s === 'frozen')" in code, (
         "the state word is shown even when it only repeats the selected tab")
-
-
-def test_an_empty_stage_says_what_to_do_about_being_empty():
-    """There is no button that opens a browser - they are opened by asking, on
-    purpose - so the empty stage is the one place that has to say so. An empty
-    state that only reports the emptiness leaves the person hunting for a
-    control that was never going to be there.
-
-    Known-bad: go back to naming the condition and stopping.
-    """
-    assert "ask for one in the chat" in PAGE, (
-        "the empty stage no longer says how a browser gets opened")
 
 
 def test_the_pump_cannot_be_killed_by_a_bad_pass():

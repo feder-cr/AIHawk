@@ -116,6 +116,7 @@ PAGE = r"""<!doctype html>
   --r-sm:4px; --r:8px; --r-lg:12px; --r-pill:999px;
   --spine:54px;                               /* the sessions band */
   --topbar:50px;                              /* every header, one height */
+  --h-ctl:28px;                               /* every control on a bar */
   --gutter:1.75rem;                            /* three digits of 11px mono */
   --gap:.55rem;
   --indent:calc(var(--gutter) + var(--gap));   /* ONE source for the step indent */
@@ -297,9 +298,14 @@ code,pre,.g,.meta,.badge,#url,#tok{
 #split:focus-visible{ outline:none }
 #split:focus-visible::after, #split[data-drag]::after{ background:var(--accent); width:2px }
 #right{ flex:1; min-width:0; display:flex; flex-direction:column; background:var(--well) }
+/* Three groups and not four things in a row: the name, then what this
+   conversation is costing and running, then the one thing you can do to it.
+   The rule that separates the last is the same hairline the panes use. */
 #head { flex:none; height:var(--topbar); display:flex; align-items:center;
-        gap:10px; padding:0 var(--s4);
+        gap:var(--s2); padding:0 var(--s4);
         border-bottom:1px solid var(--line-1) }
+#head .vr{ width:1px; height:18px; flex:none; background:var(--line-2);
+           margin:0 var(--s1) }
 #head b{ font-size:var(--t-ui); font-weight:600 }
 .badge{ font-size:var(--t-label); color:var(--fg-2);
         background:var(--raised); border:1px solid var(--line-2);
@@ -543,15 +549,22 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
 /* The strip only exists when there is more than one tab: a single tab labelled
    with its own title is chrome that says nothing the address bar below it does
    not already say. */
-#tabs{ flex:none; display:flex; gap:2px; padding:6px 8px 0; background:var(--raised);
-       overflow-x:auto; scrollbar-width:none }
-#tabs button{ flex:0 1 190px; min-width:80px; display:flex; align-items:center; gap:6px;
-              border:0; border-radius:var(--r) var(--r) 0 0; cursor:pointer;
-              background:transparent; color:var(--fg-3); padding:6px 10px;
+/* ⛔ THE STRIP IS THE TOP OF THE BAR, NOT A THING FLOATING OVER IT. It sat
+   on the same surface as the bar with the SELECTED tab cut out in a darker
+   one, so the current page read as a hole punched in the header, and its left
+   edge started 4px before the address below it. Now the strip stands on the
+   page's ground and the selected tab is the bar's own surface, which is what
+   makes a tab look attached to what it opens - and both share one padding. */
+#tabs{ flex:none; display:flex; gap:2px; padding:6px var(--s3) 0;
+       background:var(--base); overflow-x:auto; scrollbar-width:none }
+#tabs button{ flex:0 1 190px; min-width:80px; height:28px; display:flex;
+              align-items:center; gap:6px; border:0; cursor:pointer;
+              border-radius:var(--r) var(--r) 0 0;
+              background:transparent; color:var(--fg-3); padding:0 10px;
               font:var(--t-label)/1.4 var(--sans); white-space:nowrap;
               overflow:hidden; text-overflow:ellipsis }
 #tabs button:hover{ background:var(--hover); color:var(--fg-2) }
-#tabs button[aria-selected="true"]{ background:var(--base); color:var(--fg) }
+#tabs button[aria-selected="true"]{ background:var(--raised); color:var(--fg) }
 #tabs .t{ overflow:hidden; text-overflow:ellipsis }
 
 /* The same height as the conversation's header beside it. They were 38 and
@@ -559,7 +572,8 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
    seam - the one place a misalignment is read as the whole thing being
    loose rather than as one box being wrong. */
 #chrome{ flex:none; height:var(--topbar); display:flex; align-items:center;
-         gap:var(--s2); padding:0 10px; background:var(--raised); border-bottom:1px solid var(--line-1) }
+         gap:var(--s2); padding:0 var(--s3); background:var(--raised);
+         border-bottom:1px solid var(--line-1) }
 /* The honesty contract: nothing in here is interactive except what is, so
    nothing in here gets a pointer cursor except what does. */
 #chrome, #chrome *{ cursor:default; user-select:none }
@@ -570,123 +584,206 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
 [data-state="busy"]  #dot{ background:var(--accent); animation:breathe .9s ease-in-out infinite }
 [data-state="frozen"]#dot{ background:var(--fg-2) }
 [data-state="offline"] #dot, [data-state="error"] #dot{ background:var(--err) }
-#url{ flex:1; min-width:0; height:24px; line-height:24px; padding:0 10px;
-      border-radius:var(--r-pill); background:var(--well); border:1px solid var(--line-1);
-      font-size:.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+/* ⛔ ONE HEIGHT FOR EVERYTHING IN THIS BAR. The address was 24 tall, the
+   Live/Frozen pair 30 and the layout picker 30, so three controls on one line
+   sat on three different rhythms - the kind of thing nobody names and everybody
+   reads as unfinished. And the address is a FIELD, so it gets the field's
+   corner: a pill is for a badge, and using both shapes for everything is what
+   made this bar look assembled rather than designed. */
+#url{ flex:1; min-width:0; height:var(--h-ctl); line-height:calc(var(--h-ctl) - 2px);
+      padding:0 var(--s3); border-radius:var(--r); background:var(--well);
+      border:1px solid var(--line-1); font-size:.75rem;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
 #url .dim{ color:var(--fg-3) }
 #url .host{ color:var(--fg) }
-#mode{ display:inline-flex; gap:2px; flex:none; background:var(--base);
-       border-radius:var(--r); padding:3px }
+#mode{ display:inline-flex; gap:2px; flex:none; height:var(--h-ctl);
+       align-items:center; background:var(--base); border:1px solid var(--line-1);
+       border-radius:var(--r); padding:0 2px }
 #mode button{ border:0; background:transparent; color:var(--fg-3);
               border-radius:var(--r-sm); padding:2px 9px;
               font:500 var(--t-label)/1.5 var(--sans) }
 #mode button[aria-selected="true"]{ background:var(--top); color:var(--fg);
                                     box-shadow:0 1px 2px rgba(0,0,0,.35) }
+/* ⛔ A CONTROL THAT CANNOT DO ANYTHING DOES NOT LOOK READY. With no browser
+   open, Live/Frozen, the layout picker and the address are three armed controls
+   over an empty room: the bar looked identical whether the product was working
+   or waiting to be told what to do. */
+#right[data-empty="1"] #url,
+#right[data-empty="1"] #mode,
+#right[data-empty="1"] #grid{ opacity:.4; pointer-events:none }
+/* And the state word goes altogether: with nothing running it said IDLE, in
+   capitals, and was the brightest thing on a bar describing an empty room -
+   while the room itself already says what it is. */
+#right[data-empty="1"] #state{ display:none }
 
 /* The frame is solved from the available height, so a wide shot fills the width
    and a tall one fills the height. What is left over is stage, never a hole
    inside the frame. object-fit stays underneath for the one frame where the
    ratio is still the previous page's. */
 /* ---------------- the other browsers ----------------
-   A row of slow previews under the live pane, never a second live pane: eight
-   at full rate would want 2.3 seconds of pipe for every second that passes,
-   measured, and that is arithmetic rather than an optimisation problem. */
+   A row under the stage, never a second live pane: eight at full rate would
+   want more pipe than there is, and that is arithmetic rather than an
+   optimisation problem.
+
+   ⛔ AND A BROWSER WITH NO PICTURE DOES NOT GET A PICTURE FRAME. Six declared
+   but stopped browsers used to draw six 168x133 cards, each holding the words
+   `not up` in the middle of an empty grey rectangle: a wall of nothing, 133px
+   tall, in the place where the running ones live. A thing with no image is a
+   NAME, so it is drawn as one - a 26px chip - and the row goes from a gallery
+   of failures to a list of what this session has. */
 /* ⛔ NO CONTROLS HERE. Browsers are opened and closed by ASKING - "open
    another browser", "close the second one" - because the agent is what drives
    this and a button beside it is a second way to do the same thing, in a place
    where the two can disagree about which browser is current. The panes are
    views: clicking one changes what YOU are looking at and tells the agent
    nothing. */
-#thumbs{ flex:none; display:flex; gap:8px; padding:0 14px 12px; overflow-x:auto }
-/* The one the agent is driving, marked rather than selected: the person's eye
-   and the agent's hand are two different things and the pane says both. */
-.thumb .cap .dot{ flex:none; width:6px; height:6px; border-radius:50%;
-                  background:var(--ok, #6c9); box-shadow:0 0 0 2px var(--raised) }
-.thumb{ flex:none; width:168px; border:1px solid var(--line-2); border-radius:8px;
-        background:var(--raised); padding:0; cursor:pointer; overflow:hidden;
-        display:flex; flex-direction:column; text-align:left; font:inherit;
-        color:var(--fg-3) }
-.thumb:hover{ border-color:var(--line-3); color:var(--fg) }
-.thumb[aria-current="true"]{ border-color:var(--fg-2); color:var(--fg) }
+#thumbs{ flex:none; display:flex; align-items:flex-end; gap:var(--s2);
+         padding:0 var(--s3) var(--s3); overflow-x:auto }
+.thumb{ flex:none; width:150px; border:1px solid var(--line-2);
+        border-radius:var(--r); background:var(--raised); padding:0;
+        cursor:pointer; overflow:hidden; display:flex; flex-direction:column;
+        text-align:left; font:inherit; color:var(--fg-3);
+        transition:border-color 120ms ease-out }
+.thumb:hover{ border-color:var(--line-3); color:var(--fg-2) }
+.thumb[aria-current="true"]{ border-color:var(--fg-2); color:var(--fg-2) }
 .thumb .pic{ width:100%; aspect-ratio:16/10; background:var(--well);
              display:grid; place-items:center; overflow:hidden }
 .thumb .pic img{ width:100%; height:100%; object-fit:cover; display:block }
 .thumb .pic span{ font-size:var(--t-label); color:var(--fg-3); padding:4px;
                   text-align:center }
-.thumb .cap{ display:flex; align-items:center; gap:6px; padding:5px 7px;
+.thumb .cap{ display:flex; align-items:center; gap:6px; padding:5px 8px;
              font-family:var(--mono); font-size:var(--t-label) }
 .thumb .cap .id{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis;
                  white-space:nowrap }
-.thumb .cap .st{ flex:none; color:var(--fg-3) }
+/* The one the agent is driving, marked rather than selected: the person's eye
+   and the agent's hand are two different things and the row says both. */
+.thumb .cap .dot, .chip .dot{ flex:none; width:6px; height:6px; border-radius:50%;
+                              background:var(--ok, #6c9) }
+.chip{ flex:none; height:26px; display:flex; align-items:center; gap:7px;
+       padding:0 10px; border:1px solid var(--line-2); border-radius:var(--r-pill);
+       background:var(--raised); cursor:pointer; color:var(--fg-3);
+       font:var(--t-label)/1 var(--mono); letter-spacing:.02em;
+       transition:border-color 120ms ease-out, color 120ms ease-out }
+.chip:hover{ border-color:var(--line-3); color:var(--fg-2) }
+.chip .off{ flex:none; width:6px; height:6px; border-radius:50%;
+            box-shadow:inset 0 0 0 1px var(--fg-4) }
 
-/* ⛔ THE STAGE IS A GRID NOW, AND HOW MANY CELLS IT HAS IS A MEASURED
-   DECISION. A frame costs 5 to 6 ms of pipe, not the 22 this file assumed
-   until it was measured again on 2026-09-09 with four real browsers: the
-   capture already runs inside the engine and the server hands over the latest
-   picture rather than taking one. Four panes at twenty frames a second each
-   deliver 80 a second in total, use about half the pipe, and an action still
-   lands in 49 ms against 40 with one pane. So four live screens are affordable
-   and eight are not, which is exactly the vocabulary a control room uses. */
-#stage{ flex:1; min-height:0; padding:14px; display:grid; gap:12px;
-        container-type:size }
+/* ---------------- the stage ----------------
+   ⛔ THE CARD IS THE PICTURE, NOT THE CELL, and getting that backwards is what
+   made this pane look unfinished. A cell used to be a full-height box with a
+   border and a shadow, and the picture floated in the middle of it: measured on
+   the bench, a 1280x688 window in a one-up cell drew 40% of the card as black,
+   and at two-up the two cards were the same size while their pictures were not,
+   so the smaller one read as broken rather than as a narrower window. Now the
+   frame SHRINK-WRAPS the picture - the border, the corner and the shadow belong
+   to the image - and the cell is only the space it is centred in.
+
+   How, without measuring anything: the picture sizes itself against the cell
+   with container units, and the browser's own chrome is cut with a NEGATIVE
+   MARGIN in percent. A percentage margin resolves against the containing
+   block's width, so `--cut` is the chrome expressed as a fraction of the
+   picture's WIDTH, and the frame's height ends up being the cropped height by
+   construction. No getBoundingClientRect, nothing to recompute on resize, and
+   the old two-number cache disappears with it. */
+#stage{ flex:1; min-height:0; padding:var(--s3); display:grid; gap:var(--s3) }
 #stage[data-grid="1"]{ grid-template-columns:1fr }
 #stage[data-grid="2"]{ grid-template-columns:1fr 1fr }
 /* Three on a 2x2 with one slot empty, because three equal screens and a gap
    is what a control room does: the alternative makes one of them special. */
 #stage[data-grid="3"],
 #stage[data-grid="4"]{ grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr }
-.screen{ min-width:0; min-height:0; display:flex; flex-direction:column;
-         background:var(--raised); border:1px solid var(--line-2);
-         border-radius:10px; overflow:hidden; box-shadow:0 18px 50px -22px #000;
-         padding:0; font:inherit; color:inherit; text-align:left; cursor:pointer;
-         transition:border-color 120ms ease-out }
-.screen:hover{ border-color:var(--line-3) }
-/* The one you are looking at, when there is more than one to look at. */
-/* A graphic that carries meaning wants 3:1, and this one carries the answer
-   to "which screen is the address bar describing" - which at 2.4:1 was a
-   question you had to ask twice. */
-.screen[aria-current="true"]{ border-color:var(--fg-2) }
-.screen .shot{ flex:1; min-height:0; position:relative; background:var(--well);
-               display:grid; place-items:center }
-/* contain and not cover: cropping a browser window hides part of what the
-   agent is looking at, which is the thing this pane exists to show. The bands
-   are the same recessed colour as the frame, so they read as the frame. */
-/* ⛔ ANCHORED, NOT SIZED IN PERCENT. `height:100%` on a grid item whose parent
-   takes its height from a flex row does not resolve, so the picture fell back
-   on its own aspect ratio and came out 23px taller than the box it was in -
-   measured - which put it over the caption underneath. Absolute against the
-   shot gives it a definite box on both axes and `contain` does the rest. */
-.screen .shot img{ position:absolute; inset:0; width:100%; height:100%;
-                   object-fit:contain; object-position:top center; display:block }
-/* Visibility rides the `hidden` property. An earlier version set
-   `style.display = ''` to show the image, which removes the inline value and
-   falls back on a stylesheet rule hiding it: the pane stayed black with the
-   pixels already decoded inside it, and every structural assertion passed. */
-.screen .shot img[hidden]{ display:none }
+
+.screen{ container-type:size; min-width:0; min-height:0;
+         display:grid; place-items:center; overflow:hidden;
+         background:none; border:0; padding:0; margin:0;
+         font:inherit; color:inherit; text-align:left; cursor:pointer }
+.frame{ position:relative; overflow:hidden; border:1px solid var(--line-2);
+        border-radius:var(--r-lg); background:var(--well);
+        box-shadow:0 12px 30px -20px #000;
+        transition:border-color 120ms ease-out }
+.screen:hover .frame{ border-color:var(--line-3) }
+/* The one you are looking at, when there is more than one to look at. A border
+   that carries meaning wants 3:1, and --fg-2 is 8.6. */
+.screen[aria-current="true"] .frame{ border-color:var(--fg-2) }
+/* ⛔ AND THE FRAME IS THE LARGEST BOX OF THE PICTURE'S SHAPE THAT THE CELL
+   CAN HOLD, which is one line of CSS and the whole reason the cells stopped
+   being loose. The first attempt let the image size itself and the frame
+   shrink-wrap it: correct for a picture bigger than the cell, and wrong for
+   every other case, because an image is never scaled UP to fill a box - so a
+   small capture sat at its natural size in the middle of a large pane and the
+   cell looked empty again, which is the defect this was meant to end.
+   `--arn` is the picture's shape AFTER the crop and `--cut` the crop itself,
+   both set once per shape by the frame that arrives. */
+.frame{ aspect-ratio:var(--arn, 1.6);
+        width:min(100cqw, calc(100cqh * var(--arn, 1.6))) }
+.frame img{ position:absolute; left:0; top:0; width:100%; height:auto;
+            margin-top:calc(var(--cut, 0%) * -1) }
+.frame img[hidden]{ display:none }
+
+/* ⛔ WAITING, EMPTY, STOPPED AND FAILED ARE FOUR STATES AND THEY USED TO DRAW
+   ONE BLACK RECTANGLE. On the bench, a browser whose capture answered 503 and
+   one that simply had not sent its first frame were pixel-identical, and both
+   read as a product that is broken. Whatever the pane cannot show, it says. */
+.veil{ position:absolute; inset:0; display:grid; place-content:center;
+       justify-items:center; gap:6px; padding:0 var(--s4); text-align:center;
+       background:var(--well) }
+.veil b{ font:600 var(--t-ui)/1.4 var(--sans); color:var(--fg-2) }
+.veil span{ font-size:var(--t-label); color:var(--fg-3); max-width:34ch }
+.veil[hidden]{ display:none }
+/* Over a picture that is still there, the veil is a scrim and not a wall: the
+   last frame is evidence, and hiding it to announce that it is old throws away
+   the only thing the pane has. */
+.screen[data-state="stale"] .veil{ background:linear-gradient(rgba(11,13,16,.55),
+                                                             rgba(11,13,16,.78)) }
+.screen[data-state="error"] .veil b{ color:var(--err) }
+/* The pulse says the pane is trying, which is the difference between waiting
+   and stopped - and it is the whole reason a spinner exists. */
+.veil .pulse{ width:56px; height:2px; border-radius:2px; background:var(--line-3);
+              overflow:hidden; position:relative }
+.veil .pulse::after{ content:""; position:absolute; inset:0 auto 0 0; width:40%;
+                     background:var(--fg-3); border-radius:2px;
+                     animation:slide 1.4s ease-in-out infinite }
+@keyframes slide{ 0%{ left:0 } 50%{ left:60% } 100%{ left:0 } }
+
+/* The name rides ON the picture. It used to be a 28px bar bolted under the
+   card, which put the label of a thing outside the thing and cost a row of
+   height in every cell of a 2x2. */
+.tag, .stamp{ position:absolute; top:8px; height:20px; display:flex;
+              align-items:center; gap:6px; padding:0 8px; pointer-events:none;
+              border-radius:var(--r-sm); background:rgba(11,13,16,.74);
+              font:var(--t-label)/1 var(--mono); letter-spacing:.02em }
+.tag{ left:8px; color:var(--fg-2); max-width:calc(100% - 96px);
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.tag .dot{ flex:none; width:6px; height:6px; border-radius:50%;
+           background:var(--ok, #6c9) }
+/* ⛔ STALE HAS TO LOOK STALE. In a grid most of what you see is a picture from
+   a moment ago by construction, and a control room's first rule is that a feed
+   which has stopped must not read as one that is running. Nothing while the
+   frames keep coming, a number in seconds the moment they do not. */
+.stamp{ right:8px; color:var(--err) }
+.stamp[hidden]{ display:none }
+
+/* The empty stage is not a void with a sentence in it: it is the one place
+   that has to say how a browser gets opened, because there is no button that
+   does it - they are opened by asking, on purpose. */
+.empty{ grid-column:1 / -1; grid-row:1 / -1; display:grid; place-content:center;
+        justify-items:center; gap:var(--s2); text-align:center; padding:var(--s4) }
+.empty b{ font:600 var(--t-h2)/1.3 var(--sans); color:var(--fg-2) }
+.empty span{ font-size:var(--t-ui); color:var(--fg-3); max-width:38ch }
+.empty code{ font:var(--t-mono)/1.9 var(--mono); color:var(--fg-2);
+             background:var(--raised); border:1px solid var(--line-1);
+             border-radius:var(--r); padding:6px var(--s3); margin-top:var(--s1) }
+
 /* The second half of the address bar when nobody has picked a screen: the count
    is the fact, this is what to do about it. */
 #url .hint{ color:var(--fg-3); font-family:var(--sans); font-size:var(--t-label) }
 #url .hint::before{ content:"  -  "; white-space:pre }
-.screen .ph{ color:var(--fg-3); font-size:var(--t-ui); text-align:center;
-             padding:0 16px }
-.screen .cap{ flex:none; display:flex; align-items:center; gap:7px;
-              padding:5px 9px; border-top:1px solid var(--line-1);
-              font-family:var(--mono); font-size:var(--t-label);
-              color:var(--fg-3) }
-.screen .cap .id{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis;
-                  white-space:nowrap }
-/* ⛔ STALE HAS TO LOOK STALE. In a grid most of what you see is a picture from
-   a moment ago by construction, and a control room's first rule is that a feed
-   which has stopped must not read as one that is running. Empty while the
-   frames keep coming, and a number in seconds the moment they do not. */
-.screen .cap .age{ flex:none; color:var(--err) }
-.screen .cap .dot{ flex:none; width:6px; height:6px; border-radius:50%;
-                   background:var(--ok, #6c9); box-shadow:0 0 0 2px var(--raised) }
 
-#grid{ flex:none; display:flex; gap:2px; background:var(--well);
-       border:1px solid var(--line-2); border-radius:var(--r-pill); padding:2px }
+#grid{ flex:none; display:flex; align-items:center; gap:2px; height:var(--h-ctl);
+       background:var(--well); border:1px solid var(--line-2);
+       border-radius:var(--r); padding:0 2px }
 #grid button{ min-width:30px; height:24px; padding:0 5px; border:0;
-              border-radius:var(--r-pill); background:none; cursor:pointer;
+              border-radius:var(--r-sm); background:none; cursor:pointer;
               display:grid; place-items:center; color:var(--fg-3);
               transition:background-color 120ms ease-out, color 120ms ease-out }
 #grid button:hover{ color:var(--fg-2) }
@@ -744,6 +841,7 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
     <b>AIHawk</b>
     <span id="tok" hidden></span>
     <span class="badge" id="model">no model</span>
+    <span class="vr" aria-hidden="true"></span>
     <button id="fresh" type="button" title="Clear this conversation">Clear</button></div>
   <div id="log">
     <div id="thread">
@@ -1378,61 +1476,77 @@ async function onePass(){
         im.src = URL.createObjectURL(blob);
         if(old && old.startsWith('blob:')) URL.revokeObjectURL(old);
         im.hidden = false;
-        cutTheChrome(cell, im);
-        const ph = cell.querySelector('.ph'); if(ph) ph.hidden = true;
+        shapeFrom(cell, im);
+        setState(cell, 'live');
         cell.dataset.at = String(Date.now());
         if(id === watched()) say('live');
       }
       /* The capture could not answer, and the body says why: no frame within
          the server's wait (a minimised window is captured as nothing), or an
-         engine without the screencast. The last frame stays on screen either
-         way - a picture of where the browser was beats a blank pane - which is
-         exactly why the age below has to be told. */
-      else if(r.status === 503 && id === watched()){ say('error', await reason(r)); }
-      else if(id === watched()){ say('error'); }
+         engine without the screencast. The last frame stays on screen - a
+         picture of where the browser was beats a blank pane - and the reason
+         goes ON the screen rather than into a tooltip nobody hovers: this
+         used to leave the same black rectangle as a pane that had simply not
+         drawn yet, which is how a failure got to look like patience.
+         
+         And it is said for EVERY screen, not only the watched one. On a 2x2
+         the three you are not following are exactly the ones whose silence
+         you would otherwise have to guess at. */
+      else {
+        const why = r.status === 503 ? await reason(r) : '';
+        setState(cell, 'error', 'the capture failed',
+                 why || 'the server answered ' + r.status);
+        if(id === watched()) say('error', why);
+      }
     } catch(err){ if(id === watched()) say('offline'); }
     ageAll(cells);
   }
 }
 
 /* ⛔ THE BROWSER'S OWN CHROME IS CUT OFF THE TOP OF EVERY SCREEN. The capture
-   is the WINDOW - deliberately, because that is the only way the pointer is in
-   the picture - and the tab strip and the address bar come with it. They say
-   nothing the frame above does not already say, and at four-up they cost a
-   tenth of every screen to repeat it four times.
+   is a picture of a window, and the tab strip and the address bar in it are a
+   second address bar under the one this page already draws - the same fact
+   twice, in the place where the eye goes for the page itself. Measured on
+   three captures: 57/688, 43/515 and 57/688, so the chrome is 8.3% of the
+   window's height and that is a proportion rather than a number of pixels.
 
-   MEASURED rather than guessed, on four real captures: the chrome is 8.3% of
-   the picture (57 rows of 688, 43 of 515, 57 of 688). It is a fraction and not
-   a pixel count because the engine scales the window into the frame it sends,
-   so the rows change with the window while the proportion does not.
-
-   Clipped and shifted rather than scaled: the page keeps its size and its
-   shape, and what was the chrome becomes empty frame at the bottom. Scaling the
-   rest up to fill would make one screen's pixels a different size from
-   another's, which for pictures meant to be compared is worse than a band. */
+   ⛔ AND IT IS CUT WITH A MARGIN IN PERCENT, NOT WITH MEASURED PIXELS. A
+   percentage margin resolves against the containing block's width, so the
+   chrome expressed as a fraction of the picture's WIDTH crops the same slice at
+   any size, and the frame - which shrink-wraps the picture - ends up the
+   cropped height by construction. The version before this one read the box with
+   getBoundingClientRect on every frame, cached two numbers to avoid a reflow,
+   and had to be told again on every resize. */
 const CHROME = 0.083;
-function cutTheChrome(cell, im){
+function shapeFrom(cell, im){
   if(!im.naturalWidth) return;
-  const box = im.getBoundingClientRect();
-  /* What `object-fit:contain` with `object-position:top center` actually draws:
-     as wide as the box or as tall, whichever runs out first, anchored to the
-     top - so the top of the drawing is the top of the box. */
-  const drawn = Math.min(box.height, box.width * im.naturalHeight / im.naturalWidth);
-  const cut = Math.round(CHROME * drawn);
-  /* ⛔ AND THEN THE PICTURE IS CENTRED IN ITS CELL. Every browser here has
-     a window of a different shape - that is the point of the fingerprint, not a
-     bug to iron out - so on a 2x2 the pictures come out different heights.
-     Measured on four live browsers: three cells drawing 304px of image and one
-     drawing 237px. Top-anchored, that one read as a smaller screen with a hole
-     under it, 29% of the cell empty against 8% for its neighbours. The leftover
-     split above and below reads as a frame instead, which is what it is: same
-     cell, same border, a picture of a different shape inside it. */
-  const lift = Math.round((box.height - (drawn - cut)) / 2);
-  const both = cut + ':' + lift;
-  if(cell.dataset.cut === both) return;
-  cell.dataset.cut = both;
-  im.style.clipPath = 'inset(' + cut + 'px 0 0 0)';
-  im.style.transform = 'translateY(' + (lift - cut) + 'px)';
+  const key = im.naturalWidth + 'x' + im.naturalHeight;
+  if(cell.dataset.shape === key) return;
+  cell.dataset.shape = key;
+  const box = cell.querySelector('.frame');
+  if(!box) return;
+  const seen = im.naturalHeight * (1 - CHROME);
+  box.style.setProperty('--cut',
+    (CHROME * im.naturalHeight / im.naturalWidth * 100).toFixed(3) + '%');
+  box.style.setProperty('--arn', (im.naturalWidth / seen).toFixed(4));
+}
+
+/* ⛔ ONE PLACE DECIDES WHAT A SCREEN IS SHOWING, because four states used to
+   draw one black rectangle: no frame yet, no tab, stopped answering, and a
+   capture that failed were pixel-identical, and all four read as a product
+   that is broken. `data-blank` is a different question - whether to ASK for a
+   picture at all - and it stays where it was: a browser with no tab is not
+   asked, because asking spends a round trip to be told there is nothing. */
+function setState(cell, state, title, detail){
+  cell.dataset.state = state;
+  const veil = cell.querySelector('.veil');
+  if(!veil) return;
+  veil.hidden = state === 'live';
+  veil.textContent = '';
+  if(state === 'live') return;
+  if(state === 'waiting') veil.appendChild(el('span','pulse'));
+  if(title) veil.appendChild(el('b', null, title));
+  if(detail) veil.appendChild(el('span', null, detail));
 }
 
 /* ⛔ A PICTURE THAT HAS STOPPED MUST NOT READ AS ONE THAT IS RUNNING. On a
@@ -1443,13 +1557,16 @@ function cutTheChrome(cell, im){
 function ageAll(cells){
   const now = Date.now();
   for(const c of cells){
-    /* The placeholder cell has no caption to write into, which is how this
-       function killed the pump the first time it ran. */
-    const lab = c.querySelector('.age');
+    /* The empty stage has no stamp to write into, which is how this function
+       killed the pump the first time it ran. */
+    const lab = c.querySelector('.stamp');
     if(!lab) continue;
     const at2 = Number(c.dataset.at || 0), old = at2 && (now - at2) > 2000;
+    lab.hidden = !old;
     lab.textContent = old ? Math.round((now - at2) / 1000) + 's' : '';
     lab.title = old ? 'no frame for this long' : '';
+    if(old && c.dataset.state === 'live') setState(c, 'stale');
+    else if(!old && c.dataset.state === 'stale') setState(c, 'live');
   }
 }
 
@@ -1638,6 +1755,20 @@ let pinned2 = null;
 const watched = () => pinned2 || focusHere;
 
 function thumbFor(b){
+  /* ⛔ A BROWSER WITH NO PICTURE DOES NOT GET A PICTURE FRAME. Six declared
+     but stopped browsers drew six 168x133 cards, each with the words `not up`
+     in the middle of an empty rectangle - a gallery of failures under the
+     stage, 133px tall, in the place the running ones live. A thing with no
+     image is a NAME: it gets a chip, and the row becomes a list of what this
+     session holds. Clicking one still asks to watch it, exactly as before. */
+  if(!b.running){
+    const chip = document.createElement('button');
+    chip.type = 'button'; chip.className = 'chip'; chip.dataset.id = b.id;
+    chip.title = 'Send this session’s commands to ' + b.id;
+    chip.append(el('span','off'), el('span','id', b.id));
+    chip.onclick = () => watchThis(b.id);
+    return chip;
+  }
   const el2 = document.createElement('button');
   el2.type = 'button'; el2.className = 'thumb'; el2.dataset.id = b.id;
   el2.title = 'Send this session’s commands to ' + b.id;
@@ -1648,14 +1779,14 @@ function thumbFor(b){
      so, then paints ERROR over something that is simply empty. The tabs are
      already in the answer this pane was built from, so the question is asked
      of data rather than of the pipe. */
-  if(b.running && (b.urls || []).length){
+  if((b.urls || []).length){
     const im = document.createElement('img'); im.alt = ''; pic.appendChild(im);
   } else {
-    pic.appendChild(el('span', null, b.running ? 'no page yet' : 'not up'));
+    pic.appendChild(el('span', null, 'no tab open'));
   }
   const cap = el('div','cap');
   cap.appendChild(el('span','id', b.id));
-  cap.appendChild(el('span','st', b.running ? '' : 'idle'));
+  cap.appendChild(el('span','st', ''));
   if(b.id === focusHere){
     const dot = el('span','dot');
     dot.title = 'the agent is working here';
@@ -1692,37 +1823,43 @@ function onStage(){
 
 function blank(cell, why){
   const im = cell.querySelector('img'); if(im) im.hidden = true;
-  const ph = cell.querySelector('.ph');
-  if(ph){ ph.hidden = false; ph.textContent = why; }
+  setState(cell, 'nopage', why || 'no tab open',
+           'ask the agent to open a page here');
   cell.dataset.blank = '1';
   cell.dataset.at = '';
 }
 
+/* One screen: a frame that wraps the picture, the name written on it, and
+   whatever the picture cannot say written over it. */
 function screenFor(b, current){
   const cell = document.createElement('button');
   cell.type = 'button'; cell.className = 'screen'; cell.dataset.id = b.id;
   cell.setAttribute('aria-current', String(current));
   cell.title = 'Watch ' + b.id;
-  const shot = el('div','shot');
+  const box = el('div','frame');
   const im = document.createElement('img'); im.alt = ''; im.hidden = true;
+  const tag = el('span','tag');
+  tag.appendChild(el('span','id', b.id));
+  /* The one the agent is driving, marked rather than selected: the person's
+     eye and the agent's hand are two different things and the tag says both. */
+  if(b.id === focusHere){
+    const dot = el('span','dot');
+    dot.title = 'the agent is working here';
+    tag.appendChild(dot);
+  }
+  const stamp = el('span','stamp'); stamp.hidden = true;
+  box.append(im, el('div','veil'), tag, stamp);
+  cell.appendChild(box);
   /* Three states and not two, and the third is the one that reads as a
      failure: a browser that is RUNNING WITH NO TAB cannot be captured - the
      engine answers "no such tab" - and asking anyway spends a round trip to be
      told so. The tabs are already in the answer this was built from, so the
      question is asked of data rather than of the pipe. */
-  const ph = el('span','ph', (b.urls || []).length ? '' : 'no page yet');
-  ph.hidden = (b.urls || []).length > 0;
-  shot.append(im, ph);
-  const cap = el('div','cap');
-  cap.appendChild(el('span','id', b.id));
-  cap.appendChild(el('span','age', ''));
-  if(b.id === focusHere){
-    const dot = el('span','dot');
-    dot.title = 'the agent is working here';
-    cap.appendChild(dot);
-  }
-  cell.append(shot, cap);
-  if(!(b.urls || []).length) cell.dataset.blank = '1';
+  const has = (b.urls || []).length > 0;
+  if(has) setState(cell, 'waiting', 'waiting for the first frame');
+  else { setState(cell, 'nopage', 'no tab open',
+                  'ask the agent to open a page here');
+         cell.dataset.blank = '1'; }
   cell.onclick = () => watchThis(b.id);
   return cell;
 }
@@ -1744,15 +1881,16 @@ function drawStage(){
   box.dataset.sig = sig;
   box.textContent = '';
   turnOf = 0;
+  right.dataset.empty = show.length ? '' : '1';
   if(!show.length){
-    const cell = el('div','screen');
-    cell.dataset.blank = '1';
-    const shot = el('div','shot');
     /* An empty state that only reports the emptiness leaves the person to
        guess where the button is. There is no button - browsers are opened by
-       asking - so this is the one place that has to say so. */
-    shot.appendChild(el('span','ph', 'no browser yet - ask for one in the chat'));
-    cell.append(shot, el('div','cap'));
+       asking - so this is the one place that has to say so, and to show the
+       shape of the sentence that does it. */
+    const cell = el('div','empty');
+    cell.append(el('b', null, 'No browser open'),
+                el('span', null, 'Ask in the chat and one opens here. There is no button for it, on purpose.'),
+                el('code', null, 'open a browser and go to example.com'));
     box.appendChild(cell);
     return;
   }
