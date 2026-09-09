@@ -226,6 +226,57 @@ async def test_deleting_a_conversation_closes_the_browsers_that_belonged_to_it()
     assert "lavoro" not in [r["id"] for r in sessions.listing()]
 
 
+async def test_a_deleted_conversation_stays_deleted_while_a_page_is_still_open_on_it():
+    """⛔ THE DELETE WORKED AND CAME BACK ON ITS OWN. Every route resolved the id
+    with `get`, which BUILDS what it does not find, so one poll from a tab left
+    open on the deleted session declared it again - `/live/browsers` every three
+    seconds, `/live/frame` up to twenty-five times a second. Measured against
+    the running server: `forgotten:true`, the browsers closed, the file erased,
+    and the row back in the column a moment later, empty and unnamed, for as
+    long as that tab stayed open. Every visible signal said the delete had
+    failed.
+
+    Known-bad: have `named` fall back to `sessions.get` when `knows` says no.
+    """
+    link, sessions = _sessions()
+    client = await _client(sessions, link)
+    await sessions.get("lavoro").send("log in somewhere")
+
+    assert await sessions.forget("lavoro") is True
+
+    # The three questions a page left open on it goes on asking.
+    for path in ("/live/browsers?s=lavoro", "/live/tabs?s=lavoro",
+                 "/live/frame?s=lavoro"):
+        assert client.get(path).status_code == 410, (
+            "%s answered a conversation that does not exist" % path)
+    assert client.post("/chat/send?s=lavoro", json={"text": "ciao"}).status_code == 410
+    assert client.post("/sessions/rename",
+                       json={"id": "lavoro", "name": "x"}).status_code == 410, (
+        "the rename carries the id in the BODY, so it is the one route that "
+        "would go on resurrecting sessions after the eight beside it stopped")
+
+    assert "lavoro" not in [r["id"] for r in sessions.listing()], (
+        "asking about a deleted conversation brought it back")
+    assert store.load_chat("lavoro") is None
+
+
+async def test_a_session_known_only_by_its_browsers_can_still_be_opened():
+    """⛔ A SESSION IS A CONVERSATION AND ITS BROWSERS, AND EITHER HALF CAN BE THE
+    ONLY ONE ON DISK. An agent client that opens a browser in session `work` and
+    never touches this interface writes the browsers file and no transcript.
+    Refusing what has no transcript would have answered 410 to a session that
+    plainly exists - the same defect one step further along.
+
+    Known-bad: drop the `store.load(at)` half of `Sessions.knows`.
+    """
+    link, sessions = _sessions()
+    client = await _client(sessions, link)
+    store.save("work", {"docs": {"running": False}}, focus="docs")
+
+    assert sessions.knows("work") is True
+    assert client.get("/live/browsers?s=work").status_code == 200
+
+
 async def test_deleting_a_conversation_that_is_mid_run_is_refused():
     """The same reason clearing one is: throwing away a transcript something is
     still writing into is a surprise nobody can undo.
@@ -276,6 +327,7 @@ async def test_the_routes_act_on_the_conversation_the_page_names():
     link, sessions = _sessions()
     client = await _client(sessions, link)
 
+    sessions.get("uno"), sessions.get("due")  # both opened, as `/sessions/new` would
     client.post("/chat/send?s=uno", json={"text": "primo"})
     client.post("/chat/send?s=due", json={"text": "secondo"})
     import asyncio
@@ -301,6 +353,7 @@ async def test_the_live_pane_of_a_conversation_that_has_done_nothing_asks_for_no
     client = await _client(sessions, link)
 
     await sessions.get("vecchia").send("do something")
+    sessions.get("nuova")  # opened beside it, and told nothing
     calls_before = len(link.calls)
 
     assert client.get("/live/frame?s=nuova").status_code == 204

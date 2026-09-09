@@ -30,7 +30,8 @@ def test_typed_text_is_not_thrown_away_before_the_server_has_it():
     """
     send = CODE[CODE.index("async function send(text)"):]
     send = send[:send.index("\n}")]
-    assert "await fetch" in send, "the send does not wait for an answer"
+    assert re.search(r"await (door|fetch)\(", send), (
+        "the send does not wait for an answer")
     assert "if(!r.ok) throw" in send, "an HTTP error is treated as a send"
     assert "i.value = text" in send, (
         "the sentence is not given back when it did not arrive, and this page "
@@ -202,6 +203,62 @@ def test_every_request_that_can_fail_goes_through_one_door():
     assert "async function ask(path, body, whatFailed)" in CODE, (
         "the one door is gone, so every caller invents its own answer to a "
         "failure and most of them will not")
+
+
+def test_every_question_about_this_conversation_goes_through_one_door():
+    """⛔ AND THAT DOOR IS WHERE THE PAGE LEARNS THE CONVERSATION IS GONE. Six
+    fetches carried `?s=`, and while they each asked on their own, a page left
+    open on a session somebody deleted went on asking forever - and every one of
+    those questions declared the session again on the server, so the delete came
+    back as an empty row for as long as that tab stayed open.
+
+    Known-bad: put `fetch(at(...))` back into any of the six callers, or take
+    the 410 out of `door`.
+    """
+    doors = re.findall(r"fetch\(at\(", CODE)
+    assert len(doors) == 1, (
+        "%d places build a session-scoped request; one of them is `door` and "
+        "the rest will not notice a conversation that no longer exists"
+        % len(doors))
+    body = CODE[CODE.index("async function door(path, init)"):]
+    body = body[:body.index("\n}")]
+    assert "410" in body and "vanish()" in body, (
+        "the door does not read the one answer that will never stop being true")
+
+
+def test_a_deleted_conversation_stops_the_page_asking_about_it():
+    """The other half of the same defect: the server refuses now, and the page
+    has to stop rather than retry a 410 four times a second in three loops.
+
+    Known-bad: leave `looking` reading only `document.hidden`, or drop the
+    `vanish` guard so the page keeps a live composer over a dead session.
+    """
+    assert "!document.hidden && !vanished" in CODE, (
+        "the four loops go on polling a conversation that does not exist")
+    body = CODE[CODE.index("function vanish()"):]
+    body = body[:body.index("\n}")]
+    assert "es.close()" in body, "the event stream is left open on a dead session"
+    assert "box.inert = true" in body, (
+        "the composer still answers the keyboard for a conversation that cannot "
+        "receive anything")
+    assert "orphan(" in body, "the page says nothing about why it went quiet"
+
+
+def test_a_subtree_that_cannot_be_used_does_not_look_usable():
+    """⛔ `inert` HAS NO LOOK. This page spells "cannot be used" as `opacity:.3`
+    on a disabled button and then said the same thing about whole subtrees with
+    `inert`, which draws them exactly as before. It was wrong before the case
+    that found it: the Live/Frozen pair and the layout picker go inert whenever
+    there is nothing to see, and stayed fully lit throughout. Seen on the running
+    page: a deleted conversation left a composer inviting a sentence it could
+    not send.
+
+    Known-bad: drop the rule and let each caller remember to dim its own subtree.
+    """
+    css = CODE[CODE.index("<style>"):CODE.index("</style>")]
+    assert re.search(r"\[inert\]\{[^}]*opacity", css), (
+        "nothing makes an inert subtree look inert, so every control inside one "
+        "keeps inviting an action it cannot perform")
 
 
 def test_no_colour_is_typed_out_instead_of_named():

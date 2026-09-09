@@ -376,6 +376,16 @@ code,pre,.g,.meta,.badge,#url,#tok{
 #fresh:hover:not(:disabled){ background:var(--hover); color:var(--fg) }
 #fresh:disabled{ opacity:.3; cursor:default }
 
+/* ⛔ `inert` HAS NO LOOK, AND A CONTROL THAT CANNOT BE USED MUST NOT LOOK
+   USABLE. This page already spells that `opacity:.3` on a disabled button, and
+   then said the same thing about whole SUBTREES with `inert` and drew them as
+   if nothing had happened. It was already wrong before the case that found it:
+   the Live/Frozen pair and the layout picker go inert whenever there is nothing
+   to see, and stayed fully lit the whole time. Seen on the running page, a
+   deleted conversation left a composer inviting a sentence it could not send.
+   One rule, so the look follows the mechanism rather than whoever remembers. */
+[inert]{ opacity:.3 }
+
 #log{ flex:1; overflow:auto; padding:var(--s5) var(--s4); scrollbar-gutter:stable }
 /* Capped in CHARACTERS and not in pixels, because the thing being limited is
    the measure and 680px is only one screen's worth of it: on a 1920 window the
@@ -1553,15 +1563,16 @@ chip.onclick = () => { i.value = queued; setQueued(null); i.focus();
    grew, which reads as the agent ignoring you. */
 async function send(text){
   try {
-    const r = await fetch(at('/chat/send'), {method:'POST',
-                          headers:{'Content-Type':'application/json'},
-                          body: JSON.stringify({text})});
+    const r = await door('/chat/send', {method:'POST',
+                         headers:{'Content-Type':'application/json'},
+                         body: JSON.stringify({text})});
     if(!r.ok) throw new Error('HTTP ' + r.status);
   } catch(err){
     /* Give it back, exactly as it was, and say why - the sentence is the
        person's work and this is the only copy of it. */
     i.value = text;
     i.dispatchEvent(new Event('input'));
+    if(vanished) return;
     orphan('err', 'That instruction did not reach the server (' + err.message
            + '). It is back in the box - try again.');
   }
@@ -1583,6 +1594,44 @@ function wipe(){
   busyNow = false;
   setQueued(null);
 }
+let vanished = false;
+/* ⛔ ONE PLACE ASKS THIS CONVERSATION FOR ANYTHING, so one place can notice
+   that it is not there any more. Six fetches carry `?s=`, and each of them
+   would otherwise need the same three lines - written six times, the seventh
+   is where a page goes on talking to a session somebody deleted. Which is not
+   hypothetical: every one of those questions used to DECLARE the session again
+   on the server, so a delete that had already closed the browsers and erased
+   the transcript came straight back as an empty row, for as long as one tab
+   stayed open on it. */
+async function door(path, init){
+  const r = await fetch(at(path), init);
+  /* 410 and nothing else. Every other failure is worth trying again; this one
+     is the only one that will never stop being true. */
+  if(r.status === 410){ vanish(); throw new Error('this conversation was deleted'); }
+  return r;
+}
+
+/* Deleted from the other tab, or from another window. The page says so and
+   stops asking, in that order. It does NOT navigate anywhere: the column
+   beside it still works, and where to go next is not this page's decision to
+   make for somebody who is in the middle of reading. */
+function vanish(){
+  if(vanished) return;
+  vanished = true;
+  if(es) es.close();
+  say('offline', 'deleted');
+  orphan('err', 'This conversation was deleted. Nothing here is live any more '
+         + '- open another one from Sessions, or start a new one.');
+  /* Everything goes inert EXCEPT the way out. `inert` rather than `disabled`
+     because these are subtrees and not single controls, and it takes them out
+     of the pointer AND the tab order - a composer that answers the keyboard
+     while it cannot send is the same lie in a different place. The column of
+     sessions keeps its full contrast, because the sentence above tells the
+     person to use it. */
+  for(const box of [f, $('right'), $('fresh')]) box.inert = true;
+  drawChats();
+}
+
 /* ⛔ ONE PLACE KNOWS WHAT TO DO WHEN A REQUEST DOES NOT ARRIVE. Six
    `fetch` calls had no failure path at all, and the sharpest of them is the
    stop button: this file says elsewhere that it is the only thing that ends a
@@ -1591,14 +1640,15 @@ function wipe(){
    worked and says so on the page when it did not. */
 async function ask(path, body, whatFailed){
   try {
-    const r = await fetch(at(path), body === undefined
+    const r = await door(path, body === undefined
       ? {method:'POST'}
       : {method:'POST', headers:{'Content-Type':'application/json'},
          body: JSON.stringify(body)});
     if(!r.ok) throw new Error('HTTP ' + r.status);
     return r;
   } catch(err){
-    orphan('err', whatFailed + ' (' + err.message + ').');
+    /* The one failure that already said its piece, and says it once. */
+    if(!vanished) orphan('err', whatFailed + ' (' + err.message + ').');
     return null;
   }
 }
@@ -1712,7 +1762,10 @@ const pause = () => Math.round(1000 / (fps(onScreen()) * onScreen()));
    hidden, which is exactly when the page was still spending its share on
    pictures nobody could see. The loops keep their rhythm so a page coming
    back is one tick away from current. */
-const looking = () => !document.hidden;
+/* ⛔ AND NOTHING IS POLLED FOR A CONVERSATION THAT NO LONGER EXISTS, which is
+   the same gate because it is the same question: is there anything here worth
+   asking about. See `vanish`. */
+const looking = () => !document.hidden && !vanished;
 
 async function tick(){
   if(looking()){ try { await onePass(); } catch(err) {} }
@@ -1734,8 +1787,8 @@ async function onePass(){
     const id = cell.dataset.id;
     if(cell.dataset.blank === '1'){ say(cells.length > 1 ? 'live' : 'idle'); }
     else try {
-      const r = await fetch(at('/live/frame?b=' + encodeURIComponent(id)
-                               + '&t=' + Date.now()), {cache:'no-store'});
+      const r = await door('/live/frame?b=' + encodeURIComponent(id)
+                           + '&t=' + Date.now(), {cache:'no-store'});
       if(r.status === 204){ blank(cell, 'no page yet'); if(id === watched()) say('idle'); }
       else if(r.ok){
         const im = cell.querySelector('img'), blob = await r.blob(), old = im.src;
@@ -1920,10 +1973,10 @@ async function paintWhere(){
     if(who && !fleet.some(b => b.id === who && b.running)){
       paintUrl(''); paintTabs([]); return;
     }
-    /* `at` is what adds the question mark, so the browser goes in as one too
-       and it appends its own with an ampersand. */
-    const r = await fetch(at(who ? '/live/tabs?b=' + encodeURIComponent(who)
-                                 : '/live/tabs'), {cache:'no-store'});
+    /* `at`, inside `door`, is what adds the question mark, so the browser goes
+       in as one too and it appends its own with an ampersand. */
+    const r = await door(who ? '/live/tabs?b=' + encodeURIComponent(who)
+                             : '/live/tabs', {cache:'no-store'});
     if(r.ok){ const j = await r.json(); paintUrl(j.url || ''); paintTabs(j.tabs); }
   } catch(err){}
 }
@@ -2266,7 +2319,7 @@ $('grid').onclick = (e) => {
 
 async function drawFleet(){
   let got = {browsers: []};
-  try { const r = await fetch(at('/live/browsers'), {cache:'no-store'});
+  try { const r = await door('/live/browsers', {cache:'no-store'});
         if(r.ok) got = await r.json(); }
   catch(err){ return; }
   fleet = got.browsers || [];
@@ -2313,8 +2366,8 @@ async function slowTick(){
     const t = shown[nextPane % shown.length];
     nextPane++;
     try {
-      const r = await fetch(at('/live/frame?b=' + encodeURIComponent(t.dataset.id)
-                               + '&t=' + Date.now()), {cache:'no-store'});
+      const r = await door('/live/frame?b=' + encodeURIComponent(t.dataset.id)
+                           + '&t=' + Date.now(), {cache:'no-store'});
       if(r.ok && r.status !== 204){
         const im = t.querySelector('img'), blob = await r.blob(), was = im.src;
         im.src = URL.createObjectURL(blob);
@@ -2657,6 +2710,20 @@ class ChatService:
                 self.save()
 
 
+class SessionGone(Exception):
+    """A request named a conversation that does not exist.
+
+    Its own class rather than an HTTPException so the one handler that answers
+    it lives beside the routes instead of inside each of them: eight routes
+    resolve a session and every one of them would otherwise carry the same
+    three lines, which is how a rule stops being enforced one route later.
+    """
+
+    def __init__(self, session_id: str) -> None:
+        super().__init__(session_id)
+        self.session_id = session_id
+
+
 class Sessions:
     """Every conversation this interface holds, by id, saved as it goes.
 
@@ -2736,6 +2803,38 @@ class Sessions:
         out.sort(key=lambda r: (r.get("saved") or "", r["id"]), reverse=True)
         return out
 
+    def knows(self, session_id: str | None) -> bool:
+        """Whether this conversation exists, WITHOUT bringing it into being.
+
+        ⛔ THE QUESTION EVERY REQUEST HAS TO ASK BEFORE `get`. Building what it
+        does not find is right for a caller that MEANS to start a conversation -
+        `new`, an embedder, a test - and wrong for a request that only means to
+        look at one. Measured: a page left open on a session somebody deleted
+        went on asking `/live/browsers` every three seconds, and one of those
+        questions was enough to declare the session again. The delete worked,
+        answered `forgotten:true`, closed the browsers, erased the file - and the
+        row came back on its own, empty and unnamed, for as long as that tab
+        stayed open. Every visible signal said the delete had failed.
+
+        ⛔ AND IT ASKS ABOUT BOTH HALVES OF A SESSION, because a session is a
+        conversation AND its browsers and either half can be the only one on
+        disk. An agent client that opens a browser in session `work` and never
+        touches this interface writes the browsers and no transcript; opening
+        `?s=work` here has to work, and asking only about transcripts would have
+        refused it. That is the same defect this method exists to fix, made one
+        step further along - which is why it is written into the one question
+        rather than into the routes that ask it.
+
+        Each half is asked of whoever owns it: what is in memory of this
+        registry, what is on disk of the store. The default is always known
+        because it is the conversation a page with no id gets, and on a fresh
+        install nothing has written it down yet.
+        """
+        at = session_id or DEFAULT_CHAT_ID
+        return (at == DEFAULT_CHAT_ID or at in self._live
+                or store.load_chat(at) is not None
+                or store.load(at) is not None)
+
     def rename(self, session_id: str, name: str) -> bool:
         clean = " ".join((name or "").split())[:80]
         if not clean:
@@ -2772,6 +2871,19 @@ class Sessions:
 
 
 def build_app(link: Link, sessions: "Sessions") -> Starlette:
+    def named(session_id: str | None) -> ChatService:
+        """The conversation with this id, refusing one nobody declared.
+
+        ⛔ ONE PLACE TURNS AN ID OFF THE WIRE INTO A CONVERSATION, because the
+        id does not always arrive the same way: eight routes carry it in the
+        query string and the rename carries it in the body. Written twice, the
+        rename is where it would have gone on resurrecting deleted sessions
+        after the eight beside it had stopped.
+        """
+        if not sessions.knows(session_id):
+            raise SessionGone(session_id or "")
+        return sessions.get(session_id)
+
     def which(request: Request) -> ChatService:
         """The conversation this request is about.
 
@@ -2781,8 +2893,13 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         picture on the right belonging to somebody else's browser. A caller that
         names nothing gets the default conversation, which is what every page
         written before this existed does.
+
+        ⛔ AND IT REFUSES AN ID NOBODY DECLARED, instead of declaring it. A
+        request is a way to look at a conversation, never a way to start one -
+        `/sessions/new` is. See `Sessions.knows` for what a page left open on a
+        deleted session did to it.
         """
-        return sessions.get(request.query_params.get("s"))
+        return named(request.query_params.get("s"))
 
     async def root(_request: Request) -> HTMLResponse:
         return HTMLResponse(PAGE)
@@ -2798,8 +2915,9 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
     async def rename_session(request: Request) -> JSONResponse:
         body = await request.json()
         at = (body or {}).get("id") or DEFAULT_CHAT_ID
+        service = named(at)
         done = sessions.rename(at, (body or {}).get("name", ""))
-        return JSONResponse({"renamed": done, "name": sessions.get(at).name})
+        return JSONResponse({"renamed": done, "name": service.name})
 
     async def forget_session(request: Request) -> JSONResponse:
         body = await request.json()
@@ -3058,7 +3176,20 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         await which(request).link.call("session_select_page", {"page_id": page_id})
         return JSONResponse({"ok": True})
 
-    return Starlette(routes=[
+    async def vanished(_request: Request, exc: Exception) -> JSONResponse:
+        """410, because the conversation existed and does not any more.
+
+        Not 404: the page asking is a page that HAD this conversation open, and
+        the difference between "there is no such thing" and "this is over" is
+        the difference between a page that says something wrong happened and a
+        page that says what happened. It is also the only status the page reads
+        as a reason to stop asking - anything else is a failure worth retrying.
+        """
+        return JSONResponse({"error": "this conversation was deleted",
+                             "id": getattr(exc, "session_id", "")},
+                            status_code=410)
+
+    return Starlette(exception_handlers={SessionGone: vanished}, routes=[
         Route("/", root),
         Route("/sessions", listing),
         Route("/sessions/new", new_session, methods=["POST"]),

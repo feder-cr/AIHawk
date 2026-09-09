@@ -122,6 +122,10 @@ async def test_the_workspace_asks_the_one_question_that_starts_nothing():
     the browsers route.
     """
     link, sessions, client = _app()
+    # Opened, and nothing asked of it: that is the case under test. It has to be
+    # opened rather than only named, because a request may no longer bring a
+    # conversation into being - see `Sessions.knows`.
+    sessions.get("mai-usata")
 
     got = client.get("/live/browsers?s=mai-usata").json()
 
