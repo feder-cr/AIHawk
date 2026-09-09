@@ -376,6 +376,32 @@ code,pre,.g,.meta,.badge,#url{
 #split:focus-visible{ outline:none }
 #split:focus-visible::after, #split[data-drag]::after{ background:var(--accent); width:2px }
 #right{ flex:1; min-width:0; display:flex; flex-direction:column; background:var(--well) }
+/* ⛔ UNDER 720px THE TWO PANES STOP BEING SIDE BY SIDE, or the right one is
+   allotted nothing and its bar spills out of the window. Measured in a frame
+   320px wide, which is what WCAG 1.4.10 asks a layout to survive: the document
+   scrolled sideways to 482px, the conversation was squeezed to 270 and the
+   browser pane was FOUR HUNDRED AND EIGHTY-TWO minus everything, which is to
+   say zero, with the Live/Frozen pair and the layout picker drawn past the
+   edge of the screen.
+
+   Stacked, both halves keep a full width and the page scrolls in one direction
+   only. The spine stays where it is - it belongs to the frame, and that was
+   decided - so it keeps the conversation company on the first row.
+
+   ⛔ AND THE MEASUREMENT NEEDED A REAL VIEWPORT. The `zoom` property scales
+   what is drawn and does NOT move the CSS viewport, so media queries do not
+   fire under it: a first pass "at 400%" reported a failure that was an artefact
+   of the instrument. An iframe of a fixed width has a viewport of its own, and
+   that is what these numbers come from. */
+@media (max-width:720px){
+  body{ flex-wrap:wrap }
+  /* `min-width:0` or the pane refuses to go under its content's own minimum,
+     the flex line overflows, and the pane wraps to a row of its own - leaving
+     the spine alone above it as a 93px stub with the word clipped inside. */
+  #left{ width:calc(100% - var(--spine)); min-width:0; height:60vh }
+  #split{ display:none }
+  #right{ flex:1 0 100%; height:40vh }
+}
 /* Three groups and not four things in a row: the name, then what this
    conversation is costing and running, then the one thing you can do to it.
    The rule that separates the last is the same hairline the panes use. */
@@ -692,8 +718,19 @@ form{ position:relative; padding:var(--s3) var(--s4) var(--s4);
    50, so the top edge of the product broke by twelve pixels on its main
    seam - the one place a misalignment is read as the whole thing being
    loose rather than as one box being wrong. */
-#chrome{ flex:none; height:var(--topbar); display:flex; align-items:center;
-         gap:var(--s2); padding:0 var(--s3); background:var(--raised);
+/* ⛔ IT WRAPS, AND THE HEIGHT IS A FLOOR RATHER THAN A CEILING. Measured at
+   400% zoom, which WCAG 1.4.10 asks a layout to survive and which is the same
+   thing as a 320px window: this bar was the only place on the page that pushed
+   the document sideways. The address can shrink to nothing, but the Live/Frozen
+   pair and the layout picker cannot, so three fixed-width groups in a row on a
+   fixed 50px line had nowhere to go and went past the edge. A `height` would
+   then have clipped the second row, so it is a `min-height`: the bar is one
+   line whenever one line fits, and it is the bar's own business when it does
+   not. Found by the reflow check and not by looking - at 100% there is room,
+   so nothing shows. */
+#chrome{ flex:none; min-height:var(--topbar); display:flex; align-items:center;
+         flex-wrap:wrap; row-gap:var(--s1);
+         gap:var(--s2); padding:var(--s1) var(--s3); background:var(--raised);
          border-bottom:1px solid var(--line-1) }
 /* The honesty contract: nothing in here is interactive except what is, so
    nothing in here gets a pointer cursor except what does. */

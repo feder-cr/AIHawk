@@ -20,6 +20,10 @@ from aihawk.web import PAGE
 #: comment explaining why something is not done must not read as doing it.
 CODE = re.sub(r"/\*.*?\*/", "", PAGE, flags=re.S)
 
+#: The stylesheet alone. A brace count over the whole page would count
+#: every block in the script too, and answer about the wrong thing.
+CSS = PAGE[PAGE.index("<style>"):PAGE.index("</style>")]
+
 
 def test_no_glyph_stands_in_for_an_icon():
     """⛔ AN ICON IS DRAWN. A pencil, an arrow or an emoji borrowed from the text
@@ -116,6 +120,52 @@ def test_the_surfaces_the_browser_would_have_picked_are_picked_here():
         "%d rules turn the focus ring off; the splitter is the only element "
         "that draws its own" % len(off))
 
+
+def test_the_stylesheet_closes_everything_it_opens():
+    """⛔ A MISSING BRACE DOES NOT FAIL, IT SWALLOWS. An `@media` block left
+    unclosed while being moved took every rule after it inside itself, so the
+    whole page above the breakpoint quietly lost its header height, its browser
+    bar and its composer width - and nothing went red, because a stylesheet
+    with an unbalanced brace is still one the browser parses. It was found by
+    measuring a layout whose numbers made no sense.
+
+    Counting is the whole check, and it is enough.
+
+    Known-bad: drop any closing brace.
+    """
+    css = re.sub(r"/\*.*?\*/", "", CSS, flags=re.S)
+    opened, closed = css.count("{"), css.count("}")
+    assert opened == closed, (
+        "the stylesheet opens %d blocks and closes %d, so everything after "
+        "the unclosed one is inside it" % (opened, closed))
+
+
+def test_the_narrow_layout_comes_after_the_layout_it_overrides():
+    """⛔ SAME SPECIFICITY, SO SOURCE ORDER DECIDES, and the first version of
+    this rule sat ABOVE the rules it meant to override: it changed nothing, and
+    measured as though the breakpoint did not exist.
+
+    Under 720px the two panes stack, because side by side the right one is
+    allotted nothing and its bar is drawn past the edge of the window. Measured
+    in a frame 320px wide, which is what WCAG 1.4.10 asks a layout to survive:
+    the document scrolled sideways to 482px before this rule and not at all
+    after it, at every width from 320 to 1400.
+
+    Known-bad, three: move the block above `#right`, drop the wrap, drop the
+    hidden splitter.
+    """
+    narrow = CSS.find("@media (max-width:720px)")
+    assert narrow > 0, "nothing stacks the panes when they no longer fit"
+    base = CSS.find("#right{ flex:1; min-width:0")
+    assert base > 0, "the base rule for the browser pane is gone"
+    assert narrow > base, (
+        "the narrow layout is declared before the layout it overrides, so at "
+        "equal specificity the base rule wins and the breakpoint does nothing")
+    block = CSS[narrow:CSS.index("}", CSS.index("#right{ flex:1 0 100%", narrow))]
+    for needed in ("flex-wrap:wrap", "#split{ display:none }"):
+        assert needed in block, (
+            "the stacked layout is missing %r, without which the panes do not "
+            "stack at all" % needed)
 
 def test_the_type_scale_has_steps_a_reader_can_see():
     """⛔ EITHER THE SAME SIZE OR A REAL STEP, NEVER A HAIR APART. Measured on
