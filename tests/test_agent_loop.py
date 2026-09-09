@@ -974,16 +974,27 @@ def test_the_answer_is_asked_for_the_way_a_person_would_write_it():
     that stripped the decoration would be a filter over a habit instead of an
     instruction against it.
 
-    ⛔ AND THE FIRST VERSION OF THIS ASKED FOR NONE OF IT, WHICH IS NOT WHAT WAS
-    ASKED FOR. "No emoji" is a ban; what was asked for was much less decoration
-    and answers that read like a person wrote them. The ban also bought nothing:
-    MEASURED against the model this product runs, on eight finished tasks with
-    the answer asked for three ways, the arm carrying no instruction at all
-    produced ONE emoji in eight. What it produced instead was 19 bold labels, 8
-    numbered checklists, 7 em dashes, 2 openings that announce what is coming
-    and 2 closings that summarise what was just said. Those are the tells, and
-    they are what the sentences in the prompt aim at. The same eight tasks with
-    them: 3 bold, 0 checklists, 0 em dashes, 0 preambles, 0 restatements.
+    The rest of the shape came from a measurement worth keeping: against the
+    model this product runs, on eight finished tasks with the answer asked for
+    three ways, the arm carrying no instruction at all produced 19 bold labels,
+    8 numbered checklists, 7 em dashes, 2 openings that announce what is coming
+    and 2 closings that summarise what was just said. The same eight tasks with
+    the sentences below: 3 bold, 0 checklists, 0 em dashes, 0 preambles, 0
+    restatements. Those sentences stay exactly as they are.
+
+    ⛔ THE EMOJI RULE IS FLAT NOW, AND IT IS FLAT BECAUSE THE CONDITIONAL ONE WAS
+    READ AS PERMISSION. It said an emoji "is fine where it carries something the
+    words do not, and wrong as a status marker at the head of every line" - and
+    what came back was a tick at the head of every line, the one thing that
+    sentence named. That is what a rule with an exception in it buys: the model
+    satisfies it by finding the exception.
+
+    The same eight-task measurement had also found only ONE emoji in eight with
+    no instruction at all, and that number is why the earlier wording went soft.
+    It was a measurement of eight short tasks, not of a real session, and a real
+    session settled it: the owner read one and asked for no emoji, full stop
+    (2026-09-09). Eight tasks is not the product being used. Do not soften this
+    again on the strength of that number.
 
     ⛔ AND IT ASSERTED THE WORD `markdown`, WHERE THE REQUIREMENT IS A MEANING.
     The prompt now names the marks it allows - a heading, a list, a table -
@@ -992,15 +1003,27 @@ def test_the_answer_is_asked_for_the_way_a_person_would_write_it():
     of what the word stood for is the comment-versus-code defect, moved into a
     string.
 
-    Known-bad, four: drop the sentence about decoration; drop the marks it
-    names; ask for "plain text" again; and put an emoji or an em dash in the
-    prompt itself - one that decorates while asking for restraint teaches the
-    habit it is trying to curb.
+    Known-bad, five: drop the sentence about decoration; drop the marks it
+    names; ask for "plain text" again; put an emoji or an em dash in the prompt
+    itself - one that decorates while asking for restraint teaches the habit it
+    is trying to curb - and put the exception back into the emoji sentence.
     """
     low = SYSTEM_PROMPT.lower()
     assert "emoji" in low, (
         "nothing says anything about decoration, and the recap of a long task "
         "is exactly where a model reaches for a tick: %r" % SYSTEM_PROMPT)
+    # ⛔ THE WORD IS NOT THE RULE. This asserted `emoji` alone, and the sentence
+    # that licensed emoji satisfied it perfectly - the same comment-versus-code
+    # defect the paragraph above names for `markdown`, committed by the very
+    # gate that names it. What has to be true is that the prompt FORBIDS them.
+    said = next(s for s in SYSTEM_PROMPT.split(". ") if "emoji" in s.lower())
+    assert any(no in said.lower() for no in ("never", "do not", "don't", "no ")), (
+        "the prompt mentions emoji without forbidding them: %r" % said)
+    for loophole in ("is fine", "are fine", "where it", "unless", "except",
+                     "may use", "can use", "sometimes", "sparingly", "rare"):
+        assert loophole not in said.lower(), (
+            "the emoji rule carries an exception (%r), and an exception is what "
+            "a model reaches for: %r" % (loophole, said))
     named = [mark for mark in ("heading", "list", "table") if mark in low]
     assert len(named) == 3, (
         "the pane draws these and the prompt names %s, so the model is guessing "

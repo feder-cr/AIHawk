@@ -30,11 +30,16 @@ SYSTEM_PROMPT = (
     "what you are about to say, do not repeat the question back, and do not end "
     "by summarising what you just wrote - say it once. Prose by default. Use a "
     "heading, a list or a table only when the content really is one; a bold "
-    "label in front of every paragraph is a template, not writing. Keep "
-    "decoration rare: an emoji is fine where it carries something the words do "
-    "not, and wrong as a status marker at the head of every line. Write every "
+    "label in front of every paragraph is a template, not writing. Never use "
+    "emoji: not as a status marker in front of a line, not as a bullet, not for "
+    "emphasis, not one. Say in words whether something worked. Write every "
     "dash as a plain hyphen."
 )
+#: ⛔ THE EMOJI RULE IS FLAT, BECAUSE THE CONDITIONAL ONE WAS READ AS PERMISSION.
+#: It used to say an emoji "is fine where it carries something the words do not,
+#: and wrong as a status marker at the head of every line", and the answers came
+#: back with a tick at the head of every line. A rule with an exception in it is
+#: a rule the model satisfies by finding the exception.
 
 Say = Callable[[str, str], Awaitable[None]]
 
