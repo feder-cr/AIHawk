@@ -162,6 +162,32 @@ def _describe_exit(proxy: Optional[dict], explicit: Optional[str],
     return proxy["server"]
 
 
+def engine_here(env: Optional[Mapping[str, str]] = None) -> dict:
+    """The engine THIS process was told to launch, if it was told one.
+
+    ⛔ THE ENGINE IS A PROPERTY OF THE PROCESS, NOT OF THE SESSION, and keeping
+    those two apart is the whole reason this exists. `WHO_A_BROWSER_IS` leaves
+    `binary_path` out of what a session writes down, and rightly: it is a path
+    on THIS machine, and a session carried to another one must resolve an engine
+    rather than insist on a path that means nothing there. But leaving it out of
+    the FILE was read as leaving it out of the browser, so a browser restored
+    from a saved session came back without the engine the person had asked for.
+
+    Measured 2026-09-09, and it is not only a developer's problem. Somebody
+    running `aihawk ui --binary <their build>` and reopening a session got
+    browsers on a DIFFERENT engine than the one they named, silently; on a build
+    whose seal has no published assets - anything built locally - they got no
+    browser at all, because there was nothing to download and nothing to run.
+
+    The transcript is what happened; the engine is what this build was asked
+    for. Same shape as the system prompt, which a saved conversation used to
+    carry back in place of the current one.
+    """
+    env = os.environ if env is None else env
+    named = env.get("STEALTHFOX_BINARY")
+    return {"binary_path": named} if named else {}
+
+
 def plan_session(seed: Optional[int] = None, proxy: Optional[str] = None,
                  profile: Optional[str] = None,
                  env: Optional[Mapping[str, str]] = None) -> SessionPlan:
@@ -202,8 +228,7 @@ def plan_session(seed: Optional[int] = None, proxy: Optional[str] = None,
         "seed": chosen_seed,
         "headless": env.get("STEALTHFOX_HEADLESS", "1") != "0",
     }
-    if env.get("STEALTHFOX_BINARY"):
-        kwargs["binary_path"] = env["STEALTHFOX_BINARY"]
+    kwargs.update(engine_here(env))
     if chosen_proxy is not None:
         kwargs["proxy"] = chosen_proxy
     if directory is not None:

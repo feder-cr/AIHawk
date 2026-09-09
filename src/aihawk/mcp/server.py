@@ -311,7 +311,16 @@ def restore(session_id: str | None = None) -> bool:
         # make it carry a fact about pages, which is the one thing it has
         # deliberately never known.
         owed = config.pop("urls", None)
-        registry.declare(key, config)
+        # ⛔ AND THE ENGINE COMES FROM THIS PROCESS, NOT FROM THE FILE. The file
+        # deliberately does not carry `binary_path` - it is a path on this
+        # machine, and a session opened on another one must resolve an engine
+        # rather than insist on one that is not there. Leaving it out of the
+        # file was read as leaving it out of the BROWSER, so a restored browser
+        # came back without the engine the person had named on the command
+        # line: on a locally built one, with nothing to download, it could not
+        # start at all. What the file says is who this browser is; what this
+        # build was asked to run it on is not the file's to say.
+        registry.declare(key, dict(config, **plan.engine_here()))
         if owed:
             _tabs_owed[key] = list(owed)
     if saved.get("focus"):

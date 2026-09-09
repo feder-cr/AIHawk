@@ -407,3 +407,58 @@ async def test_closing_the_last_browser_stops_the_session_being_listed(registry)
 
     assert store.load("default") is None
     assert "no saved sessions yet" in await server.session_list()
+
+
+async def test_a_restored_browser_runs_on_the_engine_this_build_was_given(
+        registry, monkeypatch):
+    """⛔ THE ENGINE IS A PROPERTY OF THE PROCESS, NOT OF THE SESSION, and
+    leaving it out of the FILE was read as leaving it out of the BROWSER.
+
+    `WHO_A_BROWSER_IS` keeps `binary_path` out of what a session writes down,
+    and rightly: it is a path on THIS machine, and a session carried to another
+    one must resolve an engine rather than insist on a path that means nothing
+    there. But a browser restored from that file was then declared without an
+    engine at all, so it came back on whatever the seal resolved instead of on
+    the one the person had named.
+
+    Measured 2026-09-09, and not only a developer's problem: somebody running
+    `aihawk ui --binary <their build>` and reopening a session got browsers on a
+    DIFFERENT engine, silently. On a locally built one - a seal with no
+    published assets - they got no browser at all, because there was nothing to
+    download and nothing to run. The interface's own agent hit it live and
+    worked around it by closing and reopening every browser under the same name,
+    which works precisely because `browser_open` goes through the launch plan
+    and a restore does not.
+
+    Same shape as the system prompt a saved conversation used to carry back in
+    place of the current one: the file says what happened, the build says what
+    it runs on.
+
+    Known-bad: `registry.declare(key, config)` without the engine.
+    """
+    monkeypatch.setenv("STEALTHFOX_BINARY", "C:/an/engine/firefox.exe")
+    store.save("default", {"uno": {"seed": 4242, "headless": True}})
+
+    session = await server.ready(browser_id="uno")
+
+    assert session.kwargs.get("seed") == 4242, "it came back as somebody else"
+    assert session.kwargs.get("binary_path") == "C:/an/engine/firefox.exe", (
+        "the browser came back without the engine this process was told to "
+        "run, so it resolved one from the seal instead: %r" % session.kwargs)
+
+
+async def test_and_the_engine_is_still_never_written_into_the_file(registry,
+                                                                  monkeypatch):
+    """The other half, and the reason the first half is not simply adding
+    `binary_path` to what a session saves. A path on this machine written into a
+    session file is a session that only opens here.
+
+    Known-bad: put "binary_path" into WHO_A_BROWSER_IS.
+    """
+    monkeypatch.setenv("STEALTHFOX_BINARY", "C:/an/engine/firefox.exe")
+    await server.browser_open(browser_id="uno", seed=4242)
+
+    saved = store.load("default")
+    assert "binary_path" not in saved["browsers"]["uno"], (
+        "the session file carries a path that means nothing on another "
+        "machine: %r" % saved["browsers"]["uno"])
