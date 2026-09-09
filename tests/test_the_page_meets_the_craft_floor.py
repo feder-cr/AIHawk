@@ -38,7 +38,13 @@ def test_no_glyph_stands_in_for_an_icon():
         % ", ".join(sorted(entities - allowed)))
 
     # Emoji ride in as characters too, and are the same shortcut with a colour.
-    emoji = [c for c in PAGE if ord(c) > 0x2100 and c not in "⛔’—"]
+    # Only the marker this project writes its own hard rules with. The em dash
+    # and the curly quote used to be allowed here too, and they were not in the
+    # page at all: an allowlist that admits what nobody uses is a hole waiting
+    # for the day somebody does - and the em dash is separately banned across
+    # this whole product, so allowing it in the page would have been a gate
+    # contradicting a rule.
+    emoji = [c for c in PAGE if ord(c) > 0x2100 and c != "⛔"]
     assert not emoji, "the page draws with emoji: %s" % "".join(sorted(set(emoji)))
 
 

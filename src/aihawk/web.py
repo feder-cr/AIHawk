@@ -343,6 +343,11 @@ code,pre,.g,.meta,.badge,#url,#tok{
    hand. */
 #split{ flex:0 0 9px; cursor:col-resize; position:relative; background:none;
         border:0; padding:0; touch-action:none }
+/* ⛔ NINE PIXELS OF LINE, TWENTY-FIVE OF TARGET. WCAG 2.2 puts the floor at
+   24px and none of its exceptions cover a separator: the arrow keys are a
+   path, not a control. The grab area reaches into the two panes it divides,
+   which is where a hand aims anyway, and nothing about the layout moves. */
+#split::before{ content:""; position:absolute; inset:0 -8px; cursor:col-resize }
 #split::after{ content:""; position:absolute; top:0; bottom:0; left:4px; width:1px;
                background:var(--line-1); transition:background-color 120ms ease-out }
 #split:hover::after{ background:var(--line-3) }
