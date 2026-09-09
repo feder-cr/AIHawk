@@ -64,6 +64,41 @@ def test_the_drawn_icons_share_one_stroke():
         % (len(widths), ", ".join(sorted(widths))))
 
 
+def test_the_controls_on_a_bar_are_declared_once():
+    """⛔ TWO RULES THAT MUST AGREE DO NOT AGREE. The model badge and the Clear
+    button sit side by side on the same bar and were declared separately, so a
+    pass that put the control height on one of them and not the other left a
+    40px pill beside a 20px one - same radius, visibly different shapes, and
+    nothing went red because each rule was internally fine.
+
+    This page already learned it once for the browser bar, where the address was
+    24 tall, the Live and Frozen pair 30 and the layout picker 30: three
+    controls on one line sitting on three different rhythms. The fix there was
+    the same as the fix here - say it once.
+
+    Known-bad, two: split them back into two rules; give one of them a size of
+    its own after the shared rule.
+    """
+    shared = re.search(r"\.badge, ?#fresh\{([^}]*)\}", CODE)
+    assert shared, (
+        "the badge and the button are declared apart again, so the next pass "
+        "that touches one of them can leave the other behind")
+    for needed in ("height", "font-size", "border-radius", "padding"):
+        assert needed in shared.group(1), (
+            "the shared rule does not state %r, so each control decides it "
+            "for itself" % needed)
+
+    # The rule whose selector IS `#fresh`, not the shared one that contains
+    # the string: `#fresh{` appears inside `.badge, #fresh{` too, and the first
+    # version of this gate accused the very rule it exists to require.
+    own = [body for sel, body in re.findall(r"([^{}]+)\{([^}]*)\}", CODE)
+           if sel.strip().endswith("#fresh") and "," not in sel]
+    for body in own:
+        for forbidden in ("height", "font-size", "border-radius", "padding"):
+            assert forbidden not in body, (
+                "`#fresh` sets its own %r after the shared rule, which is how "
+                "the two drifted apart the first time" % forbidden)
+
 def test_an_icon_draws_the_stroke_it_declares():
     """⛔ THE ONE-STROKE RULE WAS TRUE IN THE ATTRIBUTE AND FALSE ON THE SCREEN.
     An `svg` drawn at 12px from a 16-unit viewBox scales everything inside it by

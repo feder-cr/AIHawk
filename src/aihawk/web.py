@@ -462,15 +462,22 @@ code,pre,.g,.meta,.badge,#url{
    things being pushed, and this rule only describes the size it is announced
    at rather than drawn at. */
 #head h1{ margin:0; font-size:var(--t-ui); font-weight:600 }
-.badge{ font-size:var(--t-label); color:var(--fg-2);
-        background:var(--raised); border:1px solid var(--line-2);
-        padding:3px 9px; border-radius:var(--r-pill) }
+/* ⛔ ONE RULE FOR BOTH, BECAUSE TWO RULES THAT MUST AGREE DO NOT. The badge and
+   the Clear button sit side by side on the same bar and were declared
+   separately: putting the control height on one of them and not the other left
+   a 40px pill beside a 20px one, same radius, visibly different shapes. Written
+   once, they cannot drift again.
+
+   Height from the control token, text at the body size - 12px on a bar control
+   is a caption size, and these are things you read and press. */
+.badge, #fresh{ height:var(--h-ctl); display:inline-flex; align-items:center;
+                font-size:var(--t-ui); color:var(--fg-2);
+                background:var(--raised); border:1px solid var(--line-2);
+                padding:0 var(--s3); border-radius:var(--r-pill) }
+
 /* 24px is the floor WCAG 2.2 sets for a target, and these three sat at 21,
    22 and 23 - close enough to look fine and short enough to fail. */
-#fresh{ min-height:var(--h-ctl); font-size:var(--t-label); font-family:var(--sans);
-        color:var(--fg-2);
-        background:var(--raised); border:1px solid var(--line-2); cursor:pointer;
-        padding:3px 9px; border-radius:var(--r-pill);
+#fresh{ font-family:var(--sans); cursor:pointer;
         transition:background-color 120ms ease-out, color 120ms ease-out }
 #fresh:hover:not(:disabled){ background:var(--hover); color:var(--fg) }
 #fresh:disabled{ opacity:.3; cursor:default }
