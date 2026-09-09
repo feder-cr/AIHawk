@@ -16,6 +16,8 @@ import asyncio
 import base64
 import json
 import re
+import shutil
+import subprocess
 
 import pytest
 
@@ -553,11 +555,13 @@ async def test_the_stage_asks_for_frames_at_a_rate_it_has_measured():
     picture. Both edges, and both numbers measured rather than chosen.
 
     ⛔ THE PACE IS NO LONGER ONE LITERAL, because the stage is no longer one
-    screen. It is a table of frames-a-second by how many screens are showing,
-    and the loop's pause is derived from it. The old gate read
-    `setTimeout(tick, 18)` and asserted on 18; that number does not exist any
-    more, so this reads the table instead - the same question asked of the
-    thing that now answers it.
+    screen. It is a rate per screen, decided by how many screens are drawn, and
+    the loop's pause is derived from it. The old gate read `setTimeout(tick,
+    18)` and asserted on 18; then it read a table of three entries. Both of
+    those are gone: what the page declares now is a function, so this gate runs
+    it - which is also the only way to ask what it answers for three screens, a
+    case a table of 1, 2 and 4 could not express and a four-up layout produces
+    the moment three browsers are running.
 
     ⛔ AND THE COST OF A FRAME WAS WRONG BY A FACTOR OF FOUR. This file said 22
     ms of pipe, and everything about the old design followed from it: one live
@@ -586,30 +590,59 @@ async def test_the_stage_asks_for_frames_at_a_rate_it_has_measured():
     assert len(re.findall(r"setTimeout\(tick,", code)) == 1, (
         "the pump is scheduled from more than one place, so its pace is no "
         "longer one number anybody can read")
-    table = re.search(r"const FPS = \{([^}]*)\}", code)
-    assert table, "the stage no longer declares its frames a second"
-    fps = {int(k): int(v) for k, v in re.findall(r"(\d+)\s*:\s*(\d+)", table.group(1))}
-    assert set(fps) == {1, 2, 4}, "the layouts on offer are %s" % sorted(fps)
+    # ⛔ AND THE RATE IS PACED ON THE STAGE, NOT ON THE BUTTON. A layout is a
+    # ceiling on how many screens you watch at once; how many there ARE is a
+    # different number, and pacing two browsers as though they were four gave
+    # them half the frames the measurement says they can have.
+    assert "fps(onScreen()) * onScreen()" in code, (
+        "the pause is no longer derived from the screens actually on the stage")
+
+    decl = re.search(r"const LAYOUTS = \[[^\]]*\];\s*"
+                     r"const TOPRATE = \d+, CEILING = \d+;\s*"
+                     r"const fps = \(n\) => .+", code)
+    assert decl, "the stage no longer declares the pace it keeps"
+
+    node = shutil.which("node")
+    if not node:  # pragma: no cover - every runner here has one
+        pytest.skip("needs node to EXECUTE the pace")
+
+    # ⛔ EXECUTED, NOT READ. The pace used to be a literal table a regex could
+    # check entry by entry. It is a function now, so the only honest way to ask
+    # what it answers for three screens is to run it - and three screens is a
+    # real case the table never had, because a four-up layout with three
+    # browsers running draws exactly three.
+    js = decl.group(0) + chr(10) + (
+        "process.stdout.write(JSON.stringify("
+        "[LAYOUTS, CEILING, [1,2,3,4].map(n => fps(n))]));")
+    done = subprocess.run([node, "-e", js], capture_output=True, text=True,
+                          encoding="utf-8", timeout=30)
+    assert done.returncode == 0, "the pace threw: %s" % done.stderr
+    layouts, ceiling, each = json.loads(done.stdout)
+
+    assert layouts == [1, 2, 4], "the layouts on offer are %s" % layouts
 
     from aihawk.mcp.session import StealthSession
 
-    assert fps[1] >= StealthSession.WATCH_FPS, (
+    assert each[0] >= StealthSession.WATCH_FPS, (
         "one screen is asked for %d frames a second while the engine is told to "
         "produce %d: the difference is made, held and thrown away, which is the "
         "defect this gate was written for"
-        % (fps[1], StealthSession.WATCH_FPS))
+        % (each[0], StealthSession.WATCH_FPS))
 
-    #: Measured 2026-09-09, four browsers, this pipe. The ceiling is the rate at
-    #: which the measurement showed an action still landing promptly: 80 frames
-    #: a second cost about half the pipe, so half of that is the budget spent.
-    A_FRAME_MS, CEILING = 6, 40
-    for screens, each in fps.items():
-        total = screens * each
-        assert total <= CEILING, (
-            "%d screens at %d frames a second each is %d requests a second, and "
-            "at about %d ms of pipe apiece that is %d%% of it - the agent's "
-            "clicks go down the same pipe"
-            % (screens, each, total, A_FRAME_MS, total * A_FRAME_MS / 10))
+    #: Measured 2026-09-09, four browsers, this pipe. 80 frames a second cost
+    #: about half of it, so a quarter of the pipe is the budget spent.
+    A_FRAME_MS, A_QUARTER_MS = 6, 250
+    assert ceiling * A_FRAME_MS <= A_QUARTER_MS, (
+        "the stage may ask for %d frames a second, which at about %d ms apiece "
+        "is %d ms of every second - the agent's clicks go down the same pipe"
+        % (ceiling, A_FRAME_MS, ceiling * A_FRAME_MS))
+    for screens, rate in enumerate(each, start=1):
+        assert rate >= 1, "%d screens are paced at %d frames a second" % (screens, rate)
+        assert screens * rate <= ceiling, (
+            "%d screens at %d frames a second each is %d requests a second, over "
+            "the %d the pipe was measured to have room for"
+            % (screens, rate, screens * rate, ceiling))
+
 async def test_the_answer_is_built_from_nodes_and_never_from_html():
     """The model's Markdown is drawn, and it is drawn without `innerHTML`.
 

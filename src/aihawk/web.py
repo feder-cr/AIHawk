@@ -82,10 +82,16 @@ PAGE = r"""<!doctype html>
   --lip:    inset 0 1px 0 rgba(255,255,255,.045);
 
   /* Ink, with the contrast each one carries against --base. */
-  --fg:   #e8ebed;   /* 15.0:1  what the user typed, what the model answered */
-  --fg-2: #a8b1b9;   /*  8.7:1  narration and chrome labels */
-  --fg-3: #78828a;   /*  4.8:1  tool output and arguments */
-  --fg-4: #4a545c;   /*  2.2:1  step numbers and placeholder: decorative only */
+  --fg:   #e8ebed;   /* 15.6:1  what the user typed, what the model answered */
+  --fg-2: #a8b1b9;   /*  8.6:1  narration and chrome labels */
+  --fg-3: #78828a;   /*  4.8:1  tool output and arguments, and now every quiet word */
+  /* ⛔ AND `--fg-4` NEVER COLOURS WORDS. It was carrying the count beside a
+     conversation, the address under a link, the timing on a step, the marker of
+     a list, the dim halves of the URL and the placeholder inside a preview -
+     nine rules, all of them text, all of them at 2.4:1 where AA asks 4.5. The
+     worst was the address: it is printed precisely so an injected link can be
+     read, and it was the hardest thing on the page to read. */
+  --fg-4: #4a545c;   /*  2.4:1  decoration only - a dot, a chevron, never a word */
 
   --accent:    #e38a5d;
   --on-accent: #101317;
@@ -108,13 +114,16 @@ PAGE = r"""<!doctype html>
 
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:32px;
   --r-sm:4px; --r:8px; --r-lg:12px; --r-pill:999px;
+  --spine:54px;                               /* the sessions band */
+  --topbar:50px;                              /* every header, one height */
   --gutter:1.75rem;                            /* three digits of 11px mono */
   --gap:.55rem;
   --indent:calc(var(--gutter) + var(--gap));   /* ONE source for the step indent */
 }
 
 *{ box-sizing:border-box }
-body{ margin:0; height:100vh; display:flex; background:var(--base); color:var(--fg);
+body{ margin:0; height:100vh; display:flex; position:relative;
+      background:var(--base); color:var(--fg);
       font:var(--t-body)/1.55 var(--sans); }
 code,pre,.g,.meta,.badge,#url,#tok{
   font-family:var(--mono);
@@ -123,8 +132,15 @@ code,pre,.g,.meta,.badge,#url,#tok{
      being the text the model emitted. */
   font-variant-ligatures:none; }
 .meta,.g,#tok{ font-variant-numeric:tabular-nums }
+/* ⛔ `--fg-4` IS DECLARED DECORATIVE AT 2.4:1 AND THIS CLASS PUT WORDS ON IT.
+   Measured on the running page: the state beside the browser read at 2.23:1,
+   the meter at 2.71, the placeholder inside a screen at 2.51, the layout icons
+   at 2.51. WCAG AA wants 4.5:1 for text and 3:1 for a graphic that carries
+   meaning, and the token's own comment in this file says what it is for. A
+   label is a small word, not a faint one: `--fg-3` is 4.8:1 and still reads as
+   quieter than the thing it labels. */
 .label{ font-size:var(--t-label); font-weight:600; letter-spacing:.07em;
-        text-transform:uppercase; color:var(--fg-4); line-height:1 }
+        text-transform:uppercase; color:var(--fg-3); line-height:1 }
 .sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%) }
 /* `hidden` must beat any display an id or class sets, or an element the script
    believes it has hidden stays on screen. This shipped once on the live image
@@ -144,12 +160,24 @@ code,pre,.g,.meta,.badge,#url,#tok{
    a choice. It is one keystroke away, it remembers what you last did with it,
    and the toggle lives IN the header row rather than above the list - a control
    floating over a panel is what "bolted on" looks like. */
-#rail { width:224px; flex:none; display:flex; flex-direction:column;
-        background:var(--well); border-right:1px solid var(--line-1) }
+/* ⛔ IT FLOATS OVER THE CONVERSATION, IT DOES NOT PUSH IT. As a flex sibling
+   the column took its width out of the room and everything to its right moved
+   the moment it opened, which for a panel you open and shut twenty times an
+   hour is the whole layout twitching. Out of flow it costs nothing: the
+   conversation stays exactly where it was, the panel lies on top of the near
+   edge of it, and because the panel is narrower than the conversation the rest
+   of the words are still there to come back to.
+   Anchored to the spine's own width so the two are one object, and lifted with
+   a shadow rather than a border, because what says "this is over that" is the
+   shadow. */
+#rail { position:absolute; top:0; bottom:0; left:var(--spine); width:224px;
+        z-index:5; display:flex; flex-direction:column;
+        background:var(--well); border-right:1px solid var(--line-1);
+        box-shadow:14px 0 34px -18px #000 }
 /* The header of the column lines up with the header of the conversation beside
    it: same height, same padding, so the two read as one row across the app. */
-#railhead{ display:flex; align-items:center; gap:8px;
-           padding:var(--s3) var(--s3) var(--s3) var(--s4);
+#railhead{ flex:none; height:var(--topbar); display:flex; align-items:center;
+           gap:8px; padding:0 var(--s3) 0 var(--s4);
            border-bottom:1px solid var(--line-1) }
 #railhead .label{ flex:1 }
 #newchat{ flex:none; width:26px; height:26px; display:grid;
@@ -176,9 +204,9 @@ code,pre,.g,.meta,.badge,#url,#tok{
    the background, while a line that is always there is the edge of the room,
    and the open state has the background and the ink to say it. It also replaces
    the hairline that used to separate this from what follows. */
-#railtab{ flex:none; width:44px; padding:0; cursor:pointer; border:0;
+#railtab{ flex:none; width:var(--spine); padding:0; cursor:pointer; border:0;
           position:relative; background:var(--base); color:var(--fg-3);
-          box-shadow:inset -1.5px 0 0 var(--accent);
+          box-shadow:inset -1px 0 0 var(--accent);
           /* The chevron and the word are two rows of one grid, centred
              together: pinned to the top the arrow sat 450px from the word and
              the two read as separate things on the same strip. */
@@ -201,12 +229,13 @@ code,pre,.g,.meta,.badge,#url,#tok{
    edge away from the column instead of the one beside it - correct in the
    element's own coordinates and backwards on the screen. */
 #railtab span{ writing-mode:vertical-rl; transform:rotate(180deg);
-               font:600 .75rem/1 var(--sans); letter-spacing:.18em;
+               font:600 .875rem/1 var(--sans); letter-spacing:.2em;
                text-transform:uppercase }
 #railtab:hover{ background:var(--raised); color:var(--fg) }
 /* Open: the spine lifts a rung and the word goes to full ink. The state is
    drawn on the thing you press, where a hand already is. */
 #railtab[aria-expanded="true"]{ background:var(--raised); color:var(--fg) }
+#railtab[aria-expanded="true"] span{ display:none }
 @media (max-width:900px){ #railtab{ display:none } }
 #chats{ flex:1; min-height:0; overflow-y:auto; padding:var(--s2) var(--s2) var(--s3);
         /* A long list is cheap to skip past: the rows below the fold are not
@@ -230,9 +259,12 @@ code,pre,.g,.meta,.badge,#url,#tok{
            white-space:nowrap; border:0; background:none; color:inherit;
            font:inherit; text-align:left; padding:0; cursor:pointer }
 .chat .cnt{ flex:none; font-family:var(--mono); font-size:var(--t-label);
-            color:var(--fg-4) }
-.chat .x{ flex:none; width:18px; height:18px; border:0; border-radius:4px;
-          background:none; color:var(--fg-4); cursor:pointer; line-height:1;
+            color:var(--fg-3) }
+/* 24 and not 18: WCAG 2.2 puts the floor at 24px and this is the control
+   that DELETES a conversation, so it is also the one where a near miss costs
+   the most. */
+.chat .x{ flex:none; width:24px; height:24px; border:0; border-radius:4px;
+          background:none; color:var(--fg-3); cursor:pointer; line-height:1;
           visibility:hidden }
 .chat:hover .x, .chat:focus-within .x{ visibility:visible }
 .chat .x:hover{ background:var(--line-2); color:var(--fg) }
@@ -265,13 +297,17 @@ code,pre,.g,.meta,.badge,#url,#tok{
 #split:focus-visible{ outline:none }
 #split:focus-visible::after, #split[data-drag]::after{ background:var(--accent); width:2px }
 #right{ flex:1; min-width:0; display:flex; flex-direction:column; background:var(--well) }
-#head { display:flex; align-items:center; gap:10px; padding:var(--s3) var(--s4);
+#head { flex:none; height:var(--topbar); display:flex; align-items:center;
+        gap:10px; padding:0 var(--s4);
         border-bottom:1px solid var(--line-1) }
 #head b{ font-size:var(--t-ui); font-weight:600 }
-.badge{ margin-left:auto; font-size:var(--t-label); color:var(--fg-2);
+.badge{ font-size:var(--t-label); color:var(--fg-2);
         background:var(--raised); border:1px solid var(--line-2);
         padding:3px 9px; border-radius:var(--r-pill) }
-#fresh{ font-size:var(--t-label); font-family:var(--sans); color:var(--fg-2);
+/* 24px is the floor WCAG 2.2 sets for a target, and these three sat at 21,
+   22 and 23 - close enough to look fine and short enough to fail. */
+#fresh{ min-height:24px; font-size:var(--t-label); font-family:var(--sans);
+        color:var(--fg-2);
         background:var(--raised); border:1px solid var(--line-2); cursor:pointer;
         padding:3px 9px; border-radius:var(--r-pill);
         transition:background-color 120ms ease-out, color 120ms ease-out }
@@ -323,7 +359,7 @@ code,pre,.g,.meta,.badge,#url,#tok{
 #hint .eg{ font:var(--t-mono)/1.9 var(--mono); color:var(--fg-2);
            background:var(--raised); border:1px solid var(--line-1);
            border-radius:var(--r); padding:var(--s3) var(--s4); text-align:left }
-#hint .sm{ font-size:.75rem; color:var(--fg-4) }
+#hint .sm{ font-size:.75rem; color:var(--fg-3) }
 
 #jump{ position:absolute; bottom:110px; left:50%; transform:translateX(-50%); z-index:2;
        background:var(--top); border:1px solid var(--line-2); color:var(--fg);
@@ -394,7 +430,7 @@ h5.md-h, h6.md-h{ font-size:var(--t-h3); color:var(--fg-2) }
 .md-l{ margin:0 1.4em var(--s4) 0; padding-left:2.6em }
 .md-l .md-l{ margin:var(--s2) 0 0 }        /* a nested list continues its item */
 .md-i{ margin:0 0 var(--s2); white-space:pre-wrap; overflow-wrap:anywhere }
-.md-i::marker{ color:var(--fg-4) }
+.md-i::marker{ color:var(--fg-3) }
 .md-q{ margin:0 0 var(--s4); padding:2px 0 2px var(--s4); color:var(--fg-2);
        box-shadow:inset 2px 0 0 var(--line-3) }
 .md-hr{ margin:var(--s5) 0; border:0; border-top:1px solid var(--line-2) }
@@ -410,7 +446,7 @@ h5.md-h, h6.md-h{ font-size:var(--t-h3); color:var(--fg-2) }
    whatever page the agent last read, and the browser it drives is right there.
    The address is printed next to them so an injected one is legible. */
 .lk  { color:var(--fg) }
-.href{ color:var(--fg-4); font:.75rem/1.5 var(--mono); overflow-wrap:anywhere }
+.href{ color:var(--fg-3); font:.75rem/1.5 var(--mono); overflow-wrap:anywhere }
 .href::before{ content:" " }
 .orph  { display:flex; gap:8px; font-size:var(--t-mono); color:var(--err);
          background:rgba(232,131,107,.08); border-radius:var(--r-sm);
@@ -423,13 +459,13 @@ h5.md-h, h6.md-h{ font-size:var(--t-h3); color:var(--fg-2) }
       transition:background-color 120ms ease-out }
 .row::-webkit-details-marker{ display:none }
 .row:hover{ background:var(--raised) }
-.g   { grid-column:1; justify-self:end; font-size:var(--t-label); color:var(--fg-4) }
+.g   { grid-column:1; justify-self:end; font-size:var(--t-label); color:var(--fg-3) }
 .lab { grid-column:2; min-width:0; overflow:hidden; text-overflow:ellipsis;
        white-space:nowrap; font-size:var(--t-mono) }
 .lab b   { font-family:var(--sans); font-weight:600; color:var(--fg) }  /* the verb */
 .lab code{ color:var(--accent) }                                        /* the object */
 .lab .inline{ color:var(--fg-3) }                    /* a short result, on the row */
-.meta{ grid-column:3; white-space:nowrap; font-size:var(--t-label); color:var(--fg-4) }
+.meta{ grid-column:3; white-space:nowrap; font-size:var(--t-label); color:var(--fg-3) }
 
 /* The chevron is the row's own pseudo-element in its own track: no svg, no icon
    font, and it cannot shift the label when it turns. */
@@ -481,9 +517,9 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
     font:var(--t-body)/1.55 var(--sans); min-height:24px; max-height:200px;
     overflow-y:hidden; padding:0; caret-color:var(--accent) }
 /* --fg-3 and not --fg-4: the placeholder is the only hint the composer gives,
-   so it is text that has to be read, and --fg-4 sits at 2.2:1 against 4.5:1.
-   The step numbers keep --fg-4, which is what it was picked for: decoration
-   beside a label that carries the meaning. */
+   so it is text that has to be read, and --fg-4 sits at 2.4:1 against 4.5:1.
+   This was the first rule to be moved and it stayed the only one for a while;
+   the other nine went the same way once somebody counted them. */
 #i::placeholder{ color:var(--fg-3) }
 #go, #halt{ width:32px; height:32px; flex:none; border:0; border-radius:50%; display:grid;
      place-items:center; cursor:pointer; background:var(--accent);
@@ -500,12 +536,7 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
        background:var(--hover); border:1px solid var(--line-2); color:var(--fg-2);
        font-size:var(--t-label); padding:3px 9px; border-radius:var(--r-pill);
        cursor:pointer }
-/* flex-end and not space-between: with the label gone there is one thing in
-   this row, and space-between would leave it on the LEFT, which is where the
-   word used to be. */
-#under{ display:flex; align-items:center; justify-content:flex-end;
-        gap:var(--s2); padding:var(--s2) var(--s1) 0; min-height:1lh }
-#tok{ display:inline-flex; align-items:center; gap:6px;
+#tok{ margin-left:auto; display:inline-flex; align-items:center; gap:6px;
       font-size:var(--t-label); color:var(--fg-3) }
 
 /* ---------------- browser pane ---------------- */
@@ -523,13 +554,17 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
 #tabs button[aria-selected="true"]{ background:var(--base); color:var(--fg) }
 #tabs .t{ overflow:hidden; text-overflow:ellipsis }
 
-#chrome{ flex:none; height:38px; display:flex; align-items:center; gap:var(--s2);
-         padding:0 10px; background:var(--raised); border-bottom:1px solid var(--line-1) }
+/* The same height as the conversation's header beside it. They were 38 and
+   50, so the top edge of the product broke by twelve pixels on its main
+   seam - the one place a misalignment is read as the whole thing being
+   loose rather than as one box being wrong. */
+#chrome{ flex:none; height:var(--topbar); display:flex; align-items:center;
+         gap:var(--s2); padding:0 10px; background:var(--raised); border-bottom:1px solid var(--line-1) }
 /* The honesty contract: nothing in here is interactive except what is, so
    nothing in here gets a pointer cursor except what does. */
 #chrome, #chrome *{ cursor:default; user-select:none }
 #url{ user-select:text }
-#mode button{ cursor:pointer }
+#mode button{ cursor:pointer; min-height:24px }
 #dot{ width:7px; height:7px; flex:none; border-radius:50%; background:var(--fg-4) }
 [data-state="live"]  #dot{ background:var(--ok); animation:breathe 1.8s ease-in-out infinite }
 [data-state="busy"]  #dot{ background:var(--accent); animation:breathe .9s ease-in-out infinite }
@@ -538,7 +573,7 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
 #url{ flex:1; min-width:0; height:24px; line-height:24px; padding:0 10px;
       border-radius:var(--r-pill); background:var(--well); border:1px solid var(--line-1);
       font-size:.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-#url .dim{ color:var(--fg-4) }
+#url .dim{ color:var(--fg-3) }
 #url .host{ color:var(--fg) }
 #mode{ display:inline-flex; gap:2px; flex:none; background:var(--base);
        border-radius:var(--r); padding:3px }
@@ -572,17 +607,17 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
         display:flex; flex-direction:column; text-align:left; font:inherit;
         color:var(--fg-3) }
 .thumb:hover{ border-color:var(--line-3); color:var(--fg) }
-.thumb[aria-current="true"]{ border-color:var(--fg-4); color:var(--fg) }
+.thumb[aria-current="true"]{ border-color:var(--fg-2); color:var(--fg) }
 .thumb .pic{ width:100%; aspect-ratio:16/10; background:var(--well);
              display:grid; place-items:center; overflow:hidden }
 .thumb .pic img{ width:100%; height:100%; object-fit:cover; display:block }
-.thumb .pic span{ font-size:var(--t-label); color:var(--fg-4); padding:4px;
+.thumb .pic span{ font-size:var(--t-label); color:var(--fg-3); padding:4px;
                   text-align:center }
 .thumb .cap{ display:flex; align-items:center; gap:6px; padding:5px 7px;
              font-family:var(--mono); font-size:var(--t-label) }
 .thumb .cap .id{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis;
                  white-space:nowrap }
-.thumb .cap .st{ flex:none; color:var(--fg-4) }
+.thumb .cap .st{ flex:none; color:var(--fg-3) }
 
 /* ⛔ THE STAGE IS A GRID NOW, AND HOW MANY CELLS IT HAS IS A MEASURED
    DECISION. A frame costs 5 to 6 ms of pipe, not the 22 this file assumed
@@ -596,6 +631,9 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
         container-type:size }
 #stage[data-grid="1"]{ grid-template-columns:1fr }
 #stage[data-grid="2"]{ grid-template-columns:1fr 1fr }
+/* Three on a 2x2 with one slot empty, because three equal screens and a gap
+   is what a control room does: the alternative makes one of them special. */
+#stage[data-grid="3"],
 #stage[data-grid="4"]{ grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr }
 .screen{ min-width:0; min-height:0; display:flex; flex-direction:column;
          background:var(--raised); border:1px solid var(--line-2);
@@ -604,7 +642,10 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
          transition:border-color 120ms ease-out }
 .screen:hover{ border-color:var(--line-3) }
 /* The one you are looking at, when there is more than one to look at. */
-.screen[aria-current="true"]{ border-color:var(--fg-4) }
+/* A graphic that carries meaning wants 3:1, and this one carries the answer
+   to "which screen is the address bar describing" - which at 2.4:1 was a
+   question you had to ask twice. */
+.screen[aria-current="true"]{ border-color:var(--fg-2) }
 .screen .shot{ flex:1; min-height:0; position:relative; background:var(--well);
                display:grid; place-items:center }
 /* contain and not cover: cropping a browser window hides part of what the
@@ -622,7 +663,12 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
    falls back on a stylesheet rule hiding it: the pane stayed black with the
    pixels already decoded inside it, and every structural assertion passed. */
 .screen .shot img[hidden]{ display:none }
-.screen .ph{ color:var(--fg-4); font-size:var(--t-ui) }
+/* The second half of the address bar when nobody has picked a screen: the count
+   is the fact, this is what to do about it. */
+#url .hint{ color:var(--fg-3); font-family:var(--sans); font-size:var(--t-label) }
+#url .hint::before{ content:"  -  "; white-space:pre }
+.screen .ph{ color:var(--fg-3); font-size:var(--t-ui); text-align:center;
+             padding:0 16px }
 .screen .cap{ flex:none; display:flex; align-items:center; gap:7px;
               padding:5px 9px; border-top:1px solid var(--line-1);
               font-family:var(--mono); font-size:var(--t-label);
@@ -639,9 +685,9 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
 
 #grid{ flex:none; display:flex; gap:2px; background:var(--well);
        border:1px solid var(--line-2); border-radius:var(--r-pill); padding:2px }
-#grid button{ min-width:24px; height:20px; padding:0 6px; border:0;
+#grid button{ min-width:30px; height:24px; padding:0 5px; border:0;
               border-radius:var(--r-pill); background:none; cursor:pointer;
-              font:600 var(--t-label)/1 var(--mono); color:var(--fg-4);
+              display:grid; place-items:center; color:var(--fg-3);
               transition:background-color 120ms ease-out, color 120ms ease-out }
 #grid button:hover{ color:var(--fg-2) }
 #grid button[aria-pressed="true"]{ background:var(--raised); color:var(--fg) }
@@ -689,8 +735,15 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
 </nav>
 
 <div id="left">
+  <!-- The meter lives up here with the other things that describe the
+       conversation rather than under the box you type in. What is under the box
+       should be the box: a number that grows all session long, sitting between
+       the composer and the edge of the window, is the one place a person looks
+       twenty times an hour for something else. -->
   <div id="head">
-    <b>AIHawk</b><span class="badge" id="model">no model</span>
+    <b>AIHawk</b>
+    <span id="tok" hidden></span>
+    <span class="badge" id="model">no model</span>
     <button id="fresh" type="button" title="Clear this conversation">Clear</button></div>
   <div id="log">
     <div id="thread">
@@ -720,13 +773,6 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
           <rect width="12" height="12" rx="2" fill="#fff"/></svg>
       </button>
     </div>
-    <!-- No word here any more. It said `agent`, which is what the whole left
-         column is: a label that names the thing you are already looking at
-         earns nothing and takes a line of the frame. The meter keeps the row,
-         pushed to its end. -->
-    <div id="under">
-      <span id="tok" hidden></span>
-    </div>
   </form>
 </div>
 
@@ -752,10 +798,28 @@ form{ padding:var(--s3) var(--s4) var(--s4); border-top:1px solid var(--line-1);
     <!-- How many browsers are on the stage at once. The vocabulary of a
          control room, because that is the job: one when you are watching the
          work, four when you are keeping an eye on it. -->
+    <!-- Drawn rather than numbered: the icon IS the layout, where a digit is a
+         label for it. Each carries its own name because there is no text in it
+         to read - the opposite of the sessions spine, where the word is the
+         name and an aria-label would replace it. -->
     <span id="grid" role="group" aria-label="Screens at once">
-      <button type="button" data-n="1" aria-pressed="true">1</button>
-      <button type="button" data-n="2" aria-pressed="false">2</button>
-      <button type="button" data-n="4" aria-pressed="false">4</button>
+      <button type="button" data-n="1" aria-pressed="true"
+              aria-label="One screen" title="One screen">
+        <svg viewBox="0 0 18 12" width="18" height="12" fill="none"
+             stroke="currentColor" stroke-width="1.3">
+          <rect x="1" y="1" width="16" height="10" rx="1.6"/></svg></button>
+      <button type="button" data-n="2" aria-pressed="false"
+              aria-label="Two screens" title="Two screens">
+        <svg viewBox="0 0 18 12" width="18" height="12" fill="none"
+             stroke="currentColor" stroke-width="1.3">
+          <rect x="1" y="1" width="16" height="10" rx="1.6"/>
+          <path d="M9 1v10"/></svg></button>
+      <button type="button" data-n="4" aria-pressed="false"
+              aria-label="Four screens" title="Four screens">
+        <svg viewBox="0 0 18 12" width="18" height="12" fill="none"
+             stroke="currentColor" stroke-width="1.3">
+          <rect x="1" y="1" width="16" height="10" rx="1.6"/>
+          <path d="M9 1v10M1 6h16"/></svg></button>
     </span>
   </div>
   <div id="stage" data-grid="1"></div>
@@ -1236,7 +1300,13 @@ let frozen = false;
 /* The second argument is the sentence behind a one-word state, shown on hover:
    an "error" with no reason is a thing to restart, an "error" that says the
    engine has no screencast is a thing to upgrade. */
+/* ⛔ AND IT SAYS NOTHING WHEN IT WOULD ONLY REPEAT THE TAB NEXT TO IT.
+   `Live` selected with the word `live` printed beside it is one fact twice,
+   one of them in the place the eye goes for news. `idle`, `busy` and `error`
+   are news, and they are now the only things that appear there; the dot keeps
+   carrying live and frozen, which is what a dot is for. */
 function say(s, why){ right.dataset.state = s; stateEl.textContent = s;
+                      stateEl.hidden = (s === 'live' || s === 'frozen');
                       stateEl.title = why || ''; }
 async function reason(r){ try { return (await r.json()).error || ''; } catch(err) { return ''; } }
 
@@ -1262,8 +1332,18 @@ $('mode').onclick = (e) => {
    the 25 the engine is asked to produce, two get 20 each, four get 10 each -
    40 requests a second at most, about a quarter of what the pipe can carry,
    leaving the rest to the agent whose clicks share it. */
-const FPS = {1: 25, 2: 20, 4: 10};
-const pause = () => Math.round(1000 / (FPS[grid] * grid));
+/* And it is paced on the screens that are ACTUALLY on the stage, never on
+   the layout picked. Two browsers in a four-up layout are two browsers: the
+   table this used to be gave them 10 frames a second each because the
+   BUTTON said four, halving the thing the person asked for by reading the
+   wrong number. The ceiling below is the measured budget - 40 requests a
+   second, about a quarter of the pipe - and the top rate is what the engine
+   is asked to produce, so asking for more would make frames to throw away. */
+const LAYOUTS = [1, 2, 4];
+const TOPRATE = 25, CEILING = 40;
+const fps = (n) => Math.min(TOPRATE, Math.floor(CEILING / n));
+const onScreen = () => Math.max(1, $('stage').children.length);
+const pause = () => Math.round(1000 / (fps(onScreen()) * onScreen()));
 
 /* One scheduler for the whole stage. It used to be two - a fast one for the
    single live pane and a slow one for the previews - and with a grid that
@@ -1298,6 +1378,7 @@ async function onePass(){
         im.src = URL.createObjectURL(blob);
         if(old && old.startsWith('blob:')) URL.revokeObjectURL(old);
         im.hidden = false;
+        cutTheChrome(cell, im);
         const ph = cell.querySelector('.ph'); if(ph) ph.hidden = true;
         cell.dataset.at = String(Date.now());
         if(id === watched()) say('live');
@@ -1312,6 +1393,46 @@ async function onePass(){
     } catch(err){ if(id === watched()) say('offline'); }
     ageAll(cells);
   }
+}
+
+/* ⛔ THE BROWSER'S OWN CHROME IS CUT OFF THE TOP OF EVERY SCREEN. The capture
+   is the WINDOW - deliberately, because that is the only way the pointer is in
+   the picture - and the tab strip and the address bar come with it. They say
+   nothing the frame above does not already say, and at four-up they cost a
+   tenth of every screen to repeat it four times.
+
+   MEASURED rather than guessed, on four real captures: the chrome is 8.3% of
+   the picture (57 rows of 688, 43 of 515, 57 of 688). It is a fraction and not
+   a pixel count because the engine scales the window into the frame it sends,
+   so the rows change with the window while the proportion does not.
+
+   Clipped and shifted rather than scaled: the page keeps its size and its
+   shape, and what was the chrome becomes empty frame at the bottom. Scaling the
+   rest up to fill would make one screen's pixels a different size from
+   another's, which for pictures meant to be compared is worse than a band. */
+const CHROME = 0.083;
+function cutTheChrome(cell, im){
+  if(!im.naturalWidth) return;
+  const box = im.getBoundingClientRect();
+  /* What `object-fit:contain` with `object-position:top center` actually draws:
+     as wide as the box or as tall, whichever runs out first, anchored to the
+     top - so the top of the drawing is the top of the box. */
+  const drawn = Math.min(box.height, box.width * im.naturalHeight / im.naturalWidth);
+  const cut = Math.round(CHROME * drawn);
+  /* ⛔ AND THEN THE PICTURE IS CENTRED IN ITS CELL. Every browser here has
+     a window of a different shape - that is the point of the fingerprint, not a
+     bug to iron out - so on a 2x2 the pictures come out different heights.
+     Measured on four live browsers: three cells drawing 304px of image and one
+     drawing 237px. Top-anchored, that one read as a smaller screen with a hole
+     under it, 29% of the cell empty against 8% for its neighbours. The leftover
+     split above and below reads as a frame instead, which is what it is: same
+     cell, same border, a picture of a different shape inside it. */
+  const lift = Math.round((box.height - (drawn - cut)) / 2);
+  const both = cut + ':' + lift;
+  if(cell.dataset.cut === both) return;
+  cell.dataset.cut = both;
+  im.style.clipPath = 'inset(' + cut + 'px 0 0 0)';
+  im.style.transform = 'translateY(' + (lift - cut) + 'px)';
 }
 
 /* ⛔ A PICTURE THAT HAS STOPPED MUST NOT READ AS ONE THAT IS RUNNING. On a
@@ -1369,11 +1490,37 @@ $('tabs').onclick = (e) => {
                          body: JSON.stringify({id: b.dataset.id})});
 };
 
-async function where(){
-  try { const r = await fetch(at('/live/tabs'), {cache:'no-store'});
-        if(r.ok){ const j = await r.json(); paintUrl(j.url || ''); paintTabs(j.tabs); } }
-  catch(err){}
-  setTimeout(where, 2000);
+/* ⛔ THE ADDRESS FOLLOWS THE SCREEN YOU ARE LOOKING AT, and with four of them
+   there is a case where no single address is the honest answer: nobody has
+   picked one, so the bar would be showing whichever browser the agent happens
+   to be in while three other pages sit beside it, unnamed. It says how many
+   instead, and how to choose. Once a screen has been clicked the bar follows
+   that one, at any layout. */
+function severalOpen(n){
+  urlEl.textContent = ''; urlEl.className = 'dim'; urlEl.title = '';
+  urlEl.append(el('span', null, n + ' pages open'),
+               el('span', 'hint', 'click a screen to follow it'));
+}
+
+/* ⛔ THE WORK AND THE TIMER ARE SEPARATE, for the reason the strip beside it
+   was: changing the layout changes what the address should say, and there is
+   nothing to wait for. While this was one function the bar kept the old answer
+   until the next poll landed - two seconds showing one page's address over four
+   screens. Calling `where` itself from a click would start a SECOND timer
+   chain, which is how a pace stops being one number. */
+async function where(){ await paintWhere(); setTimeout(where, 2000); }
+
+async function paintWhere(){
+  const many = grid > 1 && !pinned2 && onStage().length > 1;
+  if(many){ severalOpen(onStage().length); paintTabs([]); }
+  else try {
+    const who = watched();
+    /* `at` is what adds the question mark, so the browser goes in as one too
+       and it appends its own with an ampersand. */
+    const r = await fetch(at(who ? '/live/tabs?b=' + encodeURIComponent(who)
+                                 : '/live/tabs'), {cache:'no-store'});
+    if(r.ok){ const j = await r.json(); paintUrl(j.url || ''); paintTabs(j.tabs); }
+  } catch(err){}
 }
 /* ---------------- the session column ----------------
    Drawn from the server every time it changes rather than kept in step by hand:
@@ -1528,7 +1675,7 @@ function thumbFor(b){
    the view back to the agent, so there is a way out of a choice as well as in. */
 function watchThis(id){
   pinned2 = (pinned2 === id) ? null : id;
-  drawFleet();
+  drawStage(); drawStrip(); paintWhere();
 }
 
 /* ---- the stage: one screen, or two, or four ----
@@ -1582,7 +1729,12 @@ function screenFor(b, current){
 
 function drawStage(){
   const box = $('stage'), show = onStage();
-  box.dataset.grid = String(grid);
+  /* ⛔ THE TEMPLATE FOLLOWS THE CELLS THAT EXIST. Two running browsers in
+     a four-up layout used to be laid on a 2x2 whose second row was empty, so
+     each of them got half the height for nothing - the layout control is a
+     ceiling on how many you watch at once, not a promise that there are that
+     many. */
+  box.dataset.grid = String(Math.min(grid, Math.max(1, show.length)));
   /* Only when the SET changes, or every poll would throw away the pictures and
      make the whole stage flash once a second for no new fact. */
   const sig = show.map(b => b.id + ((b.urls || []).length ? 'p' : '')
@@ -1596,7 +1748,10 @@ function drawStage(){
     const cell = el('div','screen');
     cell.dataset.blank = '1';
     const shot = el('div','shot');
-    shot.appendChild(el('span','ph', 'nothing running yet'));
+    /* An empty state that only reports the emptiness leaves the person to
+       guess where the button is. There is no button - browsers are opened by
+       asking - so this is the one place that has to say so. */
+    shot.appendChild(el('span','ph', 'no browser yet - ask for one in the chat'));
     cell.append(shot, el('div','cap'));
     box.appendChild(cell);
     return;
@@ -1610,7 +1765,7 @@ function setGrid(n){
   for(const b of $('grid').children)
     b.setAttribute('aria-pressed', String(Number(b.dataset.n) === n));
   try { localStorage.setItem(GRIDKEY, String(n)); } catch(err){}
-  drawStage();
+  drawStage(); drawStrip(); paintWhere();
 }
 $('grid').onclick = (e) => {
   const b = e.target.closest('button');
@@ -1625,6 +1780,15 @@ async function drawFleet(){
   fleet = got.browsers || [];
   focusHere = got.focus || '';
   drawStage();
+  drawStrip();
+}
+
+/* ⛔ SEPARATE FROM THE POLL, because changing the layout changes what the strip
+   holds and there is nothing to ask the server about it. While this lived
+   inside `drawFleet` the strip stayed wrong until the next poll landed - up to
+   three seconds showing browsers that were already on the stage, or missing the
+   ones that had just left it. It reads the fleet that is already here. */
+function drawStrip(){
   /* The strip carries what the stage does not, so at four-up with four
      browsers it is empty and at one-up with eight it holds seven. */
   const up = new Set(onStage().map(b => b.id));
@@ -1755,7 +1919,7 @@ function splitter(){
 
 let sawGrid = null;
 try { sawGrid = localStorage.getItem(GRIDKEY); } catch(err){}
-setGrid(FPS[Number(sawGrid)] ? Number(sawGrid) : 1);
+setGrid(LAYOUTS.includes(Number(sawGrid)) ? Number(sawGrid) : 1);
 
 paint(); listen(); tick(); where(); fleetPoll(); slowTick(); splitter();
 if(!$('rail').hidden) drawChats();
@@ -2359,8 +2523,15 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         seen = which(request)
         if not seen.link.touched:
             return JSONResponse({"url": "", "tabs": []})
+        # ⛔ WHICH BROWSER, like the frame route beside it. The address above the
+        # stage has to be the address of the screen being looked at, and with
+        # more than one screen the answer stopped being "the focused one" the
+        # moment clicking a screen became a way to look somewhere else.
+        watching = request.query_params.get("b") or None
         try:
-            raw = await seen.link.call_text("session_list_pages")
+            raw = await seen.link.call_text(
+                "session_list_pages",
+                {"browser_id": watching} if watching else None)
             rows = json.loads(raw)
         except Exception:
             return JSONResponse({"url": "", "tabs": []})
