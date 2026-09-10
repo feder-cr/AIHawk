@@ -1,0 +1,188 @@
+#left { width:clamp(420px, 44%, 530px); display:flex; flex-direction:column;
+        position:relative }
+/* The separator carries the line that used to be `#left`'s right border, so
+   the thing you drag and the thing you see are the same thing. Wider than the
+   line it draws: a 1px target is a 1px target, and this one is grabbed by
+   hand. */
+#split{ flex:0 0 9px; cursor:col-resize; position:relative; background:none;
+        border:0; padding:0; touch-action:none }
+/* ⛔ NINE PIXELS OF LINE, TWENTY-FIVE OF TARGET. WCAG 2.2 puts the floor at
+   24px and none of its exceptions cover a separator: the arrow keys are a
+   path, not a control. The grab area reaches into the two panes it divides,
+   which is where a hand aims anyway, and nothing about the layout moves. */
+#split::before{ content:""; position:absolute; inset:0 -8px; cursor:col-resize }
+#split::after{ content:""; position:absolute; top:0; bottom:0; left:4px; width:1px;
+               background:var(--line-1); transition:background-color 120ms ease-out }
+#split:hover::after{ background:var(--line-3) }
+#split:focus-visible{ outline:none }
+#split:focus-visible::after, #split[data-drag]::after{ background:var(--accent); width:2px }
+#right{ flex:1; min-width:0; display:flex; flex-direction:column; background:var(--well) }
+/* ⛔ UNDER 720px THE TWO PANES STOP BEING SIDE BY SIDE, or the right one is
+   allotted nothing and its bar spills out of the window. Measured in a frame
+   320px wide, which is what WCAG 1.4.10 asks a layout to survive: the document
+   scrolled sideways to 482px, the conversation was squeezed to 270 and the
+   browser pane was FOUR HUNDRED AND EIGHTY-TWO minus everything, which is to
+   say zero, with the Live/Frozen pair and the layout picker drawn past the
+   edge of the screen.
+
+   Stacked, both halves keep a full width and the page scrolls in one direction
+   only. The spine stays where it is - it belongs to the frame, and that was
+   decided - so it keeps the conversation company on the first row.
+
+   ⛔ AND THE MEASUREMENT NEEDED A REAL VIEWPORT. The `zoom` property scales
+   what is drawn and does NOT move the CSS viewport, so media queries do not
+   fire under it: a first pass "at 400%" reported a failure that was an artefact
+   of the instrument. An iframe of a fixed width has a viewport of its own, and
+   that is what these numbers come from. */
+@media (max-width:720px){
+  body{ flex-wrap:wrap }
+  /* `min-width:0` or the pane refuses to go under its content's own minimum,
+     the flex line overflows, and the pane wraps to a row of its own - leaving
+     the spine alone above it as a 93px stub with the word clipped inside. */
+  #left{ width:calc(100% - var(--spine)); min-width:0; height:60vh }
+  #split{ display:none }
+  #right{ flex:1 0 100%; height:40vh }
+}
+/* Three groups and not four things in a row: the name, then what this
+   conversation is costing and running, then the one thing you can do to it.
+   The rule that separates the last is the same hairline the panes use. */
+#head { flex:none; height:var(--topbar); display:flex; align-items:center;
+        gap:var(--s2); padding:0 var(--s4);
+        border-bottom:1px solid var(--line-1) }
+#head .vr{ width:1px; height:18px; flex:none; background:var(--line-2);
+           margin:0 var(--s1) }
+/* ⛔ THE GROUP STAYS ON THE RIGHT, AND THE THING THAT KEPT IT THERE WAS THE
+   METER. `margin-left:auto` lived on the meter, so removing it dropped the
+   model and Clear against the left edge, under the transcript's own margin and
+   nowhere near the edge they had always sat on. The push belongs to the first
+   of whatever survives, not to whichever element happened to be there. */
+#head #model{ margin-left:auto }
+/* The heading is out of flow (`.sr` is absolute), so it is not one of the
+   things being pushed, and this rule only describes the size it is announced
+   at rather than drawn at. */
+#head h1{ margin:0; font-size:var(--t-ui); font-weight:600 }
+/* ⛔ ONE RULE FOR BOTH, BECAUSE TWO RULES THAT MUST AGREE DO NOT. The badge and
+   the Clear button sit side by side on the same bar and were declared
+   separately: putting the control height on one of them and not the other left
+   a 40px pill beside a 20px one, same radius, visibly different shapes. Written
+   once, they cannot drift again.
+
+   Height from the control token, text at the body size - 12px on a bar control
+   is a caption size, and these are things you read and press. */
+.badge, #fresh{ height:var(--h-ctl); display:inline-flex; align-items:center;
+                font-size:var(--t-ui); color:var(--fg-2);
+                background:var(--raised); border:1px solid var(--line-2);
+                padding:0 var(--s3); border-radius:var(--r-pill) }
+
+/* 24px is the floor WCAG 2.2 sets for a target, and these three sat at 21,
+   22 and 23 - close enough to look fine and short enough to fail. */
+#fresh{ font-family:var(--sans); cursor:pointer;
+        transition:background-color 120ms ease-out, color 120ms ease-out }
+#fresh:hover:not(:disabled){ background:var(--hover); color:var(--fg) }
+#fresh:disabled{ opacity:.3; cursor:default }
+
+/* ⛔ `inert` HAS NO LOOK, AND A CONTROL THAT CANNOT BE USED MUST NOT LOOK
+   USABLE. This page already spells that `opacity:.3` on a disabled button, and
+   then said the same thing about whole SUBTREES with `inert` and drew them as
+   if nothing had happened. It was already wrong before the case that found it:
+   the Live/Frozen pair and the layout picker go inert whenever there is nothing
+   to see, and stayed fully lit the whole time. Seen on the running page, a
+   deleted conversation left a composer inviting a sentence it could not send.
+   One rule, so the look follows the mechanism rather than whoever remembers. */
+[inert]{ opacity:.3 }
+
+#log{ flex:1; overflow:auto; scrollbar-gutter:stable;
+      padding:var(--s5) var(--s4);
+      transition:padding-left 180ms cubic-bezier(.23,1,.32,1) }
+/* ⛔ IT PUSHES, IT DOES NOT COVER. An overlay drawer is the phone pattern;
+   on a desktop the standard one moves the content over, and covering it here
+   sliced every line of the conversation down the middle - readable text with
+   a panel sitting on its first 224 pixels. The header is not moved: it lives
+   above the drawer, which is what the drawing asked for. */
+#rail:not([hidden]) ~ #left #log,
+#rail:not([hidden]) ~ #left form{
+  padding-left:calc(var(--s4) + var(--drawer) - var(--spine)) }
+/* Capped in CHARACTERS and not in pixels, because the thing being limited is
+   the measure and 680px is only one screen's worth of it: on a 1920 window the
+   same column ran to about 92 characters, past the 80 the WCAG asks for and
+   well past the 50 to 75 the readability research settles on. `ch` follows the
+   font instead of guessing at it.
+
+   ⛔ AND `ch` IS NOT A CHARACTER. It is the advance width of the digit zero,
+   which in a proportional font is much wider than an average letter, so a
+   number written in `ch` reads like a character count and is not one.
+   MEASURED on this font with a canvas, on real prose in both languages this
+   interface serves: `0` is 7.55px at 14px system-ui, while the average
+   character of a sentence is 6.11px. One `ch` is 1.24 characters.
+
+   What that turned into, twice. The cap started at 72ch believing it was 72
+   characters: minus the indent an answer carries, it was really 83. Then it
+   was widened to 84ch on the reasoning that the indent made the column too
+   NARROW - the arithmetic was done in `ch` again, and the result was 98
+   characters per line, past every source that has a number: 65-72 in the chat
+   design guidance, 75 as Baymard's upper bound, 80 as the WCAG 2.1 AAA cap.
+
+   66ch is 498px here; minus the 37px indent that is 461px of text, and at
+   6.11px a character that is 75 characters. The unit stays `ch` because it
+   tracks the font's own metrics if the font ever changes; the number comes
+   from the measurement, and the conversion is written down here so the next
+   person does not redo it in the wrong unit for the third time.
+
+   Left aligned rather than centred: centring splits the slack in two and puts
+   half on the LEFT, which reads as the column having been pushed away from the
+   edge for no reason - 185px of nothing before the first character, in a
+   screenshot. */
+/* ⛔ THE MEASURE BELONGS TO THE PROSE, NOT TO THE COLUMN. The cap used to sit
+   here, on the whole transcript, so widening the pane widened NOTHING: dragged
+   from 530 to 1440, the conversation stopped growing at 534 and the rest of the
+   pane became margin. A control that offers a range in which nothing happens is
+   a control that lies, and this one was measured doing it.
+
+   Prose keeps the cap, because 200 characters a line is unreadable whatever the
+   window is. The step rows do NOT: they are monospace data, they were already
+   cut off at 48 characters with the rest behind a disclosure, and every pixel
+   the drag gives them is a pixel of address a person can read without opening
+   anything. Same for code blocks and tables, which scroll in their own box.
+
+   So dragging wider now widens the thing that was actually short. */
+#thread{ margin:0 }
+/* Every block of an answer, and then the two that are not prose taken back
+   out. Written as `> *` and not as a list of element selectors on purpose: a
+   compound starting with `h3.md-h` sits earlier in the file than the heading's
+   own rule, and two gates that read this stylesheet as text then find this one
+   first and check the wrong declarations. */
+/* ⛔ AND THEN THE CAP CAME OFF THE PROSE TOO, BECAUSE IT WAS THE PROSE THE
+   OWNER WAS LOOKING AT. Moving it off the transcript widened the step rows and
+   left the answer exactly where it was, which is the text a person actually
+   reads: dragged wide, the sentences still wrapped at the same place. Said
+   twice, the second time with a screenshot.
+
+   So the measure is not a number this file picks any more - it is the width of
+   the pane, and the separator is the control that sets it. That is a better
+   answer than a cap in either place: the person reading decides how wide their
+   own reading is, which is the one thing a fixed number can never get right for
+   everybody. The DEFAULT still lands inside 65-80 characters for anybody who
+   never drags, and there is a gate that recomputes exactly that from the pane's
+   own declared width rather than from a number written down here. */
+
+
+/* Bottom-pinning with no scroll handler and no epsilon: the sentinel is the only
+   anchor the browser may keep, so content inserted before it pushes the view
+   down, and a reader who has scrolled up is left alone because an anchor off
+   screen is not chosen. */
+#log > *{ overflow-anchor:none }
+#anchor{ height:1px; overflow-anchor:auto }
+
+#hint{ color:var(--fg-3); max-width:46ch; margin:var(--s6) auto 0; text-align:center }
+#hint p{ margin:0 0 var(--s4) }
+#hint .eg{ font:var(--t-mono)/1.9 var(--mono); color:var(--fg-2);
+           background:var(--raised); border:1px solid var(--line-1);
+           border-radius:var(--r); padding:var(--s3) var(--s4); text-align:left }
+#hint .sm{ font-size:var(--t-label); color:var(--fg-3) }
+
+#jump{ position:absolute; bottom:100%; margin-bottom:var(--s2);
+       left:50%; transform:translateX(-50%); z-index:2;
+       background:var(--top); border:1px solid var(--line-2); color:var(--fg);
+       font:var(--t-ui)/1 var(--sans); padding:7px 13px;
+       border-radius:var(--r-pill); cursor:pointer }
+

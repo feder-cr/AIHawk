@@ -1,0 +1,102 @@
+/* ---------------- browser pane ---------------- */
+/* The strip only exists when there is more than one tab: a single tab labelled
+   with its own title is chrome that says nothing the address bar below it does
+   not already say. */
+/* ⛔ THE STRIP IS THE TOP OF THE BAR, NOT A THING FLOATING OVER IT. It sat
+   on the same surface as the bar with the SELECTED tab cut out in a darker
+   one, so the current page read as a hole punched in the header, and its left
+   edge started 4px before the address below it. Now the strip stands on the
+   page's ground and the selected tab is the bar's own surface, which is what
+   makes a tab look attached to what it opens - and both share one padding. */
+#tabs{ flex:none; display:flex; gap:2px; padding:6px var(--s3) 0;
+       background:var(--base); overflow-x:auto; scrollbar-width:none }
+#tabs button{ flex:0 1 190px; min-width:80px; height:28px; display:flex;
+              align-items:center; gap:6px; border:0; cursor:pointer;
+              border-radius:var(--r) var(--r) 0 0;
+              background:transparent; color:var(--fg-3); padding:0 10px;
+              font:var(--t-label)/1.4 var(--sans); white-space:nowrap;
+              overflow:hidden; text-overflow:ellipsis }
+#tabs button:hover{ background:var(--hover); color:var(--fg-2) }
+#tabs button[aria-selected="true"]{ background:var(--raised); color:var(--fg) }
+#tabs .t{ overflow:hidden; text-overflow:ellipsis }
+
+/* The same height as the conversation's header beside it. They were 38 and
+   50, so the top edge of the product broke by twelve pixels on its main
+   seam - the one place a misalignment is read as the whole thing being
+   loose rather than as one box being wrong. */
+/* ⛔ IT WRAPS, AND THE HEIGHT IS A FLOOR RATHER THAN A CEILING. Measured at
+   400% zoom, which WCAG 1.4.10 asks a layout to survive and which is the same
+   thing as a 320px window: this bar was the only place on the page that pushed
+   the document sideways. The address can shrink to nothing, but the Live/Frozen
+   pair and the layout picker cannot, so three fixed-width groups in a row on a
+   fixed 50px line had nowhere to go and went past the edge. A `height` would
+   then have clipped the second row, so it is a `min-height`: the bar is one
+   line whenever one line fits, and it is the bar's own business when it does
+   not. Found by the reflow check and not by looking - at 100% there is room,
+   so nothing shows. */
+#chrome{ flex:none; min-height:var(--topbar); display:flex; align-items:center;
+         flex-wrap:wrap; row-gap:var(--s1);
+         gap:var(--s2); padding:var(--s1) var(--s3); background:var(--raised);
+         border-bottom:1px solid var(--line-1) }
+/* The honesty contract: nothing in here is interactive except what is, so
+   nothing in here gets a pointer cursor except what does. */
+#chrome, #chrome *{ cursor:default; user-select:none }
+#url{ user-select:text }
+#mode button{ cursor:pointer; min-height:var(--h-ctl) }
+#dot{ width:7px; height:7px; flex:none; border-radius:50%; background:var(--fg-4) }
+[data-state="live"]  #dot{ background:var(--ok); animation:breathe 1.8s ease-in-out infinite }
+[data-state="busy"]  #dot{ background:var(--accent); animation:breathe .9s ease-in-out infinite }
+[data-state="frozen"]#dot{ background:var(--fg-2) }
+[data-state="offline"] #dot, [data-state="error"] #dot{ background:var(--err) }
+/* ⛔ ONE HEIGHT FOR EVERYTHING IN THIS BAR. The address was 24 tall, the
+   Live/Frozen pair 30 and the layout picker 30, so three controls on one line
+   sat on three different rhythms - the kind of thing nobody names and everybody
+   reads as unfinished. And the address is a FIELD, so it gets the field's
+   corner: a pill is for a badge, and using both shapes for everything is what
+   made this bar look assembled rather than designed. */
+#url{ flex:1; min-width:0; height:var(--h-ctl); line-height:calc(var(--h-ctl) - 2px);
+      padding:0 var(--s3); border-radius:var(--r); background:var(--well);
+      border:1px solid var(--line-1); font-size:var(--t-mono);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+/* ⛔ BOTH FORMS, BECAUSE THE INTENT LIVED IN TWO PLACES AND MATCHED IN
+   NEITHER. The script sets `dim` on the address bar ITSELF when there is no
+   page, and the only rule was a descendant selector - so `no page yet`
+   rendered in the inherited ink and was the brightest thing on a bar that
+   was describing an empty room. The halves of a real URL are the descendant
+   case and keep working. */
+#url.dim, #url .dim{ color:var(--fg-3) }
+#url .host{ color:var(--fg) }
+#mode{ display:inline-flex; gap:2px; flex:none; height:var(--h-ctl);
+       align-items:center; background:var(--base); border:1px solid var(--line-1);
+       border-radius:var(--r); padding:0 2px }
+#mode button{ border:0; background:transparent; color:var(--fg-3);
+              border-radius:var(--r-sm); padding:2px 9px;
+              font:500 var(--t-label)/1.5 var(--sans);
+              transition:color 120ms ease-out }
+#mode button:hover:not([aria-pressed="true"]){ color:var(--fg-2) }
+#mode button[aria-pressed="true"]{ background:var(--top); color:var(--fg);
+                                    box-shadow:0 1px 2px rgba(0,0,0,.35) }
+/* ⛔ A CONTROL THAT CANNOT DO ANYTHING DOES NOT LOOK READY. With no browser
+   open, Live/Frozen, the layout picker and the address are three armed controls
+   over an empty room: the bar looked identical whether the product was working
+   or waiting to be told what to do. */
+#right[data-empty="1"] #url,
+#right[data-empty="1"] #mode,
+#right[data-empty="1"] #grid{ opacity:.4 }
+/* ⛔ AND `pointer-events` IS NOT A DISABLED STATE. It only stops the
+   mouse: the five buttons kept their place in the tab order, kept the focus
+   ring, and Enter still fired the handler - so a keyboard could operate five
+   controls that look dead, and a screen reader announced them as ordinary
+   enabled buttons. `inert` takes them out of both. */
+#right[data-empty="1"] #mode,
+#right[data-empty="1"] #grid{ pointer-events:none }
+/* And the state word goes altogether: with nothing running it said IDLE, in
+   capitals, and was the brightest thing on a bar describing an empty room -
+   while the room itself already says what it is. */
+#right[data-empty="1"] #state{ position:absolute; width:1px; height:1px;
+                              overflow:hidden; clip-path:inset(50%) }
+
+/* The frame is solved from the available height, so a wide shot fills the width
+   and a tall one fills the height. What is left over is stage, never a hole
+   inside the frame. object-fit stays underneath for the one frame where the
+   ratio is still the previous page's. */

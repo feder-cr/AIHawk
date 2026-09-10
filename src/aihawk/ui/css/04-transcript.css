@@ -1,0 +1,151 @@
+/* ---------------- one turn ---------------- */
+.turn + .turn{ margin-top:var(--s6) }   /* between turns */
+.turn > * + *{ margin-top:var(--s3) }   /* inside a turn */
+/* A turn that has scrolled out of sight costs no layout and no paint. Chosen
+   over hiding or removing old turns because it is the only one of the three
+   that leaves the text findable with Ctrl+F and readable by a screen reader:
+   the browser skips the work, it does not drop the content. `auto` on the
+   placeholder so a turn that has never been on screen still guesses its own
+   height instead of collapsing the scrollbar. */
+.turn{ content-visibility:auto; contain-intrinsic-size:auto 4rem }
+.ev + .ev    { margin-top:var(--s1) }   /* between steps: a continuation */
+
+.you{ margin-left:auto; width:fit-content; max-width:88%;
+      background:var(--hover); border:1px solid var(--line-1);
+      border-radius:var(--r-lg) var(--r-lg) var(--r-sm) var(--r-lg);
+      padding:9px 13px; white-space:pre-wrap; overflow-wrap:anywhere }
+/* ⛔ THE PRE-WRAP MOVED DOWN, and that is the whole reason the blocks below can
+   exist. While the answer was one pre-wrap box, every blank line the model left
+   between two paragraphs was drawn as an empty line - so a paragraph margin on
+   top of it would space the answer twice. Now the parser eats the blank lines
+   and the margins do the spacing, while pre-wrap survives exactly where a line
+   break belongs to the author: inside a paragraph, an item, a cell. */
+.say   { color:var(--fg-2); padding-left:var(--indent) }
+.answer{ color:var(--fg);   padding-left:var(--indent) }
+.say > :first-child, .answer > :first-child{ margin-top:0 }
+.say > :last-child,  .answer > :last-child { margin-bottom:0 }
+/* ⛔ THE RHYTHM IS THE FIRST THING THAT WAS WRONG once the blocks existed, and
+   it read as "everything is stuck together". The gap between two items was 4px
+   under a line 22px tall, so an item that wrapped ran into the next one and a
+   list of six looked like one paragraph with dots in it. The scale here is a
+   ladder rather than one value: 8 inside a list, 16 between blocks, 24 above a
+   heading - a heading needs more space ABOVE it than below, because the space
+   is what says the section starts, and a heading floating equidistant between
+   two paragraphs belongs to neither. */
+/* 1.6 rather than the 1.55 the rest of the app uses: this is the only place
+   somebody reads paragraphs rather than scans rows, and the guidance for
+   long-form chat answers puts the comfortable leading at about 1.6. WCAG 2.2
+   asks 1.5 as a floor, so both pass; this one is the reading surface. */
+.md-p, .md-i{ line-height:1.6 }
+.md-p{ margin:0 0 var(--s4); white-space:pre-wrap; overflow-wrap:anywhere }
+h3.md-h, h4.md-h, h5.md-h, h6.md-h{
+      margin:calc(var(--s4) + var(--s2)) 0 var(--s2); font-family:var(--sans);
+      font-weight:600; line-height:1.35; color:var(--fg) }
+/* `##` is what a model writes most, so h4 is the one that has to read as a
+   heading and not as a bold line: at 14px it was the size of the body text
+   under it, which is a hierarchy only the weight was carrying. */
+h3.md-h{ font-size:var(--t-h1) }
+h4.md-h{ font-size:var(--t-h2); font-weight:600 }
+h5.md-h, h6.md-h{ font-size:var(--t-h3); font-weight:600; color:var(--fg-2) }
+/* A fenced block inside an answer is already inside the answer's indent, and
+   `.out` carries its own for the tool output it was written for: the two
+   stacked, so code sat a step to the right of the prose describing it. */
+.say > .out, .answer > .out{ margin-left:0 }
+/* ⛔ A LIST IS SET APART ON BOTH SIDES, and only stepping the left is why it
+   still read as prose with dots in it. Measured on a real answer: the items
+   began 26px in from the paragraph above and ended at 548, the SAME pixel the
+   paragraph ended on, so the block was indented on one edge and flush on the
+   other - which the eye reads as the same column, slightly ragged, rather than
+   as something set inside it. 2.6em in and 1.4em back gives it two edges of its
+   own. (1.9 was already the second attempt: at the 1.4 it started with, the
+   marker sat almost under the first letter.) */
+.md-l{ margin:0 1.4em var(--s4) 0; padding-left:2.6em }
+.md-l .md-l{ margin:var(--s2) 0 0 }        /* a nested list continues its item */
+.md-i{ margin:0 0 var(--s2); white-space:pre-wrap; overflow-wrap:anywhere }
+.md-i::marker{ color:var(--fg-3) }
+.md-q{ margin:0 0 var(--s4); padding:2px 0 2px var(--s4); color:var(--fg-2);
+       box-shadow:inset 2px 0 0 var(--line-3) }
+.md-hr{ margin:var(--s5) 0; border:0; border-top:1px solid var(--line-2) }
+/* display:block so a wide table scrolls inside itself instead of widening the
+   whole conversation, which on this layout would push the live pane off. */
+.md-t{ display:block; overflow-x:auto; max-width:100%; margin:0 0 var(--s4);
+       border-collapse:collapse; font-size:var(--t-mono) }
+.md-t th, .md-t td{ padding:6px 18px 6px 0; text-align:left; vertical-align:top;
+                    white-space:pre-wrap; border-bottom:1px solid var(--line-1) }
+.md-t th{ font-family:var(--sans); font-size:var(--t-label); font-weight:600;
+          text-transform:uppercase; letter-spacing:.04em; color:var(--fg-3) }
+/* A link is SHOWN and never made clickable: this pane draws words chosen by
+   whatever page the agent last read, and the browser it drives is right there.
+   The address is printed next to them so an injected one is legible. */
+.lk  { color:var(--fg) }
+.href{ color:var(--fg-3); font:.75rem/1.5 var(--mono); overflow-wrap:anywhere }
+.href::before{ content:" " }
+/* ⛔ NO COLOURED BAR DOWN THE LEFT EDGE. A 2px stripe on a callout is the
+   house style of every framework and belongs to none of them; a tint plus a
+   hairline in the same hue says the same thing without the costume. */
+.orph  { display:flex; gap:8px; font-size:var(--t-mono); color:var(--err);
+         background:color-mix(in srgb, var(--err) 9%, transparent);
+         border-radius:var(--r-sm);
+         border:1px solid color-mix(in srgb, var(--err) 32%, transparent);
+         padding:6px 10px }
+
+/* ONE grid: every row on the same rails, so nothing shifts as text changes. */
+.row{ display:grid; grid-template-columns:var(--gutter) minmax(0,1fr) auto 1rem;
+      column-gap:var(--gap); align-items:baseline; padding:3px 6px;
+      list-style:none; cursor:pointer; border-radius:var(--r-sm);
+      transition:background-color 120ms ease-out }
+.row::-webkit-details-marker{ display:none }
+.row:hover{ background:var(--raised) }
+.g   { grid-column:1; justify-self:end; font-size:var(--t-label); color:var(--fg-3) }
+/* Selectable: `user-select:none` on the whole row kept a double-click from
+   painting the line blue, and also made a truncated URL impossible to copy -
+   which is the one thing somebody wants from a row they cannot finish
+   reading. */
+.lab { user-select:text; grid-column:2; min-width:0; overflow:hidden;
+       text-overflow:ellipsis; white-space:nowrap; font-size:var(--t-mono) }
+.lab b   { font-family:var(--sans); font-weight:600; color:var(--fg) }  /* the verb */
+.lab code{ color:var(--accent) }                                        /* the object */
+.lab .inline{ color:var(--fg-3) }                    /* a short result, on the row */
+.meta{ grid-column:3; white-space:nowrap; font-size:var(--t-label); color:var(--fg-3) }
+
+/* The chevron is the row's own pseudo-element in its own track: no svg, no icon
+   font, and it cannot shift the label when it turns. */
+.row::after{ content:""; grid-column:4; justify-self:end; align-self:center;
+             width:5px; height:5px; margin-top:-2px;
+             border-right:1.5px solid var(--fg-4); border-bottom:1.5px solid var(--fg-4);
+             transform:rotate(-45deg); transition:transform 150ms ease }
+.ev[open] > .row::after{ transform:rotate(45deg); margin-top:-4px }
+.ev[data-body="none"] > .row{ cursor:default }
+.ev[data-body="none"] > .row::after{ visibility:hidden }
+
+.ev[data-state="run"] .g{ color:transparent; position:relative }
+.ev[data-state="run"] .g::after{ content:""; position:absolute; right:0; top:.45em;
+  width:6px; height:6px; border-radius:50%; background:var(--accent);
+  animation:breathe 1.4s ease-in-out infinite }
+.ev[data-state="err"] .g{ color:var(--err) }
+/* The wait between steps, wearing the same row as a step so the sequence does
+   not change shape when the agent is thinking rather than acting. Its verb is
+   muted, because nothing has happened yet and a bold one would claim it had. */
+.pend{ display:grid; grid-template-columns:var(--gutter) minmax(0,1fr) auto 1rem;
+       column-gap:var(--gap); align-items:baseline; padding:3px 6px }
+.pend .lab b{ color:var(--fg-3); font-weight:400 }
+.pend .g{ position:relative }
+.pend .g::after{ content:""; position:absolute; right:0; top:.45em;
+  width:6px; height:6px; border-radius:50%; background:var(--fg-3);
+  animation:breathe 1.4s ease-in-out infinite }
+@media (prefers-reduced-motion: reduce){ .pend .g::after{ animation:none } }
+/* inset and not border-left: a border would shift all four tracks by two pixels */
+/* ⛔ THE TOKEN, MIXED - NOT THE TOKEN'S CURRENT VALUE TYPED OUT AGAIN. Seven
+   places had `--err` and `--well` re-expanded as rgba by hand, which is seven
+   surfaces that would keep the old hue the day either token moves. */
+.ev[data-state="err"] > .row{
+     background:color-mix(in srgb, var(--err) 8%, transparent);
+     box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--err) 30%, transparent) }
+
+.out{ margin:2px 0 var(--s2) var(--indent);
+      max-height:290px; max-height:15lh; overflow:auto; overscroll-behavior:contain;
+      white-space:pre-wrap; overflow-wrap:anywhere;
+      font:.75rem/1.5 var(--mono); color:var(--fg-3);
+      background:var(--raised); border-left:2px solid var(--line-2);
+      border-radius:0 var(--r-sm) var(--r-sm) 0; padding:8px 10px }
+

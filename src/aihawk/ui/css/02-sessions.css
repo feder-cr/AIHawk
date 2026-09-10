@@ -1,0 +1,187 @@
+/* ---------------- panes ---------------- */
+/* The session column is FIXED width and the two panes beside it share what is
+   left, because the column holds names and a name does not get more readable
+   with more room, while the transcript and the picture both do. It collapses
+   below 900px rather than squeezing the two things that matter. */
+/* ⛔ CLOSED UNTIL SOMEBODY ASKS FOR IT. A column of sessions standing open
+   beside a conversation somebody is reading is a list nobody needed yet taking
+   a fifth of the width; open by default it reads as scaffolding rather than as
+   a choice. It is one keystroke away, it remembers what you last did with it,
+   and the toggle lives IN the header row rather than above the list - a control
+   floating over a panel is what "bolted on" looks like. */
+/* ⛔ IT FLOATS OVER THE CONVERSATION, IT DOES NOT PUSH IT. As a flex sibling
+   the column took its width out of the room and everything to its right moved
+   the moment it opened, which for a panel you open and shut twenty times an
+   hour is the whole layout twitching. Out of flow it costs nothing: the
+   conversation stays exactly where it was, the panel lies on top of the near
+   edge of it, and because the panel is narrower than the conversation the rest
+   of the words are still there to come back to.
+   Anchored to the spine's own width so the two are one object, and lifted with
+   a shadow rather than a border, because what says "this is over that" is the
+   shadow. */
+#rail { position:absolute; top:0; bottom:0; left:0; width:var(--drawer);
+        z-index:5; display:flex; flex-direction:column;
+        background:var(--well); border-right:1px solid var(--line-1);
+        box-shadow:14px 0 34px -18px #000 }
+/* The header of the column lines up with the header of the conversation beside
+   it: same height, same padding, so the two read as one row across the app. */
+/* The left padding is the button's: it is drawn over this header now, so the
+   word starts after it instead of under it. */
+#railhead{ flex:none; height:var(--topbar); display:flex; align-items:center;
+           gap:8px; padding:0 var(--s3) 0 var(--spine);
+           border-bottom:1px solid var(--line-1) }
+#railhead .label{ flex:1 }
+#newchat{ flex:none; width:48px; height:48px; display:grid;
+          place-items:center; padding:0; border-radius:var(--r);
+          border:1px solid transparent; background:none;
+          color:var(--fg-3); cursor:pointer;
+          transition:background-color 120ms ease-out, color 120ms ease-out }
+#newchat:hover{ background:var(--raised); color:var(--fg);
+                border-color:var(--line-2) }
+
+/* ⛔ AN ICON, AND THE WORD WHEN IT IS WANTED. The rail carried SESSIONS set
+   vertically, and the word was the whole objection: it is the only thing on
+   this page a person has to tilt their head for, and it names a category where
+   everything else on screen names an action - Clear, Live, Frozen, jump to
+   latest. Chosen from four variants drawn side by side at real proportions,
+   which is how it finally got decided after two guesses were wrong: a bar in
+   the header, and then leaving it alone.
+
+   44px instead of 54, so ten pixels go back to the conversation. The target is
+   still the full height of the window, as far above the 24px WCAG floor and the
+   44px Fitts figure as a target gets, and the accent on the edge stays: it was
+   asked for, and a line that is always there is the edge of the room rather
+   than a state indicator competing with the background.
+
+   The icon sits at the TOP and not in the middle. That is where a rail's first
+   control goes in every product that has one, and it leaves the strip able to
+   grow a second icon without anything being re-thought. */
+/* ⛔ THE RAIL IS THE FULL HEIGHT OF THE WINDOW AND STARTS AT THE TOP, so the
+   icon sits in the corner ABOVE the header's line rather than under it. Tried
+   the other way round for one commit - band across the whole width, rail
+   hanging below - and the owner asked for this one back. It is also the older
+   of the two: the strip belongs to the room, not to the pane beside it. */
+#railtab{ flex:none; width:var(--spine); padding:11px 0 0; cursor:pointer; border:0;
+          position:relative; background:var(--base); color:var(--fg-3);
+
+          /* Half the weight it was: a hairline that says where the room ends
+             rather than a rule that draws attention to itself. */
+          box-shadow:inset -.5px 0 0 var(--accent);
+          display:flex; justify-content:center; align-items:flex-start;
+          transition:background-color 120ms ease-out, color 120ms ease-out }
+#railtab svg{ flex:none; display:block }
+/* The word, on screen, the moment a pointer or the keyboard arrives. Drawn
+   rather than left to `title`: the native tooltip waits about a second, takes
+   the operating system's colours, and never appears for a keyboard at all. */
+#railtab::after{ content:attr(data-tip); position:absolute; left:calc(100% + var(--s2));
+                 top:9px; white-space:nowrap; pointer-events:none; z-index:6;
+                 background:var(--top); color:var(--fg); font-size:var(--t-label);
+                 padding:4px 8px; border-radius:var(--r-sm);
+                 box-shadow:0 2px 8px rgba(0,0,0,.4);
+                 opacity:0; transition:opacity 125ms ease-out }
+#railtab:hover::after, #railtab:focus-visible::after{ opacity:1 }
+/* Open: the rail lifts a rung and the icon goes to full ink. The state is drawn
+   on the thing you press, where a hand already is - and the word goes quiet,
+   because the column beside it is now saying its own name. */
+#railtab:hover{ background:var(--raised); color:var(--fg) }
+/* ⛔ OPEN, THE RAIL GIVES ITS WIDTH AWAY. A 48px strip beside an open column is
+   48px that says nothing: the column beside it already carries the name, the
+   state and the way out. So the button leaves the flow - the conversation gets
+   those pixels back and the panel starts at the edge of the window - and is
+   drawn over the panel's own header, in the same place on screen it was a
+   moment ago.
+
+   Moved, not duplicated. It is the same button, and it has to be: a second
+   control that opens the same column is a second thing to keep in step with the
+   first, which this page carried for half an hour once and a gate now forbids.
+   It is also the only thing that CLOSES the column, so it cannot simply be
+   hidden. */
+/* ⛔ ABOVE THE PANEL, AND 5 IS THE PANEL. Both were 5, and the panel comes
+   later in the document, so it painted over the button: the icon was exactly
+   where it belonged, 48 by 56 at the top-left corner, and invisible. The
+   ladder this page uses is 2 for the jump button, 5 for the panel, 6 above it,
+   20 for the skip link. */
+#railtab[aria-expanded="true"]{ position:absolute; top:0; left:0; z-index:6;
+                                width:var(--spine); height:var(--topbar);
+                                padding:0; display:grid; place-items:center;
+                                background:transparent; box-shadow:none;
+                                color:var(--fg-2) }
+#railtab[aria-expanded="true"]:hover{ color:var(--fg); background:transparent }
+#railtab[aria-expanded="true"]::after{ content:none }
+/* ⛔ THE PANEL FOLDS, THE WAY IN DOES NOT. Both used to disappear at the
+   same breakpoint, and `#newchat` lives inside the panel - so a window snapped
+   to half a 1366-wide laptop lost every session control at once, with the only
+   route left being hand-editing `?s=` in the address bar. The panel is an
+   overlay: it costs nothing at any width. */
+@media (max-width:900px){ #rail{ width:min(84vw, 224px) } }
+#chats{ flex:1; min-height:0; overflow-y:auto; padding:var(--s2) var(--s2) var(--s3);
+        /* A long list is cheap to skip past: the rows below the fold are not
+           laid out until they are scrolled to, and Ctrl+F still finds them. */
+        content-visibility:auto; contain-intrinsic-size:auto 600px }
+.chat{ position:relative; display:flex; align-items:center; gap:6px; width:100%;
+       padding:7px 8px 7px 10px; border:0; border-radius:8px; background:none;
+       /* --t-body and not --t-small: the latter was referenced here, exactly
+          once, and declared nowhere, so the size silently fell back to what
+          it inherited. A dangling token that renders plausibly is the kind
+          nobody reports. */
+       color:var(--fg-2); font:inherit; font-size:var(--t-body);
+       text-align:left }
+.chat:hover{ background:var(--raised); color:var(--fg) }
+/* A mark on the edge rather than a filled row: the current session should be
+   findable at a glance without the list turning into a row of blocks. */
+.chat[aria-current="true"]{ color:var(--fg) }
+.chat[aria-current="true"]::before{ content:""; position:absolute; left:0;
+       top:7px; bottom:7px; width:2px; border-radius:2px; background:var(--fg-3) }
+/* The name is a button so it can be reached by keyboard, and the whole of the
+   user agent's button chrome has to come off or it draws as a raised box with
+   its text centred - which is what shipped in the first screenshot of this
+   column. A row in a list looks like a row. */
+/* ⛔ THE POINTER GOES ON WHAT IS CLICKABLE. The row carried it and the row
+   has no handler: the padding around the name was a pointer cursor over
+   nothing, which is the honesty contract this file states for the browser bar
+   thirty lines earlier and did not keep here. */
+/* 24px tall, because 23 is a miss. WCAG 2.5.8 puts the floor at 24 CSS px and
+   this row was one pixel under it - measured on the running page, not guessed.
+   The height comes from a min-height rather than padding: the row is a flex
+   child and padding would move the text off the baseline it shares with the
+   count beside it. */
+.chat .nm{ cursor:pointer; flex:1; min-width:0; overflow:hidden;
+           text-overflow:ellipsis; min-height:24px; display:flex;
+           align-items:center;
+           white-space:nowrap; border:0; background:none; color:inherit;
+           font:inherit; text-align:left; padding:0 }
+#chats .none{ margin:0; padding:var(--s3) var(--s2); color:var(--fg-3);
+              font-size:var(--t-label); line-height:1.5 }
+.chat .cnt{ flex:none; font-family:var(--mono); font-size:var(--t-label);
+            color:var(--fg-3) }
+/* 24 and not 18: WCAG 2.2 puts the floor at 24px and this is the control
+   that DELETES a conversation, so it is also the one where a near miss costs
+   the most. */
+/* ⛔ HIDDEN FROM THE EYE, NOT FROM THE TAB ORDER. `visibility:hidden` takes
+   an element out of the focus order, and tabbing BACKWARD into a row then
+   skips it every time: the browser looks for the previous focusable while
+   that row is neither hovered nor focused, so the control that deletes a
+   conversation was reachable in one direction only. Transparent instead, and
+   it shows itself the moment it takes focus. */
+.chat .x{ flex:none; width:24px; height:24px; border:0; border-radius:4px;
+          background:none; color:var(--fg-3); cursor:pointer; line-height:1;
+          opacity:0; transition:opacity 120ms ease-out }
+.chat:hover .x, .chat:focus-within .x, .chat .x:focus-visible{ opacity:1 }
+.chat .x:hover{ background:var(--line-2); color:var(--fg) }
+
+
+/* ⛔ A PERCENTAGE ALONE GIVES THE SURPLUS TO THE WRONG PANE. The conversation
+   stops getting better past its measure cap - a wider column is a longer line,
+   not more text - while the browser view is a picture and gets better with
+   every pixel. At 44% of a 2560 screen this column was 1126px around a 634px
+   thread: 460px of nothing, taken from the pane that could have used it. The
+   clamp holds the column at what the thread plus its gutters actually need and
+   hands the rest to the right. Only desktops run this, so the floor is the
+   narrow end of a laptop and there is no phone case to carry.
+
+   The ceiling here is the DEFAULT, not a limit: it is where the pane starts on
+   a screen nobody has dragged, chosen so the prose sits at its measure without
+   taking width the picture on the right can use. The splitter goes well past
+   it - up to the window minus 480 - and since the measure cap moved off the
+   transcript onto the prose, every pixel past this one goes to the step rows,
+   which is where it does something. Dragging used to widen nothing at all. */

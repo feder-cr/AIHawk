@@ -1,0 +1,149 @@
+/* ---------------- the stage ----------------
+   ⛔ THE CARD IS THE PICTURE, NOT THE CELL, and getting that backwards is what
+   made this pane look unfinished. A cell used to be a full-height box with a
+   border and a shadow, and the picture floated in the middle of it: measured on
+   the bench, a 1280x688 window in a one-up cell drew 40% of the card as black,
+   and at two-up the two cards were the same size while their pictures were not,
+   so the smaller one read as broken rather than as a narrower window. Now the
+   frame SHRINK-WRAPS the picture - the border, the corner and the shadow belong
+   to the image - and the cell is only the space it is centred in.
+
+   How, without measuring anything: the picture sizes itself against the cell
+   with container units, and the browser's own chrome is cut with a NEGATIVE
+   MARGIN in percent. A percentage margin resolves against the containing
+   block's width, so `--cut` is the chrome expressed as a fraction of the
+   picture's WIDTH, and the frame's height ends up being the cropped height by
+   construction. No getBoundingClientRect, nothing to recompute on resize, and
+   the old two-number cache disappears with it. */
+#stage{ flex:1; min-height:0; padding:var(--s3); display:grid; gap:var(--s3) }
+#stage[data-grid="1"]{ grid-template-columns:1fr }
+#stage[data-grid="2"]{ grid-template-columns:1fr 1fr }
+/* Three on a 2x2 with one slot empty, because three equal screens and a gap
+   is what a control room does: the alternative makes one of them special. */
+#stage[data-grid="3"],
+#stage[data-grid="4"]{ grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr }
+
+.screen{ container-type:size; min-width:0; min-height:0;
+         display:grid; place-items:center; overflow:hidden;
+         background:none; border:0; padding:0; margin:0;
+         font:inherit; color:inherit; text-align:left; cursor:pointer }
+.frame{ position:relative; overflow:hidden; border:1px solid var(--line-2);
+        border-radius:var(--r-lg); background:var(--well);
+        box-shadow:0 12px 30px -20px #000;
+        transition:border-color 120ms ease-out }
+.screen:hover .frame{ border-color:var(--line-3) }
+/* The one you are looking at, when there is more than one to look at. A border
+   that carries meaning wants 3:1, and --fg-2 is 8.6. */
+.screen[aria-current="true"] .frame{ border-color:var(--fg-2) }
+/* ⛔ AND THE FRAME IS THE LARGEST BOX OF THE PICTURE'S SHAPE THAT THE CELL
+   CAN HOLD, which is one line of CSS and the whole reason the cells stopped
+   being loose. The first attempt let the image size itself and the frame
+   shrink-wrap it: correct for a picture bigger than the cell, and wrong for
+   every other case, because an image is never scaled UP to fill a box - so a
+   small capture sat at its natural size in the middle of a large pane and the
+   cell looked empty again, which is the defect this was meant to end.
+   `--arn` is the picture's shape AFTER the crop and `--cut` the crop itself,
+   both set once per shape by the frame that arrives. */
+.frame{ aspect-ratio:var(--arn, 1.6);
+        width:min(100cqw, calc(100cqh * var(--arn, 1.6))) }
+.frame img{ position:absolute; left:0; top:0; width:100%; height:auto;
+            margin-top:calc(var(--cut, 0%) * -1) }
+.frame img[hidden]{ display:none }
+
+/* ⛔ WAITING, EMPTY, STOPPED AND FAILED ARE FOUR STATES AND THEY USED TO DRAW
+   ONE BLACK RECTANGLE. On the bench, a browser whose capture answered 503 and
+   one that simply had not sent its first frame were pixel-identical, and both
+   read as a product that is broken. Whatever the pane cannot show, it says. */
+.veil{ position:absolute; inset:0; display:grid; place-content:center;
+       justify-items:center; gap:6px; padding:0 var(--s4); text-align:center;
+       background:var(--well) }
+.veil b{ font:600 var(--t-ui)/1.4 var(--sans); color:var(--fg-2) }
+.veil span{ font-size:var(--t-label); color:var(--fg-3); max-width:34ch }
+.veil[hidden]{ display:none }
+/* Over a picture that is still there, the veil is a scrim and not a wall: the
+   last frame is evidence, and hiding it to announce that it is old throws away
+   the only thing the pane has. */
+/* Deep enough that the words on it hold their contrast over a white page,
+   shallow enough that the last frame stays evidence underneath. */
+.screen[data-state="stale"] .veil{
+     background:linear-gradient(color-mix(in srgb, var(--well) 86%, transparent),
+                                color-mix(in srgb, var(--well) 93%, transparent)) }
+.screen[data-state="error"] .veil b{ color:var(--err) }
+/* The pulse says the pane is trying, which is the difference between waiting
+   and stopped - and it is the whole reason a spinner exists. */
+.veil .pulse{ width:56px; height:2px; border-radius:2px; background:var(--line-3);
+              overflow:hidden; position:relative }
+.veil .pulse::after{ content:""; position:absolute; inset:0 auto 0 0; width:40%;
+                     background:var(--fg-3); border-radius:2px;
+                     animation:slide 1.4s ease-in-out infinite }
+@keyframes slide{ 0%{ left:0 } 50%{ left:60% } 100%{ left:0 } }
+
+/* The name rides ON the picture. It used to be a 28px bar bolted under the
+   card, which put the label of a thing outside the thing and cost a row of
+   height in every cell of a 2x2. */
+/* ⛔ THE PLATE CARRIES ITS OWN GROUND. These two sit on a live capture of
+   somebody else's website, so a translucent backdrop makes their contrast a
+   function of that page's stylesheet: measured over a white page the id read
+   3.9:1 and the staleness 3.4:1, both under the floor, and most of the web is
+   white. Opaque, with a hairline so it still reads as sitting on top. */
+.tag, .stamp{ position:absolute; top:8px; height:20px; display:flex;
+              align-items:center; gap:6px; padding:0 8px; pointer-events:none;
+              border-radius:var(--r-sm); background:var(--well);
+              box-shadow:0 0 0 1px rgba(255,255,255,.14);
+              font:var(--t-label)/1 var(--mono); letter-spacing:.02em }
+.tag{ left:8px; color:var(--fg-2); max-width:calc(100% - 96px);
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.tag .dot{ flex:none; width:6px; height:6px; border-radius:50%;
+           background:var(--ok) }
+/* ⛔ STALE HAS TO LOOK STALE. In a grid most of what you see is a picture from
+   a moment ago by construction, and a control room's first rule is that a feed
+   which has stopped must not read as one that is running. Nothing while the
+   frames keep coming, a number in seconds the moment they do not. */
+.stamp{ right:8px; color:var(--err) }
+.stamp[hidden]{ display:none }
+
+/* The empty stage is not a void with a sentence in it: it is the one place
+   that has to say how a browser gets opened, because there is no button that
+   does it - they are opened by asking, on purpose. */
+.empty{ grid-column:1 / -1; grid-row:1 / -1; display:grid; place-content:center;
+        justify-items:center; gap:var(--s2); text-align:center; padding:var(--s4) }
+.empty b{ font:600 var(--t-h2)/1.3 var(--sans); color:var(--fg-2) }
+.empty span{ font-size:var(--t-ui); color:var(--fg-3); max-width:38ch }
+.empty code{ font:var(--t-mono)/1.9 var(--mono); color:var(--fg-2);
+             background:var(--raised); border:1px solid var(--line-1);
+             border-radius:var(--r); padding:6px var(--s3); margin-top:var(--s1) }
+
+/* The second half of the address bar when nobody has picked a screen: the count
+   is the fact, this is what to do about it. */
+#url .hint{ color:var(--fg-3); font-family:var(--sans); font-size:var(--t-label) }
+#url .hint::before{ content:"  -  "; white-space:pre }
+
+#grid{ flex:none; display:flex; align-items:center; gap:2px; height:var(--h-ctl);
+       background:var(--well); border:1px solid var(--line-2);
+       border-radius:var(--r); padding:0 2px }
+#grid button{ min-width:30px; height:24px; padding:0 5px; border:0;
+              border-radius:var(--r-sm); background:none; cursor:pointer;
+              display:grid; place-items:center; color:var(--fg-3);
+              transition:background-color 120ms ease-out, color 120ms ease-out }
+#grid button:hover{ color:var(--fg-2) }
+#grid button[aria-pressed="true"]{ background:var(--raised); color:var(--fg) }
+
+/* The small things whose absence is felt without being noticed. */
+:focus{ outline:none }
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:inherit }
+/* The accent itself, mixed - it was a second orange one shade off the one
+   this page uses, and white ink in a palette whose own rule forbids it. */
+::selection{ background:color-mix(in srgb, var(--accent) 30%, transparent);
+             color:var(--fg) }
+:root{ accent-color:var(--accent) }
+*{ scrollbar-width:thin; scrollbar-color:var(--top) transparent }
+
+@keyframes rise{ from{ opacity:0; transform:translateY(3px) } }
+@keyframes breathe{ 0%,100%{opacity:1} 50%{opacity:.35} }
+#thread .turn, #thread .ev, #thread .say, #thread .answer{
+  animation:rise 140ms cubic-bezier(.2,.6,.3,1) both }
+#thread [data-replay]{ animation:none }
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{ animation-duration:.01ms !important;
+    animation-iteration-count:1 !important; transition-duration:.01ms !important }
+}

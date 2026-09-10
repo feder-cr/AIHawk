@@ -1,0 +1,152 @@
+
+:root{
+  color-scheme: dark;
+
+  /* Surfaces as a ladder rather than two greys. The steps widen going up
+     (5,7,7,8) because equal hex steps read as progressively smaller the lighter
+     they get. */
+  --well:   #0b0d10;   /* recessed: behind the frame, the deepest thing here */
+  --base:   #101317;   /* the ground */
+  --raised: #171b21;   /* composer, header, browser chrome, expanded output */
+  --hover:  #1e232a;   /* row hover, and the user's own bubble */
+  --top:    #262c34;   /* a control sitting on --hover */
+
+  /* Edges are translucent white, never a hex: rgba composites correctly on
+     every rung, so a component can move up the ladder without its border being
+     picked again. */
+  --line-1: rgba(255,255,255,.06);
+  --line-2: rgba(255,255,255,.09);
+  --line-3: rgba(255,255,255,.14);
+  --lip:    inset 0 1px 0 rgba(255,255,255,.045);
+
+  /* ⛔ THE LADDER IS PICKED FROM THE USE SCENE, NOT FROM THE CATEGORY. This
+     interface is watched during long runs in a room with the lights off - the
+     screen is the only light - so the ground stays near black and nothing on it
+     is pure white: a full white on a dark ground at night is a lamp pointed at
+     the reader. The accent moves off coral onto amber for the same reason, that
+     being the warm end that disturbs dark-adapted eyes least, and every rung
+     gains headroom over the floor rather than sitting on it.
+
+     Ink, with the contrast each one carries against --base. */
+  --fg:   #dfe4e8;   /* 14.5:1  what the user typed, what the model answered */
+  --fg-2: #a6b0b8;   /*  8.4:1  narration and chrome labels */
+  --fg-3: #8d98a1;   /*  6.3:1  tool output and arguments, and every quiet word */
+  /* ⛔ AND `--fg-4` NEVER COLOURS WORDS. It was carrying the count beside a
+     conversation, the address under a link, the timing on a step, the marker of
+     a list, the dim halves of the URL and the placeholder inside a preview -
+     nine rules, all of them text, all of them at 2.4:1 where AA asks 4.5. The
+     worst was the address: it is printed precisely so an injected link can be
+     read, and it was the hardest thing on the page to read. */
+  --fg-4: #6b747d;   /*  3.9:1  decoration only - a dot, a chevron, never a word.
+                                Three to one and not two: a chevron and an idle
+                                dot MEAN something, and a graphic that carries
+                                meaning has a floor of its own.
+                                ⛔ AND MEASURED WHERE IT IS PAINTED, not
+                                against the ground. All three of its uses sit on
+                                --raised: the idle dot in the browser bar, the
+                                chevron of a hovered row, the ring on a stopped
+                                browser's chip. At the old value that was 2.96:1
+                                - the same defect this ladder fixed for text,
+                                repeated one rung up. */
+
+  --accent:    #e0a35f;   /* 8.5:1 */
+  --accent-hi: #ecb377;   /* the same amber a step up, for hover */
+  --stop:      #d94f45;   /* the one red that is a CONTROL and not a state */
+  --stop-hi:   #e0655a;
+  --on-accent: #151005;
+  --ok:  #79bf94;         /* 8.6:1 */
+  --err: #e88b76;         /* 7.4:1 */
+
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas,
+          "Liberation Mono", "DejaVu Sans Mono", monospace;
+  /* ⛔ rem AND NOT px, WHICH IS THE DIFFERENCE BETWEEN HONOURING AND IGNORING
+     A SETTING SOMEBODY CHANGED FOR THEIR EYES. A default font size set in the
+     browser or the system does nothing to a page whose sizes are absolute -
+     page zoom still works, but that is a different control and it scales the
+     browser view on the right along with the text. web.dev's typography
+     accessibility guidance marks `font-size: 16px` "Don't" and `1rem` "Do" for
+     exactly this. Same pixels at the default 16px root, so nothing moves for
+     anybody who never changed it. */
+  /* ⛔ EVERY SIZE HERE IS A PUBLISHED NUMBER, NOT A JUDGEMENT. Asked for in
+     those words, and it is the right way round: a scale somebody invents is a
+     scale nobody can check.
+
+       16px body    Material's default body size and the web's, and the number
+                    every one of the sources names first.
+       12px label   the comfortable floor for labels and captions; 11 is the
+                    absolute minimum and this is a step above it.
+       20px heading 1.25 from the body, inside the 1.2 to 1.333 ratio band all
+                    of them give for a type scale.
+
+     12 / 16 / 20, so the steps are 1.33 and 1.25. Levels that share a size are
+     separated by weight and colour, which those sources prefer to size anyway.
+
+     ⛔ MONO IS OFF THIS SCALE BY DECISION, at the 13px those same sources put
+     on code - a mono face runs wider and reads larger at the same pixel, and
+     the step track is MEASURED against it, so moving it moves a threshold a
+     gate checks. */
+  --t-label:.75rem;                            /* 12 - labels, meta, counts */
+  --t-body:1rem;                               /* 16 - prose, and the base */
+  --t-ui:1rem;                                 /* 16 - chrome reads as prose */
+  --t-mono:.8125rem;                           /* 13 - steps, code, addresses */
+  --t-h1:1.25rem; --t-h2:1rem; --t-h3:1rem;    /* 20, then weight and colour */
+
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:32px;
+  --r-sm:4px; --r:8px; --r-lg:12px; --r-pill:999px;
+  /* ⛔ AND SO IS EVERY BOX, FOR THE SAME REASON.
+
+       48px rail    Material's touch target, and the width a strip of icon
+                    buttons has in every product that ships one.
+       56px bar     Material's top app bar. By Jakob's law that is the height
+                    an eye already expects at the top of a window.
+       40px control the standard button height these sources give (36 to 40),
+                    taken at the top so a pill in a bar is comfortable rather
+                    than merely legal.
+
+     All three are multiples of the 4px base this file spends everywhere else.
+     The header used to be 50 - twelve and a half steps, which is not a step,
+     and the kind of number nobody questions because it looks round in decimal. */
+  --spine:48px;                               /* the sessions rail */
+  --drawer:256px;                             /* the standard drawer's width */
+  --topbar:56px;                              /* every header, one height */
+  --h-ctl:40px;                               /* every control on a bar */
+  --gutter:1.75rem;                            /* three digits of 11px mono */
+  --gap:.55rem;
+  --indent:calc(var(--gutter) + var(--gap));   /* ONE source for the step indent */
+}
+
+*{ box-sizing:border-box }
+body{ margin:0; height:100vh; display:flex; position:relative;
+      background:var(--base); color:var(--fg);
+      font:var(--t-body)/1.55 var(--sans); }
+code,pre,.g,.meta,.badge,#url{
+  font-family:var(--mono);
+  /* Not cosmetic: a step reads `#email <- ada@example.com`, and a mono face with
+     contextual alternates draws `<-` as one arrow. The text on screen would stop
+     being the text the model emitted. */
+  font-variant-ligatures:none; }
+.meta,.g{ font-variant-numeric:tabular-nums }
+/* ⛔ `--fg-4` IS DECLARED DECORATIVE AT 2.4:1 AND THIS CLASS PUT WORDS ON IT.
+   Measured on the running page: the state beside the browser read at 2.23:1,
+   the meter at 2.71, the placeholder inside a screen at 2.51, the layout icons
+   at 2.51. WCAG AA wants 4.5:1 for text and 3:1 for a graphic that carries
+   meaning, and the token's own comment in this file says what it is for. A
+   label is a small word, not a faint one: `--fg-3` is 4.8:1 and still reads as
+   quieter than the thing it labels. */
+.label{ font-size:var(--t-label); font-weight:600; letter-spacing:.07em;
+        text-transform:uppercase; color:var(--fg-3); line-height:1 }
+.sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%) }
+.skip{ position:absolute; left:var(--s2); top:var(--s2); z-index:20;
+       padding:8px 12px; background:var(--top); color:var(--fg);
+       border:1px solid var(--line-3); border-radius:var(--r);
+       font-size:var(--t-ui); text-decoration:none;
+       transform:translateY(-200%); transition:transform 120ms ease-out }
+.skip:focus{ transform:none }
+/* `hidden` must beat any display an id or class sets, or an element the script
+   believes it has hidden stays on screen. This shipped once on the live image
+   and again on the queued-message chip: both were "hidden" and both were
+   visible, because a rule with an id selector outranks the user agent's
+   [hidden]. One line, and the whole class is gone. */
+[hidden]{ display:none !important }
+

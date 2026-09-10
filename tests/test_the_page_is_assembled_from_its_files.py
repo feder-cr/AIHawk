@@ -54,27 +54,41 @@ def test_nothing_is_left_unresolved_in_the_page():
 
 
 def test_each_file_is_written_in_its_own_language():
-    """The point of the split. A stylesheet in a `.css` file is a stylesheet;
-    the same bytes in a Python literal are a string that no editor, formatter or
-    diff understands.
+    """The point of the split, and it holds for every piece.
 
-    ⛔ AND IT STRIPS THE COMMENTS FIRST. The first version of this asserted that
-    `app.js` contains no `<script>` and was accused by the comment explaining
-    why a script inside an ANSWER is drawn as text - the gate-accused-by-a-
-    comment defect this project has recorded more than any other, committed here
-    by the gate that was meant to be careful about it.
+    A stylesheet in a `.css` file is a stylesheet; the same bytes in a Python
+    literal are a string that no editor, formatter or diff understands. The
+    same goes one level down: a script cut into ten files is ten scripts only
+    if none of them carries markup or rules.
 
-    Known-bad: put the script back inside the markup.
+    ⛔ AND IT STRIPS THE COMMENTS FIRST. The first version asserted that the
+    script contains no `<script>` and was accused by the comment explaining why
+    a script inside an ANSWER is drawn as text - the gate-accused-by-a-comment
+    defect this project has recorded more than any other, committed by the gate
+    that was meant to be careful about it.
+
+    Known-bad: put a rule in a script file, or markup in either.
     """
-    strip = lambda s: re.sub(r"/\*.*?\*/|^\s*//[^\n]*", "", s, flags=re.S | re.M)
-    css = strip((ASSETS / "app.css").read_bytes().decode("utf-8"))
-    js = strip((ASSETS / "app.js").read_bytes().decode("utf-8"))
-    html = re.sub(r"<!--.*?-->", "", (ASSETS / "page.html").read_bytes().decode("utf-8"),
-                  flags=re.S)
+    def strip_css(s):
+        return re.sub(r"/\*.*?\*/", "", s, flags=re.S)
 
-    assert "<style>" not in css and "function " not in css, (
-        "the stylesheet carries markup or script")
-    assert "<script>" not in js, "the script carries its own tag"
+    def strip_js(s):
+        # Two passes, and the line comments without a newline escape: `.` does
+        # not cross a line without DOTALL, so `.*$` under MULTILINE is exactly
+        # "to the end of this line" and needs no backslash-n to say so.
+        return re.sub(r"^\s*//.*$", "", strip_css(s), flags=re.M)
+
+    for name in ui.CSS_FILES:
+        css = strip_css(ui._read("css", name))
+        assert "<style>" not in css and "function " not in css, (
+            "%s carries markup or script" % name)
+        assert "{" in css, "%s has no rules in it at all" % name
+
+    for name in ui.JS_FILES:
+        js = strip_js(ui._read("js", name))
+        assert "<script>" not in js, "%s carries its own tag" % name
+
+    html = re.sub(r"<!--.*?-->", "", ui._read("page.html"), flags=re.S)
     assert ui.CSS_AT in html and ui.JS_AT in html, (
         "the markup does not say where the other two go")
     assert html.count("{") < 40, (
@@ -82,10 +96,35 @@ def test_each_file_is_written_in_its_own_language():
         "not actually separate anything")
 
 
-def test_the_wheel_carries_the_three_files():
+def test_no_piece_is_big_enough_to_hide_in():
+    """⛔ THE WHOLE POINT, AND THE ONLY THING THAT CAN QUIETLY COME BACK. The
+    stylesheet was 1023 lines of 208 rules and the script 1398 lines of 54
+    functions, each covering seven unrelated areas with a comment between them.
+    Nothing stops the next change appending to whichever file it lands in until
+    one of them is a thousand lines again.
+
+    The ceiling is generous on purpose: this is a floor under the split, not a
+    style rule about file length.
+
+    Known-bad: paste two of the pieces back together.
+    """
+    for folder, names in (("css", ui.CSS_FILES), ("js", ui.JS_FILES)):
+        for name in names:
+            lines = ui._read(folder, name).count(chr(10))
+            assert lines < 400, (
+                "%s is %d lines: the split it was made by has been undone"
+                % (name, lines))
+
+def test_the_wheel_carries_every_file_the_page_is_made_of():
     """⛔ A WHEEL WITHOUT THEM INSTALLS AND THEN SERVES NOTHING. The assets are
     not Python, so nothing imports them and no test that runs from a checkout
     can notice they were left out of the build.
+
+    ⛔ AND THE LIST COMES FROM THE ORDER, NOT FROM A COPY OF IT. This named the
+    two files by hand and went on naming them after the split: it only failed
+    when a wheel happened to exist in the checkout, and would have skipped in
+    silence anywhere else. A gate that repeats a list has a second list to keep
+    in step, which is the defect this project keeps writing down.
 
     Skipped when there is no wheel to look at; the release workflow builds one
     before this ever matters.
@@ -96,10 +135,13 @@ def test_the_wheel_carries_the_three_files():
     if not wheels:
         pytest.skip("no wheel built in this checkout")
     names = set(zipfile.ZipFile(wheels[-1]).namelist())
-    for needed in ("aihawk/ui/app.css", "aihawk/ui/app.js", "aihawk/ui/page.html"):
+    wanted = (["aihawk/ui/page.html"]
+              + ["aihawk/ui/css/%s" % f for f in ui.CSS_FILES]
+              + ["aihawk/ui/js/%s" % f for f in ui.JS_FILES])
+    for needed in wanted:
         assert needed in names, (
-            "%s is not in the wheel, so an installed copy serves an unstyled "
-            "page" % needed)
+            "%s is not in the wheel, so an installed copy serves a page with a "
+            "piece missing" % needed)
 
 
 def test_the_assembly_does_not_depend_on_how_the_files_were_checked_out():

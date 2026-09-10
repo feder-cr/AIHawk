@@ -1,0 +1,49 @@
+/* ---------------- the other browsers ----------------
+   A row under the stage, never a second live pane: eight at full rate would
+   want more pipe than there is, and that is arithmetic rather than an
+   optimisation problem.
+
+   ⛔ AND A BROWSER WITH NO PICTURE DOES NOT GET A PICTURE FRAME. Six declared
+   but stopped browsers used to draw six 168x133 cards, each holding the words
+   `not up` in the middle of an empty grey rectangle: a wall of nothing, 133px
+   tall, in the place where the running ones live. A thing with no image is a
+   NAME, so it is drawn as one - a 26px chip - and the row goes from a gallery
+   of failures to a list of what this session has. */
+/* ⛔ NO CONTROLS HERE. Browsers are opened and closed by ASKING - "open
+   another browser", "close the second one" - because the agent is what drives
+   this and a button beside it is a second way to do the same thing, in a place
+   where the two can disagree about which browser is current. The panes are
+   views: clicking one changes what YOU are looking at and tells the agent
+   nothing. */
+#thumbs{ flex:none; display:flex; align-items:flex-end; gap:var(--s2);
+         padding:0 var(--s3) var(--s3); overflow-x:auto }
+.thumb{ flex:none; width:150px; border:1px solid var(--line-2);
+        border-radius:var(--r); background:var(--raised); padding:0;
+        cursor:pointer; overflow:hidden; display:flex; flex-direction:column;
+        text-align:left; font:inherit; color:var(--fg-3);
+        transition:border-color 120ms ease-out }
+.thumb:hover{ border-color:var(--line-3); color:var(--fg-2) }
+.thumb[aria-current="true"]{ border-color:var(--fg-2); color:var(--fg-2) }
+.thumb .pic{ width:100%; aspect-ratio:16/10; background:var(--well);
+             display:grid; place-items:center; overflow:hidden }
+.thumb .pic img{ width:100%; height:100%; object-fit:cover; display:block }
+.thumb .pic span{ font-size:var(--t-label); color:var(--fg-3); padding:4px;
+                  text-align:center }
+.thumb .cap{ display:flex; align-items:center; gap:6px; padding:5px 8px;
+             font-family:var(--mono); font-size:var(--t-label) }
+.thumb .cap .id{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis;
+                 white-space:nowrap }
+/* The one the agent is driving, marked rather than selected: the person's eye
+   and the agent's hand are two different things and the row says both. */
+.thumb .cap .dot, .chip .dot{ flex:none; width:6px; height:6px; border-radius:50%;
+                              background:var(--ok) }
+.chip{ flex:none; height:26px; display:flex; align-items:center; gap:7px;
+       padding:0 10px; border:1px solid var(--line-2); border-radius:var(--r-pill);
+       background:var(--raised); cursor:pointer; color:var(--fg-3);
+       font:var(--t-label)/1 var(--mono); letter-spacing:.02em;
+       transition:border-color 120ms ease-out, color 120ms ease-out }
+.chip:hover{ border-color:var(--line-3); color:var(--fg-2) }
+.chip[aria-current="true"]{ border-color:var(--fg-2); color:var(--fg-2) }
+.chip .off{ flex:none; width:6px; height:6px; border-radius:50%;
+            box-shadow:inset 0 0 0 1px var(--fg-4) }
+
