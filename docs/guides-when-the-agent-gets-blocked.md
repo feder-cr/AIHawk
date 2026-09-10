@@ -23,3 +23,7 @@ check, in what order.
 - [Agent retry loops trip rate limits, not fingerprints](agent-retry-loops-rate-limits.md)
 - [Claude computer use detected as a bot](claude-computer-use-detected-as-bot.md)
 - [browser-use getting blocked: what you can and cannot change](browser-use-getting-blocked.md)
+- [Playwright MCP session getting blocked](playwright-mcp-blocked.md)
+- [Playwright MCP and captchas](playwright-mcp-and-captchas.md)
+- [Cloudflare and a browser MCP server](cloudflare-and-playwright-mcp.md)
+- [Can an AI agent solve a captcha?](can-an-ai-agent-solve-a-captcha.md)
