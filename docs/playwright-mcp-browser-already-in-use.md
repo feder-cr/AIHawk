@@ -9,7 +9,7 @@ nav_order: 32
 
 The message reads roughly:
 
-```
+```text
 Browser is already in use for /path/to/mcp-chrome, use --isolated to run
 multiple instances of the same browser
 ```
