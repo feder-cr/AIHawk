@@ -21,6 +21,7 @@ import subprocess
 
 import pytest
 
+from aihawk.link import text_of
 from aihawk.web import PAGE, ChatService, Sessions, build_app
 
 pytestmark = pytest.mark.asyncio
@@ -40,8 +41,11 @@ class FakeLink:
         return None
 
     async def call_text(self, name, arguments=None):
-        await self.call(name, arguments)
-        return ""
+        # Through `text_of`, like the real link, so a double that answers a
+        # tool answers it on BOTH doors. Overriding only `call` used to leave
+        # `call_text` returning the empty string for the same tool, which is a
+        # double that disagrees with itself.
+        return text_of(await self.call(name, arguments))
 
 
 class SilentBrain:
@@ -324,13 +328,23 @@ async def test_the_stop_control_is_its_own_button_and_follows_the_run():
         "the send button has a mode again, which is how stop went missing before"
 
 
-async def test_the_live_view_asks_for_nothing_until_an_instruction_has_been_given():
-    """The invariant the in-process view held by calling `registry.peek`.
+async def test_the_live_view_never_causes_a_browser_to_start():
+    """⛔ A VIEW DRAWS WHAT EXISTS AND MAY NOT BRING IT INTO EXISTENCE. Asking
+    for a picture of a browser that is not running would START one, 800 MB and
+    seven seconds nobody asked for, to draw a pane for a conversation that has
+    done nothing.
 
-    Over MCP that question does not exist - `session_list_pages` calls `ensure` -
-    so the guarantee is held by Link remembering. If the frame route ever asks
-    before an instruction, opening the page would START a browser, which is what
-    a view is not allowed to cause.
+    The assertion is on WHICH tools were called and not on how many, and that
+    is the whole lesson of [B201]. This used to say `link.calls == []`, which
+    was the same thing only while the view asked nothing at all; the moment it
+    asked the one free question, `== []` would have had to be relaxed, and the
+    relaxation people reach for is a count. `browser_list` is free by
+    construction and `browser_watch` is not free at all, so naming them is the
+    assertion that keeps meaning what it means.
+
+    Known-bad: a guard that reads whether any call has been made on the link.
+    That is armed by `browser_list` itself, so the next view through it starts
+    an engine - measured on 0.38.0, 9 processes to 16.
     """
     link = FakeLink()
     svc = ChatService(link, SilentBrain())
@@ -343,7 +357,9 @@ async def test_the_live_view_asks_for_nothing_until_an_instruction_has_been_give
 
     resp = await frame.endpoint(Req())
     assert resp.status_code == 204
-    assert link.calls == [], "the view asked the server something before any instruction"
+    assert [n for n, _ in link.calls] == ["browser_watch"], (
+        "the pane asks for the picture and nothing else: %s"
+        % [n for n, _ in link.calls])
 
 
 # --------------------------------------------------------------------------
@@ -371,17 +387,23 @@ class Result:
         self.isError = isError
 
 
+#: What `browser_list` answers when there is something to look at. A double
+#: that can hand back a picture is a double with a browser running, so it has
+#: to say so: the views ask this first and draw nothing when the answer is no.
+RUNNING = ('{"session": "default", "focus": "main", "limit": 8, '
+           '"browsers": [{"id": "main", "running": true, "focused": true, '
+           '"urls": []}]}')
+
+
 class WatchingLink(FakeLink):
     """Answers both picture tools the way the server does - `browser_watch`
     with a JPEG, `browser_take_screenshot` with a PNG - so which one the view
     asked for is visible in what came back and not only in the call log."""
 
-    def __init__(self):
-        super().__init__()
-        self.touched = True
-
     async def call(self, name, arguments=None):
         await super().call(name, arguments)
+        if name == "browser_list":
+            return Result(Item(type="text", text=RUNNING))
         if name == "browser_watch":
             return Result(Item(type="image", data=base64.b64encode(JPEG).decode(),
                                mimeType="image/jpeg"))
@@ -432,8 +454,13 @@ async def test_a_capture_that_cannot_answer_says_why_instead_of_looking_idle():
     Known-bad: the previous route answered 204 here.
     """
     class RefusingLink(WatchingLink):
+        """The browser IS running - that is the point: the refusal has to be
+        about the screencast and not about there being nothing to look at."""
+
         async def call(self, name, arguments=None):
             await FakeLink.call(self, name, arguments)
+            if name == "browser_list":
+                return Result(Item(type="text", text=RUNNING))
             return Result(Item(type="text", text=(
                 "the live window view needs invisible-playwright with "
                 "page.screencast and an engine from firefox-28 on")), isError=True)
@@ -446,6 +473,43 @@ async def test_a_capture_that_cannot_answer_says_why_instead_of_looking_idle():
 
     assert resp.status_code == 503
     assert "page.screencast" in json.loads(resp.body)["error"]
+
+
+async def test_nothing_to_look_at_is_the_idle_pane_and_not_an_error():
+    """⛔ THE TWO REFUSALS ARRIVE THE SAME WAY AND MEAN OPPOSITE THINGS. A tool
+    that refuses reaches a client as an error result carrying a sentence, and
+    the route above turns that into a 503 the page shows in words. That is
+    right for a capture that is broken and wrong for a browser that simply is
+    not running, which is not a failure at all: it is the ordinary state of a
+    conversation nobody has asked anything, and the pane should sit idle.
+
+    Since 0.39.0 `browser_watch` refuses rather than starting a browser to
+    photograph, so this refusal became the COMMON case - every poll of a fresh
+    session - and without this the pane would show an error banner from the
+    moment it opened.
+
+    Told apart by comparing against the sentence itself, which both sides
+    import from one place. Known-bad: `if reason:` on its own, which was what
+    the route said before the refusal existed, and any edit to the shared
+    sentence that leaves the two copies to drift.
+    """
+    from aihawk.mcp import NOTHING_RUNNING
+
+    class AsleepLink(WatchingLink):
+        async def call(self, name, arguments=None):
+            await FakeLink.call(self, name, arguments)
+            return Result(Item(type="text", text=NOTHING_RUNNING), isError=True)
+
+    link = AsleepLink()
+    route = await _frame_route(link)
+
+    class Req: query_params = {}
+    resp = await route(Req())
+
+    assert resp.status_code == 204, (
+        "a browser that is not running was reported as a failure, so the pane "
+        "shows an error banner instead of sitting idle: %s"
+        % getattr(resp, "body", b"")[:120])
 
 
 async def test_a_new_conversation_makes_the_brain_forget_and_clears_the_history():
@@ -828,12 +892,18 @@ async def test_a_page_that_joins_an_idle_service_is_told_the_turn_is_over():
 # --------------------------------------------------------------------------
 
 class TabbedLink(FakeLink):
-    def __init__(self, payload):
+    """`session_list_pages` answers `payload`; `browser_list` answers that the
+    browser is running, because a session with tabs to list has one."""
+
+    def __init__(self, payload, running=True):
         super().__init__()
         self._payload = payload
+        self._running = running
 
     async def call_text(self, name, arguments=None):
         await self.call(name, arguments)
+        if name == "browser_list":
+            return RUNNING if self._running else '{"focus": "", "browsers": []}'
         return self._payload
 
 
@@ -853,7 +923,6 @@ async def test_the_address_comes_from_the_active_tab():
         {"id": "tab-1", "title": "A", "url": "https://a.example/", "active": False},
         {"id": "tab-2", "title": "B", "url": "https://b.example/x", "active": True},
     ]))
-    link.touched = True
     route = await _tabs_route(link)
 
     class Req: query_params = {}
@@ -862,7 +931,7 @@ async def test_the_address_comes_from_the_active_tab():
     assert body["url"] == "https://b.example/x", "the address is the ACTIVE tab's"
     assert [t["id"] for t in body["tabs"]] == ["tab-1", "tab-2"]
     assert [n for n, _ in link.calls] == ["session_list_pages"], (
-        "one call, and not browser_evaluate on top of it")
+        "the tabs in ONE call, and not browser_evaluate on top of it")
 
 
 async def test_an_older_server_leaves_the_strip_empty_instead_of_breaking_the_pane():
@@ -878,13 +947,23 @@ async def test_an_older_server_leaves_the_strip_empty_instead_of_breaking_the_pa
     assert body == {"url": "", "tabs": []}
 
 
-async def test_the_strip_asks_nothing_before_an_instruction():
-    """Same invariant as the frame: looking must not start a browser."""
-    link = TabbedLink("[]")
+async def test_the_strip_never_causes_a_browser_to_start():
+    """Same invariant as the frame, and it has to be stated the same way.
+
+    `session_list_pages` resolves the browser through `ready`, which STARTS it,
+    so an empty strip drawn by asking is an empty strip that cost an engine.
+    Measured on 0.38.0: 9 processes before, 16 after, and the answer was
+    `{"url": "", "tabs": []}` either way.
+
+    Known-bad: a guard that reads whether any call has been made on the link.
+    """
+    link = TabbedLink("[]", running=False)
     route = await _tabs_route(link)
 
     class Req: query_params = {}
     body = json.loads((await route(Req())).body)
 
     assert body == {"url": "", "tabs": []}
-    assert link.calls == []
+    assert [n for n, _ in link.calls] == ["session_list_pages"], (
+        "the strip asks once and reads the answer: %s"
+        % [n for n, _ in link.calls])

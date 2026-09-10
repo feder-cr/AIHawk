@@ -359,27 +359,35 @@ async def test_the_routes_act_on_the_conversation_the_page_names():
         == ["secondo"]
 
 
-async def test_the_live_pane_of_a_conversation_that_has_done_nothing_asks_for_nothing():
-    """⛔ OR OPENING A CHAT LAUNCHES A BROWSER. Over MCP there is no way to ask
-    "is a browser running" without starting one, so the pane may only ask once
-    this conversation has issued an instruction. If that question were asked of
-    the shared connection, a second chat opened beside a working one would start
-    an engine - 800 MB and seven seconds - to draw a picture of nothing.
+async def test_the_live_pane_of_a_conversation_that_has_done_nothing_starts_nothing():
+    """⛔ OR OPENING A CHAT LAUNCHES A BROWSER. A second chat opened beside a
+    working one would start an engine - 800 MB and seven seconds - to draw a
+    picture of nothing, and the person who opened it asked for a conversation.
 
-    Known-bad: have the frame route read `link.touched` instead of the
-    conversation's own.
+    What holds it is that `browser_watch` refuses a browser that is not
+    running instead of starting one, which is gated where it can be proven -
+    `tests/mcp_server/test_a_look_starts_nothing.py`, against a real registry
+    that can be asked how many sessions it built. Here the link is a double
+    with no registry behind it, so the only honest claim left is the one below:
+    the pane draws idle and asks for exactly the one thing, so nothing else can
+    be reaching for a browser on the way.
+
+    Known-bad: have the pane fall back to a second question when the first
+    answers nothing. That is the shape the removed guard had, and it is how
+    both of these came to cost an engine.
     """
     link, sessions = _sessions()
     client = await _client(sessions, link)
 
     await sessions.get("vecchia").send("do something")
     sessions.get("nuova")  # opened beside it, and told nothing
-    calls_before = len(link.calls)
+    before = len(link.calls)
 
     assert client.get("/live/frame?s=nuova").status_code == 204
-    assert len(link.calls) == calls_before, (
-        "drawing a pane for an unused conversation reached the server: %r"
-        % link.calls[calls_before:])
+    after = [n for n, _ in link.calls[before:]]
+    assert after == ["browser_watch"], (
+        "drawing a pane for an unused conversation asked for more than the "
+        "picture it draws: %r" % after)
 
 
 async def test_the_column_can_be_listed_renamed_and_emptied_over_http():

@@ -46,10 +46,6 @@ class Link:
         self._ctx = None
         self._sess_ctx = None
         self._tools = None
-        # Set the moment an instruction is issued, and never cleared: it answers
-        # "could a browser exist?", which is what the live view needs to know
-        # before it is allowed to ask for a picture.
-        self.touched = False
         # One instruction at a time. Two tool calls racing on one browser is not
         # a transport problem, it is two hands on the same mouse.
         self._lock = asyncio.Lock()
@@ -91,7 +87,6 @@ class Link:
 
     async def call(self, name: str, arguments: dict | None = None):
         """Call one tool, serialised against every other call on this link."""
-        self.touched = True
         async with self._lock:
             return await self.session.call_tool(name, arguments or {})
 
@@ -162,15 +157,6 @@ class SessionLink:
     def __init__(self, link: "Link", session_id: str) -> None:
         self._link = link
         self._session_id = session_id
-        #: Whether THIS session has ever issued an instruction. Per session and
-        #: not per connection, and the difference is a browser nobody asked for:
-        #: the live pane is allowed to ask for a picture only once a browser
-        #: could exist, and over MCP there is no way to ask "is one running"
-        #: without starting one. Delegating to the shared link would make every
-        #: NEW conversation inherit the answer from an old one, so opening a
-        #: second chat would launch an engine to draw a pane for a session that
-        #: has done nothing.
-        self._touched = False
         self._addressable = {
             t.name for t in link.tools
             if "session_id" in (getattr(t, "inputSchema", None) or {}).get(
@@ -185,10 +171,6 @@ class SessionLink:
     def tools(self):
         return self._link.tools
 
-    @property
-    def touched(self) -> bool:
-        return self._touched
-
     def addresses(self, name: str) -> bool:
         """Whether a call to this tool will carry the session id."""
         return name in self._addressable
@@ -197,7 +179,6 @@ class SessionLink:
         args = dict(arguments or {})
         if name in self._addressable:
             args["session_id"] = self._session_id
-        self._touched = True
         return await self._link.call(name, args)
 
     async def call_text(self, name: str, arguments: dict | None = None) -> str:

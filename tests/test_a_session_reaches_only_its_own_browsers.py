@@ -141,24 +141,35 @@ async def test_the_session_view_answers_for_the_connection_underneath():
     assert link.tools is rec.tools
 
 
-async def test_whether_a_browser_could_exist_is_asked_per_session():
-    """⛔ AND IT IS THE ONE THING THIS VIEW MUST NOT DELEGATE. The live pane may
-    ask for a picture only once a browser could exist, because over MCP there is
-    no way to ask "is one running" without starting one - `browser_watch` calls
-    `ensure`. If this answered for the shared CONNECTION, every new conversation
-    would inherit the answer from an old one, and opening a second chat would
-    launch an engine, 800 MB and seven seconds, to draw a pane for a session
+async def test_whether_a_browser_is_running_is_asked_per_session():
+    """⛔ AND IT IS THE ONE THING THIS VIEW MUST NOT DELEGATE. If the live pane
+    learned "there is a browser" from the shared CONNECTION, a second chat
+    opened beside a working one would ask for a picture and the server would
+    start an engine, 800 MB and seven seconds, to draw a pane for a session
     that has done nothing.
 
-    Known-bad: `return self._link.touched`. `nuova` below then reports true
-    without having made a single call.
+    ⛔ THIS TEST USED TO ASSERT A REMEMBERED FLAG, `SessionLink.touched`, AND
+    THE FLAG WAS BUILT ON A PREMISE THAT WAS NOT TRUE. Its comment said "over
+    MCP there is no way to ask is one running without starting one". There is:
+    `browser_list` reports what `registry.peek` already holds and starts
+    nothing, and it carries the session id, so the answer is this
+    conversation's. The flag was removed with the workaround it existed for,
+    and what a view needs is now a question with an answer rather than a
+    memory of whether anything has happened here.
+
+    Known-bad: drop `browser_list` from the addressable set. Every pane then
+    asks about the default session's browsers, so an unused conversation is
+    told there is something to look at and asks for a picture of it.
     """
     rec = _Recording(TOOLS)
     vecchia, nuova = SessionLink(rec, "vecchia"), SessionLink(rec, "nuova")
 
     await vecchia.call("browser_navigate", {"url": "http://x/"})
+    await nuova.call("browser_list")
 
-    assert vecchia.touched is True
-    assert nuova.touched is False, (
-        "a conversation that has done nothing says a browser could exist, so "
-        "its live pane will ask for one and the server will start it")
+    assert rec.calls[-1][1].get("session_id") == "nuova", (
+        "the pane of a conversation that has done nothing asked about "
+        "somebody else's browsers: %r" % (rec.calls[-1],))
+    assert not hasattr(nuova, "touched"), (
+        "the remembered flag is back, and it answers a different question "
+        "from the one a view needs")

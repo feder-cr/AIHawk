@@ -30,7 +30,7 @@ from contextlib import asynccontextmanager
 
 from mcp.server.fastmcp import FastMCP, Image
 
-from . import actions, identity, plan, store
+from . import NOTHING_RUNNING, actions, identity, plan, store
 from .registry import DEFAULT_SESSION_ID, SessionRegistry
 
 # Kept for callers that imported it from here. The implementation moved.
@@ -423,6 +423,31 @@ async def ready(session_id=None, browser_id=None):
     return session
 
 
+def looking(session_id=None, browser_id=None):
+    """This browser only if it is ALREADY running. Never starts one.
+
+    ⛔ A QUESTION IS NOT A COMMAND, AND `ready` CANNOT TELL THEM APART, because
+    it starts whatever it resolves. That is exactly right for an instruction
+    and exactly wrong for a look, and the difference is measurable: on 0.38.0,
+    drawing the live panes of a session nobody had asked anything took the
+    machine from 9 firefox processes to 16, roughly 800 MB and seven seconds,
+    and `browser_watch` then answered an error - so the engine the look had
+    started was not even used for the look.
+
+    `registry.peek` has said this was needed since the day it was written -
+    "for callers that want to know whether a browser is up, such as a live
+    view" - and had no callers. What kept it unused was a belief written down
+    in the interface beside the flag it invented instead: "over MCP there is no
+    way to ask is one running without starting one". There is; this is it.
+
+    A browser this answers `None` for is not gone, it is asleep: it was
+    declared and has not been needed yet, and the next COMMAND aimed at it
+    still starts it as the same person, through `ready`. Only looking stopped
+    waking it.
+    """
+    return registry.peek(addressed(session_id, browser_id))
+
+
 async def _retrying(fn, *args, session_id=None, browser_id=None, **kwargs):
     """Run an action on one browser, and on failure rebuild it once and retry.
 
@@ -800,11 +825,17 @@ async def session_list_pages(session_id: str | None = None,
     Use it before session_select_page: the id alone does not tell you which tab
     you are switching to.
 
+    Starts nothing: a browser that is not running has no tabs open, and this
+    answers the empty list rather than opening one to find out. Asking what is
+    there is not the same as asking for it to exist.
+
     session_id and browser_id are optional. Leave them out and this lists the
     default browser's tabs, as before; name them when a session holds more than
     one, since each browser numbers its own tabs."""
-    return await actions.list_pages(
-        await ready(session_id, browser_id))
+    session = looking(session_id, browser_id)
+    if session is None:
+        return "[]"
+    return await actions.list_pages(session)
 
 
 @mcp.tool()
@@ -950,10 +981,21 @@ async def browser_watch(session_id: str | None = None,
     is window pixels, so do not feed its coordinates to browser_click_at; use
     browser_take_screenshot for that.
 
+    Starts nothing. A browser that is not running has no window, so this
+    refuses rather than opening one to photograph: a look is not a command, and
+    the live panes call this many times a second.
+
     session_id and browser_id are optional. Leave them out and this watches the
     default browser, as before; name them to watch one of several."""
-    jpeg = await actions.watch_jpeg(
-        await ready(session_id, browser_id))
+    session = looking(session_id, browser_id)
+    if session is None:
+        # It REFUSES rather than answering the sentence, and only because the
+        # type says so: this is declared to return an Image, and `Image | str`
+        # is not a schema pydantic will build - measured, five test modules
+        # refuse to import. A refusal reaches a client as an error result
+        # carrying the reason, which every client already handles.
+        raise RuntimeError(NOTHING_RUNNING)
+    jpeg = await actions.watch_jpeg(session)
     return Image(data=jpeg, format="jpeg")
 
 

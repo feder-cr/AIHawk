@@ -14,6 +14,7 @@ from starlette.routing import Route
 
 from .chat import ChatService, DEFAULT_CHAT_ID
 from .link import Link, image_of, text_of
+from .mcp import NOTHING_RUNNING
 from .sessions import SessionGone, Sessions
 from .ui import PAGE
 
@@ -249,15 +250,20 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         The strip and the address in the picture are pixels; the ones the
         page draws above it are the same facts as elements, and those can be
         clicked and copied. Both stay.
+
+        ⛔ AND THERE IS NO GUARD HERE ANY MORE, WHICH IS THE POINT. There used
+        to be one, reading whether this conversation had ever called anything,
+        and it was armed by the one call that starts nothing - so the next
+        frame through it started an engine: measured on 0.38.0, 9 firefox
+        processes to 16 for a session nobody had asked anything, and the
+        capture then failed anyway. Asking the free question here instead was
+        tried and measured too, and it is the wrong place: `browser_list` costs
+        30 ms against the capture's 1, so paying it every frame caps the pane
+        at 32 a second to answer a question whose answer is almost always yes.
+        `browser_watch` refuses without starting now, so the cheap path is the
+        common one and this route simply asks.
         """
         seen = which(request)
-        if not seen.link.touched:
-            # 204, not an error: nothing is wrong, there is simply nothing to
-            # look at. Asking the server would START a browser, which is exactly
-            # what a view is not allowed to cause - and it is asked of THIS
-            # conversation, so opening a second chat does not launch an engine
-            # to draw a pane for a session that has done nothing.
-            return Response(status_code=204)
         # ⛔ THE PANE SAYS WHICH BROWSER, and without that the workspace is one
         # picture drawn eight times. `browser_id` is the caller's to choose here
         # exactly as `session_id` is not: which SESSION a request belongs to is
@@ -277,8 +283,12 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
             # the reason, never a 204, which would read as "nothing to look at"
             # in the one case where a person needs to read a sentence.
             reason = text_of(result) if getattr(result, "isError", False) else ""
-            if reason:
+            if reason and NOTHING_RUNNING not in reason:
                 return JSONResponse({"error": reason[:200]}, status_code=503)
+            # And one refusal is not a failure at all: a browser that is not
+            # running is nothing to look at, which is the idle pane. Compared
+            # against the sentence itself rather than guessed at from its
+            # shape - the two ship in one package, so there is one string.
             return Response(status_code=204)
         jpeg, mime = got
         return Response(jpeg, media_type=mime, headers={"Cache-Control": "no-store"})
@@ -329,8 +339,6 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         and the pane keeps working as a picture.
         """
         seen = which(request)
-        if not seen.link.touched:
-            return JSONResponse(NO_TABS)
         # ⛔ WHICH BROWSER, like the frame route beside it. The address above the
         # stage has to be the address of the screen being looked at, and with
         # more than one screen the answer stopped being "the focused one" the
