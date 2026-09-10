@@ -173,6 +173,26 @@ software, and you pay only for model tokens.
 open-source rows: they run locally, and the model you point them at is
 the only outside party you introduce.
 
+**Is Manus free, or is there a free tier?** It is a paid product with a limited
+free plan below it, and the paid tiers are where the useful capacity sits.
+Prices in this category move often enough that a number written here would be
+wrong within a quarter, so check theirs;
+[what is actually free in the agent stack](what-is-free-in-the-agent-stack.md)
+explains why "free" means four different things across this field and which one
+usually applies.
+
+**Claude Code versus Manus?** Not the same shape of thing. Claude Code is a
+coding assistant that runs on your machine and can be given tools, including a
+browser through MCP; Manus is a hosted autonomous agent you send a task to. If
+what you want is an agent that works inside a tool you already run, that is the
+MCP route rather than either of them: [the MCP server](mcp-server.md).
+
+**How do I cancel Manus?** Through Manus's own account settings, and their
+support is the only accurate source for it - we do not run the product and will
+not guess at somebody else's billing flow. If you are leaving because you want
+the agent local and keyed to your own provider, the open-source route above is
+the part of this page worth reading.
+
 **Is AIHawk a Manus replacement?** Only for the browsing part of the
 brief, and we maintain it, so get a second opinion from the table above.
 
