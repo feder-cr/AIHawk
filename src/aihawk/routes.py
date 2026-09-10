@@ -18,6 +18,59 @@ from .sessions import SessionGone, Sessions
 from .ui import PAGE
 
 
+def sse(payload: dict, at: str | None = None) -> bytes:
+    """One event, framed the way `EventSource` reads them.
+
+    ⛔ ONE PLACE KNOWS THE FRAMING, where seven wrote it out by hand. The
+    framing is three details a reader skims past - the `id:` line before the
+    `data:` line, the single newline between them, the blank line that ends the
+    event - and every one of them is load-bearing: a missing blank line makes
+    two events arrive as one and neither is delivered. Written seven times it
+    was seven chances to get one of them wrong in a way no test looked at.
+
+    `at` is the resume point, and leaving it out is meaningful rather than
+    lazy: an id MOVES that point, so state which is not a place to resume from
+    is sent without one, and the spec then keeps the last id standing.
+    """
+    head = (b"id: " + at.encode() + b"\n") if at else b""
+    return head + b"data: " + json.dumps(payload).encode() + b"\n\n"
+
+
+def marker_at(epoch: str, position: int) -> str:
+    """The resume point for this position of this transcript."""
+    return "%s:%d" % (epoch, position)
+
+
+def resume_point(marker: str, epoch: str) -> tuple[int, bool]:
+    """Where a reconnecting listener got to, and whether it is even the same
+    conversation. Answers `(the first event it still needs, same transcript)`.
+
+    ⛔ THE EPOCH IS HALF THE ANSWER. A position only means something inside one
+    transcript: after a reset, or after the process restarts, the same number
+    points at something else entirely, so a mismatch is not a resume at all -
+    it replays from the beginning and the page is told to drop what it holds
+    rather than grow a chimera.
+
+    Written beside `marker_at`, which is the only thing that produces what this
+    reads, so the two cannot drift apart.
+    """
+    if ":" not in marker:
+        return 0, False
+    said, _, position = marker.partition(":")
+    if said != epoch or not position.isdigit():
+        return 0, False
+    return int(position) + 1, True
+
+
+#: The answer when there is nothing to say, in the shape of the answer when
+#: there is. The page reads the same fields either way, so an empty reply that
+#: omits a field is a reply the page cannot read - and both of these are given
+#: on paths that exist precisely because something went wrong or is missing,
+#: which is where a shape written out a second time drifts unnoticed.
+NO_BROWSERS = {"browsers": [], "focus": "", "limit": 0}
+NO_TABS = {"url": "", "tabs": []}
+
+
 def build_app(link: Link, sessions: "Sessions") -> Starlette:
     def named(session_id: str | None) -> ChatService:
         """The conversation with this id, refusing one nobody declared.
@@ -114,37 +167,27 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         # copy of everything. Measured: three consecutive subscriptions each
         # received all 21 events of the same conversation.
         #
-        # The epoch is the other half. A position only means something inside
-        # one transcript: after a reset, or after the process restarts, the
-        # same number points at something else entirely, so a mismatch replays
-        # from the beginning - and says `fresh` first, so a page holding the
-        # previous conversation drops it instead of growing a chimera.
-        resume_from, same_conversation = 0, False
+        # What the header means, and why a position alone is not enough, is in
+        # `resume_point`. It is not repeated here: written in both places it
+        # would be two accounts of one rule, free to disagree.
         marker = request.headers.get("last-event-id") or ""
-        if ":" in marker:
-            epoch, _, index = marker.partition(":")
-            if epoch == service.epoch and index.isdigit():
-                resume_from = int(index) + 1
-                same_conversation = True
+        resume_from, same_conversation = resume_point(marker, service.epoch)
         replay = history[resume_from:] if same_conversation else history
 
         async def stream() -> AsyncIterator[bytes]:
             try:
-                yield b"data: " + json.dumps(
-                    {"kind": "model", "text": service.model_label}).encode() + b"\n\n"
+                yield sse({"kind": "model", "text": service.model_label})
                 if not same_conversation and marker:
                     # It reconnected carrying a position from another
                     # transcript, so what it is still showing is not this one.
-                    yield b"data: " + json.dumps(
-                        {"kind": "fresh", "text": "1"}).encode() + b"\n\n"
+                    yield sse({"kind": "fresh", "text": "1"})
                 # Flagged as replay so the page does not animate forty rows at
                 # once and does not start a stopwatch on work that finished
                 # before this listener existed. Numbered so the next
                 # reconnection can say where it got to instead of starting over.
                 for offset, past in enumerate(replay):
-                    yield (b"id: " + ("%s:%d" % (service.epoch, resume_from + offset)).encode()
-                           + b"\ndata: " + json.dumps({**past, "replay": True}).encode()
-                           + b"\n\n")
+                    yield sse({**past, "replay": True},
+                              marker_at(service.epoch, resume_from + offset))
                 # And then the CURRENT state, which the replay above cannot
                 # carry: `emit` keeps `busy` out of the history on purpose, so a
                 # page opened long after a run would not show a spinner for work
@@ -173,11 +216,9 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
                 # it should call `waiting()`, and a run in progress would lose
                 # its clock.
                 if joining_a_run:
-                    yield b"data: " + json.dumps(
-                        {"kind": "busy", "text": "1"}).encode() + b"\n\n"
+                    yield sse({"kind": "busy", "text": "1"})
                 else:
-                    yield b"data: " + json.dumps(
-                        {"kind": "busy", "text": "0", "replay": True}).encode() + b"\n\n"
+                    yield sse({"kind": "busy", "text": "0", "replay": True})
                 while True:
                     event = await q.get()
                     # Only what the history keeps is numbered: an id moves the
@@ -185,11 +226,10 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
                     # Leaving the field out keeps the last one,
                     # which is what the spec says and what is wanted here.
                     if event["kind"] in ("busy", "fresh"):
-                        yield b"data: " + json.dumps(event).encode() + b"\n\n"
+                        yield sse(event)
                     else:
-                        yield (b"id: " + ("%s:%d" % (service.epoch,
-                                                     len(service.history) - 1)).encode()
-                               + b"\ndata: " + json.dumps(event).encode() + b"\n\n")
+                        yield sse(event, marker_at(service.epoch,
+                                                   len(service.history) - 1))
             finally:
                 service.unsubscribe(q)
 
@@ -267,9 +307,9 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
             # An older server answered this in prose. The workspace then draws
             # nothing rather than half of something, and the single live pane -
             # which does not need this - keeps working.
-            return JSONResponse({"browsers": [], "focus": "", "limit": 0})
+            return JSONResponse(NO_BROWSERS)
         if not isinstance(got, dict):
-            return JSONResponse({"browsers": [], "focus": "", "limit": 0})
+            return JSONResponse(NO_BROWSERS)
         return JSONResponse({"browsers": got.get("browsers") or [],
                              "focus": got.get("focus") or "",
                              "limit": got.get("limit") or 0})
@@ -290,7 +330,7 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         """
         seen = which(request)
         if not seen.link.touched:
-            return JSONResponse({"url": "", "tabs": []})
+            return JSONResponse(NO_TABS)
         # ⛔ WHICH BROWSER, like the frame route beside it. The address above the
         # stage has to be the address of the screen being looked at, and with
         # more than one screen the answer stopped being "the focused one" the
@@ -302,9 +342,9 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
                 {"browser_id": watching} if watching else None)
             rows = json.loads(raw)
         except Exception:
-            return JSONResponse({"url": "", "tabs": []})
+            return JSONResponse(NO_TABS)
         if not isinstance(rows, list) or not all(isinstance(r, dict) for r in rows):
-            return JSONResponse({"url": "", "tabs": []})
+            return JSONResponse(NO_TABS)
         here = next((r for r in rows if r.get("active")), rows[0] if rows else {})
         return JSONResponse({"url": here.get("url") or "", "tabs": rows})
 
