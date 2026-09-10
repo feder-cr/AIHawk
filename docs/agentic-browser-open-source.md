@@ -1,6 +1,6 @@
 ---
-title: "Open-source agentic browsers"
-description: "What is actually open source in the agentic browser field: the full browsers, the agent libraries, and the MCP servers. What each one gives you, what free means in each case, and which licence you are agreeing to."
+title: "Open-source agentic browsers: the three layers, compared"
+description: "What is genuinely open in this field sits one layer below the browser. The full browsers, the agent libraries, the MCP servers, and what free means here."
 parent: "Alternatives and Comparisons"
 nav_order: 25
 ---

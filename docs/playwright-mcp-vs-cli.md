@@ -1,6 +1,6 @@
 ---
-title: "Playwright MCP vs the Playwright CLI"
-description: "They are not competing tools. The CLI runs a test suite you wrote; the MCP server lets a model drive a browser turn by turn. Which one fits exploration, which fits CI, and the three places people pick the wrong one."
+title: "Playwright MCP vs the Playwright CLI: which fits when"
+description: "Not competing tools. The CLI runs a script you wrote; MCP lets a model pick the next step. Which fits exploration, which fits CI, and three wrong picks."
 parent: "Using the Agent"
 nav_order: 31
 ---

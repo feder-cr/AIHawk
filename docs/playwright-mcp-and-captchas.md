@@ -1,6 +1,6 @@
 ---
-title: "Playwright MCP and captchas"
-description: "What happens when an agent meets a challenge, why the model reading it is not the same as solving it, the three legitimate routes past one, and why this project does not ship a solver."
+title: "Playwright MCP and captchas: what actually gets you past"
+description: "A model reading the image is not the answer, because most challenges show nothing to read. What the score is made of, and the three routes that do work."
 parent: "When the Agent Gets Blocked"
 nav_order: 7
 ---

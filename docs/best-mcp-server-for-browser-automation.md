@@ -1,6 +1,6 @@
 ---
-title: "Choosing an MCP server for browser automation"
-description: "There is a default worth starting from, and three reasons to look past it. The comparison axes that matter - perception model, session handling, engine, capability surface - and which server wins on each."
+title: "Choosing an MCP server for browser automation: four axes"
+description: "Start with Microsoft's, then the four axes that separate the rest: how the model sees the page, sessions, the engine underneath, and the surface size."
 parent: "Alternatives and Comparisons"
 nav_order: 26
 ---
@@ -71,6 +71,13 @@ there is.
 Tool count is a bad metric that gets used as a good one. A server with a hundred
 tools is not more capable than one with twenty; it is harder for a model to
 choose within, and every tool description costs context on every turn.
+
+To put a number on the cost rather than assert it, here is ours, read from our
+own source on 2026-09-10: **24 tools, 14,064 characters of description, about
+3,500 tokens on every turn.** A server advertising a hundred tools of similar
+description length is asking for roughly four times that, on every turn, for
+the whole session. Ask any server you are evaluating for the same two figures
+before believing that more tools is more capability.
 
 What to look for instead: can the model **read** state without scripting, does
 it have a **coordinate** path for what selectors cannot reach, and is there a

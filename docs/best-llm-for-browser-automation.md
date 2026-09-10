@@ -1,6 +1,6 @@
 ---
-title: "Which LLM for browser automation"
-description: "The properties that actually decide whether a model drives a browser well - tool-call discipline, long-context stability, cost per turn, and whether it can look at a screenshot - and why the leaderboard ranking is the wrong axis."
+title: "Which LLM for browser automation: the four properties"
+description: "Leaderboards do not predict this workload. Tool-call discipline, stability as context grows, cost per turn, and vision only where a snapshot fails you."
 parent: "Using the Agent"
 nav_order: 37
 ---
@@ -74,6 +74,9 @@ is the practice, and it is cheaper than upgrading.
 
 **The server's tool surface changes the answer.** A server exposing a hundred
 tools makes every model worse at choosing, and makes small models much worse.
+Ours is **24 tools and about 3,500 tokens of description per turn** (measured
+from our own source, 2026-09-10); that overhead lands on every model you test,
+so hold it constant when you compare them.
 [How the tools are shaped](mcp-tool-design.md) argues why fewer is better here.
 
 ## In this project

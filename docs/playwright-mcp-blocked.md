@@ -1,6 +1,6 @@
 ---
-title: "Playwright MCP session getting blocked"
-description: "Four different failures all report as blocked, and they need opposite fixes. How to tell an empty snapshot from a challenge page from a rate limit from a real detection, and what actually changes each one."
+title: "Playwright MCP session blocked: four causes, four fixes"
+description: "Four failures all report as blocked and need opposite responses. How to tell an empty snapshot from a challenge from a rate limit from real detection."
 parent: "When the Agent Gets Blocked"
 nav_order: 6
 ---

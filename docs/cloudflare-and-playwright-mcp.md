@@ -1,6 +1,6 @@
 ---
-title: "Cloudflare and a browser MCP server"
-description: "What a Cloudflare challenge is reading when your agent hits one, why the same site lets you through by hand, the four things that change the outcome, and the one that does not."
+title: "Cloudflare and a browser MCP server: what is being read"
+description: "A challenge is the visible end of a decision made earlier on. The three layers that feed it, why it works by hand, and the four things that change it."
 parent: "When the Agent Gets Blocked"
 nav_order: 8
 ---

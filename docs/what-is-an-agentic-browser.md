@@ -1,6 +1,6 @@
 ---
-title: "What is an agentic browser?"
-description: "An agentic browser is a browser that acts on your behalf. The definition, the four shapes it takes, why the term collides with browser agents you drive from code, and the security question the whole field is currently arguing about."
+title: "What is an agentic browser? Definition and the two kinds"
+description: "An agentic browser acts for you instead of just showing pages. The two products that share the name, the four problems both solve, and the security gap."
 parent: "Alternatives and Comparisons"
 nav_order: 24
 ---

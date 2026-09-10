@@ -1,6 +1,6 @@
 ---
-title: "Playwright MCP: browser is already in use"
-description: "The error means a profile directory is locked, not that a browser is running. The four ways a lock survives, why --isolated fixes it, and how to tell a stale lock from a real second client."
+title: "Playwright MCP: browser is already in use, and the fix"
+description: "The error means a profile directory is locked, not that a browser is running. The four ways a lock survives, and how to tell stale from a real client."
 parent: "Using the Agent"
 nav_order: 32
 ---
@@ -28,7 +28,9 @@ clients sharing the same workspace will conflict.
 
 **A second client.** You have the server registered in two places - your editor
 and a terminal assistant, say - and both are alive. Both want the same profile.
-This is the case the error is actually written for.
+This is the case the error is actually written for, and it is most common in an
+editor: [a browser MCP server in GitHub Copilot](playwright-mcp-in-github-copilot.md)
+covers why.
 
 **A previous run that was killed.** The session ended by something other than a
 clean close, so the lock file outlived the process. Nothing is running and the
@@ -51,8 +53,10 @@ memory for the session and nothing is shared, so two clients stop fighting. The
 cost is that you start logged out every time, which for exploration is usually
 what you wanted anyway.
 
-**If you want the profile, give each client its own.** `--user-data-dir <path>`
-with a different path per client. You keep persistence and lose the collision.
+**If you want the profile, give each client its own.** Choosing this
+deliberately rather than by accident is the second of the four decisions in
+[Playwright MCP best practices](playwright-mcp-best-practices.md).
+`--user-data-dir <path>` with a different path per client. You keep persistence and lose the collision.
 Note that this is a command-line option on the server, so if your client only
 lets you register a command with no arguments, you may not be able to reach it
 without editing the config block by hand.
@@ -77,7 +81,8 @@ of colliding with it. That is a design difference, not a claim of superiority
 over Playwright MCP, and it comes with its own cost: you have to name things.
 
 Where the same class of problem does reach us is persistent profiles, because
-the constraint is the browser's, not the server's. One directory, one live
+the constraint is the browser's, not the server's - the same reason a
+[logged-in session has to be handled deliberately](ai-agent-login-to-a-website.md). One directory, one live
 browser. If you point two sessions at the same `profile_dir`, the second one has
 the same bad day.
 

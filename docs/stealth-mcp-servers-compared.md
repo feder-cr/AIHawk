@@ -1,6 +1,6 @@
 ---
-title: "Stealth MCP servers compared"
-description: "The MCP servers built on Camoufox, nodriver and Patchright instead of a stock automation build: what each engine actually changes, what the wrappers claim, and which claims we could not verify."
+title: "Stealth MCP servers compared: Camoufox, nodriver, Patchright"
+description: "The MCP servers built on modified engines rather than a stock automation build: what each engine really changes, and which claims we could not verify."
 parent: "Alternatives and Comparisons"
 nav_order: 27
 ---

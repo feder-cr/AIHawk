@@ -1,6 +1,6 @@
 ---
-title: "Can an AI agent solve a captcha?"
-description: "The direct answer, the reason the obvious answer is wrong, what the modern challenge is actually measuring, and the three routes that work instead. Written by a project that does not ship a solver."
+title: "Can an AI agent solve a captcha? The honest answer"
+description: "Usually no, and not because the model is not smart enough. Most challenges ask no question at all. What the score reads, and the three routes that work."
 parent: "When the Agent Gets Blocked"
 nav_order: 9
 ---

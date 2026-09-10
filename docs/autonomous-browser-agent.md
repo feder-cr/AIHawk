@@ -1,6 +1,6 @@
 ---
-title: "What an autonomous browser agent can and cannot do"
-description: "Autonomy is a spectrum with four rungs, not a feature. Which rung each tool actually reaches, the three things that break when you leave one unattended, and the honest test for whether your task belongs on the top rung."
+title: "Autonomous browser agents: the four rungs of autonomy"
+description: "Autonomy is a spectrum, not a feature. The four rungs, what breaks above rung two, and the three-question test for whether your task belongs on the top."
 parent: "Alternatives and Comparisons"
 nav_order: 29
 ---

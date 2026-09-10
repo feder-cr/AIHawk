@@ -1,6 +1,6 @@
 ---
-title: "Playwright MCP with a proxy"
-description: "How to point a browser MCP server at a proxy, why the proxy is usually the fix people actually needed, and the three ways a proxied session still gives itself away: DNS, WebRTC and a timezone that disagrees with the exit."
+title: "Playwright MCP with a proxy, and the three leaks it leaves"
+description: "The config is one line. DNS, WebRTC and a timezone that disagrees with the exit are the three things that routing HTTP through a proxy does not close."
 parent: "Using the Agent"
 nav_order: 34
 ---

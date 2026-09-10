@@ -1,6 +1,6 @@
 ---
-title: "Using a browser MCP server for web scraping"
-description: "A model driving a browser is the right tool for working out the shape of a page and the wrong tool for extracting ten thousand of them. The split that works, what it costs per page, and the two jobs where the model stays in the loop."
+title: "Using a browser MCP server for web scraping: the pattern"
+description: "A model is the right tool for working out how to scrape a site and the wrong one for doing it. The three-phase split, and the two jobs it stays inside."
 parent: "Using the Agent"
 nav_order: 36
 ---
@@ -11,6 +11,12 @@ The honest version, first: **a browser MCP server is excellent at finding out
 how to scrape a site and bad at doing the scraping.** Every step is a round trip
 through a model. That is a few seconds and a few thousand tokens per page. A
 plain script does the same page in a fraction of a second for nothing.
+
+The floor under that estimate is measurable and it is ours: our server's tool
+descriptions alone are **14,064 characters, about 3,500 tokens, resent on every
+turn** (24 tools, read from `src/aihawk/mcp/server.py` on 2026-09-10). Page
+content and the model's own reasoning stack on top of that floor. Multiply by
+turns, then by pages, and phase 2 below stops being a style preference.
 
 Which does not make MCP useless here. It makes it useful in a specific place,
 and the pattern below is what people converge on after they have paid for the

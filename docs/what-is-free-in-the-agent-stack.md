@@ -1,6 +1,6 @@
 ---
-title: "What is actually free in the agent stack"
-description: "Free means four different things across this category and the same product name covers two of them. What each layer costs, where the bill actually lands, and the three surprises that arrive in month two."
+title: "What is actually free in the AI browser agent stack"
+description: "Free means four different things here, and one product name often covers two. What each layer costs, and the three surprises that arrive in month two."
 parent: "Alternatives and Comparisons"
 nav_order: 30
 ---

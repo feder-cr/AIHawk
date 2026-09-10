@@ -1,6 +1,6 @@
 ---
-title: "Playwright MCP best practices"
-description: "The settings and habits that decide whether a browser MCP server is useful or expensive: capability scope, profile strategy, how to write the instruction, when to stop using the model, and what to check before blaming the server."
+title: "Playwright MCP best practices: four decisions that matter"
+description: "Capability scope, profile strategy, how the instruction is written, and when to stop using the model. Measured: our own tool surface costs 3.5k tokens."
 parent: "Using the Agent"
 nav_order: 33
 ---
@@ -16,6 +16,14 @@ change. These are those four, then the habits that follow from them.
 Every tool the server exposes has a description, and every description is in the
 model's context on **every turn**. A browsing session is dozens of turns. This
 is the single largest avoidable cost in the category.
+
+Measured on our own server, because we can read our own source and nobody
+publishes this number: **24 tools, 14,064 characters of tool description, which
+is roughly 3,500 tokens sent again on every single turn** (median 442
+characters per tool, read from `src/aihawk/mcp/server.py` on 2026-09-10). A
+forty-turn session therefore spends on the order of 140,000 tokens restating
+what the tools are, before a single page has been read. That is the budget the
+next two paragraphs are about.
 
 Microsoft's server makes capabilities additive with `--caps`, so vision, pdf and
 devtools are off unless you ask. Leave them off until a page forces the issue.

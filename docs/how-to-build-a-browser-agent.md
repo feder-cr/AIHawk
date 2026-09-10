@@ -1,6 +1,6 @@
 ---
-title: "How to build a browser agent"
-description: "The loop is about forty lines. The hard parts are what you feed the model, how the actions reach the page, and knowing when to stop. What to build, what to take off the shelf, and the four failures every home-built agent hits."
+title: "How to build a browser agent, and what to take instead"
+description: "The loop is about forty lines. The page description, the action path and the stopping condition are the project, plus the four failures every one hits."
 parent: "Using the Agent"
 nav_order: 38
 ---
@@ -20,7 +20,11 @@ Four steps, repeated:
    Raw HTML is enormous, mostly irrelevant, and will exhaust your context on the
    third page.
 2. **Ask for one action.** Constrained to a small vocabulary: navigate, click,
-   type, select, press, read, screenshot, done.
+   type, select, press, read, screenshot, done. For calibration, our own
+   production server settled on **24 tools totalling 14,064 characters of
+   description** (measured 2026-09-10) covering sessions, tabs, reading,
+   pointer, keyboard and a JavaScript reader. If your vocabulary is much
+   larger than that, the model is choosing between overlapping verbs.
 3. **Perform it,** and get the resulting state.
 4. **Decide whether to stop.**
 

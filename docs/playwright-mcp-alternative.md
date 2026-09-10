@@ -1,6 +1,6 @@
 ---
-title: "Playwright MCP alternatives"
-description: "Microsoft's server is the right default. The four specific complaints that send people looking, what each one is actually caused by, and which alternative addresses which - including the cases where the answer is not another server."
+title: "Playwright MCP alternatives, and the three you don't need"
+description: "Four complaints send people looking for a replacement. Three are fixed by a flag on the server you already have; only one of them needs a real switch."
 parent: "Alternatives and Comparisons"
 nav_order: 28
 ---

@@ -1,6 +1,6 @@
 ---
-title: "Getting an AI agent to log into a website"
-description: "The mechanics of a login for an agent: the three ways to hold a session, why typing the password is the worst of them, what two-factor does to the flow, and the failures that only happen after you are logged in."
+title: "Getting an AI agent to log into a website: three routes"
+description: "Reuse a saved session, persist a profile, or type the password, which is the worst. What two-factor does, and the failures that start after you log in."
 parent: "Using the Agent"
 nav_order: 39
 ---

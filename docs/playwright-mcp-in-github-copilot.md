@@ -1,6 +1,6 @@
 ---
-title: "A browser MCP server in GitHub Copilot"
-description: "How to give Copilot's agent mode a real browser through MCP, what changes about how you prompt it, the tool-budget problem nobody warns you about, and when the browser is the wrong tool inside an editor."
+title: "A browser MCP server in GitHub Copilot: setup and limits"
+description: "Give Copilot's agent mode a real browser through MCP. The config block, why isolated matters more in an editor, and the tool budget nobody warns about."
 parent: "Using the Agent"
 nav_order: 35
 ---
@@ -58,6 +58,12 @@ every turn, and in an editor you probably already have several servers
 registered. Copilot has a ceiling on how many tools it will offer at once, and
 crossing it means some of them stop being available without a message that says
 so.
+
+The size of one browser server, measured on ours on 2026-09-10: **24 tools,
+14,064 characters, about 3,500 tokens per turn.** Register two browser servers
+in an editor that already has a file server and a search server and you are
+spending a meaningful slice of the context window on tool descriptions before
+your question arrives.
 
 Two habits keep this from biting:
 
