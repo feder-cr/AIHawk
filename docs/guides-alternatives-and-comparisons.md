@@ -38,3 +38,4 @@ another tool covers more, the page says so.
 - [Playwright MCP alternatives](playwright-mcp-alternative.md)
 - [What an autonomous browser agent can and cannot do](autonomous-browser-agent.md)
 - [What is actually free in the agent stack](what-is-free-in-the-agent-stack.md)
+- [browser-use on GitHub: what the repo actually gives you](browser-use-github.md)
