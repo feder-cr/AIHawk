@@ -718,8 +718,9 @@ def test_a_lead_in_is_not_drawn_and_the_answer_still_is():
     """⛔ THE SENTENCE THAT COMES WITH THE TOOL CALLS IS NOT DRAWN, and the
     one that comes instead of them is.
 
-    Owner, reading a run: `Sito aperto. Guardo cosa c'e' in home.` above a row
-    that says `Inspected`, then `lo chiudo prima di girare` above a row that
+    Owner, reading a run whose narration was in Italian, translated here:
+    `Site open. Let me see what is on the home page.` above a row that says
+    `Inspected`, then `I will close the cookie banner first` above a row that
     says `Clicked`. The sentence announces what the row below it states, so
     the column spent three lines saying one thing and spaced the things worth
     reading out with the things that were not.

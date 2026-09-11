@@ -101,18 +101,17 @@
    where it belonged, 48 by 56 at the top-left corner, and invisible. The
    ladder this page uses is 2 for the jump button, 5 for the panel, 6 above it,
    20 for the skip link. */
-/* ⛔ APERTA, LA SPINA NON REGALA PIU' LA SUA LARGHEZZA, E LA RIGA CHE LO
-   FACEVA STAVA QUI. Toglieva il bottone dal flusso perche' quei 48px
-   tornassero alla conversazione: misurato il 2026-09-11, aprire la colonna
-   spostava `#left` da x=48 a x=0 e allargava il pannello del browser di 48,
-   cioe' l'intera finestra scivolava mentre si apriva un pannello. Il
-   proprietario l'ha chiamata guardandola: la barra deve VIVERE SOPRA, e la
-   chat non deve saperne niente.
+/* ⛔ OPEN, THE SPINE NO LONGER GIVES ITS WIDTH AWAY, AND THE RULE THAT DID
+   THAT STOOD HERE. It took the button out of the flow so those 48px went back
+   to the conversation: measured 2026-09-11, opening the column moved `#left`
+   from x=48 to x=0 and widened the browser pane by 48 - the whole window
+   sliding to open a panel. The owner named it by looking at it: the bar has
+   to LIVE ON TOP, and the chat must not know a thing about it.
 
-   Quindi la spina appartiene alla cornice e sta ferma, il cassetto esce alla
-   sua destra e copre il bordo vicino della conversazione, e nessuna misura
-   di nessun altro elemento cambia. Resta solo lo stato disegnato sul
-   bottone, che non sposta niente. */
+   So the spine belongs to the frame and stays put, the drawer slides out to
+   its right and covers the near edge of the conversation, and not one
+   measurement of anything else changes. What is left is the state drawn on
+   the button, which moves nothing. */
 #railtab[aria-expanded="true"]{ background:var(--raised); color:var(--fg) }
 #railtab[aria-expanded="true"]::after{ content:none }
 /* ⛔ THE PANEL FOLDS, THE WAY IN DOES NOT. Both used to disappear at the

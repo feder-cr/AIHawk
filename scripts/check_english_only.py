@@ -92,7 +92,21 @@ EXCLUDED = (
     "tests/test_fork.py",
 )
 
-EXTENSIONS = (".py", ".md", ".toml", ".cfg", ".yml", ".yaml")
+#: ⛔ `.js`, `.css` AND `.html` WERE MISSING, AND THE FRONT END IS WHERE THE
+#: PROSE IS. Added 2026-09-11, after five files of the served page were found
+#: carrying Italian comments - written that same afternoon, four of them
+#: already pushed - while this gate reported clean on every run. The page is
+#: 67 KB of script plus eight stylesheets, and none of it was ever looked at.
+#:
+#: It is a gate and not a backlog: the five were translated in the same
+#: change and the whole tree is at zero, which is the condition the selftest
+#: below holds everything else to.
+#:
+#: No extractor was needed. `inspect` reads the raw text for any covered
+#: extension - the comment-block walk is only for VENDORED folders, where the
+#: question is which lines are ours - so these three cost one tuple entry.
+EXTENSIONS = (".py", ".md", ".toml", ".cfg", ".yml", ".yaml",
+              ".js", ".css", ".html")
 
 
 def italian_words(text: str) -> set:
@@ -256,6 +270,12 @@ def selftest() -> int:
            "def click(selector):\n"
            "    # Prima si risolve, poi si guarda dove sta, quindi si clicca.\n"
            "    return selector\n", True)
+    expect("an Italian comment in a .js", "src/aihawk/ui/js/x.js",
+           "/* Prima si guarda dove sta, quindi si disegna. */" + chr(10)
+           + "function draw(){ return 1; }" + chr(10), True)
+    expect("an Italian comment in a .css", "src/aihawk/ui/css/x.css",
+           "/* Questo pannello sta sopra, quindi non sposta niente. */" + chr(10)
+           + "#rail{ position:absolute }" + chr(10), True)
     expect("an Italian test", "tests/test_x.py",
            "def test_questo_funziona():\n"
            "    # Questo controlla che tutto sia a posto, quindi basta.\n"

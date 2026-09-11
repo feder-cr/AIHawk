@@ -52,10 +52,11 @@ function flush(asAnswer, replay){
   const text = hold.replace(LEAD,'').replace(/^\w/, c => c.toUpperCase());
   hold = null;
   /* ⛔ A LEAD-IN IS NOT DRAWN AT ALL, AND THAT IS A DECISION. The owner,
-     reading a run: `Sito aperto. Guardo cosa c'e' in home.` followed by the
-     row that says `Inspected`, then `lo chiudo prima di girare` followed by
-     the row that says `Clicked`. The sentence announces what the row below
-     it states, so the column carried three lines to say one thing, and the
+     reading a run whose narration was in Italian, translated here: `Site
+     open. Let me see what is on the home page.` above the row that says
+     `Inspected`, then `I will close the cookie banner first` above the row
+     that says `Clicked`. The sentence announces what the row below it
+     states, so the column carried three lines to say one thing, and the
      things worth reading were spaced out by the things that were not.
 
      What it costs, said plainly rather than discovered later: a lead-in

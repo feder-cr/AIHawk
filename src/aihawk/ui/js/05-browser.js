@@ -79,15 +79,14 @@ const pause = () => Math.round(1000 / (fps(onScreen()) * onScreen()));
    asking about. See `vanish`. */
 const looking = () => !document.hidden && !vanished;
 
-/* ⛔ IL RILANCIO STA IN UN `finally`, E NON E' UNA CINTURA IN PIU'. Una
-   pompa che si riarma DOPO il lavoro muore per sempre alla prima eccezione:
-   non salta un giro, smette. Misurato il 2026-09-11 sulla barra
-   dell'indirizzo, dove il `try` interno era stato tolto riscrivendo la
-   funzione - e la stessa forma era gia' latente in altre due pompe, dove il
-   `try` copriva la fetch e non le righe attorno. Il `catch` vuoto tiene il
-   giro silenzioso; il `finally` tiene viva la catena qualunque cosa accada,
-   e insieme tolgono la domanda "mi sono ricordato del try?" da ogni
-   funzione che una catena chiama. */
+/* ⛔ THE RE-ARM SITS IN A `finally`, AND IT IS NOT ONE BELT TOO MANY. A pump
+   that re-arms AFTER the work dies for good on the first exception: it does
+   not skip a turn, it stops. Measured 2026-09-11 on the address bar, where the
+   inner `try` had been taken away while rewriting the function - and the same
+   shape was already latent in two more pumps, whose `try` covered the fetch
+   and not the lines around it. The empty `catch` keeps one turn quiet; the
+   `finally` keeps the chain alive whatever happens, and together they take the
+   question "did I remember the try?" out of every function a chain calls. */
 async function tick(){
   try { if(looking()) await onePass(); }
   catch(err){}

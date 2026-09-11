@@ -151,13 +151,13 @@ function drawStrip(){
   box.hidden = others.length === 0;
 }
 
-/* ⛔ IL RILANCIO STA IN UN `finally`, come per `tick` e `where`. Una pompa
-   che si riarma DOPO il lavoro muore per sempre alla prima eccezione: non
-   salta un giro, smette. Qui il `try` copriva la fetch e non le righe
-   attorno - `$('thumbs')` e `box.children` stavano fuori - quindi bastava un
-   nodo mancante per spegnere le anteprime fino al ricaricamento della
-   pagina. Il giro e' una funzione sua, come `onePass`, cosi' la catena e' tre
-   righe che non possono fallire. */
+/* ⛔ THE RE-ARM SITS IN A `finally`, as it does for `tick` and `where`. A
+   pump that re-arms AFTER the work dies for good on the first exception: it
+   does not skip a turn, it stops. Here the `try` covered the fetch and not the
+   lines around it - `$('thumbs')` and `box.children` were outside - so one
+   missing node put the previews out until the page was reloaded. The turn is a
+   function of its own, like `onePass`, so the chain is three lines that cannot
+   fail. */
 async function slowTick(){
   try { if(looking()) await slowPass(); }
   catch(err){}
