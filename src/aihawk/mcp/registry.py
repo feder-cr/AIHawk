@@ -58,7 +58,7 @@ def _is_usable(session) -> bool:
 
 
 class BrowserRegistry:
-    """Sessions by id, created on demand, closed on request or at shutdown."""
+    """Browsers by key, created on demand, closed on request or at shutdown."""
 
     def __init__(self, factory=StealthSession, defaults=None,
                  on_change=None) -> None:
@@ -89,7 +89,7 @@ class BrowserRegistry:
         return plan_session().kwargs
 
     def config(self, key: str) -> Optional[dict]:
-        """What this id was started with, for callers that have to report it."""
+        """What this browser was started with, for callers that have to report it."""
         return self._configs.get(key)
 
     def _changed(self, key: str) -> None:
@@ -131,15 +131,15 @@ class BrowserRegistry:
         return self._locks[key]
 
     def peek(self, key: str) -> Optional[StealthSession]:
-        """The session as it stands, without starting anything. For callers that
-        want to know whether a browser is up, such as a live view."""
+        """The browser as it stands, without starting anything. For callers that
+        want to know whether one is up, such as a live view."""
         return self._browsers.get(key)
 
     def ids(self) -> list:
         return sorted(self._browsers)
 
     async def ensure(self, key: str) -> StealthSession:
-        """The session for this id, started and usable.
+        """The browser for this key, started and usable.
 
         A start that FAILS must not poison the id. The original bug here stored
         the session before awaiting `start()`, so a start that raised left a
@@ -261,7 +261,7 @@ class BrowserRegistry:
             pass
 
     async def drop(self, key: str) -> None:
-        """Throw a session away so the next `ensure` builds a fresh one."""
+        """Throw a browser away so the next `ensure` builds a fresh one."""
         async with self._lock(key):
             await self._discard(key)
 

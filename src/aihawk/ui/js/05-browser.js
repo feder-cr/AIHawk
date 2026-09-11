@@ -255,13 +255,15 @@ async function paintWhere(){
   if(many){ severalOpen(onStage().length); }
   else try {
     const who = watched();
-    /* ⛔ AND NEVER OF A BROWSER THAT IS NOT RUNNING. Asking for the tabs of a
-       declared-but-stopped browser STARTS it - the server resolves the id and
-       the registry wakes the engine - so clicking a stopped browser's chip
-       spent 800 MB and seven seconds nobody asked for, and then kept asking
-       every two seconds because the pin never cleared. The frame pump, the
-       preview row and both cell builders already know this rule; this was the
-       fifth place that had to and did not. */
+    /* A browser that is not running has no address, and `fleet` already says
+       which ones are running - so this skips a request whose answer is known.
+       It is no longer a SAFETY rule here: it used to be, when this asked the
+       tab tool, which resolved its browser through `ready` and so woke a
+       stopped one (800 MB and seven seconds for a chip nobody clicked twice).
+       The address comes from `browser_list` now, which reaches the registry
+       through `peek` and starts nothing, so the worst this saves is a round
+       trip. The safety version of the rule still binds the frame pump, the
+       preview row and both cell builders, which ask tools that DO wake. */
     if(who && !fleet.some(b => b.id === who && b.running)){
       paintUrl(''); return;
     }

@@ -73,8 +73,8 @@ consequences: you do not call tools, you describe outcomes and approve steps;
 and if you stop wanting the browser in a project, the toggle beats editing
 JSON.
 
-The tools themselves come in two families: browser tools for tabs
-(`browser_tab_new` and friends) and page tools (`browser_navigate`,
+The tools themselves come in two families: browser tools for the two
+browsers (`browser_open` and friends) and page tools (`browser_navigate`,
 `browser_read_text`, `browser_snapshot`, `browser_click`, `browser_type`,
 `browser_take_screenshot`, among others). You will see these names in the
 agent's transcript as it works, each gated by an approval until you loosen

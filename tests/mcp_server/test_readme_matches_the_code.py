@@ -104,6 +104,21 @@ def test_the_readme_names_every_tool_the_server_registers():
     missing = sorted(names - listed)
     assert not missing, f"registered but not in the tool list under ## Tools: {missing}"
 
+    # ⛔ AND THE OTHER DIRECTION, WHICH IS THE ONE THAT SHIPPED A DEFECT. Only
+    # the check above existed, so it could see a tool added and never a tool
+    # REMOVED - and removing four is exactly what happened on 2026-09-11. The
+    # list here was corrected by hand; six other published pages were not, and
+    # nothing complained, because a name in a doc that the server no longer
+    # registers is invisible to a subtraction that runs the other way.
+    #
+    # The project already enforces both directions one file over, for the
+    # page's verb table, with a docstring saying why the second one exists.
+    # This is that assertion, on the tool list.
+    stale = sorted(listed - names)
+    assert not stale, (
+        f"the tool list names tools the server does not register: {stale}. A "
+        "reader following this page calls a tool that does not exist.")
+
 
 def test_the_engine_floor_covers_the_wait_this_package_relies_on():
     """`browser_click_at` holds a button down with `wait_for_timeout`, and in

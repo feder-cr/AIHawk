@@ -22,7 +22,7 @@ Paste-able as given:
 
 ## The run
 
-**1. Open a tab and navigate.** `browser_tab_new` returns `tab-1`;
+**1. Navigate.** `browser_navigate` opens the browser's page and goes to it;
 `browser_navigate` to `https://books.toscrape.com/` lands on the catalogue
 home. A `browser_snapshot` shows the page title, the URL and the visible
 links, including one per category in the sidebar.

@@ -52,7 +52,7 @@ function thumbFor(b){
   const pic = el('div','pic');
   /* Three states, not two, and the third is the one that read as a failure.
      A browser that is RUNNING WITH NO TAB cannot be captured - the engine
-     answers "no such tab" - and asking anyway spends a round trip to be told
+     refuses, saying it has no page open - and asking anyway spends a round trip to be told
      so, then paints ERROR over something that is simply empty. The tabs are
      already in the answer this pane was built from, so the question is asked
      of data rather than of the pipe. */

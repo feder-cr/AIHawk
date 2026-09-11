@@ -171,7 +171,7 @@ in a way that gets you blocked.
 
 There are two browsers, and every tool takes `browser`.
 
-`main` is your own identity: its tabs, its cookies, its logins, its
+`main` is your own identity: its page, its cookies, its logins, its
 fingerprint. That is where the work happens, and it is where a command goes
 when it says nothing.
 
@@ -497,23 +497,32 @@ async def ready(browser_id=None):
     that came home empty. The rule this follows is the project's: after the fix,
     the places that know a thing are one.
 
-    Reopening happens ONCE per browser and only for tabs a SAVED file declared.
-    A browser that has been woken owns its own tabs, and a wake that kept
-    reopening them would fight whoever is using it.
+    Reopening happens ONCE per browser and only for a page a SAVED file
+    declared. A browser that has been woken owns where it goes next, and a wake
+    that kept reopening would fight whoever is using it.
+
+    ⛔ ONE PAGE, WHICH IS WHAT MAKES THE REST OF THIS SURFACE TRUE. This loop
+    used to reopen every url the file held, one `new_page` each - so a saved
+    file was the one input that could put a browser into a state the
+    instructions call impossible ("there is no way to open, list, choose or
+    close another"), with no tool left to inspect or close the extras. It also
+    made `browser_status` blame the site for pages this function had opened.
+    The file still records every url it saw, because that is an observation
+    and a browser can legitimately hold several; what is restored is the one
+    the browser was ON, which is the LAST of them - the same page the old loop
+    left active, since every `new_page` moved the active one along.
     """
     at = addressed(browser_id)
     owed = _tabs_owed.pop(at, None)
     session = await registry.ensure(at)
     if owed:
         try:
-            for url in owed:
-                await session.new_page()
-                await actions.navigate(session, url)
+            await session.new_page()
+            await actions.navigate(session, owed[-1])
         except Exception:
             # A url that will not load must not cost the browser. It is up, it
-            # is the right person, and the tab it could not reopen is one tab -
-            # refusing to hand it back would turn a stale bookmark into a
-            # session somebody cannot use.
+            # is the right person, and refusing to hand it back would turn a
+            # stale bookmark into a session somebody cannot use.
             pass
     try:
         # The urls only. `describe_pages` also fetches each tab's TITLE, which
@@ -590,7 +599,7 @@ async def browser_open(browser: Browser | None = None, seed: int | None = None,
                        proxy: str | None = None, profile: str | None = None) -> str:
     """Open `main` or `support`, or reopen one as somebody else.
 
-    `main` is your own identity - tabs, cookies, fingerprint, the logins - and
+    `main` is your own identity - its page, cookies, fingerprint, the logins - and
     `support` is a helper beside it for what must not touch that identity: a
     temporary mailbox to receive a verification, a lookup, a page you want to
     read without the site connecting it to the account. They share nothing.
@@ -689,7 +698,7 @@ async def browser_open(browser: Browser | None = None, seed: int | None = None,
 async def browser_close(browser: Browser | None = None) -> str:
     """Close one browser and free what it was holding.
 
-    The tabs it had are gone with it. The other browser is not touched.
+    The page it had is gone with it. The other browser is not touched.
 
     Closing FORGETS who that browser was: opening it again is a new stranger,
     not the same person resumed. That is deliberate - a browser somebody shut
@@ -712,9 +721,10 @@ async def browser_list() -> str:
     the commands that name none go to.
 
     Answers JSON: `focus`, `limit`, `note`, and `browsers` - each with `id`,
-    `running`, `focused` and the `urls` of its tabs. A browser that is not
-    running has been declared and has not been needed yet; the next command
-    aimed at it starts it as the same person.
+    `running`, `focused`, `url` (the page it is on) and `urls` (every page it
+    holds, which is more than one only when a site opened one). A browser that
+    is not running has been declared and has not been needed yet; the next
+    command aimed at it starts it as the same person.
 
     Starts nothing: it reports what is running, so asking is free.
     """
@@ -809,14 +819,18 @@ async def browser_status(browser: Browser | None = None) -> str:
             rows = await session.describe_pages()
             here = next((r for r in rows if r["active"]), rows[0] if rows else None)
             where = (here["url"] or "blank") if here else "no page open yet"
-            # ⛔ SAID ONLY WHEN IT IS TRUE, and it is not an invitation. There
-            # are no tab tools: a caller cannot make, choose or close a page.
-            # But a SITE can open one, and a status that reported only the
-            # active page would leave somebody reading about a window that has
-            # something else in it. Counted, never named - naming them would be
-            # offering a vocabulary nothing here accepts.
+            # ⛔ COUNTED, AND NOT BLAMED ON ANYBODY. A caller cannot make,
+            # choose or close a page, so the honest report of a second one is
+            # that it is there - not who opened it. The first version of this
+            # line said "the site has opened %d more", and measured on a
+            # restored browser it was false: `ready` was opening them itself,
+            # one per saved url. Fixing that left this sentence true, and it
+            # still does not say it, because a confident wrong cause is the
+            # defect this project removed from `navigate` ("navigated to
+            # {url}" whatever happened). Counted, never named: naming them
+            # would offer a vocabulary nothing here accepts.
             if len(rows) > 1:
-                where += " (the site has opened %d more)" % (len(rows) - 1)
+                where += " (%d other pages are open in this browser)" % (len(rows) - 1)
         except Exception:
             where = "the page is unreadable"
 
@@ -845,7 +859,7 @@ async def browser_status(browser: Browser | None = None) -> str:
 @mcp.tool()
 async def browser_navigate(url: str, wait_until: str = "domcontentloaded",
                            browser: Browser | None = None) -> str:
-    """Go to a url in the active tab, opening one if none exists.
+    """Go to a url in this browser's page, opening it if none exists.
 
     Answers with the HTTP status the server gave and the url actually landed
     on, which is not always the one asked for: a redirect to a login wall or a
@@ -930,7 +944,7 @@ async def browser_read_html(mode: str = "form", browser: Browser | None = None) 
 
 @mcp.tool()
 async def browser_take_screenshot(browser: Browser | None = None) -> Image:
-    """One screenshot of the active tab, on demand.
+    """One screenshot of this browser's page, on demand.
 
     `browser` is `main` unless you say `support`, and they share nothing."""
     png = await actions.screenshot_png(
@@ -942,7 +956,7 @@ async def browser_take_screenshot(browser: Browser | None = None) -> Image:
 async def browser_watch(browser: Browser | None = None) -> Image:
     """The whole browser window as a person at the machine sees it: tab strip,
     address bar, the page and the pointer, from a live capture kept running on
-    the active tab. For watching the work, not for acting on it: the picture
+    that page. For watching the work, not for acting on it: the picture
     is window pixels, so do not feed its coordinates to browser_click_at; use
     browser_take_screenshot for that.
 

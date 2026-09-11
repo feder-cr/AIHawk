@@ -51,7 +51,7 @@ JS_FILES = (
     "02-transcript.js",    # turns, steps, the queued message
     "03-which-session.js", # which conversation this page is in
     "04-composer.js",      # sending, the event stream, one door for requests
-    "05-browser.js",       # the live pane: frames, address, tabs, state
+    "05-browser.js",       # the live pane: frames, address, state
     "06-sessions.js",      # the column of conversations
     "07-rail.js",          # opening and closing that column
     "08-workspace.js",     # which browsers this session holds

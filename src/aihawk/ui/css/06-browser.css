@@ -1,13 +1,10 @@
 /* ---------------- browser pane ---------------- */
-/* The strip only exists when there is more than one tab: a single tab labelled
-   with its own title is chrome that says nothing the address bar below it does
-   not already say. */
-/* ⛔ THE STRIP IS THE TOP OF THE BAR, NOT A THING FLOATING OVER IT. It sat
-   on the same surface as the bar with the SELECTED tab cut out in a darker
-   one, so the current page read as a hole punched in the header, and its left
-   edge started 4px before the address below it. Now the strip stands on the
-   page's ground and the selected tab is the bar's own surface, which is what
-   makes a tab look attached to what it opens - and both share one padding. */
+/* ⛔ TEN LINES ABOUT THE TAB STRIP STOOD HERE and went with the rules
+   they explained: a browser drives one page, so there is no strip. They
+   are not kept as scar tissue because nothing in this file survives them
+   to be explained - left in place they would read as commentary on
+   `#chrome` below, claiming a shared padding and a selected-tab surface
+   that no longer exist anywhere. */
 
 /* The same height as the conversation's header beside it. They were 38 and
    50, so the top edge of the product broke by twelve pixels on its main

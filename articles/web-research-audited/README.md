@@ -25,7 +25,7 @@ uses as its worked example:
 Driven by Claude through the MCP server, exactly as option 1 of the
 [README](../../README.md) wires it. The transcript, tool call by tool call:
 
-1. `browser_tab_new` -> `tab-1`; `browser_navigate` to
+1. `browser_navigate` opens the page and goes to
    `catalogue/page-1.html`.
 2. `browser_read_text` on the results section: twenty titles with twenty
    prices, read as visible text. The model counts from what it read.

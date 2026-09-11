@@ -34,9 +34,10 @@ quickstart lists "restart Claude Desktop completely" as the first
 troubleshooting step for a server that does not appear.
 
 After the restart, the same Claude you already talk to has a real browser. The
-server exposes a flat set of tools in two families: browser tools that manage
-tabs (`browser_tab_new`, `browser_tab_list` and friends) and page tools that
-act on one (`browser_navigate`, `browser_read_text`, `browser_snapshot`,
+server exposes a flat set of tools in two families: browser tools that open
+and report the two browsers (`browser_open`, `browser_close`, `browser_list`,
+`browser_status`) and page tools that act on the page one of them is driving
+(`browser_navigate`, `browser_read_text`, `browser_snapshot`,
 `browser_click`, `browser_type`, `browser_take_screenshot`, and a few more).
 Claude sees the list and decides when to use them; you do not invoke tools
 yourself, you ask for outcomes.

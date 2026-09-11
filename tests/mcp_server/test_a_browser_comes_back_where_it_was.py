@@ -103,13 +103,27 @@ async def test_a_browser_nobody_has_looked_at_does_not_report_an_empty_window(re
     assert "urls" not in saved["browsers"]["main"], saved["browsers"]["main"]
 
 
-async def test_waking_a_declared_browser_reopens_the_tabs_it_had(registry, monkeypatch):
-    """The point of the whole slice.
+async def test_waking_a_declared_browser_reopens_the_page_it_was_on(registry, monkeypatch):
+    """The point of the whole slice, and since 2026-09-11 it is ONE page.
 
-    Known-bad, two: drop the reopen loop from `ready`, and have `restore` hand
-    the urls to `registry.declare` as part of the identity - the registry would
-    then pass `urls` to the session factory, which is a launch setting no
-    browser has.
+    ⛔ A SAVED FILE WAS THE ONE WAY TO GET A SECOND PAGE AFTER THE TAB TOOLS
+    WERE REMOVED. This loop reopened every url the file held, one `new_page`
+    each, while the instructions the server hands every model say "there is no
+    way to open, list, choose or close another" page - and no tool was left
+    that could inspect or close the extras. It also made `browser_status`
+    report "the site has opened 1 more" about a page `ready` had opened itself.
+
+    The file still records every url it saw - that is an observation, and a
+    site can open one whenever it likes - but a wake restores the page the
+    browser was ON. That is the LAST url, which is also where the old loop
+    left the browser, since every `new_page` moved the active page along: the
+    browser lands in the same place it used to, without the pages behind it.
+
+    Known-bad, three: reopen `owed` in a loop again and the first assertion
+    goes red; drop the reopen entirely and the second does; have `restore`
+    hand the urls to `registry.declare` as part of the identity and the third
+    does, because the registry would pass `urls` to the session factory as a
+    launch setting no browser has.
     """
     store.save("default", {"main": {"seed": 4242, "headless": True,
                                     "urls": ["http://a.test/", "http://b.test/"]}},
@@ -120,11 +134,38 @@ async def test_waking_a_declared_browser_reopens_the_tabs_it_had(registry, monke
 
     session = await server.ready()
 
+    assert session.pages == ["http://b.test/"], (
+        "a wake opened more than the page the browser was on, which is a state "
+        "no tool can now inspect or close: %r" % (session.pages,))
     assert session.kwargs.get("seed") == 4242, "it came back as somebody else"
     assert "urls" not in session.kwargs, (
         "the urls were handed to the browser as a launch setting: %r"
         % session.kwargs)
-    assert session.pages == ["http://a.test/", "http://b.test/"]
+
+
+async def test_the_status_does_not_blame_the_site_for_pages_the_wake_opened(registry):
+    """⛔ MEASURED, AND IT WAS FALSE. `browser_status` appends a note when the
+    browser holds more than one page, and the note used to read "the site has
+    opened %d more". Restoring a file with two urls produced exactly that
+    sentence about a page `ready` had just opened itself - a confident wrong
+    cause in the one string a model reads to orient itself, which is the
+    defect this project removed from `navigate` when it answered "navigated to
+    {url}" whatever happened.
+
+    Both halves are asserted: the wake leaves one page, so there is no note at
+    all, and the note that would appear does not name a culprit.
+    """
+    store.save("default", {"main": {"seed": 7, "headless": True,
+                                    "urls": ["http://a.test/", "http://b.test/"]}})
+
+    await server.ready()
+    answer = await server.browser_status()
+
+    assert "http://b.test/" in answer, "the status does not say where it is: %r" % answer
+    assert "other pages" not in answer, (
+        "the wake opened pages the status then reported as extras: %r" % answer)
+    assert "the site has opened" not in answer, (
+        "the status still blames the site for pages it did not open: %r" % answer)
 
 
 async def test_the_tabs_are_reopened_once_and_not_on_every_command(registry):

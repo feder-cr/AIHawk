@@ -65,9 +65,9 @@ A set of browser tools, prefixed with the server name you chose. The
 authoritative list is whatever `/mcp` shows for your installed server version;
 the families, with the names AIHawk's own client code knows them by:
 
-- **Navigation and tabs**: `browser_navigate`, plus `browser_tab_new`,
-  `browser_tab_select`, `browser_tab_close` and `browser_tab_list` for
-  working across tabs.
+- **Navigation**: `browser_navigate`. A browser drives one page; when you
+  need a second, `browser_open` opens the `support` browser beside it rather
+  than a tab, so the two sites never share cookies or a fingerprint.
 - **Reading the page**: `browser_read_text`, `browser_read_html`, and
   `browser_snapshot` for a structural view of what is interactive.
 - **Acting on the page**: `browser_click` and `browser_click_at`,

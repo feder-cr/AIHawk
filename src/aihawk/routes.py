@@ -307,10 +307,12 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         nothing, so drawing the workspace can never cost an engine.
 
         ⛔ AND IT ASKS EVEN WHEN THIS CONVERSATION HAS DONE NOTHING, which is
-        the opposite of what the picture and the tab strip do. Those may not ask
+        the opposite of what the PICTURE does. `browser_watch` may not be asked
         before an instruction because asking STARTS a browser; `browser_list` is
         the one question that starts nothing, by construction and by its own
-        test. Copying the guard here looked prudent and was a bug: a session
+        test. (The tab strip used to be the second example here. It is gone, and
+        its replacement - the address - now reads this same tool, so the
+        contrast is with the frame alone.) Copying the guard here looked prudent and was a bug: a session
         reopened after a restart has browsers it declared and no instruction
         yet, so the workspace would have been empty in exactly the case the
         declarations exist for - and the panes offering to wake them would

@@ -52,7 +52,7 @@ function screenFor(b, current){
   cell.appendChild(box);
   /* Three states and not two, and the third is the one that reads as a
      failure: a browser that is RUNNING WITH NO TAB cannot be captured - the
-     engine answers "no such tab" - and asking anyway spends a round trip to be
+     engine refuses, saying it has no page open - and asking anyway spends a round trip to be
      told so. The tabs are already in the answer this was built from, so the
      question is asked of data rather than of the pipe. */
   const has = (b.urls || []).length > 0;
