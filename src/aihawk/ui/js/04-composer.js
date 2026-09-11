@@ -90,6 +90,7 @@ function wipe(){
   setQueued(null);
 }
 let vanished = false;
+let outdated = false;
 /* ⛔ ONE PLACE ASKS THIS CONVERSATION FOR ANYTHING, so one place can notice
    that it is not there any more. Six fetches carry `?s=`, and each of them
    would otherwise need the same three lines - written six times, the seventh
@@ -103,7 +104,32 @@ async function door(path, init){
   /* 410 and nothing else. Every other failure is worth trying again; this one
      is the only one that will never stop being true. */
   if(r.status === 410){ vanish(); throw new Error('this conversation was deleted'); }
+  /* 404 is the OTHER thing that will never stop being true, and until
+     2026-09-11 it was silent. Every path this page asks for is a route the
+     app declares, so a 404 cannot be a missing row or a bad id - it means
+     this page and this server disagree about what exists, which happens to
+     every tab left open across a deploy. Reported from a real session: the
+     address bar said `no page yet` on a browser plainly on a page, because
+     the tab was older than the server and the route it asked for had been
+     removed. The old code read `if(r.ok)` and dropped the answer without a
+     word, so the only visible effect was one part of the page quietly
+     ceasing to be true while everything else kept working. */
+  if(r.status === 404){ outOfDate(path); }
   return r;
+}
+
+/* Older than the server, which is not the same as broken and must not be
+   treated like it. Only the routes that went away stop answering; the rest
+   of the page is still live and still worth reading, so this SAYS it and
+   changes nothing else - going inert here would take away more than the
+   defect did. Once per page: a pump asking every two seconds would otherwise
+   write the same sentence thirty times a minute. */
+function outOfDate(path){
+  if(outdated) return;
+  outdated = true;
+  orphan('err', 'This page is older than the server: it asked for '
+         + String(path).split('?')[0] + ', which this version does not serve. '
+         + 'Reload to get the current page.');
 }
 
 /* Deleted from the other tab, or from another window. The page says so and

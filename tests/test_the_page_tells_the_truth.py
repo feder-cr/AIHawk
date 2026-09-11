@@ -591,3 +591,66 @@ def test_no_pump_of_the_page_can_be_killed_by_one_exception():
     assert not dead, (
         "these pumps do not re-arm when their pass throws, so they stop for the "
         "life of the page instead of skipping one turn: %s" % dead)
+
+
+def test_a_page_older_than_the_server_says_so_instead_of_going_quiet():
+    """⛔ A TAB LEFT OPEN ACROSS A DEPLOY ASKS FOR ROUTES THAT ARE GONE, AND
+    until 2026-09-11 it did that in silence.
+
+    Reported from a real session: the address bar said `no page yet` on a
+    browser plainly sitting on a page. The server was answering correctly and
+    a freshly loaded page showed the url; the open tab was older than the
+    server, and the route it asked for had been removed that morning. The code
+    read `if(r.ok)` and dropped the 404 without a word, so one part of the
+    page quietly stopped being true while everything else kept working - which
+    is the worst shape a defect can take, because nothing points at it.
+
+    Every path this page asks for is a route the app declares, so a 404 cannot
+    mean a missing row or a bad id. It can only mean the page and the server
+    disagree about what exists.
+
+    It SAYS it and changes nothing else. Going inert, the way a deleted
+    conversation does, would take away more than the defect did: only the
+    routes that went away stop answering, and the rest of the page is still
+    live and still worth reading.
+
+    Known-bad: drop the 404 branch from `door`, or let it speak every time -
+    a pump asking every two seconds would write the same sentence thirty times
+    a minute, which is a different way of being unreadable.
+    """
+    import json
+    import shutil
+    import subprocess
+
+    import pytest
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("needs node to EXECUTE the page's fetch funnel")
+
+    def whole(name):
+        src = CODE[CODE.index(name):]
+        return src[:src.index(chr(10) + "}") + 2]
+
+    js = (whole("async function door(") + chr(10)
+          + whole("function outOfDate(") + chr(10)
+          + "let notices = [], vanished = false, outdated = false, status = 200;\nglobalThis.at = p => p;\nglobalThis.orphan = (kind, t) => notices.push(t);\nglobalThis.vanish = () => { vanished = true; };\nglobalThis.fetch = async () => ({status, ok: status >= 200 && status < 300});\n(async () => {\n  const out = {};\n  status = 200; await door('/live/browsers?s=x'); out.afterOk = notices.length;\n  status = 404; await door('/live/address?s=x');\n  out.afterFirst = notices.length; out.text = notices[0] || '';\n  await door('/live/address?s=x'); out.afterSecond = notices.length;\n  status = 410;\n  try { await door('/chat/send?s=x'); } catch (e) { out.threw = true; }\n  out.vanished = vanished;\n  process.stdout.write(JSON.stringify(out));\n})();")
+    done = subprocess.run([node, "-e", js], capture_output=True, text=True,
+                          encoding="utf-8", timeout=30)
+    assert done.returncode == 0, done.stderr
+    got = json.loads(done.stdout)
+
+    assert got["afterOk"] == 0, "an answer that worked put a notice on the page"
+    assert got["afterFirst"] == 1, (
+        "a route this server does not have was dropped in silence, which is how "
+        "a tab older than the server looks like a tab where one feature broke")
+    assert "older than the server" in got["text"] and "Reload" in got["text"], (
+        "the notice does not say what happened or what to do: %r" % got["text"])
+    assert "/live/address" in got["text"] and "?s=" not in got["text"], (
+        "the notice should name the path and not the conversation id: %r"
+        % got["text"])
+    assert got["afterSecond"] == 1, (
+        "said twice, so a pump on a two second timer writes it thirty times a "
+        "minute and the transcript becomes the notice")
+    assert got.get("threw") and got["vanished"], (
+        "the 410 path stopped working while the 404 one was added")
