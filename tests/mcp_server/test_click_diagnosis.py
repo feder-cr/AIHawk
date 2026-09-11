@@ -9,7 +9,6 @@ The answer worth having is `covered_by`. If a cookie banner is sitting over the
 button, the next move is to dismiss the banner, and that is a different action
 from retrying - which is what a caller does with an opaque timeout.
 """
-import json
 
 import pytest
 
@@ -39,7 +38,6 @@ def page():
 
 def _why(page, body, selector="#b"):
     """Click and return the diagnosis, or None if the click worked."""
-    import asyncio
     from urllib.parse import quote
 
     page.goto("data:text/html," + quote(f"<html><body>{body}</body></html>"))

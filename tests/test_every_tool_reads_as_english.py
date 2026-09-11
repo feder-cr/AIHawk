@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import re
 
-import pytest
 
 
 def _verbs_in_the_page() -> dict:

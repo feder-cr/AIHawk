@@ -51,7 +51,6 @@ import json
 import pathlib
 import time
 
-import pytest
 
 import mcp.types as mt
 from openai.types.chat import ChatCompletion, ChatCompletionMessage

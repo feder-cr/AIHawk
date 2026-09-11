@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import pytest
 
-from aihawk.mcp.registry import DEFAULT_SESSION_ID, SessionRegistry
+from aihawk.mcp.registry import SessionRegistry
 
 
 class _Recording:

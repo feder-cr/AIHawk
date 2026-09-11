@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, Awaitable, Callable, List, Optional
+from typing import Awaitable, Callable, List, Optional
 
 SYSTEM_PROMPT = (
     "You are a browser automation agent. You control a real, stealth Firefox "

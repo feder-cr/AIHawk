@@ -22,12 +22,11 @@ wrote is observable as the files it left behind.
 """
 from __future__ import annotations
 
-import json
 
 import pytest
 
 from aihawk.mcp import store
-from aihawk.web import (PAGE, DEFAULT_CHAT_ID, UNNAMED, ChatService, Sessions,
+from aihawk.web import (PAGE, DEFAULT_CHAT_ID, UNNAMED, Sessions,
                         build_app)
 
 pytestmark = pytest.mark.asyncio

@@ -41,10 +41,16 @@ class _Resp:
 
 
 class _FakeClient:
-    """Scripted: first turn calls a tool, second turn returns a final answer."""
-    def __init__(self): self.turn = 0
-    class chat:  # noqa
-        pass
+    """Scripted: first turn calls a tool, second turn returns a final answer.
+
+    ⛔ THIS CLASS CARRIED A DEAD `__init__` AND A DEAD NESTED `class chat` above
+    the real constructor. Python keeps the LAST definition, so the first one
+    never ran, and `self.chat` assigned below shadowed the nested class before
+    anything could reach it - two pieces of a earlier attempt left sitting in
+    front of the working one. Removed rather than kept: a stub that reads as
+    though it has two constructors is a stub the next reader has to run to
+    understand.
+    """
     def __init__(self):
         self.turn = 0
         outer = self

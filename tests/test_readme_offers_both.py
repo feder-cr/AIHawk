@@ -23,7 +23,6 @@ from __future__ import annotations
 import pathlib
 import re
 
-import pytest
 
 README = pathlib.Path(__file__).resolve().parents[1] / "README.md"
 

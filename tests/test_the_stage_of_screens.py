@@ -57,10 +57,6 @@ def up(*ids):
     return [{"id": i, "running": True, "urls": ["http://x/"]} for i in ids]
 
 
-def up(*ids):
-    return [{"id": i, "running": True, "urls": ["http://x/"]} for i in ids]
-
-
 FIRST_CUT = "const CHROME ="
 LAST_CUT = "function ageAll(cells)"
 

@@ -23,10 +23,8 @@ import sys
 
 import pytest
 
-from aihawk import agent as agent_mod
 from aihawk import link as link_mod
 from aihawk import llm as llm_mod
-from aihawk import runner
 from aihawk.runner import child_env
 
 # A sentinel that cannot occur by accident inside PATH or any other real value.
