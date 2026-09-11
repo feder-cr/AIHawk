@@ -4,6 +4,20 @@
    rather than per conversation - which panels you keep open is a habit, not a
    property of the work. */
 const RAILKEY = 'aihawk.rail';
+
+/* Where the input begins, published for the panel that must not cover it.
+   Measured rather than declared: the textarea grows with what is typed, so a
+   constant would be right until the third line. The composer knows nothing
+   about the panel - this reads the composer and the CSS reads this. */
+function publishComposerHeight(){
+  const f = $('f'); if(!f) return;
+  const h = Math.round(f.getBoundingClientRect().height);
+  document.documentElement.style.setProperty('--composer-h', h + 'px');
+}
+if(typeof ResizeObserver === 'function' && $('f')){
+  new ResizeObserver(publishComposerHeight).observe($('f'));
+}
+publishComposerHeight();
 function showRail(open){
   $('rail').hidden = !open;
   $('railtab').setAttribute('aria-expanded', open ? 'true' : 'false');

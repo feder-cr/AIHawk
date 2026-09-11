@@ -19,7 +19,19 @@
    Anchored to the spine's own width so the two are one object, and lifted with
    a shadow rather than a border, because what says "this is over that" is the
    shadow. */
-#rail { position:absolute; top:0; bottom:0; left:var(--spine); width:var(--drawer);
+/* ⛔ IT STOPS ABOVE THE COMPOSER, AND THAT IS NOT DECORATION. Full height, it
+   covered 256px of the 530px input - measured 2026-09-11, and `elementFromPoint`
+   on the corner of the textarea answered `chats`, so half of the only input on
+   the page was dead with nothing saying so. The rule that used to prevent it
+   padded the transcript out of the way, and that rewrapped every paragraph as
+   the panel appeared, which is what it was removed for.
+
+   So the CHAT still knows nothing: the coupling runs the other way, and the
+   panel knows where the input begins. `--composer-h` is measured from the
+   composer itself, because the textarea grows with what is typed into it - a
+   constant here would be right until somebody wrote three lines. */
+#rail { position:absolute; top:0; bottom:var(--composer-h, 0px);
+        left:var(--spine); width:var(--drawer);
         z-index:5; display:flex; flex-direction:column;
         background:var(--well); border-right:1px solid var(--line-1);
         box-shadow:14px 0 34px -18px #000 }

@@ -821,3 +821,56 @@ def test_a_reopened_conversation_keeps_the_answer_of_every_turn():
     #: and the lead-in is still dropped, which is the thing this must not undo.
     assert not any("open the page" in a for a in got["answers"]), (
         "the sentence that came with the tool calls came back as an answer")
+
+
+def test_the_session_drawer_never_covers_the_input():
+    """⛔ THE DRAWER COVERED HALF THE ONLY INPUT ON THE PAGE, and the gate
+    written for the drawer could not see it.
+
+    That gate asserts that nothing outside the rail reacts to the rail being
+    open, which is true and was the defect of the day before. It is a scan over
+    selectors, so it knows nothing about where a box ends up: the rail ran the
+    full height of the window and lay over the composer. Measured 2026-09-11 in
+    a real browser: 256px of the 530px input, and `elementFromPoint` on the
+    corner of the textarea answered `chats`. Half of the only way to talk to
+    the agent was dead, with nothing saying so.
+
+    The rule that used to prevent it padded the transcript out of the way, and
+    that rewrapped every paragraph as the panel appeared - which is what it was
+    removed for. So the coupling runs the other way now: the CHAT still knows
+    nothing, and the PANEL knows where the input begins.
+
+    Measured and not declared, because the textarea grows with what is typed:
+    a constant would be right until somebody wrote a third line.
+
+    Known-bad: anchor the rail to the bottom of the window again, or publish a
+    constant instead of the composer's own height.
+    """
+    import json
+    import shutil
+    import subprocess
+
+    import pytest
+
+    #: the panel has to stop at the variable, not at the window.
+    style = CODE[CODE.index("#rail {"):]
+    style = style[:style.index("}") + 1]
+    assert "bottom:var(--composer-h" in style.replace(" ", ""), (
+        "the drawer is anchored to the bottom of the window again, so it lies "
+        "over the composer: %r" % " ".join(style.split()))
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("needs node to EXECUTE the publisher")
+
+    src = CODE[CODE.index("function publishComposerHeight("):]
+    src = src[:src.index(chr(10) + "}") + 2]
+    done = subprocess.run([node, "-e", src + chr(10) + "let set = {};\nglobalThis.$ = id => id === 'f'\n  ? {getBoundingClientRect: () => ({height: 83.4})}\n  : null;\nglobalThis.document = {documentElement: {style: {\n  setProperty(k, v){ set[k] = v; }}}};\nglobalThis.ResizeObserver = undefined;\npublishComposerHeight();\nprocess.stdout.write(JSON.stringify({set}));"],
+                          capture_output=True, text=True,
+                          encoding="utf-8", timeout=30)
+    assert done.returncode == 0, done.stderr
+    got = json.loads(done.stdout)["set"]
+
+    assert got.get("--composer-h") == "83px", (
+        "the height the panel stops at does not come from the composer itself, "
+        "so it is right until somebody types a third line: %r" % got)
