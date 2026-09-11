@@ -51,7 +51,26 @@ function flush(asAnswer, replay){
   if(hold === null) return;
   const text = hold.replace(LEAD,'').replace(/^\w/, c => c.toUpperCase());
   hold = null;
-  const box = el('div', asAnswer ? 'answer' : 'say');
+  /* ⛔ A LEAD-IN IS NOT DRAWN AT ALL, AND THAT IS A DECISION. The owner,
+     reading a run: `Sito aperto. Guardo cosa c'e' in home.` followed by the
+     row that says `Inspected`, then `lo chiudo prima di girare` followed by
+     the row that says `Clicked`. The sentence announces what the row below
+     it states, so the column carried three lines to say one thing, and the
+     things worth reading were spaced out by the things that were not.
+
+     What it costs, said plainly rather than discovered later: a lead-in
+     sometimes carries a measurement that appears nowhere else - `474
+     products, I will look at the LEGO collection` - and that number is now
+     off the page. The text is NOT lost: `ChatService.emit` keeps every event
+     in the history and the saved file has it, so this is a drawing decision
+     and a later one can show it again without anything to recover.
+
+     The distinction is exact and costs no guessing: `asAnswer` is true only
+     when the run went idle holding this text, which is the message the model
+     sent with no tool calls. Every other path through the dispatcher is a
+     sentence that had something after it. */
+  if(!asAnswer) return;
+  const box = el('div', 'answer');
   /* ⛔ A DEFECT INSIDE ONE ANSWER MUST NOT TAKE THE TURN WITH IT. This runs
      from the event handler, and the caller goes on to clear the step clock,
      redraw the column and send whatever was queued - so a throw here stranded
