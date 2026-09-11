@@ -768,3 +768,56 @@ def test_a_lead_in_is_not_drawn_and_the_answer_still_is():
     assert got["cls"] == "answer", (
         "the answer was drawn in the lead-in's clothes: %r" % got["cls"])
     assert got["afterEmpty"] == 1, "an empty hold drew something"
+
+
+def test_a_reopened_conversation_keeps_the_answer_of_every_turn():
+    """⛔ THE GATE NEXT DOOR RAN `flush` BOTH WAYS AND STILL LET THIS THROUGH,
+    which is the whole reason this one exists.
+
+    Dropping the lead-in is decided by the argument the dispatcher passes, and
+    `case 'you'` was passing the one that means `this had something after it`.
+    It does not: a sentence still held when the PERSON speaks had nothing after
+    it in its own turn, which is exactly what `busy 0` means.
+
+    And `busy` is deliberately kept OUT of the history - replaying a spinner
+    for work that finished an hour ago would be a lie - so on a reopened
+    conversation that branch is the only one that can ever draw the answer of a
+    turn that is not the last. Measured on a real transcript of three turns an
+    hour after the change shipped: one answer drawn, two silently gone.
+
+    So this replays a transcript through the DISPATCHER, which is where the
+    argument is chosen, rather than through the function that receives it. A
+    unit test of a function cannot see a caller passing the wrong thing, and
+    that is not a gap in the other gate - it is a different question.
+
+    Known-bad: hand `case 'you'` the lead-in argument again. One answer comes
+    back instead of two.
+    """
+    import json
+    import shutil
+    import subprocess
+
+    import pytest
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("needs node to REPLAY a transcript through the dispatcher")
+
+    def whole(start, end):
+        src = CODE[CODE.index(start):]
+        return src[:src.index(end) + len(end)]
+
+    js = (whole("function flush(", chr(10) + "}") + chr(10)
+          + whole("const onEvent =", chr(10) + "};") + chr(10)
+          + "let drawn = [];\nglobalThis.hold = null; globalThis.busyNow = false;\nglobalThis.live = null; globalThis.timer = 0; globalThis.queued = null;\nglobalThis.LEAD = /^(I will |I'll |Let me )/i;\nglobalThis.el = (tag, cls, t) => ({tag, cls, t, kids: [],\n                                   appendChild(k){ this.kids.push(k); }});\nglobalThis.rich = t => ({tag: 'rich', t});\nglobalThis.put = n => drawn.push(n);\nglobalThis.$ = () => ({textContent: '', hidden: false});\nfor (const name of ['wipe','waiting','waited','drawChats','paint',\n                    'settleOnce','newTurn','step','land','orphan',\n                    'setQueued','send','clearInterval'])\n  globalThis[name] = () => {};\n\nconst feed = m => onEvent({data: JSON.stringify(m)});\nconst history = [\n  {kind:'you',    text:'first instruction',  replay:true},\n  {kind:'said',   text:'Let me open the page.', replay:true},\n  {kind:'tool',   text:'browser_navigate a', replay:true},\n  {kind:'result', text:'ok',                 replay:true},\n  {kind:'said',   text:'THE FIRST ANSWER.',  replay:true},\n  {kind:'you',    text:'second instruction', replay:true},\n  {kind:'tool',   text:'browser_navigate b', replay:true},\n  {kind:'result', text:'ok',                 replay:true},\n  {kind:'said',   text:'THE SECOND ANSWER.', replay:true},\n];\nhistory.forEach(feed);\n/* what the server sends after the replay, once it is idle */\nfeed({kind:'busy', text:'0'});\nconst answers = drawn.filter(d => d.cls === 'answer')\n                     .map(d => (d.kids[0] && d.kids[0].t) || '');\nprocess.stdout.write(JSON.stringify({answers, total: drawn.length}));")
+    done = subprocess.run([node, "-e", js], capture_output=True, text=True,
+                          encoding="utf-8", timeout=30)
+    assert done.returncode == 0, done.stderr
+    got = json.loads(done.stdout)
+
+    assert got["answers"] == ["THE FIRST ANSWER.", "THE SECOND ANSWER."], (
+        "a reopened conversation lost the answer of a turn that is not the "
+        "last: %r" % (got["answers"],))
+    #: and the lead-in is still dropped, which is the thing this must not undo.
+    assert not any("open the page" in a for a in got["answers"]), (
+        "the sentence that came with the tool calls came back as an answer")

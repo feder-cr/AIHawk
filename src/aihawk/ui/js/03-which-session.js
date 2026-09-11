@@ -47,7 +47,16 @@ const onEvent = (e) => {
                     if(!r) drawChats();
                     if(queued){ const t = queued; setQueued(null); send(t); } }
       paint(); break;
-    case 'you':   flush(false, r); live = null; newTurn();
+    /* ⛔ AS AN ANSWER, AND A REPLAY IS THE ONLY PLACE IT SHOWS. A sentence
+       still held when the PERSON speaks had nothing after it in its own turn,
+       which is the same thing `busy 0` means - and `busy` is deliberately not
+       kept in the history, so on a reopened conversation this branch is the
+       only one that can ever draw the answer of a turn that is not the last.
+       Measured 2026-09-11 on a real transcript of three turns: one answer
+       drawn, two dropped, silently, by a change made an hour earlier that had
+       a gate of its own - the gate ran `flush` both ways and never asked WHEN
+       the dispatcher calls which. */
+    case 'you':   flush(true, r); live = null; newTurn();
                   put(el('div','you', m.text), r); break;
     case 'said':  waited(); flush(false, r); hold = m.text; break;
     case 'tool':  waited(); flush(false, r); step(m.text, r); break;
