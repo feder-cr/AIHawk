@@ -151,14 +151,27 @@ function drawStrip(){
   box.hidden = others.length === 0;
 }
 
+/* ⛔ IL RILANCIO STA IN UN `finally`, come per `tick` e `where`. Una pompa
+   che si riarma DOPO il lavoro muore per sempre alla prima eccezione: non
+   salta un giro, smette. Qui il `try` copriva la fetch e non le righe
+   attorno - `$('thumbs')` e `box.children` stavano fuori - quindi bastava un
+   nodo mancante per spegnere le anteprime fino al ricaricamento della
+   pagina. Il giro e' una funzione sua, come `onePass`, cosi' la catena e' tre
+   righe che non possono fallire. */
 async function slowTick(){
+  try { if(looking()) await slowPass(); }
+  catch(err){}
+  finally { setTimeout(slowTick, SLOW_MS); }
+}
+
+async function slowPass(){
   const box = $('thumbs');
   /* Only running browsers are asked for a picture. A declared browser that has
      not started is not a slow pane, it is a browser that does not exist yet,
      and asking would START it - 800 MB and seven seconds to fill a thumbnail
      nobody asked for. Same rule the live pane follows. */
   const shown = [...box.children].filter(t => t.querySelector('img'));
-  if(shown.length && looking()){
+  if(shown.length){
     const t = shown[nextPane % shown.length];
     nextPane++;
     try {
@@ -171,10 +184,13 @@ async function slowTick(){
       }
     } catch(err){}
   }
-  setTimeout(slowTick, SLOW_MS);
 }
 
-async function fleetPoll(){ if(looking()) await drawFleet(); setTimeout(fleetPoll, 3000); }
+async function fleetPoll(){
+  try { if(looking()) await drawFleet(); }
+  catch(err){}
+  finally { setTimeout(fleetPoll, 3000); }
+}
 
 /* Whatever was waiting when the page went away comes back into the composer
    rather than into the queue: the run it was queued behind is over, so the

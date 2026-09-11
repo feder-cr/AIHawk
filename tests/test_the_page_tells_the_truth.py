@@ -525,3 +525,69 @@ def test_a_row_is_only_collapsed_when_it_actually_fits():
         "the label cannot be selected, so a truncated address cannot even be "
         "copied out")
 
+
+def test_no_pump_of_the_page_can_be_killed_by_one_exception():
+    """⛔ A PUMP THAT RE-ARMS AFTER THE WORK DIES FOR GOOD ON THE FIRST
+    EXCEPTION: it does not skip a turn, it stops.
+
+    Measured 2026-09-11 on the address bar. `paintWhere` had a `try` of its
+    own; rewriting the function took it away, and from that moment any
+    exception inside it would have stopped `where` for the life of the page -
+    the bar keeps whatever it had, which at load is `no page yet`, and nothing
+    says it is dead.
+
+    The same shape was already latent in two more pumps: their `try` covered
+    the fetch and not the lines around it, so a missing node or a fleet of an
+    unexpected shape would stop them just as permanently. Only `tick` was
+    safe.
+
+    Fixed at the origin rather than function by function: the re-arm sits in a
+    `finally`, so the chain no longer depends on what the pass does, and the
+    question 'did I remember the try?' stops being asked of every function a
+    pump calls.
+
+    EXECUTED rather than scanned: a scan that finds `setTimeout` in the body
+    cannot say whether it is REACHED when the pass throws, which is the only
+    thing that matters here.
+
+    Known-bad: move the `setTimeout` of any of the four back after the body
+    instead of into the `finally`.
+    """
+    import json
+    import shutil
+    import subprocess
+
+    import pytest
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("needs node to EXECUTE the page's pumps")
+
+    #: the pump, and the name of the pass it calls.
+    pumps = {"tick": "onePass", "where": "paintWhere",
+             "slowTick": "slowPass", "fleetPoll": "drawFleet"}
+
+    dead = []
+    for pump, pass_name in sorted(pumps.items()):
+        src = CODE[CODE.index("async function %s(){" % pump):]
+        src = src[:src.index(chr(10) + "}") + 2]
+        js = (
+            "let armed = 0;"
+            + "globalThis.setTimeout = () => { armed++; return 0; };"
+            + "globalThis.looking = () => true;"
+            + "globalThis.pause = () => 100;"
+            + "globalThis.SLOW_MS = 400;"
+            + "globalThis.%s = async () => { throw new Error('boom'); };" % pass_name
+            + chr(10) + src + chr(10)
+            + "%s().catch(() => {}).then(() => " % pump
+            + "process.stdout.write(JSON.stringify({armed})));"
+        )
+        done = subprocess.run([node, "-e", js], capture_output=True, text=True,
+                              encoding="utf-8", timeout=30)
+        assert done.returncode == 0, (pump, done.stderr)
+        if json.loads(done.stdout)["armed"] != 1:
+            dead.append(pump)
+
+    assert not dead, (
+        "these pumps do not re-arm when their pass throws, so they stop for the "
+        "life of the page instead of skipping one turn: %s" % dead)

@@ -79,9 +79,19 @@ const pause = () => Math.round(1000 / (fps(onScreen()) * onScreen()));
    asking about. See `vanish`. */
 const looking = () => !document.hidden && !vanished;
 
+/* ⛔ IL RILANCIO STA IN UN `finally`, E NON E' UNA CINTURA IN PIU'. Una
+   pompa che si riarma DOPO il lavoro muore per sempre alla prima eccezione:
+   non salta un giro, smette. Misurato il 2026-09-11 sulla barra
+   dell'indirizzo, dove il `try` interno era stato tolto riscrivendo la
+   funzione - e la stessa forma era gia' latente in altre due pompe, dove il
+   `try` copriva la fetch e non le righe attorno. Il `catch` vuoto tiene il
+   giro silenzioso; il `finally` tiene viva la catena qualunque cosa accada,
+   e insieme tolgono la domanda "mi sono ricordato del try?" da ogni
+   funzione che una catena chiama. */
 async function tick(){
-  if(looking()){ try { await onePass(); } catch(err) {} }
-  setTimeout(tick, pause());
+  try { if(looking()) await onePass(); }
+  catch(err){}
+  finally { setTimeout(tick, pause()); }
 }
 
 /* And the moment it is looked at again, before the next tick lands. */
@@ -248,7 +258,11 @@ function severalOpen(n){
    until the next poll landed - two seconds showing one page's address over four
    screens. Calling `where` itself from a click would start a SECOND timer
    chain, which is how a pace stops being one number. */
-async function where(){ if(looking()) await paintWhere(); setTimeout(where, 2000); }
+async function where(){
+  try { if(looking()) await paintWhere(); }
+  catch(err){}
+  finally { setTimeout(where, 2000); }
+}
 
 /* Which url the address bar says, given the rows the workspace already has.
 
