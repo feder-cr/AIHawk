@@ -25,7 +25,7 @@ import json
 import pytest
 
 from aihawk.mcp import NOTHING_RUNNING, server
-from aihawk.mcp.registry import DEFAULT_SESSION_ID
+from aihawk.mcp.store import DEFAULT_SESSION_ID
 
 pytestmark = pytest.mark.asyncio
 

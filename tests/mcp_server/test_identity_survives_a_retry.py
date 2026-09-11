@@ -20,9 +20,14 @@ observable from the kwargs a rebuilt session was constructed with.
 """
 from __future__ import annotations
 
+#: The browser this file addresses. Explicit since the registry's key
+#: stopped having a default: a bare "default" was never a key any browser
+#: occupied, because the server composes `<piece of work>/<browser>`.
+KEY = "default/main"
+
 import pytest
 
-from aihawk.mcp.registry import SessionRegistry
+from aihawk.mcp.registry import BrowserRegistry
 
 
 class _Recording:
@@ -78,13 +83,13 @@ async def test_a_rebuilt_session_is_the_same_person():
     This is `_retrying`'s recovery path with the action removed. Known-bad is
     today's `ensure`, which calls the factory with no arguments at all.
     """
-    registry = SessionRegistry(factory=_Recording)
+    registry = BrowserRegistry(factory=_Recording)
 
-    first = await registry.restart(**CHOSEN)
+    first = await registry.restart(KEY, **CHOSEN)
     assert _identity(first) == (4242, CHOSEN["proxy"], "C:/tmp/acct-a")
 
-    await registry.drop()
-    second = await registry.ensure()
+    await registry.drop(KEY)
+    second = await registry.ensure(KEY)
 
     assert _identity(second) == _identity(first), (
         "recovery changed who is browsing: started as %r, came back as %r"
@@ -95,11 +100,11 @@ async def test_a_rebuilt_session_still_goes_out_through_the_proxy():
     """Stated separately because it is the one with a consequence beyond a
     confusing answer: losing the proxy puts the traffic on the host's own
     address, which is the thing this product exists to prevent."""
-    registry = SessionRegistry(factory=_Recording)
+    registry = BrowserRegistry(factory=_Recording)
 
-    await registry.restart(**CHOSEN)
-    await registry.drop()
-    recovered = await registry.ensure()
+    await registry.restart(KEY, **CHOSEN)
+    await registry.drop(KEY)
+    recovered = await registry.ensure(KEY)
 
     assert recovered.kwargs.get("proxy") == CHOSEN["proxy"], (
         "the recovered session has no proxy, so it leaves from the host IP")
@@ -108,12 +113,12 @@ async def test_a_rebuilt_session_still_goes_out_through_the_proxy():
 async def test_a_session_that_died_is_replaced_by_the_same_person():
     """The real shape of the failure: nobody calls `drop` on purpose. The
     browser dies on its own and the registry notices it is unusable."""
-    registry = SessionRegistry(factory=_DiesOnce)
+    registry = BrowserRegistry(factory=_DiesOnce)
 
-    started = await registry.restart(**CHOSEN)
+    started = await registry.restart(KEY, **CHOSEN)
     started._context = None          # what a dead browser looks like from here
 
-    replacement = await registry.ensure()
+    replacement = await registry.ensure(KEY)
 
     assert replacement is not started, "the dead session was handed back"
     assert _identity(replacement) == _identity(started), (
@@ -129,13 +134,13 @@ async def test_closing_a_session_forgets_who_it_was():
     Without this a caller who closed a proxied session, then let a later tool
     auto-start one, would silently get the old proxy and the old profile back.
     """
-    registry = SessionRegistry(factory=_Recording,
+    registry = BrowserRegistry(factory=_Recording,
                                defaults=lambda: {"seed": 7, "headless": True})
 
-    await registry.restart(**CHOSEN)
+    await registry.restart(KEY, **CHOSEN)
     await registry.close_all()
 
-    fresh = await registry.ensure()
+    fresh = await registry.ensure(KEY)
     assert _identity(fresh) == (7, None, None), (
         "a deliberately closed session came back as %r" % (_identity(fresh),))
 
@@ -165,13 +170,13 @@ async def test_a_tab_id_from_before_a_rebuild_names_nothing_after_it():
     person across one also keeps the caller going, so the stale id got MORE
     reachable, not less. Numbering continues instead.
     """
-    registry = SessionRegistry(factory=_Numbering)
+    registry = BrowserRegistry(factory=_Numbering)
 
-    first = await registry.restart(**CHOSEN)
+    first = await registry.restart(KEY, **CHOSEN)
     before = [first.open_tab(), first.open_tab()]
 
-    await registry.drop()
-    second = await registry.ensure()
+    await registry.drop(KEY)
+    second = await registry.ensure(KEY)
     after = second.open_tab()
 
     assert after not in before, (
@@ -215,47 +220,47 @@ async def test_a_failed_start_does_not_let_the_next_tool_go_out_unproxied():
     Known-bad is an empty id plus lazy auto-start. The refusal is remembered
     instead, and it keeps being raised until a session_start works.
     """
-    registry = SessionRegistry(factory=_DeadProxy,
+    registry = BrowserRegistry(factory=_DeadProxy,
                                defaults=lambda: {"seed": 7, "headless": True})
 
     with pytest.raises(RuntimeError):
-        await registry.restart(**CHOSEN)
+        await registry.restart(KEY, **CHOSEN)
 
     # The default config has NO proxy, so it would start perfectly well. That is
     # the whole danger: the fallback succeeds, and it succeeds unproxied.
     with pytest.raises(RuntimeError, match="proxy refused"):
-        await registry.ensure()
+        await registry.ensure(KEY)
 
-    assert registry.peek() is None, "a browser was started after a refused start"
-    assert registry.config() is None, "a failed start armed recovery anyway"
+    assert registry.peek(KEY) is None, "a browser was started after a refused start"
+    assert registry.config(KEY) is None, "a failed start armed recovery anyway"
 
 
 async def test_a_working_start_clears_an_earlier_refusal():
     """The counter-case, and without it the refusal is a session nobody can
     recover: one bad proxy would wedge the id for the life of the process."""
-    registry = SessionRegistry(factory=_DeadProxy)
+    registry = BrowserRegistry(factory=_DeadProxy)
 
     with pytest.raises(RuntimeError):
-        await registry.restart(**CHOSEN)
-    session = await registry.restart(seed=99, headless=True)
+        await registry.restart(KEY, **CHOSEN)
+    session = await registry.restart(KEY, seed=99, headless=True)
     assert session.kwargs["seed"] == 99
 
     # ⛔ DROPPED FIRST, or this proves nothing: `ensure` hands back a live
     # session without ever consulting the refusals, so with a session still up
     # the assertion below passes whether the refusal was cleared or not. The
     # recovery path is the one that has to be clean.
-    await registry.drop()
-    assert (await registry.ensure()).kwargs["seed"] == 99, (
+    await registry.drop(KEY)
+    assert (await registry.ensure(KEY)).kwargs["seed"] == 99, (
         "a cleared refusal came back and wedged the id")
 
 
 async def test_a_caller_that_never_said_anything_still_gets_a_browser():
     """The other counter-case: lazy auto-start is the whole default experience
     and must survive. Only a caller who ASKED and was refused is held."""
-    registry = SessionRegistry(factory=_Recording,
+    registry = BrowserRegistry(factory=_Recording,
                                defaults=lambda: {"seed": 7, "headless": True})
 
-    assert (await registry.ensure()).kwargs["seed"] == 7
+    assert (await registry.ensure(KEY)).kwargs["seed"] == 7
 
 
 async def test_two_sessions_are_rebuilt_as_two_different_people():
@@ -271,7 +276,7 @@ async def test_two_sessions_are_rebuilt_as_two_different_people():
     B's identity and B's exit - the deanonymisation this file exists to prevent,
     arriving through the fix for it.
     """
-    registry = SessionRegistry(factory=_Recording)
+    registry = BrowserRegistry(factory=_Recording)
 
     await registry.restart("a", seed=1, profile_dir="C:/tmp/acct-a")
     await registry.restart("b", seed=2, profile_dir="C:/tmp/acct-b")
@@ -298,14 +303,14 @@ async def test_a_second_start_replaces_the_remembered_identity():
     moves to the second account, the browser dies, and recovery puts them back
     in the first one.
     """
-    registry = SessionRegistry(factory=_Recording)
+    registry = BrowserRegistry(factory=_Recording)
 
-    await registry.restart(**CHOSEN)
+    await registry.restart(KEY, **CHOSEN)
     second = {"seed": 99, "profile_dir": "C:/tmp/acct-b"}
-    await registry.restart(**second)
+    await registry.restart(KEY, **second)
 
-    await registry.drop()
-    recovered = await registry.ensure()
+    await registry.drop(KEY)
+    recovered = await registry.ensure(KEY)
 
     assert _identity(recovered) == (99, None, "C:/tmp/acct-b"), (
         "recovery went back to the previous identity: %r" % (_identity(recovered),))

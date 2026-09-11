@@ -29,15 +29,17 @@ import pathlib
 import pytest
 
 from aihawk.mcp import actions, server
-from aihawk.mcp.registry import SessionRegistry
+from aihawk.mcp.registry import BrowserRegistry
 
 SERVER_PY = pathlib.Path(inspect.getfile(server))
 
 #: The registry methods that take a browser address. Derived from the registry
 #: instead of typed out, so a method added there is guarded the day it exists.
+#: Its parameter is `key` since the registry stopped calling browsers sessions;
+#: if that name moves again this set empties and the test below says so.
 ADDRESSABLE = {
-    name for name, fn in inspect.getmembers(SessionRegistry, inspect.isfunction)
-    if not name.startswith("_") and "session_id" in inspect.signature(fn).parameters
+    name for name, fn in inspect.getmembers(BrowserRegistry, inspect.isfunction)
+    if not name.startswith("_") and "key" in inspect.signature(fn).parameters
 }
 
 
@@ -65,7 +67,7 @@ def registry(monkeypatch):
     have to get right is the key they hand it, and a stand-in would have to
     reimplement the per-key locking and discarding the assertions below lean on -
     at which point the tests would be measuring the stand-in. `new_registry`
-    rather than `SessionRegistry` for the same reason one step further out: the
+    rather than `BrowserRegistry` for the same reason one step further out: the
     product's registry writes what it holds down, and a bare one does not.
     """
     reg = server.new_registry(factory=_Recording,
@@ -281,7 +283,7 @@ def _scan_registry_calls():
                 continue
             checked[node.lineno] = "%s: registry.%s" % (holder.name, node.func.attr)
             given = node.args[0] if node.args else next(
-                (k.value for k in node.keywords if k.arg == "session_id"), None)
+                (k.value for k in node.keywords if k.arg == "key"), None)
             composed_here = (isinstance(given, ast.Call)
                              and isinstance(given.func, ast.Name)
                              and given.func.id == "addressed")

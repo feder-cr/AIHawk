@@ -28,6 +28,24 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 
+#: The piece of work a caller that names none is in, and so the file it
+#: persists to.
+#:
+#: ⛔ ONE DECLARATION, BECAUSE TWO OF THEM CANNOT BE HELD TOGETHER BY A TEST
+#: THAT COMPARES ONE OF THEM TO A LITERAL. This lived in `registry.py` as
+#: `DEFAULT_SESSION_ID` while `chat.py` declared `DEFAULT_CHAT_ID = "default"`
+#: beside it, with a comment saying the two had to match. What guarded that was
+#: an assertion reading `DEFAULT_CHAT_ID == "default"` - a literal, not the
+#: other constant - so moving the server's default would have left the
+#: interface and the server addressing two different files while the test that
+#: names the invariant stayed green.
+#:
+#: It belongs here rather than in the registry: the registry keys BROWSERS, and
+#: this names a piece of WORK, which is to say a file in this directory. The
+#: registry never needed it except as a default argument no caller used.
+DEFAULT_SESSION_ID = "default"
+
+
 def home() -> Path:
     """Where sessions are kept.
 

@@ -50,22 +50,22 @@ from typing import Literal
 from mcp.server.fastmcp import FastMCP, Image
 
 from . import NOTHING_RUNNING, actions, identity, plan, store
-from .registry import DEFAULT_SESSION_ID, SessionRegistry
+from .registry import BrowserRegistry
 
 # Kept for callers that imported it from here. The implementation moved.
 _json_capped = actions.json_capped
 
-def new_registry(**kwargs) -> SessionRegistry:
+def new_registry(**kwargs) -> BrowserRegistry:
     """A registry wired to write its sessions down.
 
     ⛔ ONE CONSTRUCTOR, USED BY THE SERVER AND BY THE TESTS. A test that builds
-    a bare `SessionRegistry` is testing a registry the product does not have,
+    a bare `BrowserRegistry` is testing a registry the product does not have,
     and the wiring below - the thing that makes a session survive the process -
     would be exercised by nothing. It is a function rather than a line because
     the tests need to build one with a factory that launches no browser, and
     the alternative was each of them repeating the wiring or, more likely, not.
     """
-    reg = SessionRegistry(**kwargs)
+    reg = BrowserRegistry(**kwargs)
     reg.on_change = lambda key: remember()
     return reg
 
@@ -270,7 +270,7 @@ _focus: dict = {}
 #: plain string and still write `sessions/<that string>.json`, exactly as
 #: before. A file saved by an earlier build is found under the same name it
 #: was saved under; nothing here migrates it.
-_SESSION_ID = os.environ.get("AIHAWK_SESSION_ID") or DEFAULT_SESSION_ID
+_SESSION_ID = os.environ.get("AIHAWK_SESSION_ID") or store.DEFAULT_SESSION_ID
 
 #: Whether the saved browser has been read into the registry yet. A single
 #: flag and not a set keyed by id, because this process holds the one piece of

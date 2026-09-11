@@ -13,7 +13,12 @@ that rebuilds a healthy one.
 """
 import pytest
 
-from aihawk.mcp.registry import DEFAULT_SESSION_ID, SessionRegistry
+#: The browser this file addresses. Explicit since the registry's key
+#: stopped having a default: a bare "default" was never a key any browser
+#: occupied, because the server composes `<piece of work>/<browser>`.
+KEY = "default/main"
+
+from aihawk.mcp.registry import BrowserRegistry
 
 
 class _SessionThatFailsOnce:
@@ -80,18 +85,18 @@ class _AlreadyPoisoned:
 @pytest.mark.asyncio
 async def test_a_failed_start_is_not_kept_and_the_next_call_retries():
     _SessionThatFailsOnce.instances = []
-    reg = SessionRegistry(factory=_SessionThatFailsOnce)
+    reg = BrowserRegistry(factory=_SessionThatFailsOnce)
 
     with pytest.raises(RuntimeError, match="refusing to launch"):
-        await reg.ensure()
+        await reg.ensure(KEY)
 
     # The half-built object must not have been kept. Before the fix this was the
     # failed instance, and every later call returned it.
-    assert reg.peek() is None
+    assert reg.peek(KEY) is None
 
-    session = await reg.ensure()
+    session = await reg.ensure(KEY)
     assert session.started is True
-    assert reg.peek() is session
+    assert reg.peek(KEY) is session
     assert len(_SessionThatFailsOnce.instances) == 2
 
 
@@ -103,13 +108,13 @@ async def test_a_session_with_no_browser_is_replaced_rather_than_returned():
     and there a later release never arrives: the operator has to restart, which
     is the thing they could not work out how to do from the error message.
     """
-    reg = SessionRegistry(factory=_Healthy)
-    reg._sessions[DEFAULT_SESSION_ID] = _AlreadyPoisoned()
+    reg = BrowserRegistry(factory=_Healthy)
+    reg._browsers[KEY] = _AlreadyPoisoned()
 
-    session = await reg.ensure()
+    session = await reg.ensure(KEY)
     assert isinstance(session, _Healthy)
     assert session.started is True
-    assert reg.peek() is session
+    assert reg.peek(KEY) is session
 
 
 @pytest.mark.asyncio
@@ -119,11 +124,11 @@ async def test_a_healthy_session_is_reused_and_not_restarted():
     def _explode():
         raise AssertionError("a healthy session must be reused, not rebuilt")
 
-    reg = SessionRegistry(factory=_explode)
+    reg = BrowserRegistry(factory=_explode)
     live = _Healthy()
-    reg._sessions[DEFAULT_SESSION_ID] = live
+    reg._browsers[KEY] = live
 
-    assert await reg.ensure() is live
+    assert await reg.ensure(KEY) is live
     assert live.started is False
 
 
@@ -131,7 +136,7 @@ async def test_a_healthy_session_is_reused_and_not_restarted():
 async def test_two_ids_get_two_browsers():
     """The reason the registry exists. One global could serve one client; this
     has to serve the built-in chat and somebody else's agent at once."""
-    reg = SessionRegistry(factory=_Healthy)
+    reg = BrowserRegistry(factory=_Healthy)
 
     a = await reg.ensure("chat")
     b = await reg.ensure("claude-desktop")
@@ -143,7 +148,7 @@ async def test_two_ids_get_two_browsers():
 
 @pytest.mark.asyncio
 async def test_close_all_closes_every_session():
-    reg = SessionRegistry(factory=_Healthy)
+    reg = BrowserRegistry(factory=_Healthy)
     a = await reg.ensure("one")
     b = await reg.ensure("two")
 
@@ -175,7 +180,7 @@ async def test_the_change_hook_fires_where_who_a_browser_is_actually_changes():
     Known-bad: fire from `drop`, and fire from `close_all`.
     """
     fired = []
-    reg = SessionRegistry(factory=_Healthy, on_change=fired.append)
+    reg = BrowserRegistry(factory=_Healthy, on_change=fired.append)
 
     await reg.ensure("one")
     assert fired == ["one"], "a browser gained an identity and nothing said so"
@@ -215,12 +220,12 @@ async def test_a_hook_that_raises_does_not_cost_the_caller_the_browser():
     knows is gone, and `on_change` is public - the next caller to set one need
     not be as careful as this one.
 
-    Known-bad: remove the try/except from `SessionRegistry._changed`.
+    Known-bad: remove the try/except from `BrowserRegistry._changed`.
     """
     def _explode(_key):
         raise OSError("no space left on device")
 
-    reg = SessionRegistry(factory=_Healthy, on_change=_explode)
+    reg = BrowserRegistry(factory=_Healthy, on_change=_explode)
 
     session = await reg.ensure("one")
     assert session is not None

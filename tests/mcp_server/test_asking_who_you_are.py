@@ -19,7 +19,7 @@ from __future__ import annotations
 import pytest
 
 from aihawk.mcp import server
-from aihawk.mcp.registry import SessionRegistry
+from aihawk.mcp.registry import BrowserRegistry
 
 
 class _Recording:
@@ -45,7 +45,7 @@ def registry(monkeypatch):
     def _explode():
         raise AssertionError("session_status resolved a plan, so it is not read only")
 
-    reg = SessionRegistry(factory=_Recording, defaults=_explode)
+    reg = BrowserRegistry(factory=_Recording, defaults=_explode)
     monkeypatch.setattr(server, "registry", reg)
     return reg
 

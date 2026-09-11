@@ -110,9 +110,34 @@ async def test_a_page_that_names_nothing_is_in_the_conversation_it_always_was():
     a, b, c = await sessions.get(), await sessions.get(None), await sessions.get(DEFAULT_CHAT_ID)
     assert a is b is c
     assert a.session_id == DEFAULT_CHAT_ID
-    assert DEFAULT_CHAT_ID == "default", (
-        "the interface's default conversation and the server's default session "
-        "must be the same id, or they are two sessions wearing one name")
+    # ⛔ THE INVARIANT IS "ONE DECLARATION", AND NO VALUE COMPARISON CAN SEE IT.
+    # This used to read `DEFAULT_CHAT_ID == "default"` - the invariant's own
+    # words checked against a copy of one side of it, so moving the SERVER's
+    # default would leave the interface writing `chats/default.json` while the
+    # server wrote somewhere else, with this assertion green and its message
+    # describing exactly that failure.
+    #
+    # `is` does not fix it either, and that was measured rather than assumed:
+    # with `DEFAULT_CHAT_ID = "default"` put back, an identity check still
+    # PASSES, because CPython interns both literals into one object. So the
+    # only honest question is about the source - does `chat.py` declare a
+    # string of its own, or take the one the server persists under?
+    import ast
+    import inspect
+
+    from aihawk import chat
+    from aihawk.mcp import store
+
+    assert DEFAULT_CHAT_ID == store.DEFAULT_SESSION_ID
+    declared = [n for n in ast.parse(inspect.getsource(chat)).body
+                if isinstance(n, ast.Assign)
+                and any(isinstance(t, ast.Name) and t.id == "DEFAULT_CHAT_ID"
+                        for t in n.targets)]
+    assert declared, "DEFAULT_CHAT_ID is not declared at the top level any more"
+    assert not isinstance(declared[0].value, ast.Constant), (
+        "the interface declares its own default id again instead of taking the "
+        "one the server persists under, so the two can drift into two sessions "
+        "wearing one name and no value comparison would notice")
 
 
 async def test_a_new_conversation_is_its_own_and_does_not_touch_the_others():

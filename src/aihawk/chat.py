@@ -16,11 +16,18 @@ from .link import Link
 from .mcp import store
 
 
-#: The conversation a page that names none is in. The SAME string the server
-#: uses for the session a tool call that names none reaches, and that is the
-#: point rather than a coincidence: every client written before this existed
-#: keeps landing on one conversation driving one browser, exactly as before.
-DEFAULT_CHAT_ID = "default"
+#: The conversation a page that names none is in.
+#:
+#: ⛔ THE SAME OBJECT the server persists under, not a second string that
+#: matches it. The point is not a coincidence: every client written before this
+#: existed keeps landing on one conversation driving one browser. That was
+#: declared twice - `"default"` here and `DEFAULT_SESSION_ID` in the mcp
+#: package - with a comment saying the two had to agree and a test asserting
+#: this one equalled the LITERAL `"default"`. Moving the server's default would
+#: therefore have left the interface writing `chats/default.json` while the
+#: server wrote `sessions/lavoro.json`, with the test that names the invariant
+#: still green. One declaration cannot disagree with itself.
+DEFAULT_CHAT_ID = store.DEFAULT_SESSION_ID
 
 #: What a conversation is called before it has been asked anything.
 UNNAMED = "New chat"
@@ -52,12 +59,14 @@ class ChatService:
 
     @property
     def link(self):
-        """The connection this conversation drives, addressed to it.
+        """The connection this conversation drives.
 
-        Exposed because the LIVE routes need it: the picture and the tab strip
-        belong to this session's browser, and reaching for the shared connection
-        instead would draw whatever the default session happens to be looking
-        at. That is a wrong answer that looks exactly like a right one.
+        Exposed because the LIVE routes need it: the picture and the address
+        belong to THIS conversation's browsers, and there is no other
+        connection to reach for - each conversation has its own server process
+        since the tool surface stopped taking a session argument. Reaching for
+        somebody else's would draw a browser the person is not looking at,
+        which is a wrong answer that looks exactly like a right one.
         """
         return self._link
 

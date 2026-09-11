@@ -12,6 +12,11 @@ that cleans up here, including the one this replaced.
 """
 import pytest
 
+#: The browser this file addresses. Explicit since the registry's key
+#: stopped having a default: a bare "default" was never a key any browser
+#: occupied, because the server composes `<piece of work>/<browser>`.
+KEY = "default/main"
+
 
 class _FakeSession:
     def __init__(self, **kwargs):
@@ -31,13 +36,13 @@ async def test_a_client_leaving_does_not_close_its_browser():
     from aihawk.mcp import server
 
     fake = _FakeSession()
-    server.registry._sessions["default"] = fake
+    server.registry._browsers[KEY] = fake
 
     async with server._lifespan(server.mcp) as ctx:
         assert ctx == {}
 
     assert fake.closed is False, "the lifespan closed a session; a second client would find no browser"
-    assert server.registry.peek() is fake
+    assert server.registry.peek(KEY) is fake
 
     await server.registry.close_all()
 
@@ -47,8 +52,8 @@ async def test_several_clients_coming_and_going_leave_every_session_alone():
     from aihawk.mcp import server
 
     a, b = _FakeSession(), _FakeSession()
-    server.registry._sessions["chat"] = a
-    server.registry._sessions["someone-else"] = b
+    server.registry._browsers["chat"] = a
+    server.registry._browsers["someone-else"] = b
 
     for _ in range(3):
         async with server._lifespan(server.mcp):
@@ -68,7 +73,7 @@ async def test_close_all_is_what_actually_shuts_them_down():
     from aihawk.mcp import server
 
     fake = _FakeSession()
-    server.registry._sessions["default"] = fake
+    server.registry._browsers[KEY] = fake
 
     await server.registry.close_all()
 

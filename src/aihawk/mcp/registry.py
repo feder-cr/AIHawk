@@ -1,14 +1,24 @@
-"""Sessions, owned here rather than by whoever happens to be connected.
+"""The browsers, owned here rather than by whoever happens to be connected.
 
-The server used to hold one session in a module global and close it when the
+The server used to hold one browser in a module global and close it when the
 client went away. That made the browser a property of the connection, which
-blocked three things at once: only one client could ever attach, the session
+blocked three things at once: only one client could ever attach, the browser
 could not outlive the process that served it, and nothing but a tool call could
 reach the page.
 
-So sessions live here, keyed by id, and a client is just something that borrows
-one. Closing happens when the process shuts down, or when someone asks - not
-when a client disconnects.
+So browsers live here, by KEY, and a client is just something that borrows one.
+Closing happens when the process shuts down, or when someone asks - not when a
+client disconnects.
+
+⛔ THE KEY IS OPAQUE HERE ON PURPOSE, and this class used to be called
+`SessionRegistry` with a `session_id` on every method - a name from when one
+entry really was one session. It is not: the server composes
+`<piece of work>/<browser>`, so an entry is one BROWSER, and two of them
+(`main` and `support`) belong to the one piece of work a process serves. What
+this class knows is that equal keys are the same browser and different keys are
+different browsers. Everything it gets right - one lock per key so two callers
+racing start one browser rather than two, the configuration remembered so a
+rebuild is the same person - follows from that and from nothing else.
 """
 from __future__ import annotations
 
@@ -17,10 +27,12 @@ from typing import Dict, Optional
 
 from .session import StealthSession
 
-# The id used by callers that do not ask for one. Existing stdio clients send no
-# session id and must keep behaving exactly as they did, which means they all
-# land here, on one shared session, as before.
-DEFAULT_SESSION_ID = "default"
+# ⛔ `DEFAULT_SESSION_ID` MOVED TO `store.py`, WHICH IS WHAT IT NAMES: a
+# piece of work, and so a file. It lived here only as the default argument of
+# every method below, and no caller ever used that default - the server
+# composes a browser key for every call, and a bare "default" is a key no
+# browser has ever occupied. A default that cannot be right is worse than
+# having none, so the key is required now.
 
 
 def _is_usable(session) -> bool:
@@ -45,7 +57,7 @@ def _is_usable(session) -> bool:
         return False
 
 
-class SessionRegistry:
+class BrowserRegistry:
     """Sessions by id, created on demand, closed on request or at shutdown."""
 
     def __init__(self, factory=StealthSession, defaults=None,
@@ -55,11 +67,11 @@ class SessionRegistry:
         #: Called with a key whenever WHO that key is has changed - gained an
         #: identity or lost one. See `_changed`.
         self.on_change = on_change
-        self._sessions: Dict[str, StealthSession] = {}
+        self._browsers: Dict[str, StealthSession] = {}
         #: What each id was last STARTED with, kept across the death of the
         #: session object so a rebuild can be the same person. See `ensure`.
         self._configs: Dict[str, dict] = {}
-        #: A session_start that FAILED, by id. Kept so `ensure` refuses with
+        #: A `browser_open` that FAILED, by key. Kept so `ensure` refuses with
         #: the real reason instead of quietly building a different browser.
         self._refusals: Dict[str, Exception] = {}
         #: The highest tab number each id has handed out, across rebuilds.
@@ -76,11 +88,11 @@ class SessionRegistry:
         from .plan import plan_session
         return plan_session().kwargs
 
-    def config(self, session_id: str = DEFAULT_SESSION_ID) -> Optional[dict]:
+    def config(self, key: str) -> Optional[dict]:
         """What this id was started with, for callers that have to report it."""
-        return self._configs.get(session_id)
+        return self._configs.get(key)
 
-    def _changed(self, session_id: str) -> None:
+    def _changed(self, key: str) -> None:
         """Say that this key's identity was gained or lost.
 
         ⛔ THIS EXISTS SO THE SERVER DOES NOT HAVE TO REMEMBER TO REMEMBER. The
@@ -106,27 +118,27 @@ class SessionRegistry:
         if self.on_change is None:
             return
         try:
-            self.on_change(session_id)
+            self.on_change(key)
         except Exception:
             pass
 
-    def _lock(self, session_id: str) -> asyncio.Lock:
+    def _lock(self, key: str) -> asyncio.Lock:
         # One lock per id, so two clients racing to first-use the same session
         # start one browser rather than two. Without it the second caller finds
         # an empty slot while the first is still awaiting start().
-        if session_id not in self._locks:
-            self._locks[session_id] = asyncio.Lock()
-        return self._locks[session_id]
+        if key not in self._locks:
+            self._locks[key] = asyncio.Lock()
+        return self._locks[key]
 
-    def peek(self, session_id: str = DEFAULT_SESSION_ID) -> Optional[StealthSession]:
+    def peek(self, key: str) -> Optional[StealthSession]:
         """The session as it stands, without starting anything. For callers that
         want to know whether a browser is up, such as a live view."""
-        return self._sessions.get(session_id)
+        return self._browsers.get(key)
 
     def ids(self) -> list:
-        return sorted(self._sessions)
+        return sorted(self._browsers)
 
-    async def ensure(self, session_id: str = DEFAULT_SESSION_ID) -> StealthSession:
+    async def ensure(self, key: str) -> StealthSession:
         """The session for this id, started and usable.
 
         A start that FAILS must not poison the id. The original bug here stored
@@ -157,32 +169,32 @@ class SessionRegistry:
         # lock is released, so the callback - which writes a file - runs with
         # nobody waiting behind it.
         became = False
-        async with self._lock(session_id):
-            existing = self._sessions.get(session_id)
+        async with self._lock(key):
+            existing = self._browsers.get(key)
             if existing is not None and not _is_usable(existing):
-                await self._discard(session_id)
+                await self._discard(key)
                 existing = None
 
             if existing is None:
-                refusal = self._refusals.get(session_id)
+                refusal = self._refusals.get(key)
                 if refusal is not None:
                     raise refusal
-                config = self._configs.get(session_id)
+                config = self._configs.get(key)
                 if config is None:
                     config = self._default_config()
                 session = self._factory(**config)
-                self._adopt_numbering(session_id, session)
+                self._adopt_numbering(key, session)
                 await session.start()
-                self._sessions[session_id] = session
-                self._configs[session_id] = config
+                self._browsers[key] = session
+                self._configs[key] = config
                 became = True
             else:
                 session = existing
         if became:
-            self._changed(session_id)
+            self._changed(key)
         return session
 
-    async def restart(self, session_id: str = DEFAULT_SESSION_ID,
+    async def restart(self, key: str,
                       **kwargs) -> StealthSession:
         """Close whatever is on this id and start a session with THESE settings.
 
@@ -196,10 +208,10 @@ class SessionRegistry:
         and the one still holding the profile directory is the one nobody has a
         handle to any more.
         """
-        async with self._lock(session_id):
-            await self._discard(session_id)
+        async with self._lock(key):
+            await self._discard(key)
             session = self._factory(**kwargs)
-            self._adopt_numbering(session_id, session)
+            self._adopt_numbering(key, session)
             try:
                 await session.start()
             except Exception as exc:
@@ -216,30 +228,30 @@ class SessionRegistry:
                 # until somebody starts a session that works. Lazy auto-start
                 # survives for a caller that never said anything; it must not
                 # resurrect after a caller said something and it did not work.
-                self._refusals[session_id] = exc
-                self._configs.pop(session_id, None)
+                self._refusals[key] = exc
+                self._configs.pop(key, None)
                 raise
-            self._refusals.pop(session_id, None)
-            self._sessions[session_id] = session
+            self._refusals.pop(key, None)
+            self._browsers[key] = session
             # Recorded only after a start that worked, and recorded LAST, so a
             # refused or failed start leaves the previous identity in place
             # rather than arming recovery with settings that do not launch.
-            self._configs[session_id] = dict(kwargs)
-        self._changed(session_id)
+            self._configs[key] = dict(kwargs)
+        self._changed(key)
         return session
 
-    def _adopt_numbering(self, session_id: str, session) -> None:
+    def _adopt_numbering(self, key: str, session) -> None:
         """Continue this id's tab numbering in the session replacing it."""
-        mark = self._tabs.get(session_id, 0)
+        mark = self._tabs.get(key, 0)
         # The factory is pluggable, so a stand-in need not offer this.
         if mark and hasattr(session, "resume_numbering_after"):
             session.resume_numbering_after(mark)
 
-    async def _discard(self, session_id: str) -> None:
-        session = self._sessions.pop(session_id, None)
+    async def _discard(self, key: str) -> None:
+        session = self._browsers.pop(key, None)
         if session is None:
             return
-        self._tabs[session_id] = max(self._tabs.get(session_id, 0),
+        self._tabs[key] = max(self._tabs.get(key, 0),
                                      getattr(session, "_counter", 0) or 0)
         try:
             await session.close()
@@ -248,12 +260,12 @@ class SessionRegistry:
             # it cleanly must not stop the replacement from starting.
             pass
 
-    async def drop(self, session_id: str = DEFAULT_SESSION_ID) -> None:
+    async def drop(self, key: str) -> None:
         """Throw a session away so the next `ensure` builds a fresh one."""
-        async with self._lock(session_id):
-            await self._discard(session_id)
+        async with self._lock(key):
+            await self._discard(key)
 
-    def declare(self, session_id: str, config: dict) -> None:
+    def declare(self, key: str, config: dict) -> None:
         """Say who a browser WILL be, without starting it.
 
         ⛔ This is what makes reopening a saved session cheap. A browser costs
@@ -274,13 +286,13 @@ class SessionRegistry:
         instead of "somebody became somebody", which is the distinction the hook
         exists to carry.
         """
-        self._configs[session_id] = dict(config)
+        self._configs[key] = dict(config)
 
     def declared(self) -> list:
         """Every browser this registry knows of, running or only declared."""
-        return sorted(set(self._sessions) | set(self._configs))
+        return sorted(set(self._browsers) | set(self._configs))
 
-    async def forget(self, session_id: str = DEFAULT_SESSION_ID) -> bool:
+    async def forget(self, key: str) -> bool:
         """Close this browser and forget who it was. Answers whether it existed.
 
         ⛔ `drop` and this one differ in exactly the way `close_all` explains,
@@ -292,13 +304,13 @@ class SessionRegistry:
         caller a person they never asked for - the same leak `close_all` refuses,
         one browser at a time.
         """
-        async with self._lock(session_id):
-            existed = session_id in self._sessions or session_id in self._configs
-            await self._discard(session_id)
-            self._configs.pop(session_id, None)
-            self._refusals.pop(session_id, None)
+        async with self._lock(key):
+            existed = key in self._browsers or key in self._configs
+            await self._discard(key)
+            self._configs.pop(key, None)
+            self._refusals.pop(key, None)
         if existed:
-            self._changed(session_id)
+            self._changed(key)
         return existed
 
     async def close_all(self) -> None:
@@ -312,7 +324,7 @@ class SessionRegistry:
         be a leak in the other direction - a caller who shut a session down and
         later let a tool auto-start one would silently get the old identity.
         """
-        for session_id in list(self._sessions):
-            await self._discard(session_id)
+        for key in list(self._browsers):
+            await self._discard(key)
         self._configs.clear()
         self._refusals.clear()
