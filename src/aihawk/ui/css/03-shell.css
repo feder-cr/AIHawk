@@ -99,9 +99,13 @@
    sliced every line of the conversation down the middle - readable text with
    a panel sitting on its first 224 pixels. The header is not moved: it lives
    above the drawer, which is what the drawing asked for. */
-#rail:not([hidden]) ~ #left #log,
-#rail:not([hidden]) ~ #left form{
-  padding-left:calc(var(--s4) + var(--drawer) - var(--spine)) }
+/* ⛔ E LA CHAT NON SA CHE LA COLONNA ESISTE. Qui il trascritto e il
+   composer prendevano un padding sinistro quando il pannello era aperto, per
+   non finirci sotto: ma un padding che cambia cambia la larghezza della riga,
+   quindi ogni paragrafo si riformattava mentre il pannello compariva - il
+   testo si muoveva sotto gli occhi di chi stava leggendo. Il pannello e' un
+   sovrapposto: copre il bordo vicino e il resto delle parole resta dov'e',
+   da tornare a leggere chiudendolo. */
 /* Capped in CHARACTERS and not in pixels, because the thing being limited is
    the measure and 680px is only one screen's worth of it: on a 1920 window the
    same column ran to about 92 characters, past the 80 the WCAG asks for and

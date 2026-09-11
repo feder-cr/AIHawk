@@ -654,3 +654,61 @@ def test_a_page_older_than_the_server_says_so_instead_of_going_quiet():
         "minute and the transcript becomes the notice")
     assert got.get("threw") and got["vanished"], (
         "the 410 path stopped working while the 404 one was added")
+
+
+def test_opening_the_rail_moves_nothing_outside_it():
+    """⛔ THE SESSION COLUMN LIVES OVER THE CONVERSATION, AND THE CONVERSATION
+    KNOWS NOTHING ABOUT IT. Owner, looking at it: the bar has to live on top,
+    and the chat must not know a thing.
+
+    It did not. Measured in a real browser on 2026-09-11: opening the column
+    moved `#left` from x=48 to x=0 and widened the browser pane by 48, because
+    the spine left the flow to give its width back - and the transcript and the
+    composer took a left padding at the same time, so every paragraph rewrapped
+    while the panel appeared. Content height went 4234 to 4412. Somebody
+    reading had the words move under their eyes to open a list.
+
+    Now the spine belongs to the frame and stays, the drawer slides out beside
+    it, and the same measurement gives identical boxes before and after.
+
+    Two rules, and the second is the one that is easy to reintroduce:
+
+    * nothing OUTSIDE the rail may be selected by the rail's open state;
+    * the toggle may restyle itself - ink, background - but may not change its
+      own BOX, because the spine is in the flow and its box is everybody
+      else's position.
+
+    Known-bad: put back either the rule that took the toggle out of the flow
+    when open, or the one that padded the transcript to dodge the panel.
+    """
+    import re
+
+    style = CODE[CODE.index("<style"):CODE.index("</style>")]
+    #: what moves a box, as opposed to what colours it.
+    boxy = ("position", "top", "left", "right", "bottom", "inset", "width",
+            "height", "padding", "margin", "display", "float", "transform")
+
+    outside, moved = [], []
+    for selector, decls in re.findall(r"([^{}]+)\{([^{}]*)\}", style):
+        sel = ' '.join(selector.split())
+        if "#rail" not in sel and "aria-expanded" not in sel:
+            continue
+        keyed = "aria-expanded" in sel or ":not([hidden])" in sel
+        if not keyed:
+            continue
+        #: a combinator after the rail reaches something that is not the rail.
+        if "~" in sel or "+" in sel:
+            outside.append(sel)
+            continue
+        if "#railtab" in sel:
+            for d in decls.split(';'):
+                name = d.split(':')[0].strip().lower()
+                if name.split('-')[0] in boxy or name in boxy:
+                    moved.append('%s -> %s' % (sel, name))
+
+    assert not outside, (
+        "these rules make something outside the session column react to it being "
+        "open, which is the column reaching into the conversation: %s" % outside)
+    assert not moved, (
+        "the toggle changes its own box when the column opens, and the spine is "
+        "in the flow - so every pane beside it moves: %s" % moved)

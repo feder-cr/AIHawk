@@ -19,7 +19,7 @@
    Anchored to the spine's own width so the two are one object, and lifted with
    a shadow rather than a border, because what says "this is over that" is the
    shadow. */
-#rail { position:absolute; top:0; bottom:0; left:0; width:var(--drawer);
+#rail { position:absolute; top:0; bottom:0; left:var(--spine); width:var(--drawer);
         z-index:5; display:flex; flex-direction:column;
         background:var(--well); border-right:1px solid var(--line-1);
         box-shadow:14px 0 34px -18px #000 }
@@ -28,7 +28,7 @@
 /* The left padding is the button's: it is drawn over this header now, so the
    word starts after it instead of under it. */
 #railhead{ flex:none; height:var(--topbar); display:flex; align-items:center;
-           gap:8px; padding:0 var(--s3) 0 var(--spine);
+           gap:8px; padding:0 var(--s3);
            border-bottom:1px solid var(--line-1) }
 #railhead .label{ flex:1 }
 #newchat{ flex:none; width:48px; height:48px; display:grid;
@@ -101,12 +101,19 @@
    where it belonged, 48 by 56 at the top-left corner, and invisible. The
    ladder this page uses is 2 for the jump button, 5 for the panel, 6 above it,
    20 for the skip link. */
-#railtab[aria-expanded="true"]{ position:absolute; top:0; left:0; z-index:6;
-                                width:var(--spine); height:var(--topbar);
-                                padding:0; display:grid; place-items:center;
-                                background:transparent; box-shadow:none;
-                                color:var(--fg-2) }
-#railtab[aria-expanded="true"]:hover{ color:var(--fg); background:transparent }
+/* ⛔ APERTA, LA SPINA NON REGALA PIU' LA SUA LARGHEZZA, E LA RIGA CHE LO
+   FACEVA STAVA QUI. Toglieva il bottone dal flusso perche' quei 48px
+   tornassero alla conversazione: misurato il 2026-09-11, aprire la colonna
+   spostava `#left` da x=48 a x=0 e allargava il pannello del browser di 48,
+   cioe' l'intera finestra scivolava mentre si apriva un pannello. Il
+   proprietario l'ha chiamata guardandola: la barra deve VIVERE SOPRA, e la
+   chat non deve saperne niente.
+
+   Quindi la spina appartiene alla cornice e sta ferma, il cassetto esce alla
+   sua destra e copre il bordo vicino della conversazione, e nessuna misura
+   di nessun altro elemento cambia. Resta solo lo stato disegnato sul
+   bottone, che non sposta niente. */
+#railtab[aria-expanded="true"]{ background:var(--raised); color:var(--fg) }
 #railtab[aria-expanded="true"]::after{ content:none }
 /* ⛔ THE PANEL FOLDS, THE WAY IN DOES NOT. Both used to disappear at the
    same breakpoint, and `#newchat` lives inside the panel - so a window snapped
