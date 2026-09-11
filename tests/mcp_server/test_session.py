@@ -43,12 +43,13 @@ async def test_multi_tab_bookkeeping():
     assert s.list_pages() == ["tab-1", "tab-2"]
     # active is the last opened
     assert s.page() is s.page("tab-2")
-    s.select_page("tab-1")
+    # And closing the current one hands the flag on, which since the setter
+    # went is the only way the active page moves at all.
+    await s.close_page("tab-2")
+    assert s.list_pages() == ["tab-1"]
     assert s.page() is s.page("tab-1")
-    await s.close_page("tab-1")
-    assert s.list_pages() == ["tab-2"]
     with pytest.raises(RuntimeError):
-        s.page("tab-1")
+        s.page("tab-2")
 
 
 @pytest.mark.asyncio

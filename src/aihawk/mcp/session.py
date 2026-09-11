@@ -155,10 +155,18 @@ class StealthSession:
             out.append(row)
         return out
 
-    def select_page(self, page_id: str) -> None:
-        if page_id not in self._pages:
-            raise RuntimeError(f"no such tab: {page_id}")
-        self._active = page_id
+    # ⛔ `select_page` STOOD HERE, AND NOTHING IN THE PRODUCT HAD CALLED IT
+    # SINCE THE TAB TOOLS WENT. It was the only way to move the active page
+    # by hand, which is exactly the capability removed when a browser became
+    # one page: what a caller may do is open, read and close, never choose.
+    # Three tests kept it alive and asserted through it - the same shape as
+    # `_focus` one layer up, which the product had stopped writing to while
+    # the fixtures went on reading it.
+    #
+    # The two properties those tests hold are still held, through the paths
+    # the product actually takes: `new_page` makes the newest page active,
+    # and `close_page` moves the flag when it closes the active one. Both
+    # have real callers, so the assertions now sit on live code.
 
     def page(self, page_id: Optional[str] = None):
         """The active page, or any live one, rather than a closed handle.

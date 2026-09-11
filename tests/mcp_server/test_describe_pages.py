@@ -82,23 +82,32 @@ async def test_every_tab_comes_back_with_all_four_fields():
     assert [r["title"] for r in rows] == ["First", "Second"]
 
 
-async def test_exactly_one_tab_is_flagged_active_and_it_is_the_current_one():
+async def test_exactly_one_tab_is_flagged_active_and_it_moves_when_that_one_goes():
     """The `active` flag is the half nothing above can work around. It is what
     tells the address bar which of several pages the browser is actually on,
     and a site opening one of its own is exactly when that stops being
-    guessable from the order."""
+    guessable from the order.
+
+    ⛔ DRIVEN THROUGH `close_page`, NOT THROUGH A SETTER. This used to move
+    the flag by hand with a method no product code had called since a browser
+    became one page; it is gone, and asserting through it was asserting
+    through something nothing else ran. Adoption makes the first page
+    current, and closing the current one hands the flag on: both are paths
+    the server itself takes.
+    """
     s = await _session_with(_Page("https://a.example/", "A"),
-                            _Page("https://b.example/", "B"))
-    ids = s.list_pages()
-    s.select_page(ids[0])
+                            _Page("https://b.example/", "B"),
+                            _Page("https://c.example/", "C"))
 
     rows = await s.describe_pages()
-    assert [r["active"] for r in rows] == [True, False]
+    assert [r["active"] for r in rows] == [True, False, False], (
+        "adoption did not make the first page the current one")
 
-    s.select_page(ids[1])
+    await s.close_page(rows[0]["id"])
     rows = await s.describe_pages()
+    assert sum(r["active"] for r in rows) == 1, (
+        "closing the current page left the browser with no address, or two")
     assert [r["active"] for r in rows] == [False, True]
-    assert sum(r["active"] for r in rows) == 1
 
 
 async def test_a_tab_that_will_not_answer_contributes_what_it_can():
