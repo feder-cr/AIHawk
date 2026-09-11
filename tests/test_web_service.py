@@ -896,7 +896,7 @@ async def test_a_page_that_joins_an_idle_service_is_told_the_turn_is_over():
 # --------------------------------------------------------------------------
 
 class TabbedLink(FakeLink):
-    """`session_list_pages` answers `payload`; `browser_list` answers that the
+    """`browser_tab_list` answers `payload`; `browser_list` answers that the
     browser is running, because a session with tabs to list has one."""
 
     def __init__(self, payload, running=True):
@@ -919,7 +919,7 @@ async def _tabs_route(link, svc=None):
 async def test_the_address_comes_from_the_active_tab():
     """One call where there were two.
 
-    While `session_list_pages` answered with ids only, this had to ask
+    While `browser_tab_list` answered with ids only, this had to ask
     `browser_evaluate` for `location.href`: script in the page, to learn
     something the server already knew.
     """
@@ -934,7 +934,7 @@ async def test_the_address_comes_from_the_active_tab():
 
     assert body["url"] == "https://b.example/x", "the address is the ACTIVE tab's"
     assert [t["id"] for t in body["tabs"]] == ["tab-1", "tab-2"]
-    assert [n for n, _ in link.calls] == ["session_list_pages"], (
+    assert [n for n, _ in link.calls] == ["browser_tab_list"], (
         "the tabs in ONE call, and not browser_evaluate on top of it")
 
 
@@ -954,7 +954,7 @@ async def test_an_older_server_leaves_the_strip_empty_instead_of_breaking_the_pa
 async def test_the_strip_never_causes_a_browser_to_start():
     """Same invariant as the frame, and it has to be stated the same way.
 
-    `session_list_pages` resolves the browser through `ready`, which STARTS it,
+    `browser_tab_list` resolves the browser through `ready`, which STARTS it,
     so an empty strip drawn by asking is an empty strip that cost an engine.
     Measured on 0.38.0: 9 processes before, 16 after, and the answer was
     `{"url": "", "tabs": []}` either way.
@@ -968,6 +968,6 @@ async def test_the_strip_never_causes_a_browser_to_start():
     body = json.loads((await route(Req())).body)
 
     assert body == {"url": "", "tabs": []}
-    assert [n for n, _ in link.calls] == ["session_list_pages"], (
+    assert [n for n, _ in link.calls] == ["browser_tab_list"], (
         "the strip asks once and reads the answer: %s"
         % [n for n, _ in link.calls])

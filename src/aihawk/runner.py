@@ -75,4 +75,13 @@ def child_env(opts: Mapping[str, Any], base_env: Mapping[str, str],
         env["STEALTHFOX_BINARY"] = str(opts["binary"])
     if opts.get("profile_dir"):
         env["STEALTHFOX_PROFILE_DIR"] = str(opts["profile_dir"])
+    if opts.get("session_id"):
+        # ⛔ NOT A STEALTHFOX_* NAME, ON PURPOSE. Those are what the ENGINE
+        # reads; this is which saved file the SERVER itself persists its two
+        # browsers to, and the server has no session concept beyond reading
+        # this one value once, at import. The interface sets it to spawn one
+        # server per conversation; a client that never sets it - `uvx aihawk`
+        # in Claude Desktop - lands on the one name every caller landed on
+        # before this had a name at all.
+        env["AIHAWK_SESSION_ID"] = str(opts["session_id"])
     return env

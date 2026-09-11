@@ -11,13 +11,21 @@ is the point of the split rather than an accident of it: the server exposes tool
 and nothing else, and everything with a face is a client of those tools, exactly
 like anybody else's agent.
 
-It costs one thing, and the cost is named here rather than discovered later. The
-in-process view could ask `registry.peek` - "is there a browser, without starting
-one" - and there is no such question over MCP: `session_list_pages` calls
-`ensure`, so asking would start a browser just to be told nothing is running.
-`Link` therefore remembers whether it has ever issued an instruction, and the
-live view stays quiet until it has. The invariant the old view held by calling a
-different function, this one holds by knowing what it has done.
+⛔ THIS PARAGRAPH USED TO DESCRIBE A COST THAT NO LONGER EXISTS, and left saying
+so would be exactly the kind of stale reasoning this project keeps finding one
+step past where it was written. The in-process view could once ask
+`registry.peek` - "is there a browser, without starting one" - and there was no
+such question over MCP at all: `browser_tab_list` called `ensure` regardless, so
+asking would start a browser just to be told nothing was running. `Link` used to
+work around that by remembering whether it had EVER issued an instruction, and
+the live view stayed quiet until it had - a coarser answer than the real
+question, armed by the first call of any kind rather than by whether a browser
+was actually up.
+
+The real question exists now: `browser_watch` and `browser_tab_list` both
+refuse rather than start when nothing is running (`registry.peek` reached from
+`looking`, in `mcp/server.py`), so a client can simply ask and read the answer.
+`Link` remembers nothing any more; there is nothing left it needs to.
 """
 from __future__ import annotations
 
@@ -131,55 +139,13 @@ def image_of(result) -> "tuple[bytes, str] | None":
     return None
 
 
-class SessionLink:
-    """One session's view of the shared connection: every call carries its id.
-
-    ⛔ WITHOUT THIS THE SESSION COLUMN IS DECORATION. The interface holds several
-    conversations now, and the server has addressed browsers per session since
-    0.15.0 - but a tool call that names no session lands on the default one, so
-    two conversations would drive the SAME browser while each drew its own
-    transcript. Nothing would fail: the second session would find the first
-    one's tabs, its cookies and its identity, and read them as its own.
-
-    The id is IMPOSED, not defaulted. A model that passes `session_id` itself -
-    because it read one in a tool result, or guessed - has it overwritten rather
-    than honoured. Letting it through would mean the thing that decides which
-    person's browser a command reaches is the model, and a model that names
-    another session's id gets that session's logins. Which session a
-    conversation belongs to is not a modelling decision.
-
-    Which tools take an address is read from the SCHEMA the server publishes,
-    never from a list written here: a list drifts, and the failure it produces
-    is a tool called with an argument it does not accept, which is an error the
-    person sees instead of the browser they meant.
-    """
-
-    def __init__(self, link: "Link", session_id: str) -> None:
-        self._link = link
-        self._session_id = session_id
-        self._addressable = {
-            t.name for t in link.tools
-            if "session_id" in (getattr(t, "inputSchema", None) or {}).get(
-                "properties", {})
-        }
-
-    @property
-    def session_id(self) -> str:
-        return self._session_id
-
-    @property
-    def tools(self):
-        return self._link.tools
-
-    def addresses(self, name: str) -> bool:
-        """Whether a call to this tool will carry the session id."""
-        return name in self._addressable
-
-    async def call(self, name: str, arguments: dict | None = None):
-        args = dict(arguments or {})
-        if name in self._addressable:
-            args["session_id"] = self._session_id
-        return await self._link.call(name, args)
-
-    async def call_text(self, name: str, arguments: dict | None = None) -> str:
-        return text_of(await self.call(name, arguments))
+# ⛔ `SessionLink` STOOD HERE AND IS GONE WITH THE THING IT MULTIPLEXED. It
+# gave every call this conversation's id, imposed rather than trusted from a
+# model, because one shared connection served every conversation and a tool
+# call naming none landed on a default that two conversations could collide
+# on. MCP has no session concept to impose an id ONTO any more - no tool
+# takes one - so the only way left to keep two conversations apart is the one
+# this always should have been: two conversations, two CONNECTIONS, each its
+# own spawned server told at birth which saved file is its own
+# (`AIHAWK_SESSION_ID`, in `Sessions.get`). A plain `Link` is what every
+# conversation holds now; there is no second class to wrap it in.

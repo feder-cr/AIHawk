@@ -61,18 +61,18 @@ HERE = server.addressed()
 
 
 async def test_with_nothing_running_it_says_so(registry):
-    answer = await server.session_status()
+    answer = await server.browser_status()
 
     assert "no browser is running" in answer
-    assert "session_start" in answer, "it does not say how to choose who to be"
+    assert "browser_open" in answer, "it does not say how to choose who to be"
 
 
 async def test_asking_starts_nothing(registry):
     """⛔ The load-bearing one. The fixture's default factory raises, so a
-    session_status that resolved a plan fails here rather than quietly launching
+    browser_status that resolved a plan fails here rather than quietly launching
     a browser - and, with a profile configured, quietly writing an identity into
     it as the side effect of a question."""
-    await server.session_status()
+    await server.browser_status()
 
     # Every key, not just the one it would have used: a browser started under
     # any address at all is a browser this tool was not supposed to start.
@@ -84,7 +84,7 @@ async def test_it_reports_the_running_identity(registry):
                            proxy={"server": "socks5://exit-a.invalid:1080"},
                            profile_dir="C:/tmp/acct-a")
 
-    answer = await server.session_status()
+    answer = await server.browser_status()
 
     assert "4242" in answer
     assert "socks5://exit-a.invalid:1080" in answer
@@ -98,7 +98,7 @@ async def test_it_reports_the_identity_of_a_browser_that_died(registry):
     await registry.restart(HERE, seed=4242, headless=True)
     await registry.drop(HERE)
 
-    answer = await server.session_status()
+    answer = await server.browser_status()
 
     assert "4242" in answer, "a dead browser lost the identity it will come back as"
     assert "not up" in answer
@@ -111,7 +111,7 @@ async def test_it_never_prints_a_proxy_password(registry):
                            proxy={"server": "socks5://exit-a.invalid:1080",
                                   "username": "u", "password": "hunter2"})
 
-    answer = await server.session_status()
+    answer = await server.browser_status()
     # The subject is checked before the absence: "hunter2 is not in this string"
     # is true of every string that is not about a proxied session, so without
     # this line the test passes hardest when it has stopped testing anything.

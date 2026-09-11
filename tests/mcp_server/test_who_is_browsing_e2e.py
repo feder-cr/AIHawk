@@ -23,12 +23,12 @@ from __future__ import annotations
 
 import json
 import os
-import pathlib
-import sys
 
 import pytest
-from mcp import ClientSession, StdioServerParameters
+from mcp import ClientSession
 from mcp.client.stdio import stdio_client
+
+from _stdio_helpers import server_params
 
 pytestmark = [
     pytest.mark.e2e,
@@ -75,13 +75,12 @@ def _server():
     hold an editable install pointing at this tree. That is luck of the venv,
     not a property of the test, and on a machine with an ordinary install the
     mutations that validated this file would have gone uncaught.
+
+    The fix moved into `_stdio_helpers.server_params` on 2026-09-11, shared
+    with every other file that spawns `python -m aihawk` as a subprocess,
+    rather than kept here as the one place that had it right.
     """
-    env = dict(os.environ)
-    env.setdefault("STEALTHFOX_HEADLESS", "1")
-    src = str(pathlib.Path(__file__).resolve().parents[2] / "src")
-    env["PYTHONPATH"] = src + os.pathsep + env.get("PYTHONPATH", "")
-    return StdioServerParameters(
-        command=sys.executable, args=["-m", "aihawk"], env=env)
+    return server_params({"STEALTHFOX_HEADLESS": os.environ.get("STEALTHFOX_HEADLESS", "1")})
 
 
 async def test_the_seed_decides_what_the_page_sees():
@@ -95,14 +94,14 @@ async def test_the_seed_decides_what_the_page_sees():
         async with ClientSession(read, write) as mcp:
             await mcp.initialize()
 
-            first = _text(await mcp.call_tool("session_start", {"seed": 4242}))
+            first = _text(await mcp.call_tool("browser_open", {"seed": 4242}))
             assert "4242" in first, first
             first_run = await _fingerprint(mcp)
 
-            _text(await mcp.call_tool("session_start", {"seed": 4242}))
+            _text(await mcp.call_tool("browser_open", {"seed": 4242}))
             same_seed_again = await _fingerprint(mcp)
 
-            _text(await mcp.call_tool("session_start", {"seed": 987654}))
+            _text(await mcp.call_tool("browser_open", {"seed": 987654}))
             other_seed = await _fingerprint(mcp)
 
     assert first_run == same_seed_again, (
@@ -117,17 +116,17 @@ async def test_status_reports_the_person_actually_browsing():
     """Not just that it answers: that what it answers matches the engine.
 
     The seed in the sentence has to be the seed the page is running under, or
-    `session_status` is a label rather than a reading.
+    `browser_status` is a label rather than a reading.
     """
     async with stdio_client(_server()) as (read, write):
         async with ClientSession(read, write) as mcp:
             await mcp.initialize()
 
-            before = _text(await mcp.call_tool("session_status", {}))
+            before = _text(await mcp.call_tool("browser_status", {}))
             assert "no browser is running" in before, before
 
-            _text(await mcp.call_tool("session_start", {"seed": 31337}))
-            after = _text(await mcp.call_tool("session_status", {}))
+            _text(await mcp.call_tool("browser_open", {"seed": 31337}))
+            after = _text(await mcp.call_tool("browser_status", {}))
             fingerprint = await _fingerprint(mcp)
 
     assert "31337" in after, after
@@ -148,10 +147,10 @@ async def test_a_profile_keeps_its_person_across_two_sessions(tmp_path):
     async with stdio_client(_server()) as (read, write):
         async with ClientSession(read, write) as mcp:
             await mcp.initialize()
-            _text(await mcp.call_tool("session_start", {"profile": profile}))
+            _text(await mcp.call_tool("browser_open", {"profile": profile}))
             before = await _fingerprint(mcp)
 
-            _text(await mcp.call_tool("session_start", {"profile": profile}))
+            _text(await mcp.call_tool("browser_open", {"profile": profile}))
             after = await _fingerprint(mcp)
 
     assert before == after, (

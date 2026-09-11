@@ -1,4 +1,4 @@
-"""`session_list_pages` has to return what its description promises.
+"""`browser_tab_list` has to return what its description promises.
 
 Until 0.9.0 the tool described itself as "Every open tab: id, title, url, and
 which one is active" and returned `["tab-1"]`. Ids, and nothing else.
@@ -85,7 +85,7 @@ async def test_every_tab_comes_back_with_all_four_fields():
 
 async def test_exactly_one_tab_is_flagged_active_and_it_is_the_current_one():
     """The `active` flag is the half a caller cannot work around. Without it,
-    `session_select_page` is the only way to know where you are, and using it to
+    `browser_tab_select` is the only way to know where you are, and using it to
     find out changes the answer."""
     s = await _session_with(_Page("https://a.example/", "A"),
                             _Page("https://b.example/", "B"))

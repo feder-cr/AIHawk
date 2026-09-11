@@ -73,7 +73,7 @@ NO_TABS = {"url": "", "tabs": []}
 
 
 def build_app(link: Link, sessions: "Sessions") -> Starlette:
-    def named(session_id: str | None) -> ChatService:
+    async def named(session_id: str | None) -> ChatService:
         """The conversation with this id, refusing one nobody declared.
 
         ⛔ ONE PLACE TURNS AN ID OFF THE WIRE INTO A CONVERSATION, because the
@@ -81,12 +81,18 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         query string and the rename carries it in the body. Written twice, the
         rename is where it would have gone on resurrecting deleted sessions
         after the eight beside it had stopped.
+
+        ⛔ ASYNC, BECAUSE `get` NOW SPAWNS A CONNECTION OF ITS OWN. Each
+        conversation has its own MCP server process since the tool surface
+        stopped taking a session argument, so the first ask for one may have
+        to start it - the same lazy cost `browser_open` already pays, moved
+        one level up.
         """
         if not sessions.knows(session_id):
             raise SessionGone(session_id or "")
-        return sessions.get(session_id)
+        return await sessions.get(session_id)
 
-    def which(request: Request) -> ChatService:
+    async def which(request: Request) -> ChatService:
         """The conversation this request is about.
 
         ⛔ EVERY ROUTE GOES THROUGH HERE, the live ones included. A route that
@@ -101,7 +107,7 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         `/sessions/new` is. See `Sessions.knows` for what a page left open on a
         deleted session did to it.
         """
-        return named(request.query_params.get("s"))
+        return await named(request.query_params.get("s"))
 
     async def root(_request: Request) -> HTMLResponse:
         return HTMLResponse(PAGE)
@@ -111,14 +117,14 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
                              "default": DEFAULT_CHAT_ID})
 
     async def new_session(_request: Request) -> JSONResponse:
-        service = sessions.new()
+        service = await sessions.new()
         return JSONResponse({"id": service.session_id, "name": service.name})
 
     async def rename_session(request: Request) -> JSONResponse:
         body = await request.json()
         at = (body or {}).get("id") or DEFAULT_CHAT_ID
-        service = named(at)
-        done = sessions.rename(at, (body or {}).get("name", ""))
+        service = await named(at)
+        done = await sessions.rename(at, (body or {}).get("name", ""))
         return JSONResponse({"renamed": done, "name": service.name})
 
     async def forget_session(request: Request) -> JSONResponse:
@@ -133,14 +139,14 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         text = (body or {}).get("text", "")
         if not text:
             return JSONResponse({"error": "empty"}, status_code=400)
-        which(request).start(text)
+        (await which(request)).start(text)
         return JSONResponse({"accepted": True})
 
     async def stop(request: Request) -> JSONResponse:
-        return JSONResponse({"stopped": which(request).stop()})
+        return JSONResponse({"stopped": (await which(request)).stop()})
 
     async def fresh(request: Request) -> JSONResponse:
-        service = which(request)
+        service = await which(request)
         done = service.reset()
         if done:
             # Told to every listener, not just the tab that asked: two tabs on
@@ -150,7 +156,7 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         return JSONResponse({"fresh": done})
 
     async def events(request: Request) -> StreamingResponse:
-        service = which(request)
+        service = await which(request)
         q = service.subscribe()
         # Freeze the replay/live boundary while subscribing. StreamingResponse
         # starts `stream` later, so taking this snapshot inside it would let an
@@ -263,7 +269,7 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         `browser_watch` refuses without starting now, so the cheap path is the
         common one and this route simply asks.
         """
-        seen = which(request)
+        seen = await which(request)
         # ⛔ THE PANE SAYS WHICH BROWSER, and without that the workspace is one
         # picture drawn twice. `browser` is the caller's to choose here
         # exactly as `session_id` is not: which SESSION a request belongs to is
@@ -310,7 +316,7 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         declarations exist for - and the panes offering to wake them would
         never have been drawn.
         """
-        seen = which(request)
+        seen = await which(request)
         try:
             got = json.loads(await seen.link.call_text("browser_list"))
         except Exception:
@@ -327,7 +333,7 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
     async def tabs(request: Request) -> JSONResponse:
         """Every tab, and which one is current.
 
-        ONE call where there were two. It asks `session_list_pages`, which since
+        ONE call where there were two. It asks `browser_tab_list`, which since
         0.9.0 of the server answers with id, title, url and active - the four
         fields its description had always promised and had never returned. While
         it returned ids only this had to ask `browser_evaluate` for
@@ -338,7 +344,7 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         parse into those fields leaves the strip empty and the address blank,
         and the pane keeps working as a picture.
         """
-        seen = which(request)
+        seen = await which(request)
         # ⛔ WHICH BROWSER, like the frame route beside it. The address above the
         # stage has to be the address of the screen being looked at, and with
         # more than one screen the answer stopped being "the focused one" the
@@ -346,7 +352,7 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         watching = request.query_params.get("b") or None
         try:
             raw = await seen.link.call_text(
-                "session_list_pages",
+                "browser_tab_list",
                 {"browser": watching} if watching else None)
             rows = json.loads(raw)
         except Exception:
@@ -361,7 +367,7 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         page_id = (body or {}).get("id", "")
         if not page_id:
             return JSONResponse({"error": "no id"}, status_code=400)
-        await which(request).link.call("session_select_page", {"page_id": page_id})
+        await (await which(request)).link.call("browser_tab_select", {"page_id": page_id})
         return JSONResponse({"ok": True})
 
     async def vanished(_request: Request, exc: Exception) -> JSONResponse:

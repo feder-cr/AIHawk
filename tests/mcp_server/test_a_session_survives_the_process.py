@@ -48,13 +48,13 @@ class _Recording:
 
 
 def _fresh(monkeypatch, **kwargs):
-    """A server with no memory of any session, as after a restart."""
+    """A server with no memory of what it held, as after a restart."""
     reg = server.new_registry(
         factory=_Recording,
         defaults=lambda: dict({"seed": 7, "headless": True}, **kwargs))
     monkeypatch.setattr(server, "registry", reg)
     monkeypatch.setattr(server, "_focus", {})
-    monkeypatch.setattr(server, "_loaded", set())
+    monkeypatch.setattr(server, "_restored", False)
     return reg
 
 
@@ -107,7 +107,7 @@ async def test_the_session_nobody_opened_a_browser_in_is_written_down_too(regist
         return "ok"
 
     monkeypatch.setattr(actions, "new_page", _nothing)
-    await server.session_new_page()
+    await server.browser_tab_new()
 
     saved = store.load("default")
     assert saved is not None, (
@@ -278,20 +278,48 @@ async def test_a_session_saved_under_other_names_comes_back_as_main(registry,
         % reg.config("default/main"))
 
 
-async def test_two_saved_sessions_come_back_as_two(registry, restarted):
-    """Known-bad: key the store by anything but the session id - a single file,
-    say. One session then overwrites the other and the second one to be saved is
-    the only one that exists.
+async def test_which_file_this_process_persists_to_comes_from_the_environment(
+        registry, restarted, monkeypatch):
+    """⛔ THIS IS THE ONLY PLACE "WHICH SESSION" STILL EXISTS, AND IT IS NOT A
+    TOOL ARGUMENT. No tool here takes a session id, lists saved sessions, or
+    deletes one - a model working through this server cannot enumerate or
+    reach a second piece of work, by design. What used to be `session_id` on
+    every call is now `_SESSION_ID`, read from `AIHAWK_SESSION_ID` once, at
+    import, by whoever SPAWNS the process - the interface, spawning one server
+    per conversation, or nobody at all for a standalone client, which lands on
+    `default` exactly as every caller did before this had a name.
+
+    Monkeypatching the read value stands in for a second process reading a
+    second one: the module-level read happens once, at import, so within one
+    test process the only way to exercise a different value is to set it
+    directly - which is the same effect a real second process gets from a
+    real second environment variable. `tests/mcp_server/test_stdio_e2e.py`
+    proves the environment variable itself works, with two real subprocesses.
+
+    Known-bad: key the store by anything but `_SESSION_ID` - a single file,
+    say. The second `browser_open` then overwrites the first one's file and
+    only one of the two survives.
     """
-    await server.browser_open(session_id="work", seed=1)
-    await server.browser_open(session_id="home", seed=2)
+    monkeypatch.setattr(server, "_SESSION_ID", "work")
+    await server.browser_open(seed=1)
 
-    restarted()
-    assert server.browsers_in("work") == ["main"]
-    assert server.browsers_in("home") == ["main"]
+    monkeypatch.setattr(server, "_SESSION_ID", "home")
+    await server.browser_open(seed=2)
 
-    listed = await server.session_list()
-    assert "work" in listed and "home" in listed, listed
+    saved_work = store.load("work")
+    saved_home = store.load("home")
+    assert saved_work is not None and saved_home is not None, (
+        "one file overwrote the other: work=%r home=%r" % (saved_work, saved_home))
+    assert saved_work["browsers"]["main"]["seed"] == 1
+    assert saved_home["browsers"]["main"]["seed"] == 2
+
+    # And a restart reads back whichever one this process is told it is.
+    reg = restarted()
+    monkeypatch.setattr(server, "_SESSION_ID", "work")
+    assert server.browsers_in() == ["main"]
+    assert reg.config("work/main")["seed"] == 1, (
+        "restoring \"work\" came back as somebody else: %r"
+        % reg.config("work/main"))
 
 
 async def test_a_session_is_read_from_disk_once_and_not_on_every_command(registry,
@@ -305,12 +333,12 @@ async def test_a_session_is_read_from_disk_once_and_not_on_every_command(registr
     was measuring something else.
 
     What the guard actually holds is both halves below. `restore` runs from
-    `in_session`, which every tool reaches, so without it the server reads a
+    `addressed`, which every tool reaches, so without it the server reads a
     file from disk on every single command; and a session this server has
     already loaded must not be re-read from underneath, or a browser it
     deliberately closed comes back because something else wrote the file.
 
-    Known-bad: drop the `if at_session in _loaded: return False` from `restore`.
+    Known-bad: drop the `if _restored: return False` from `restore`.
     """
     await server.browser_open()
 
@@ -395,59 +423,43 @@ async def test_a_write_that_fails_does_not_cost_the_caller_the_browser(registry,
     assert server.browsers_in() == ["main"]
 
 
-# --- forgetting one on purpose ----------------------------------------------
+# --- closing the last browser on purpose ------------------------------------
 
-async def test_forgetting_a_session_closes_its_browsers_and_unlists_it(registry):
-    """Known-bad: have `session_forget` erase the file without closing the
-    browsers. They stay running, holding their memory and their profiles, with
-    nothing left that names them - the leak being unreachable engines rather
-    than a wrong answer.
+async def test_closing_the_last_browser_closes_it_and_erases_the_file(registry):
+    """⛔ THIS USED TO BE `session_forget`'S JOB, AND THE TOOL IS GONE - not
+    replaced, because there is nothing left for it to do that `browser_close`
+    does not already do from inside the one process a model can reach.
+    `remember`'s empty branch already erases the file the moment the last
+    browser goes, so "delete this saved identity" falls out of "close the
+    browser" for free, with no second tool and no way to name a DIFFERENT
+    process's identity to delete - which is exactly the operation the owner
+    ruled out.
 
-    ⛔ AND THE ASSERTION ON WHAT IT SAYS IS THE POINT OF THE THIRD LINE, because
-    the first version of it was `"work" in said` and that is satisfied by BOTH
-    sentences this tool can answer - including "there is no saved session called
-    work", which is what it really said for one release. The deletion was right
-    the whole time; the report was not, and only a check in a clean environment
-    caught it. An assertion that cannot tell a tool's two answers apart is not
-    checking the answer, it is checking that the id got echoed.
+    ⛔ AND THE ASSERTION ON WHAT IT SAYS IS WHERE THE OLD TOOL'S BUG LIVED. The
+    first version of `session_forget` answered "there is no saved session
+    called X" for a deletion that HAD just happened, because both of its
+    branches shared one sentence with the id spliced in - so `"work" in said`
+    passed on both answers and the wrong one shipped for a release. The two
+    branches here already say different things; this pins that they still do.
+
+    Known-bad, two: have `browser_close` erase the file without closing the
+    live browser - it stays running, holding its memory and its profile, with
+    nothing left that names it; or collapse its two return sentences into one.
     """
-    await server.browser_open(session_id="work")
-    running = registry.peek("work/main")
-
-    said = await server.session_forget(session_id="work")
-
-    assert running.closed, "the session was forgotten with its browser still up"
-    assert store.load("work") is None
-    assert said == "session work is gone.", (
-        "a session that WAS deleted was reported as never having existed, so a "
-        "model reading this goes looking for a different name: %r" % said)
-    assert server.browsers_in("work") == []
-
-
-async def test_forgetting_a_session_that_was_never_saved_says_so(registry):
-    """A tool that answers "done" to a session that never existed teaches a
-    model that the name it used was right.
-
-    Known-bad: return the same sentence in both branches.
-    """
-    said = await server.session_forget(session_id="never-existed")
-    assert "no saved session" in said, said
-
-
-async def test_closing_the_last_browser_stops_the_session_being_listed(registry):
-    """A session here IS its browsers, so one with none left has nothing to
-    reopen, and leaving it listed offers a reopen that gives back nothing.
-
-    Known-bad: drop the `store.erase` from `remember`'s empty branch. The
-    session list then fills with names that restore to nothing.
-    """
-    await server.browser_open()
+    await server.browser_open(seed=4242)
+    running = registry.peek("default/main")
     assert store.load("default") is not None
 
-    await server.browser_close()
+    closed = await server.browser_close()
 
+    assert running.closed, "the browser was reported closed while still running"
     assert store.load("default") is None
-    assert "no saved sessions yet" in await server.session_list()
+    assert closed == "the main browser is closed. Still open: none.", closed
+
+    said_again = await server.browser_close()
+    assert said_again == "the main browser is not open.", (
+        "closing a browser that was already gone is answered the same as "
+        "closing one that just was: %r" % said_again)
 
 
 async def test_a_restored_browser_runs_on_the_engine_this_build_was_given(

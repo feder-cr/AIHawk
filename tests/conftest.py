@@ -80,8 +80,14 @@ def _the_server_remembers_nothing_from_the_last_test():
     """
     server = sys.modules.get("aihawk.mcp.server")
     if server is not None:
-        for held in ("_focus", "_loaded", "_seen_tabs", "_tabs_owed"):
+        for held in ("_focus", "_seen_tabs", "_tabs_owed"):
             got = getattr(server, held, None)
             if got is not None:
                 got.clear()
+        # ⛔ NOT A DICT SINCE 2026-09-11. `_restored` used to be `_loaded`, a
+        # set keyed by session id, because one process could hold several. It
+        # is a single flag now: one process, one piece of work, restored at
+        # most once.
+        if hasattr(server, "_restored"):
+            server._restored = False
     yield

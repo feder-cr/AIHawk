@@ -75,10 +75,10 @@ def summarise(name: str, args: dict | None) -> str:
         return "mode=%s" % _short(args.get("mode", "form"), 20) + where
     if name == "browser_evaluate":
         return _short(args.get("expression", ""), 70)
-    if name in ("session_select_page", "session_close_page"):
+    if name in ("browser_tab_select", "browser_tab_close"):
         return _short(args.get("page_id", ""), 40)
     if name in ("browser_snapshot", "browser_take_screenshot",
-                "session_new_page", "session_list_pages"):
+                "browser_tab_new", "browser_tab_list"):
         return where.strip()
 
     if not args:

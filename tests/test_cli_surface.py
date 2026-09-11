@@ -20,7 +20,7 @@ import pytest
 from click.testing import CliRunner
 
 import aihawk.cli as climod
-import aihawk.link as link_mod
+import aihawk.sessions as sessions_mod
 from aihawk.llm import BASE_URL, DEFAULT_MODEL
 from aihawk.runner import child_env
 
@@ -88,6 +88,12 @@ class LinkRecorder:
     browser options - and then hands them to `Link`. Recording that hand-over is
     the last point where the decisions are visible and the first point where a
     real browser would be launched, so it is where the command is stopped.
+
+    ⛔ `opts` CARRIES ONE MORE KEY THAN THE CLI BUILT: `Sessions._spawn_link`
+    adds `session_id` before constructing `Link`, since 2026-09-11 that is the
+    only way a conversation's saved browsers are told apart at all. None of
+    the assertions here read the whole dict, so the extra key changes nothing
+    they check.
     """
 
     def __init__(self):
@@ -105,8 +111,18 @@ class LinkRecorder:
 
 @pytest.fixture
 def link(monkeypatch):
+    """Patched where the name is actually LOOKED UP, not where it is defined.
+
+    ⛔ `ui` NEVER IMPORTS `Link` ITSELF. It builds a `Sessions` and asks it for
+    a conversation; `Sessions._spawn_link` is where `Link(...)` is actually
+    called, bound there by `sessions.py`'s own `from .link import Link` at
+    import time. Patching `aihawk.link.Link` rebinds a name nothing reads any
+    more - `aihawk.sessions.Link` still points at the real class - so every
+    test using this fixture saw zero calls and a real `Link` was still one
+    `ui` invocation away from being constructed for real.
+    """
     rec = LinkRecorder()
-    monkeypatch.setattr(link_mod, "Link", rec)
+    monkeypatch.setattr(sessions_mod, "Link", rec)
     return rec
 
 
@@ -398,7 +414,7 @@ def test_the_key_is_never_echoed_on_any_path(monkeypatch, link):
     def explode(*a, **k):
         raise RuntimeError("the browser did not start")
 
-    monkeypatch.setattr(link_mod, "Link", explode)
+    monkeypatch.setattr(sessions_mod, "Link", explode)
     crashed = run("ui", "--openrouter-key", FAKE_KEY)
     outputs["crash"] = crashed.output
     if crashed.exception is not None:

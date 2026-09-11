@@ -2,7 +2,7 @@
 
 ⛔ THE DEFECT THIS EXISTS FOR SHIPPED IN 0.36.0, 0.37.0 AND 0.38.0, AND NOTHING
 IN THE SUITE COULD SEE IT. Opening the interface drew its panes, the panes asked
-`browser_watch` and `session_list_pages`, both resolved their browser through
+`browser_watch` and `browser_tab_list`, both resolved their browser through
 `ready`, and `ready` STARTS what it resolves. Measured on 0.38.0 with a fresh
 home and no instruction given: 9 firefox processes before, 16 after - roughly
 800 MB and seven seconds - and `browser_watch` then answered an error, so the
@@ -66,7 +66,7 @@ async def test_asking_for_the_tabs_of_a_browser_that_is_not_running_starts_nothi
     """
     assert registry.ids() == [], "something was already running before the look"
 
-    said = await server.session_list_pages()
+    said = await server.browser_tab_list()
 
     assert json.loads(said) == [], (
         "a browser that is not running has no tabs, and this said otherwise")
@@ -100,7 +100,7 @@ async def test_a_browser_that_IS_running_is_still_looked_at(registry):
     before = registry.ids()
     assert before, "the command did not start a browser, so the rest proves nothing"
 
-    rows = json.loads(await server.session_list_pages())
+    rows = json.loads(await server.browser_tab_list())
 
     assert [r["id"] for r in rows] == ["p-1"], (
         "a running browser's tabs were not read: %r" % rows)

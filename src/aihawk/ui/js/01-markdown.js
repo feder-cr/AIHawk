@@ -167,15 +167,12 @@ const VERB = {
   browser_evaluate:['Evaluating','Evaluated'], browser_take_screenshot:['Capturing','Captured'],
   browser_watch:['Watching','Watched'],
   browser_select_option:['Choosing','Chose'],
-  session_new_page:['Opening tab','Opened tab'],   session_select_page:['Switching tab','Switched tab'],
-  session_close_page:['Closing tab','Closed tab'], session_list_pages:['Listing tabs','Listed tabs'],
-  session_start:['Starting browser','Started browser'],
+  browser_tab_new:['Opening tab','Opened tab'],       browser_tab_select:['Switching tab','Switched tab'],
+  browser_tab_close:['Closing tab','Closed tab'],     browser_tab_list:['Listing tabs','Listed tabs'],
   browser_open:['Opening browser','Opened browser'],
   browser_close:['Closing browser','Closed browser'],
   browser_list:['Listing browsers','Listed browsers'],
-  session_list:['Listing sessions','Listed sessions'],
-  session_forget:['Deleting session','Deleted session'],
-  session_status:['Checking session','Checked session']
+  browser_status:['Checking browser','Checked browser']
 };
 const LEAD = /^(I will |I'll |I am |I'm |Let me |Now I will |Now I'll )/i;
 /* ⛔ MEASURED IN CHARACTERS, SPENT IN PIXELS - the same defect this project

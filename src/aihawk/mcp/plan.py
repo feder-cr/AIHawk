@@ -62,9 +62,9 @@ def describe(kwargs: Mapping[str, Any], seed_from: str = "",
     told the opposite of what happened, in the same breath as being told the
     seed. Anything derived from the launch cannot drift from it.
 
-    `session_start` knows two things this cannot: where the seed came from, and
+    `browser_open` knows two things this cannot: where the seed came from, and
     why there is no proxy. They are passed in rather than recomputed, and
-    `session_status` simply omits them.
+    `browser_status` simply omits them.
     """
     profile = kwargs.get("profile_dir")
     proxy = kwargs.get("proxy") or {}

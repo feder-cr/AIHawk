@@ -145,91 +145,100 @@ between what the browser says it is and where it appears to be.
 | `STEALTHFOX_MCP_PORT` | Port for the HTTP transport. Default `8765`, which is also the AIHawk interface's default: change one of the two if you run both. |
 | `AIHAWK_HOME` | Where saved sessions are kept. Defaults to `%APPDATA%/aihawk` on Windows, `~/Library/Application Support/aihawk` on macOS and `$XDG_DATA_HOME/aihawk` on Linux. Set it to put them on another disk. |
 
-Anything a tool call says wins over these. `session_start` can pick another
-seed, another exit or another profile for one session; the variables are what a
-session gets when nobody says anything.
+Anything a tool call says wins over these. `browser_open` can pick another
+seed, another exit or another profile for one browser; the variables are what
+a browser gets when nobody says anything.
 
 ## Tools
 
-`session_list`, `session_forget`, `session_status`, `session_start`,
-`session_new_page`, `session_list_pages`,
-`session_select_page`, `session_close_page`, `browser_open`, `browser_close`,
-`browser_list`, `browser_navigate`,
-`browser_read_text`, `browser_snapshot`, `browser_read_html`,
+`browser_open`, `browser_close`, `browser_list`, `browser_status`,
+`browser_tab_new`, `browser_tab_list`, `browser_tab_select`, `browser_tab_close`,
+`browser_navigate`, `browser_read_text`, `browser_snapshot`, `browser_read_html`,
 `browser_take_screenshot`, `browser_watch`, `browser_click`, `browser_click_at`,
 `browser_type`, `browser_select_option`, `browser_press_key`, `browser_evaluate`.
 
 Tool names mirror the Microsoft Playwright MCP, so prompts written for it work
-here too. Three groups: who is browsing and which tab, reading the page, and
+here too. Three groups: the two browsers and their tabs, reading the page, and
 acting on it.
 
-**Every tool below also takes `session_id` and `browser`, both optional, and
-neither appears in the tables because the answer is the same for all of them.**
-Leave both out and you get the `main` browser of the default session, which is
-what a client that never mentions either has always got and always will.
+**Every tool below also takes `browser`, optional, and it never appears in the
+tables because the answer is the same for all of them.** Leave it out and you
+get `main`, which is what a client that never mentions it has always got and
+always will.
 
-A **session is one identity**, `main`: its conversation, its tabs, its cookies,
-its fingerprint, its logins. Beside it a session may hold ONE helper,
-`support`, for what must not touch that identity: a temporary mailbox to
-receive a verification, a lookup, a page you want to read without the site
-connecting it to the account. The two share nothing. `browser` is a closed
-choice, `main` or `support` - there is no name to invent - and the helper is
-not saved: it lives for the task and dies with the process. Open it with
-`browser_open` when you need it and close it with `browser_close` when you are
-done. By default it goes out through the same exit as `main` and carries a
-fingerprint of its own.
+⛔ **This server has no idea any other piece of work exists.** It serves
+exactly one - the two browsers below, and nothing else - so there is nothing
+here to list, name, or reach a second one of: no tool takes an id for one, and
+none can ask about one that is not its own. Which piece of work this is comes
+from how the server was STARTED, never from a tool call. `uvx aihawk` and a
+checkout run directly always land on the same one; the AIHawk interface starts
+a separate server **per conversation** and tells each which one it is the
+moment it starts it, so two conversations are two processes with two saved
+files, never one server juggling several behind your back.
+
+A **session is one identity**, `main`: its tabs, its cookies, its fingerprint,
+its logins. Beside it there may be ONE helper, `support`, for what must not
+touch that identity: a temporary mailbox to receive a verification, a lookup, a
+page you want to read without the site connecting it to the account. The two
+share nothing. `browser` is a closed choice, `main` or `support` - there is no
+name to invent - and the helper is not saved: it lives for the task and dies
+with the process. Open it with `browser_open` when you need it and close it
+with `browser_close` when you are done. By default it goes out through the
+same exit as `main` and carries a fingerprint of its own.
 
 Tabs live inside a browser, which is why the tab tools take a page id and no
 third address.
 
-Until 0.39.0 a session could hold up to eight browsers under any names, and
-`browser_focus` chose which one unaddressed commands meant. Both are gone.
+⛔ Until 0.39.0 a session could hold up to eight browsers under any names, and
+`browser_focus` chose which one unaddressed commands meant. Until 0.41.0 every
+tool also took a `session_id`, and one shared server juggled several sessions
+behind it. All three are gone: a session is `main` plus `support`, and a
+server serves exactly one session for its whole life.
 
-### Session and tabs
+### The two browsers
 
 | Tool | Arguments | What it does |
 |---|---|---|
-| `browser_open` | `browser`, `seed`, `proxy`, `profile`, all optional | Opens `main` or `support`, or reopens one that is already up with those settings, which is how a session changes identity without changing session. `support` left without a `proxy` goes out through `main`'s exit. |
-| `browser_close` | `browser` optional | Closes `main` or `support` and frees what it held. Its tabs go with it; the other browser and the conversation do not. Forgets who it was, so the next one under that role is a new stranger rather than that person resumed. Close `support` when you are done with it. |
-| `browser_list` | `session_id` optional | Which browsers this session holds, where each one is, and which one commands go to. **Answers JSON** since 0.18.0: `session`, `focus`, `limit`, `note`, and `browsers` with `id`, `running`, `focused` and the `urls` of each one's tabs. A browser that is not running is one this session declared and has not needed yet. Starts nothing, so asking is free. |
-| `session_list` | none | Every saved session and what each one holds. Sessions survive the server, so this is how you find the one you were in. Starts nothing. |
-| `session_forget` | `session_id` | Delete a saved session: its browsers are closed and it stops being listed. Not the same as closing browsers, which frees the engines and keeps the session. |
-| `session_status` | none | Who is browsing right now: the seed, the exit, the profile and the open tabs. Starts nothing; if no browser is up it says so. |
-| `session_start` | `seed`, `proxy`, `profile`, all optional | Close whatever is open and start a browser as a particular person. Returns a sentence describing the session it actually started. |
-| `session_new_page` | none | Open a tab, make it the active one, return its id. |
-| `session_list_pages` | none | Every open tab: id, title, url, and which one is active. |
-| `session_select_page` | `page_id` | Make a tab the active one. Every `browser_*` tool acts on the active tab. |
-| `session_close_page` | `page_id`, optional | Close a tab, or the active one when the id is left out. |
+| `browser_open` | `browser`, `seed`, `proxy`, `profile`, all optional | Opens `main` or `support`, or reopens one that is already up with those settings, which is how you change identity without changing which browser you are talking to. `support` left without a `proxy` goes out through `main`'s exit. |
+| `browser_close` | `browser` optional | Closes `main` or `support` and frees what it held. Its tabs go with it; the other browser is not touched. Forgets who it was, so the next one under that role is a new stranger rather than that person resumed. Close `support` when you are done with it. |
+| `browser_status` | `browser` optional | Who is browsing right now: the seed, the exit, the profile and the open tabs. Starts nothing; if that browser is not up it says so. |
+| `browser_list` | none | Which of the two browsers are open, where each one is, and which one commands that name none go to. **Answers JSON**: `focus`, `limit`, `note`, and `browsers` with `id`, `running`, `focused` and the `urls` of each one's tabs. A browser that is not running has been declared and has not been needed yet. Starts nothing, so asking is free. |
+| `browser_tab_new` | `browser` optional | Open a tab, make it the active one, return its id. |
+| `browser_tab_list` | `browser` optional | Every open tab: id, title, url, and which one is active. |
+| `browser_tab_select` | `page_id`, `browser` optional | Make a tab the active one. Every other `browser_*` tool acts on it. |
+| `browser_tab_close` | `page_id` optional, `browser` optional | Close a tab, or the active one when the id is left out. |
 
-You can ignore `session_start` entirely: the first tool that needs a page starts
-a session on its own, as a different stranger every time, which is the right
-default. A session holds up to eight browsers, so two accounts CAN be live at
-the same time: open a second browser with `browser_open` and address commands to
-whichever one you mean. `session_start` still replaces the browser you are in
-rather than adding one, which is the difference between the two.
+You can ignore `browser_open` entirely: the first tool that needs a page opens
+`main` on its own, as a different stranger every time, which is the right
+default. Open `support` alongside it with `browser_open` and address commands
+to whichever one you mean; `browser_open` called again on a browser that is
+already up replaces it rather than adding a third, which is why there are only
+ever two.
 
-**The interface's session column lists these same sessions.** A conversation
-in `aihawk ui` and a session here are one thing with one id: the chat named
-`lavoro` drives the browsers of session `lavoro` and no others, and deleting it
-there closes them. A client that names no session and a page that names none
-both land on `default`, which is why they share a browser.
+**The interface's conversation column and this server's saved identity are the
+same idea, one layer up.** A conversation in `aihawk ui` spawns its own server
+and tells it, at the moment it starts, which conversation it is - never a tool
+argument, because this server has no way to be asked about a second one. A
+standalone client that names none of that, and a checkout run directly, both
+land on the same place, `default`.
 
-Sessions are written down as soon as one holds a browser, and what is written is
-the DECLARATION - which browsers a session has, who each one is, and where its
-tabs were pointing - not eight running engines. Reopening one gives the
-identities back immediately; each engine starts when a command is aimed at it,
-as the right person, **and reopens the tabs it had** - the urls are saved with
-the identity, and the first command aimed at a declared browser is what pays
-them back. That happens once: after it, the tabs are the browser's own business.
-Cookies and logins come back only where a browser had a `profile`, which is the
-mechanism that already exists for that.
+The identity is written down as soon as `main` holds one, and what is written
+is the DECLARATION - who it is and where its tabs were pointing - not a running
+engine. Reopening it gives the identity back immediately; the engine starts
+when a command is aimed at it, as the right person, **and reopens the tabs it
+had** - the urls are saved with the identity, and the first command aimed at a
+declared browser is what pays them back. That happens once: after it, the tabs
+are the browser's own business. Cookies and logins come back only where a
+browser had a `profile`, which is the mechanism that already exists for that.
+`support` is never written down: a helper that survived a restart would be a
+second identity, which is the thing having only two fixed roles rules out.
 
 - **`seed`** is the identity. Same seed, same fingerprint, every time. Leave it
-  out and one is drawn; the answer says which, so a session worth repeating can
-  be repeated.
-- **`profile`** is a directory that keeps cookies and logins between sessions.
-  **A profile also owns its seed**: the first session on a new one stores the
-  identity inside it and every later session reuses it, so a login never comes
+  out and one is drawn; the answer says which, so an identity worth repeating
+  can be repeated.
+- **`profile`** is a directory that keeps cookies and logins between opens.
+  **A profile also owns its seed**: the first open on a new one stores the
+  identity inside it and every later open reuses it, so a login never comes
   back wearing different hardware. Ask for a seed that contradicts the one a
   profile carries and you get a refusal naming both numbers, never a silent
   choice. A relative path is resolved against the server's own directory, and
@@ -237,8 +246,8 @@ mechanism that already exists for that.
 - **`proxy`** is where the traffic leaves, `http://user:pass@host:port` or
   `socks5://host:port`. Timezone, locale and geography follow it.
 - Pass `""` for `profile` or `proxy` to insist on **none**, even when the
-  environment sets a default. That is how you get sessions a site cannot link
-  to each other.
+  environment sets a default. That is how you get an identity a site cannot
+  link to another one.
 
 **A profile does not own its exit the way it owns its seed.** The same login
 arriving from another country is as visible as one arriving on different
@@ -246,9 +255,10 @@ hardware. You are warned when a profile's exit changes, but only when *you*
 change it: a provider rotating its own addresses behind one host and port is
 indistinguishable from here.
 
-A `session_start` that fails, usually because the proxy is down, leaves nothing
-running, and every later tool repeats the refusal until a `session_start` works.
-It does not quietly start a browser without the exit that was asked for.
+A `browser_open` that fails, usually because the proxy is down, leaves whatever
+was already running untouched, and every later tool repeats the refusal until
+`browser_open` succeeds. It does not quietly start a browser without the exit
+that was asked for.
 
 ### Reading the page
 
@@ -318,7 +328,7 @@ way down it invents one:
 
 Getting to the bottom of the ladder without a way to do the thing is a result
 too: a task reported as impossible is worth more than one completed in a way
-that gets the session blocked.
+that gets you blocked.
 
 **Why each tool returns what it does**, with the measurements behind it:
 [the tool design page](mcp-tool-design.md).
@@ -344,8 +354,9 @@ shows the live page beside the conversation.
 
 - This is a browser, not a captcha solver. It does not solve or bypass
   challenges for you; it makes an ordinary Firefox session look like a real one.
-- One browser per server process. Tabs are the way to keep several pages open;
-  two identities at once need two servers.
+- Up to two browsers per server process, `main` and `support`. Tabs are the
+  way to keep several pages open within one; a third identity needs a second
+  server.
 
 ## License
 

@@ -10,7 +10,6 @@ Real browser launches are slow: timeouts here are generous on purpose.
 from __future__ import annotations
 
 import os
-import sys
 import tempfile
 
 import pytest
@@ -64,19 +63,16 @@ async def test_stdio_drive_screenshot_is_image_content():
     """Realness check (rule 12): drive the browser via the MCP tools over
     the real stdio server, not just via the library API, and confirm the
     screenshot tool actually returns image bytes."""
-    from mcp import ClientSession, StdioServerParameters
+    from mcp import ClientSession
     from mcp.client.stdio import stdio_client
-    from mcp.types import ImageContent
 
-    env = dict(os.environ)
-    env["STEALTHFOX_BINARY"] = BINARY
-    params = StdioServerParameters(
-        command=sys.executable, args=["-m", "aihawk"], env=env,
-    )
+    from _stdio_helpers import server_params
+
+    params = server_params({"STEALTHFOX_BINARY": BINARY})
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as client:
             await client.initialize()
-            await client.call_tool("session_new_page", {})
+            await client.call_tool("browser_tab_new", {})
             await client.call_tool(
                 "browser_navigate", {"url": "data:text/html,<h1>ok-stdio</h1>"}
             )

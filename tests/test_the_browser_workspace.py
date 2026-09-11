@@ -18,6 +18,7 @@ import re
 
 import pytest
 
+from aihawk.link import text_of
 from aihawk.web import PAGE, Sessions, build_app
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.filterwarnings("ignore")]
@@ -29,24 +30,28 @@ class _Tool:
         self.inputSchema = {"type": "object", "properties": {p: {} for p in props}}
 
 
+#: ⛔ NO `session` KEY. MCP stopped having a session concept on 2026-09-11:
+#: `browser_list` answers `focus`, `limit`, `browsers` and `note`, never which
+#: piece of work it is - that is decided by which PROCESS answered, not by a
+#: field in the reply.
 FLEET = {
-    "session": "lavoro", "focus": "main", "limit": 2,
+    "focus": "main", "limit": 2,
     "browsers": [
         {"id": "main", "running": True, "focused": True, "urls": ["http://a/"]},
         {"id": "posta", "running": True, "focused": False, "urls": ["http://b/"]},
         {"id": "dormiente", "running": False, "focused": False, "urls": []},
     ],
-    "note": "3 of 8 browsers.",
+    "note": "3 of 2 browsers.",
 }
 
 
 class _Text:
     """A tool result shaped the way one arrives over MCP.
 
-    ⛔ NOT a bare string. `SessionLink.call_text` is `text_of(await call(...))`,
-    so a stand-in whose `call` answers None makes every text read come back
-    empty - which reads as a server that answered nothing rather than as a
-    stand-in that was the wrong shape.
+    ⛔ NOT a bare string. `Link.call_text` is `text_of(await call(...))`, so a
+    stand-in whose `call` answers None makes every text read come back empty -
+    which reads as a server that answered nothing rather than as a stand-in
+    that was the wrong shape.
     """
 
     def __init__(self, text):
@@ -55,19 +60,33 @@ class _Text:
 
 
 class FakeLink:
+    """One conversation's own connection - not shared with any other, exactly
+    as `Sessions` now spawns one real server per conversation. Every test in
+    this file drives a single conversation, so one instance is enough; a test
+    that needed two would give each its own, the way `test_the_session_column.py`
+    does.
+
+    ⛔ NO TOOL TAKES `session_id`. It never did once MCP stopped having a
+    session concept: `browser_watch` and `browser_list` are addressed by
+    which PROCESS answers, never by an argument on the wire.
+    """
+
     def __init__(self):
         self.touched = False
-        self.tools = [_Tool("browser_watch", ["session_id", "browser"]),
-                      _Tool("browser_list", ["session_id"]),
-                      _Tool("session_list_pages", ["session_id", "browser"])]
+        self.tools = [_Tool("browser_watch", ["browser"]),
+                      _Tool("browser_list", []),
+                      _Tool("browser_tab_list", ["browser"])]
         self.calls = []
         self.answers = {"browser_list": json.dumps(FLEET),
-                        "session_list_pages": "[]"}
+                        "browser_tab_list": "[]"}
 
     async def call(self, name, arguments=None):
         self.touched = True
         self.calls.append((name, dict(arguments or {})))
         return _Text(self.answers[name]) if name in self.answers else None
+
+    async def call_text(self, name, arguments=None) -> str:
+        return text_of(await self.call(name, arguments))
 
 
 class Brain:
@@ -79,9 +98,21 @@ class Brain:
 
 
 def _app():
+    """One conversation, its own `FakeLink`, and the app built around it.
+
+    `sessions._open_link` is the test seam `Sessions` exposes for exactly
+    this: a conversation's connection without a real subprocess behind it.
+    Every test here drives one conversation, so the same link answers
+    whichever id is asked for.
+    """
     from starlette.testclient import TestClient
     link = FakeLink()
-    sessions = Sessions(link, Brain)
+    sessions = Sessions({}, None, Brain)
+
+    async def _open_link(session_id):
+        return link
+
+    sessions._open_link = _open_link
     return link, sessions, TestClient(build_app(link, sessions))
 
 
@@ -95,7 +126,7 @@ async def test_the_workspace_is_read_from_the_server_like_any_other_client():
     the model opens one, which is the case the workspace exists for.
     """
     link, sessions, client = _app()
-    await sessions.get("lavoro").send("start something")
+    await (await sessions.get("lavoro")).send("start something")
 
     got = client.get("/live/browsers?s=lavoro").json()
 
@@ -123,7 +154,7 @@ async def test_the_workspace_asks_the_one_question_that_starts_nothing():
     # Opened, and nothing asked of it: that is the case under test. It has to be
     # opened rather than only named, because a request may no longer bring a
     # conversation into being - see `Sessions.knows`.
-    sessions.get("mai-usata")
+    await sessions.get("mai-usata")
 
     got = client.get("/live/browsers?s=mai-usata").json()
 
@@ -143,9 +174,9 @@ async def test_an_older_server_leaves_the_workspace_empty_instead_of_breaking_th
     Known-bad: let the route raise on unparsable output.
     """
     link, sessions, client = _app()
-    await sessions.get("lavoro").send("start something")
+    await (await sessions.get("lavoro")).send("start something")
 
-    link.answers["browser_list"] = "session lavoro holds 3 of 8 browsers."
+    link.answers["browser_list"] = "the main browser is open, one of two."
     got = client.get("/live/browsers?s=lavoro").json()
 
     assert got == {"browsers": [], "focus": "", "limit": 0}
@@ -161,14 +192,21 @@ async def test_a_pane_asks_for_its_own_browser_and_not_for_the_focused_one():
     that looks exactly like a right one.
     """
     link, sessions, client = _app()
-    await sessions.get("lavoro").send("start something")
+    await (await sessions.get("lavoro")).send("start something")
 
     client.get("/live/frame?s=lavoro&b=posta")
 
     watched = [args for name, args in link.calls if name == "browser_watch"]
     assert watched and watched[-1].get("browser") == "posta", watched
-    assert watched[-1].get("session_id") == "lavoro", (
-        "a pane reached into another session: %r" % watched[-1])
+    # ⛔ NO `session_id` TO ASSERT ON. Which conversation a request belongs to
+    # is no longer an argument on the wire at all - it is which conversation's
+    # own connection answered, and that guarantee is structural since 0.41.0:
+    # `test_the_session_column.py` proves it with two conversations, each its
+    # own `FakeLink`, which is a link this single-conversation setup cannot
+    # even pose the question to.
+    assert "session_id" not in watched[-1], (
+        "a pane still sends session_id, which no tool accepts any more: %r"
+        % watched[-1])
 
 
 async def test_the_live_pane_still_asks_for_the_focused_browser_when_none_is_named():
@@ -178,7 +216,7 @@ async def test_the_live_pane_still_asks_for_the_focused_browser_when_none_is_nam
     Known-bad: make `browser_id` required in the frame route.
     """
     link, sessions, client = _app()
-    await sessions.get("lavoro").send("start something")
+    await (await sessions.get("lavoro")).send("start something")
 
     assert client.get("/live/frame?s=lavoro").status_code in (200, 204, 503)
     watched = [args for name, args in link.calls if name == "browser_watch"]

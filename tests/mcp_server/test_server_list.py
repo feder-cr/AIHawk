@@ -7,8 +7,7 @@ async def test_server_registers_expected_tools():
     tools = await server.mcp.list_tools()
     names = {t.name for t in tools}
     expected = {
-        "session_new_page", "session_list_pages", "session_select_page",
-        "session_close_page", "browser_navigate", "browser_read_text",
+        "browser_navigate", "browser_read_text",
         "browser_snapshot", "browser_read_html", "browser_click",
         "browser_click_at", "browser_type", "browser_press_key",
         "browser_evaluate", "browser_take_screenshot",
@@ -17,30 +16,39 @@ async def test_server_registers_expected_tools():
         # injecting script to set the value - which changes the page without
         # it ever seeing a real interaction.
         "browser_select_option",
-        # Added in 0.11.0, and they are one pair rather than two tools.
-        # session_start chooses who is browsing; session_status is the only way
-        # to ASK. Without the second, the identity was reported exactly once, in
-        # the return value of a call the descriptions explicitly say you need
-        # not make - so a model that skipped it, or whose browser was rebuilt
-        # underneath it, had no way to find out who it had become.
-        "session_start", "session_status",
         # Added in 0.15.0: the window as a person sees it, pointer included,
         # from the engine's screencast. It exists because every image the
         # server returned was the content viewport, and the pointer is drawn
         # outside the page on purpose - so nobody watching could see it.
         "browser_watch",
         # Added in 0.15.0 with the rest of the multi-browser work: a session
-        # holds several browsers now, so it needs a way to open one, close it,
-        # ask what it holds, and say which one the unaddressed commands mean.
-        # `browser_list` takes a session and no browser on purpose - what a
-        # session holds is not a question one browser can answer.
+        # held several browsers, so it needed a way to open one, close it, ask
+        # what it holds, and say which one the unaddressed commands mean.
         "browser_open", "browser_close", "browser_list",
-        # Added in 0.16.0, when sessions started surviving the process. Without
-        # these two a saved session could be reopened only by knowing its id
-        # already, and could never be deleted at all - so the directory of them
-        # grew forever with no way to see it or empty it from the surface that
-        # fills it.
-        "session_list", "session_forget",
+        # ⛔ RENAMED ON 2026-09-11, WHEN MCP STOPPED HAVING A SESSION CONCEPT AT
+        # ALL: this process serves exactly one piece of work, told which by
+        # `AIHAWK_SESSION_ID` at spawn time, never by a tool argument - so the
+        # tools that used to say "session" now say "browser", because there is
+        # no second one here to distinguish it from.
+        #
+        # `session_status` -> `browser_status`. `session_start` is GONE, folded
+        # entirely into `browser_open`, which already had to open the FIRST
+        # browser and only ever differed from a restart by name.
+        #
+        # `session_new_page`/`session_list_pages`/`session_select_page`/
+        # `session_close_page` -> `browser_tab_new`/`browser_tab_list`/
+        # `browser_tab_select`/`browser_tab_close`, which is what Microsoft's
+        # own Playwright MCP calls them - the rename brings this server's
+        # stated goal, tool names mirroring that server, closer to true rather
+        # than further.
+        #
+        # `session_list` and `session_forget` are GONE with no replacement:
+        # enumerating or deleting another piece of work is precisely the
+        # capability MCP no longer has. Listing THIS process's own two
+        # browsers is still `browser_list`; deleting a whole piece of work is
+        # done by whoever spawned this process closing it, not by a tool call.
+        "browser_status", "browser_tab_new", "browser_tab_list",
+        "browser_tab_select", "browser_tab_close",
     }
     # EXACT, not a subset. `expected <= names` passed while a tool nobody
     # meant to publish sat in the list, and the surface of an MCP server is

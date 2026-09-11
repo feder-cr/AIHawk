@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from _stdio_helpers import subprocess_env
+
 BINARY = os.environ.get("STEALTHFOX_BINARY")
 pytestmark = [pytest.mark.e2e, pytest.mark.skipif(
     not BINARY, reason="set STEALTHFOX_BINARY to a real patched Firefox binary to run this")]
@@ -46,8 +48,7 @@ def _profiles():
 
 
 def test_closing_stdin_with_a_page_open_ends_the_server_and_its_browser():
-    env = dict(os.environ)
-    env["STEALTHFOX_BINARY"] = BINARY
+    env = subprocess_env({"STEALTHFOX_BINARY": BINARY})
     before = _profiles()
     p = subprocess.Popen(
         [sys.executable, "-m", "aihawk"],
@@ -60,7 +61,7 @@ def test_closing_stdin_with_a_page_open_ends_the_server_and_its_browser():
         assert "result" in _recv(p)
         _send(p, {"jsonrpc": "2.0", "method": "notifications/initialized"})
         _send(p, {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
-                  "params": {"name": "session_new_page", "arguments": {}}})
+                  "params": {"name": "browser_tab_new", "arguments": {}}})
         answer = _recv(p)
         assert not answer.get("result", {}).get("isError"), answer
         opened = _profiles() - before

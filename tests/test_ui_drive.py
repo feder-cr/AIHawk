@@ -32,6 +32,7 @@ import functools
 import http.server
 import json
 import os
+import pathlib
 import sys
 import threading
 import time
@@ -239,14 +240,23 @@ PAGES = {
 
 # The tools the server at the floor in pyproject offers, which the agent hands
 # to the model. A rename upstream has to fail here rather than in a prompt.
-# Eighteen since invisible-playwright-mcp 0.15.0: session_start and
-# session_status arrived with 0.11.0 and browser_watch with 0.15.0, and this
-# set stood at fifteen through all three because it is opt-in and nothing in
-# CI runs it - measured 2026-09-06, the day the pane moved to browser_watch.
+#
+# ⛔ THIS SET WAS ALREADY STALE BEFORE 2026-09-11 AND NOTHING NOTICED, because
+# this file is opt-in (`pytest.mark.ui`) and nothing in CI runs it: it never
+# named `browser_open`, `browser_close` or `browser_list` at all, missing since
+# 0.15.0 introduced them. Twenty tools since the session-removal work on
+# 2026-09-11: `session_start` folded into `browser_open`; `session_status`
+# renamed `browser_status`; `session_new_page`/`session_list_pages`/
+# `session_select_page`/`session_close_page` renamed `browser_tab_new`/
+# `browser_tab_list`/`browser_tab_select`/`browser_tab_close`, matching what
+# Microsoft's own Playwright MCP calls them; `session_list` and
+# `session_forget` had no browser-scoped replacement, because enumerating or
+# deleting a piece of work other than this process's own is precisely the
+# capability MCP no longer has.
 EXPECTED_TOOLS = {
-    "session_start", "session_status",
-    "session_new_page", "session_list_pages", "session_select_page",
-    "session_close_page", "browser_navigate", "browser_read_text",
+    "browser_open", "browser_close", "browser_list", "browser_status",
+    "browser_tab_new", "browser_tab_list", "browser_tab_select", "browser_tab_close",
+    "browser_navigate", "browser_read_text",
     "browser_snapshot", "browser_read_html", "browser_take_screenshot",
     "browser_watch",
     "browser_click", "browser_click_at", "browser_type", "browser_press_key",
@@ -429,6 +439,14 @@ def browser():
     # inherited "0" survives `headed: False` and would open a window here. The
     # workbench rule is that browser tests are headless, so it is forced.
     env["STEALTHFOX_HEADLESS"] = "1"
+    # ⛔ THE SERVER RUNS AS A SUBPROCESS, AND `pythonpath` IN pyproject.toml
+    # DOES NOT REACH IT. A subprocess resolves `aihawk` through site-packages,
+    # which on this machine is a DIFFERENT, older checkout shared with another
+    # session - see `tests/mcp_server/_stdio_helpers.py` for the measurement.
+    # Prepended, not appended, so it wins over whatever the editable install
+    # names.
+    src = str(pathlib.Path(__file__).resolve().parent.parent / "src")
+    env["PYTHONPATH"] = src + os.pathsep + env.get("PYTHONPATH", "")
 
     driver = _McpDriver(env)
     driver.start()
@@ -436,7 +454,7 @@ def browser():
         # Warmup, with a long ceiling: the first navigation is the one that
         # launches Firefox, and every timing assertion below assumes that cost
         # has already been paid.
-        driver.call("session_new_page", _timeout=300.0)
+        driver.call("browser_tab_new", _timeout=300.0)
         driver.goto("about:blank", timeout=300.0)
         yield driver
     finally:

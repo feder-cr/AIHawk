@@ -21,7 +21,6 @@ import json
 import pytest
 
 from aihawk.mcp import server
-from aihawk.mcp.registry import DEFAULT_SESSION_ID, SessionRegistry
 
 
 class _Recording:
@@ -113,6 +112,13 @@ async def test_a_third_browser_is_refused_and_the_refusal_says_where_to_go(regis
     Written as a loop over the constant rather than against the number two, so
     it goes on testing the rule if the number ever moves.
 
+    ⛔ AND THE ASSERTION IS ON THE TWO NAMES, NOT ON A TOOL THAT NO LONGER
+    EXISTS. There is no third browser to open a session into any more - `main`
+    and `support` are the whole of what this gives you - so "what to do
+    instead" is not another tool, it is the two names the refusal already
+    carries. An assertion on a substring that is not one of them would pass on
+    a refusal that forgot to say either.
+
     Known-bad, two: drop the ceiling guard, and a third browser is opened; cut
     the refusal down to "limit reached", and the model is left with nowhere to
     go.
@@ -125,9 +131,9 @@ async def test_a_third_browser_is_refused_and_the_refusal_says_where_to_go(regis
     said = await server.browser_open(browser="one-too-many")
 
     assert server.browsers_in() == held, "a third browser was opened anyway"
-    assert "session_start" in said, (
-        "the refusal does not name what to do instead, so the next turn is "
-        "another try at the same thing: %r" % said)
+    assert "main" in said and "support" in said, (
+        "the refusal does not name the two browsers that DO exist, so the "
+        "next turn has nothing to try instead: %r" % said)
 
 
 async def test_closing_forgets_who_that_browser_was(registry):
@@ -165,26 +171,15 @@ async def test_closing_the_focused_one_does_not_leave_commands_pointing_at_it(re
     assert server.addressed() == "default/%s" % server.DEFAULT_BROWSER_ID
 
 
-async def test_two_sessions_do_not_share_their_browsers(registry):
-    """The session is the container, so its browsers are its own.
-
-    ⛔ AND IT IS A SHARPER TEST THAN IT WAS. Both sessions' browsers are called
-    `main` now, so the NAME cannot tell them apart: the session is the only
-    half of the key that can, which is exactly the half this is about.
-
-    Known-bad: have `addressed` ignore `session_id`. Both callers then share one
-    browser, which is one person's cookie jar handed to another.
-    """
-    await server.browser_open(session_id="work")
-    await server.browser_open(session_id="home")
-
-    main = server.DEFAULT_BROWSER_ID
-    assert server.browsers_in("work") == [main]
-    assert server.browsers_in("home") == [main]
-    assert server.addressed("work") == "work/%s" % main
-    assert server.addressed("home") == "home/%s" % main
-    assert registry.peek("work/%s" % main) is not registry.peek("home/%s" % main), (
-        "two sessions were served by one browser")
+#: ⛔ `test_two_sessions_do_not_share_their_browsers` STOOD HERE AND IS GONE.
+#: It called `browser_open`/`browsers_in`/`addressed` with a `session_id` that
+#: none of them take any more: MCP has no session concept, so there is nothing
+#: at this layer left to name two of. The property it protected - one piece of
+#: work's browsers are its own - is now guaranteed by construction (one
+#: conversation is one spawned process, each with its own `AIHAWK_SESSION_ID`)
+#: and proven end to end, with two real subprocesses, by
+#: `test_two_real_processes_with_two_session_ids_persist_to_two_files` in
+#: `tests/mcp_server/test_stdio_e2e.py`.
 
 
 async def test_the_count_is_read_from_the_registry_and_not_from_a_second_list(registry):

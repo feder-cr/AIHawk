@@ -34,8 +34,8 @@ fields worth knowing from day one: `disabled`, which switches a server off
 without deleting its entry, and `autoApprove`, a list of tool names allowed
 to run without asking you each time.
 
-The tools arrive in the same two families every other client sees: session
-tools for tabs (`session_new_page` and friends) and page tools
+The tools arrive in the same two families every other client sees: browser
+tools for tabs (`browser_tab_new` and friends) and page tools
 (`browser_navigate`, `browser_read_text`, `browser_snapshot`,
 `browser_click`, `browser_type`, `browser_take_screenshot`, among others).
 Cline decides when a tool is relevant to your request and asks your approval

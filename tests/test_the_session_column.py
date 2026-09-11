@@ -1,18 +1,24 @@
 """Several conversations, each with its own transcript and its own browsers.
 
 ⛔ WHAT MAKES THIS REAL RATHER THAN DECORATION is that a conversation drives its
-OWN browsers. The server has addressed browsers per session since 0.15.0, and a
-tool call that names no session lands on the default one - so a column that only
-swapped transcripts would have shown two chats quietly sharing one browser, with
-the second finding the first one's tabs, cookies and identity. The addressing
-itself is pinned in `test_a_session_reaches_only_its_own_browsers.py`; this file
-is about the layer above, where conversations are made, listed, saved, reopened
-and deleted.
+OWN browsers, and how that is true changed completely on 2026-09-11. It used to
+be one shared connection with the session id imposed on every call - pinned in
+`test_a_session_reaches_only_its_own_browsers.py`, which is gone with the class
+it tested, `SessionLink`. MCP has no session concept to impose an id onto any
+more: no tool takes one. So the thing that keeps two conversations apart is no
+longer a value on a shared wire, it is which CONNECTION exists at all - each
+conversation spawns its own, told at birth which saved file is its own. This
+file is about the layer where conversations are made, listed, saved, reopened
+and deleted; that separation is now proven here, by giving each conversation
+its own recording double instead of one shared one.
 
-No browser, no model and no server: the link records what it was asked, the
-brain answers without thinking, and `AIHAWK_HOME` points at a temporary
-directory for every test (see `tests/conftest.py`), so what a conversation did
-is observable as the files and the calls it left behind.
+No browser, no model and no server: `Sessions` is built with an `open_link`
+seam that hands back one `FakeLink` per conversation id instead of spawning a
+real process, so what a conversation did is observable as the calls its OWN
+double recorded - and, critically, NOT recorded on any other conversation's.
+The brain answers without thinking, and `AIHAWK_HOME` points at a temporary
+directory for every test (see `tests/conftest.py`), so what a conversation
+wrote is observable as the files it left behind.
 """
 from __future__ import annotations
 
@@ -27,30 +33,25 @@ from aihawk.web import (PAGE, DEFAULT_CHAT_ID, UNNAMED, ChatService, Sessions,
 pytestmark = pytest.mark.asyncio
 
 
-class _Tool:
-    def __init__(self, name, props):
-        self.name = name
-        self.inputSchema = {"type": "object", "properties": {p: {} for p in props}}
-
-
 class FakeLink:
-    """Shaped like `Link`, recording every call."""
+    """Shaped like `Link`, recording every call made to THIS ONE conversation's
+    connection and nothing from any other."""
 
     def __init__(self):
-        self.touched = False
-        self.tools = [_Tool("browser_navigate", ["url", "session_id", "browser_id"]),
-                      _Tool("session_forget", ["session_id"]),
-                      _Tool("session_list_pages", ["session_id", "browser_id"])]
+        self.tools = []
         self.calls = []
+        self.closed = False
 
     async def call(self, name, arguments=None):
-        self.touched = True
         self.calls.append((name, dict(arguments or {})))
         return None
 
     async def call_text(self, name, arguments=None):
         await self.call(name, arguments)
         return "[]"
+
+    async def close(self):
+        self.closed = True
 
 
 class Quiet:
@@ -76,9 +77,21 @@ class Quiet:
         await say("said", "done: " + text)
 
 
-def _sessions():
-    link = FakeLink()
-    return link, Sessions(link, Quiet, model_label="a model")
+def _sessions(make_brain=Quiet, model_label="a model"):
+    """A `Sessions` whose every conversation gets its OWN `FakeLink`, recorded
+    in `links` by session id - the seam that replaces the one shared
+    connection `SessionLink` used to multiplex.
+    """
+    links: dict = {}
+
+    async def open_link(session_id):
+        fake = FakeLink()
+        links[session_id] = fake
+        return fake
+
+    sessions = Sessions({}, None, make_brain, model_label=model_label)
+    sessions._open_link = open_link
+    return links, sessions
 
 
 # --- making and finding them ------------------------------------------------
@@ -95,8 +108,9 @@ async def test_a_page_that_names_nothing_is_in_the_conversation_it_always_was():
     """
     _, sessions = _sessions()
 
-    assert sessions.get() is sessions.get(None) is sessions.get(DEFAULT_CHAT_ID)
-    assert sessions.get().session_id == DEFAULT_CHAT_ID
+    a, b, c = await sessions.get(), await sessions.get(None), await sessions.get(DEFAULT_CHAT_ID)
+    assert a is b is c
+    assert a.session_id == DEFAULT_CHAT_ID
     assert DEFAULT_CHAT_ID == "default", (
         "the interface's default conversation and the server's default session "
         "must be the same id, or they are two sessions wearing one name")
@@ -107,7 +121,7 @@ async def test_a_new_conversation_is_its_own_and_does_not_touch_the_others():
     column and both show one transcript.
     """
     _, sessions = _sessions()
-    first, second = sessions.new(), sessions.new()
+    first, second = await sessions.new(), await sessions.new()
 
     assert first.session_id != second.session_id
     assert first is not second
@@ -127,7 +141,7 @@ async def test_the_column_shows_conversations_that_have_not_been_saved_yet():
     Known-bad: build `listing` from `store.known_chats()` alone.
     """
     _, sessions = _sessions()
-    fresh = sessions.new()
+    fresh = await sessions.new()
 
     ids = [r["id"] for r in sessions.listing()]
     assert fresh.session_id in ids, ids
@@ -145,12 +159,12 @@ async def test_a_conversation_comes_back_with_both_of_its_transcripts():
     call from `ChatService.restore`. The first assertion survives both.
     """
     _, sessions = _sessions()
-    mine = sessions.get("lavoro")
+    mine = await sessions.get("lavoro")
     await mine.send("open the dashboard")
 
     # The process ends. Nothing in memory survives; the disk does.
     _, again = _sessions()
-    back = again.get("lavoro")
+    back = await again.get("lavoro")
 
     assert [e["text"] for e in back.history if e["kind"] == "you"] == \
         ["open the dashboard"]
@@ -167,7 +181,7 @@ async def test_a_conversation_is_written_down_when_a_turn_ends_not_on_a_timer():
     Known-bad: move `save()` out of the `finally` in `send`.
     """
     _, sessions = _sessions()
-    mine = sessions.get("lavoro")
+    mine = await sessions.get("lavoro")
     assert store.load_chat("lavoro") is None
 
     await mine.send("do the thing")
@@ -186,9 +200,9 @@ async def test_a_run_that_failed_is_saved_too():
         async def handle(self, text, link, say):
             raise RuntimeError("the model refused")
 
-    link = FakeLink()
-    sessions = Sessions(link, Boom)
-    await sessions.get("lavoro").send("do the impossible")
+    _, sessions = _sessions(Boom)
+    mine = await sessions.get("lavoro")
+    await mine.send("do the impossible")
 
     saved = store.load_chat("lavoro")
     assert saved is not None
@@ -200,30 +214,56 @@ async def test_a_conversation_nobody_saved_reads_back_as_empty_and_not_as_an_err
     anybody opens a new session the interface answers 500.
     """
     _, sessions = _sessions()
-    assert sessions.get("mai-vista").history == []
+    mine = await sessions.get("mai-vista")
+    assert mine.history == []
 
 
 # --- deleting one -----------------------------------------------------------
 
-async def test_deleting_a_conversation_closes_the_browsers_that_belonged_to_it():
-    """⛔ ONE SESSION, BOTH HALVES. Erasing only the chat file would leave up to
-    eight engines running with nothing left that names them: 6.5 GB, measured,
-    unreachable except through the task manager.
+async def test_deleting_a_conversation_closes_its_own_connection(caplog):
+    """⛔ ONE SESSION, BOTH HALVES - AND THE SECOND HALF IS A DIFFERENT ACT NOW.
+    There is no `session_forget` tool to call: deleting a saved identity from
+    OUTSIDE the one process that owns it is exactly the operation MCP no longer
+    offers. What actually closes the browsers is closing THIS conversation's
+    own connection - the stdio EOF that `mcp/server.py`'s `_lifespan` already
+    closes every browser on when a process ends, the same path a standalone
+    client disconnecting always used.
 
-    Known-bad: drop the `session_forget` call. Every other assertion here still
-    passes and the leak is invisible from the page.
+    Known-bad: drop the `service.link.close()` call from `Sessions.forget`. The
+    conversation still disappears from the column and its browsers leak,
+    invisible from here.
     """
-    link, sessions = _sessions()
-    mine = sessions.get("lavoro")
+    links, sessions = _sessions()
+    mine = await sessions.get("lavoro")
     await mine.send("log in somewhere")
 
     assert await sessions.forget("lavoro") is True
 
-    assert ("session_forget", {"session_id": "lavoro"}) in link.calls, (
-        "the conversation is gone and its browsers are still running: %r"
-        % link.calls)
+    assert links["lavoro"].closed, (
+        "the conversation is gone and its own connection is still open, which "
+        "on a real process means its browsers are still running")
     assert store.load_chat("lavoro") is None
     assert "lavoro" not in [r["id"] for r in sessions.listing()]
+
+
+async def test_forgetting_one_conversation_does_not_touch_another_ones_connection():
+    """⛔ THE OTHER HALF OF THE SAME CLAIM. Closing the wrong connection - or all
+    of them - would free a browser somebody else is using while calling it a
+    deletion of the one that was actually asked for.
+
+    Known-bad: `Sessions.forget` closing every live link instead of the one
+    named.
+    """
+    links, sessions = _sessions()
+    await (await sessions.get("lavoro")).send("log in somewhere")
+    await (await sessions.get("altra")).send("something else")
+
+    await sessions.forget("lavoro")
+
+    assert links["lavoro"].closed
+    assert not links["altra"].closed, (
+        "forgetting one conversation closed a connection that belongs to "
+        "another")
 
 
 async def test_a_deleted_conversation_stays_deleted_while_a_page_is_still_open_on_it():
@@ -238,9 +278,9 @@ async def test_a_deleted_conversation_stays_deleted_while_a_page_is_still_open_o
 
     Known-bad: have `named` fall back to `sessions.get` when `knows` says no.
     """
-    link, sessions = _sessions()
-    client = await _client(sessions, link)
-    await sessions.get("lavoro").send("log in somewhere")
+    links, sessions = _sessions()
+    client = await _client(sessions)
+    await (await sessions.get("lavoro")).send("log in somewhere")
 
     assert await sessions.forget("lavoro") is True
 
@@ -270,8 +310,8 @@ async def test_deleting_one_that_is_already_gone_is_not_reported_as_a_refusal():
 
     Known-bad: answer `store.erase_chat(...) or service is not None` again.
     """
-    link, sessions = _sessions()
-    await sessions.get("lavoro").send("log in somewhere")
+    _, sessions = _sessions()
+    await (await sessions.get("lavoro")).send("log in somewhere")
 
     assert await sessions.forget("lavoro") is True
     assert await sessions.forget("lavoro") is True, (
@@ -289,9 +329,9 @@ async def test_a_session_known_only_by_its_browsers_can_still_be_opened():
 
     Known-bad: drop the `store.load(at)` half of `Sessions.knows`.
     """
-    link, sessions = _sessions()
-    client = await _client(sessions, link)
-    store.save("work", {"docs": {"running": False}}, focus="docs")
+    _, sessions = _sessions()
+    client = await _client(sessions)
+    store.save("work", {"main": {"running": False}}, focus="main")
 
     assert sessions.knows("work") is True
     assert client.get("/live/browsers?s=work").status_code == 200
@@ -309,9 +349,8 @@ async def test_deleting_a_conversation_that_is_mid_run_is_refused():
         async def handle(self, text, link, say):
             await asyncio.sleep(3600)
 
-    link = FakeLink()
-    sessions = Sessions(link, Hanging)
-    mine = sessions.get("lavoro")
+    _, sessions = _sessions(Hanging)
+    mine = await sessions.get("lavoro")
     mine.start("something slow")
     await asyncio.sleep(0.05)
 
@@ -321,19 +360,22 @@ async def test_deleting_a_conversation_that_is_mid_run_is_refused():
 
 # --- the routes the column calls --------------------------------------------
 
-async def _client(sessions, link):
-    """The app over the SAME connection the conversations use.
+async def _client(sessions):
+    """The app over a throwaway connection - unused by any route, since every
+    route reaches a conversation's OWN link through `sessions.get`.
 
-    ⛔ MEASURED, BY GETTING IT WRONG. This handed `build_app` a second, untouched
-    `FakeLink`, so the mutation that makes the live pane read the shared
-    connection instead of the conversation's own SURVIVED: it read a link
-    nothing had ever called, which answers exactly like a conversation that has
-    done nothing. The gate was not blind and the mutation was not wrong - the
-    test was exercising a path it did not think it was on, which is the third
-    possibility and the one that looks like the other two.
+    ⛔ MEASURED, BY GETTING IT WRONG. This handed `build_app` a second,
+    untouched `FakeLink` shared across every conversation, so a mutation that
+    made the live pane read a SHARED connection instead of the conversation's
+    own SURVIVED: it read a link nothing had ever called, which answers
+    exactly like a conversation that has done nothing. `build_app`'s first
+    argument is not read by any route any more - each one asks `which(request)`
+    for the conversation's own `.link` - so this passes a fresh double that
+    nothing here ever touches, and any test that wants to prove a link was
+    reached does so through `sessions.get(...)`'s own recorded double instead.
     """
     from starlette.testclient import TestClient
-    return TestClient(build_app(link, sessions))
+    return TestClient(build_app(FakeLink(), sessions))
 
 
 async def test_the_routes_act_on_the_conversation_the_page_names():
@@ -344,19 +386,19 @@ async def test_the_routes_act_on_the_conversation_the_page_names():
 
     Known-bad: leave `/chat/send` reading a fixed service.
     """
-    link, sessions = _sessions()
-    client = await _client(sessions, link)
+    _, sessions = _sessions()
+    client = await _client(sessions)
 
-    sessions.get("uno"), sessions.get("due")  # both opened, as `/sessions/new` would
+    await sessions.get("uno"), await sessions.get("due")  # as `/sessions/new` would
     client.post("/chat/send?s=uno", json={"text": "primo"})
     client.post("/chat/send?s=due", json={"text": "secondo"})
     import asyncio
     await asyncio.sleep(0.05)
 
-    assert [e["text"] for e in sessions.get("uno").history if e["kind"] == "you"] \
-        == ["primo"]
-    assert [e["text"] for e in sessions.get("due").history if e["kind"] == "you"] \
-        == ["secondo"]
+    assert [e["text"] for e in (await sessions.get("uno")).history
+           if e["kind"] == "you"] == ["primo"]
+    assert [e["text"] for e in (await sessions.get("due")).history
+           if e["kind"] == "you"] == ["secondo"]
 
 
 async def test_the_live_pane_of_a_conversation_that_has_done_nothing_starts_nothing():
@@ -376,18 +418,20 @@ async def test_the_live_pane_of_a_conversation_that_has_done_nothing_starts_noth
     answers nothing. That is the shape the removed guard had, and it is how
     both of these came to cost an engine.
     """
-    link, sessions = _sessions()
-    client = await _client(sessions, link)
+    links, sessions = _sessions()
+    client = await _client(sessions)
 
-    await sessions.get("vecchia").send("do something")
-    sessions.get("nuova")  # opened beside it, and told nothing
-    before = len(link.calls)
+    await (await sessions.get("vecchia")).send("do something")
+    await sessions.get("nuova")  # opened beside it, and told nothing
+    before = len(links["nuova"].calls)
 
     assert client.get("/live/frame?s=nuova").status_code == 204
-    after = [n for n, _ in link.calls[before:]]
+    after = [n for n, _ in links["nuova"].calls[before:]]
     assert after == ["browser_watch"], (
         "drawing a pane for an unused conversation asked for more than the "
         "picture it draws: %r" % after)
+    assert links["vecchia"].calls, (
+        "the wrong conversation's connection was reached")
 
 
 async def test_the_column_can_be_listed_renamed_and_emptied_over_http():
@@ -396,14 +440,14 @@ async def test_the_column_can_be_listed_renamed_and_emptied_over_http():
     Known-bad: have `/sessions/rename` answer ok without writing anything. The
     name is right until the page is reloaded.
     """
-    link, sessions = _sessions()
-    client = await _client(sessions, link)
+    _, sessions = _sessions()
+    client = await _client(sessions)
 
     made = client.post("/sessions/new").json()
     assert made["id"] and made["name"] == UNNAMED
 
     client.post("/sessions/rename", json={"id": made["id"], "name": "  la mia  "})
-    assert sessions.get(made["id"]).name == "la mia"
+    assert (await sessions.get(made["id"])).name == "la mia"
     assert store.load_chat(made["id"])["name"] == "la mia", (
         "the new name lives only in memory, so a reload loses it")
 
@@ -419,9 +463,9 @@ async def test_forgetting_without_an_id_refuses_rather_than_deleting_the_default
     """Known-bad: default the id to the current conversation. A page with a bug
     in it then deletes the session somebody is sitting in.
     """
-    link, sessions = _sessions()
-    client = await _client(sessions, link)
-    sessions.get()  # the default exists
+    _, sessions = _sessions()
+    client = await _client(sessions)
+    await sessions.get()  # the default exists
 
     assert client.post("/sessions/forget", json={}).status_code == 400
 
@@ -563,8 +607,7 @@ def test_the_sessions_control_says_the_same_word_it_is_called():
     code = re.sub(r"/\*.*?\*/", "", script, flags=re.S)
     # Every place the script names this control, and not the 400 characters
     # after the first one: the first `$('railtab')` in the file is not the one
-    # in `showRail`, so that window read the wrong code and the known-bad
-    # walked straight through it.
+    # in `showRail`, so that known-bad walked straight through it.
     sets = re.findall(r"\$\('railtab'\)\s*\.setAttribute\(\s*'aria-label'", code)
     assert not sets, (
         "the script writes an aria-label on every open and close, so the name "

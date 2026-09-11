@@ -1,14 +1,16 @@
 """Every conversation this interface holds, and the way in to one.
 
-Split out of `web.py` on 2026-09-10. The classes are the same bytes they were.
+Split out of `web.py` on 2026-09-10. The classes are the same bytes they were -
+except for how a conversation reaches its browsers, rewritten on 2026-09-11 when
+MCP stopped having a session concept at all. See the class docstring below.
 """
 from __future__ import annotations
 
 import time
-from typing import Dict, List
+from typing import Any, Dict, List, Mapping, Optional
 
 from .chat import ChatService, DEFAULT_CHAT_ID
-from .link import Link, SessionLink
+from .link import Link
 from .mcp import store
 
 
@@ -29,27 +31,44 @@ class Sessions:
     """Every conversation this interface holds, by id, saved as it goes.
 
     ⛔ A CONVERSATION AND ITS BROWSERS ARE ONE SESSION, and this class is where
-    that is true rather than nearly true. The id it keys on is the SAME id the
-    server keys browsers on, so the chat called `lavoro` drives the browsers of
-    session `lavoro` and nothing else - which is why `forget` below closes them
-    as well. Two ids would have been easier and would have meant that deleting a
-    conversation left up to eight engines running with nothing naming them.
+    that is true rather than nearly true - but what makes it true changed on
+    2026-09-11. It used to be one shared MCP connection with the id imposed on
+    every call, because MCP itself understood "session" as a tool argument. It
+    does not any more: no tool takes one, none can be listed, none can be
+    reached from another. So the id can no longer be a value passed over an
+    open connection - it has to be which CONNECTION exists at all, and that
+    means one conversation, one spawned server PROCESS, its `AIHAWK_SESSION_ID`
+    set at the moment it is started. Two ids would have been easier only in the
+    sense that it used to be true; it is not the shape MCP has any more.
 
-    The MCP connection underneath is shared on purpose: one server, one process,
-    one place the browsers live. What keeps two conversations from driving each
-    other's browser is `SessionLink`, which puts the id on every call.
-
-    Conversations are built on demand and read from disk the first time they are
-    asked for. They are not all loaded at startup: a transcript is thousands of
-    lines and somebody with twenty sessions wants a column of names, not twenty
-    transcripts in memory to draw it.
+    Conversations are built ON DEMAND and read from disk the first time they are
+    asked for, which now means spawning their process the first time too - the
+    same lazy cost `browser_open` already pays for a browser, paid once more, one
+    layer up, for the connection that reaches it. They are not all loaded at
+    startup: a transcript is thousands of lines and somebody with twenty
+    sessions wants a column of names, not twenty processes to draw it.
     """
 
-    def __init__(self, link: Link, make_brain, model_label: str = "no model") -> None:
-        self._link = link
+    def __init__(self, opts: Mapping[str, Any], key: Optional[str], make_brain,
+                model_label: str = "no model") -> None:
+        self._opts = dict(opts)
+        self._key = key
         self._make_brain = make_brain
         self.model_label = model_label
         self._live: Dict[str, ChatService] = {}
+        # ⛔ A SEAM FOR TESTS, NOT A SECOND WAY TO PRODUCE A CONNECTION IN THE
+        # PRODUCT. Real code never reassigns this: `get` always spawns
+        # `Link(dict(opts, session_id=at), key=key).open()`. A test that wants
+        # many conversations without many real processes sets this to a
+        # function of its own, so what is under test is `Sessions` deciding
+        # WHICH conversation gets WHICH connection - never `Link` itself,
+        # which has its own tests, and never a real subprocess, which
+        # `tests/mcp_server/test_stdio_e2e.py` is where that gets proven.
+        self._open_link = self._spawn_link
+
+    async def _spawn_link(self, session_id: str) -> Link:
+        return await Link(dict(self._opts, session_id=session_id),
+                          key=self._key).open()
 
     @classmethod
     def around(cls, service: "ChatService") -> "Sessions":
@@ -58,25 +77,45 @@ class Sessions:
         For callers that make the conversation themselves - the tests do, and so
         would anything embedding this - so that having one conversation does not
         require a second code path through the routes. One path means the single
-        case is exercised by the same code the many-session case uses.
+        case is exercised by the same code the many-session case uses. It never
+        spawns anything of its own: the one conversation it holds already has
+        its connection, and `get` finds it in `_live` before reaching for `_opts`.
         """
-        got = cls(service._link, lambda: service._brain, service.model_label)
+        got = cls({}, None, lambda: service._brain, service.model_label)
         got._live[service.session_id] = service
         return got
 
-    def get(self, session_id: str | None = None) -> ChatService:
-        """The conversation with this id, loaded from disk the first time."""
+    async def close_all(self) -> None:
+        """Close every conversation's own connection, for a clean shutdown.
+
+        ⛔ THERE IS NO LONGER ONE CONNECTION TO CLOSE - there are as many as
+        conversations were ever asked for, each its own process. `Link.close`
+        already swallows what closing can throw, so nothing here needs to.
+        """
+        for service in self._live.values():
+            await service.link.close()
+
+    async def get(self, session_id: str | None = None) -> ChatService:
+        """The conversation with this id, loaded from disk the first time.
+
+        ⛔ SPAWNS ITS OWN SERVER, THE FIRST TIME, because that is now the only
+        way one conversation's browsers stay apart from another's: each gets
+        its own process, with `AIHAWK_SESSION_ID` set to this id, so the server
+        inside never has more than the one thing to persist and never anything
+        to confuse it with.
+        """
         at = session_id or DEFAULT_CHAT_ID
         found = self._live.get(at)
         if found is not None:
             return found
-        service = ChatService(SessionLink(self._link, at), self._make_brain(),
+        link = await self._open_link(at)
+        service = ChatService(link, self._make_brain(),
                               model_label=self.model_label, session_id=at)
         service.restore()
         self._live[at] = service
         return service
 
-    def new(self) -> ChatService:
+    async def new(self) -> ChatService:
         """A conversation nobody has used yet, with an id of its own.
 
         The id is the clock, not a counter: a counter has to be stored somewhere
@@ -86,7 +125,7 @@ class Sessions:
         at = "s%d" % int(time.time() * 1000)
         while at in self._live or store.load_chat(at) is not None:
             at += "x"
-        return self.get(at)
+        return await self.get(at)
 
     def listing(self) -> List[dict]:
         """Every conversation, saved or only live, newest first.
@@ -136,11 +175,11 @@ class Sessions:
                 or store.load_chat(at) is not None
                 or store.load(at) is not None)
 
-    def rename(self, session_id: str, name: str) -> bool:
+    async def rename(self, session_id: str, name: str) -> bool:
         clean = " ".join((name or "").split())[:80]
         if not clean:
             return False
-        service = self.get(session_id)
+        service = await self.get(session_id)
         service.name = clean
         service.save()
         return True
@@ -148,11 +187,26 @@ class Sessions:
     async def forget(self, session_id: str) -> bool:
         """Delete a conversation AND the browsers that belonged to it.
 
-        ⛔ Both halves, because they are one session. Erasing only the chat file
-        would leave up to eight engines running with nothing left that names
-        them - 6.5 GB, measured, unreachable and unkillable short of the task
-        manager. `session_forget` on the server is the tool that does the other
-        half, and it exists for exactly this.
+        ⛔ BOTH HALVES, BECAUSE THEY ARE ONE SESSION, AND HOW THE SECOND HALF
+        HAPPENS CHANGED WITH EVERYTHING ELSE ON 2026-09-11. There used to be a
+        tool, `session_forget`, that closed the browsers of a session named on
+        an open connection shared with every other conversation. There is no
+        such tool now, and there could not be one that stayed inside the rule
+        the owner set: MCP cannot be asked to operate on a piece of work that
+        is not its own. So this reaches for the ONLY thing that was ever
+        really being asked for - closing that conversation's OWN connection,
+        which is that conversation's OWN server process, and closing that ends
+        it exactly the way a standalone client disconnecting always has: the
+        stdio EOF this sends is what `_lifespan` in `mcp/server.py` already
+        closes every browser on, the same path every such client relies on,
+        not a new one built for this.
+
+        The saved browser file is erased directly, by calling into `store` in
+        this same package - not over MCP, because MCP has no tool that reaches
+        a piece of work other than its own, and this IS the process whose own
+        file it is (or was, if it was never brought up this run). That call is
+        a plain function, not a wire protocol: it costs nothing to make and
+        asks nothing of anybody.
 
         Refused while that conversation is mid-run: the same reason `reset` is.
 
@@ -166,14 +220,12 @@ class Sessions:
         service = self._live.get(session_id)
         if service is not None and service.busy:
             return False
-        try:
-            await self._link.call("session_forget", {"session_id": session_id})
-        except Exception:
-            # The browsers could not be closed - the server is gone, or it
-            # refused. The conversation is still deleted: leaving it listed
-            # because something else failed would tell somebody the delete did
-            # not work, when the half they were looking at did.
-            pass
+        if service is not None:
+            # Closes silently: `Link.close` already swallows what closing can
+            # throw, because a connection being torn down on purpose is not a
+            # failure to report back.
+            await service.link.close()
         self._live.pop(session_id, None)
+        store.erase(session_id)
         store.erase_chat(session_id)
         return True
