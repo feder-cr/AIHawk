@@ -53,9 +53,11 @@ class Link:
         # is in no environment for it to find by reading.
         self._key = key
         self._session: Optional[ClientSession] = None
-        self._ctx = None
-        self._sess_ctx = None
-        self._tools = None
+        # Annotated, because an attribute left to be inferred from `None` makes
+        # every later use of it read as an error on a type that cannot have one.
+        self._ctx: Any = None
+        self._sess_ctx: Optional[ClientSession] = None
+        self._tools: Optional[list] = None
         # One instruction at a time. Two tool calls racing on one browser is not
         # a transport problem, it is two hands on the same mouse.
         self._lock = asyncio.Lock()

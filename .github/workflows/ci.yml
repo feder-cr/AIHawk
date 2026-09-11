@@ -27,6 +27,29 @@ jobs:
           python scripts/check_english_only.py --selftest
           python scripts/check_english_only.py
 
+  # ⛔ PYFLAKES ONLY, AND IT IS HERE BECAUSE A NameError REACHED CI ON A GREEN
+  # SUITE. `from mcp.types import ImageContent` was dropped while an import
+  # block was rewritten, in a file only the e2e job runs: an undefined name
+  # inside a function body passes `py_compile`, `--collect-only` never imports
+  # the module, and all six matrix jobs stayed green. This finds it in under a
+  # second.
+  #
+  # The rule set is pinned in pyproject (`select = ["F"]`), so the command
+  # carries no opinions of its own, this can never become an argument about
+  # formatting, and a ruff release cannot widen it under us.
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: no undefined names, no unused imports
+        run: |
+          python -m pip install --upgrade pip "ruff>=0.6"
+          ruff check src tests scripts
+
   test:
     runs-on: ${{ matrix.os }}
     # ⛔ A CEILING, BECAUSE A JOB THAT HANGS IS NOT REPORTED AS BROKEN. On

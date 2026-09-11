@@ -18,8 +18,11 @@ class StealthSession:
         # else; deciding is `plan.plan_session`'s job, and only its job.
         self._kwargs = kwargs
         self._ipw: Optional[InvisiblePlaywright] = None
-        self._browser = None
-        self._context = None
+        # `Any` rather than the engine's own types, which this package does not
+        # resolve: an attribute left to be inferred from `None` makes every later
+        # use read as an error on a type that cannot have one.
+        self._browser: Any = None
+        self._context: Any = None
         self._pages: dict[str, Any] = {}
         self._active: Optional[str] = None
         self._counter = 0

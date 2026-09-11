@@ -66,6 +66,24 @@ dependencies = [
 [project.optional-dependencies]
 test = ["pytest>=8", "pytest-asyncio>=0.23"]
 
+# ⛔ NARROW ON PURPOSE, AND IT IS HERE SO THE CI JOB AND A DEVELOPER RUN THE
+# SAME THING. `F` is pyflakes: a name that is not defined, an import nobody
+# uses, a variable assigned and never read. Nothing about style, so this can
+# never become an argument about formatting, and a new ruff release cannot
+# turn the tree red by adding opinions.
+#
+# It earns its place by measurement rather than taste: on 2026-09-11 a
+# dropped `from mcp.types import ImageContent` reached CI as a NameError,
+# because the file it was in only runs in the e2e job - `py_compile` and
+# `--collect-only` both pass an undefined name inside a function body, and
+# the suite never imported that module. One run of this finds it in under a
+# second. A first run over the whole tree found fifteen real things.
+[tool.ruff]
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["F"]
+
 [project.scripts]
 aihawk = "aihawk.cli:main"
 
