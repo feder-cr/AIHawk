@@ -69,7 +69,6 @@ def resume_point(marker: str, epoch: str) -> tuple[int, bool]:
 #: on paths that exist precisely because something went wrong or is missing,
 #: which is where a shape written out a second time drifts unnoticed.
 NO_BROWSERS = {"browsers": [], "focus": "", "limit": 0}
-NO_ADDRESS = {"url": ""}
 
 
 def build_app(link: Link, sessions: "Sessions") -> Starlette:
@@ -332,37 +331,17 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
                              "focus": got.get("focus") or "",
                              "limit": got.get("limit") or 0})
 
-    async def address(request: Request) -> JSONResponse:
-        """Where the browser being watched currently is.
-
-        ⛔ THE TAB STRIP IS GONE AND SO IS THE TOOL THIS USED TO ASK. A browser
-        drives one page, so there is no strip to draw and no tab to choose;
-        what survives is the address above the stage, which is the half of this
-        route anybody actually reads. `browser_list` already knows it - it is
-        the one tool that still looks at the pages - so this reads the row for
-        the browser being watched instead of asking a second tool the same
-        question.
-
-        A stale or older server is not an error: anything that does not parse
-        leaves the address blank and the pane keeps working as a picture.
-        """
-        seen = await which(request)
-        # ⛔ WHICH BROWSER, like the frame route beside it. The address above the
-        # stage has to be the address of the screen being looked at, and with
-        # more than one screen the answer stopped being "the focused one" the
-        # moment clicking a screen became a way to look somewhere else.
-        watching = request.query_params.get("b") or None
-        try:
-            got = json.loads(await seen.link.call_text("browser_list"))
-            rows = got.get("browsers") or []
-        except Exception:
-            return JSONResponse(NO_ADDRESS)
-        if not isinstance(rows, list):
-            return JSONResponse(NO_ADDRESS)
-        row = next((r for r in rows if isinstance(r, dict)
-                    and (r.get("id") == watching if watching else r.get("focused"))), None)
-        return JSONResponse({"url": (row or {}).get("url") or ""})
-
+    # ⛔ `/live/address` STOOD HERE, AND THIS BRANCH IS WHAT MADE IT A
+    # DUPLICATE. It replaced `/live/tabs`, which asked the tab tool - a
+    # different question - and once both routes asked `browser_list` the page
+    # was paying a round trip every two seconds for a field the rows above
+    # already carry, on a second timer that could name a different moment.
+    #
+    # It is read in the page now, from the fleet it already holds, because
+    # which browser is being WATCHED is a fact of the page: a pinned pane
+    # changes it instantly and a server asked three seconds ago cannot know.
+    # The two ways to get the choice wrong moved with it and are held by a
+    # gate that EXECUTES the function, which a route test could not do.
     async def vanished(_request: Request, exc: Exception) -> JSONResponse:
         """410, because the conversation existed and does not any more.
 
@@ -388,5 +367,4 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         Route("/chat/events", events),
         Route("/live/frame", frame),
         Route("/live/browsers", browsers),
-        Route("/live/address", address),
     ])

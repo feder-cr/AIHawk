@@ -250,27 +250,37 @@ function severalOpen(n){
    chain, which is how a pace stops being one number. */
 async function where(){ if(looking()) await paintWhere(); setTimeout(where, 2000); }
 
-async function paintWhere(){
+/* Which url the address bar says, given the rows the workspace already has.
+
+   ⛔ PURE, AND THAT IS THE POINT: it is the one piece of this file a test can
+   run without a browser, and the two ways of getting it wrong both look
+   exactly right from the outside. Reading `urls[0]` agrees with `url` until a
+   site opens a second page, and answering the FOCUSED row ignores a pinned
+   pane, so the bar names a browser nobody is looking at.
+
+   ⛔ AND IT USED TO BE A ROUTE. `/live/address` asked `browser_list` a second
+   time on a second timer for a field these rows already carry - a round trip
+   every two seconds for something in memory here, and an answer that went
+   stale the moment somebody pinned a pane, because the browser being watched
+   is a fact of this page and not of the server. */
+function addressOf(rows, who){
+  const list = Array.isArray(rows) ? rows : [];
+  const row = list.find(b => b && (who ? b.id === who : b.focused));
+  return (row && row.url) || '';
+}
+
+function paintWhere(){
   const many = grid > 1 && !pinned2 && onStage().length > 1;
-  if(many){ severalOpen(onStage().length); }
-  else try {
-    const who = watched();
-    /* A browser that is not running has no address, and `fleet` already says
-       which ones are running - so this skips a request whose answer is known.
-       It is no longer a SAFETY rule here: it used to be, when this asked the
-       tab tool, which resolved its browser through `ready` and so woke a
-       stopped one (800 MB and seven seconds for a chip nobody clicked twice).
-       The address comes from `browser_list` now, which reaches the registry
-       through `peek` and starts nothing, so the worst this saves is a round
-       trip. The safety version of the rule still binds the frame pump, the
-       preview row and both cell builders, which ask tools that DO wake. */
-    if(who && !fleet.some(b => b.id === who && b.running)){
-      paintUrl(''); return;
-    }
-    /* `at`, inside `door`, is what adds the question mark, so the browser goes
-       in as one too and it appends its own with an ampersand. */
-    const r = await door(who ? '/live/address?b=' + encodeURIComponent(who)
-                             : '/live/address', {cache:'no-store'});
-    if(r.ok){ const j = await r.json(); paintUrl(j.url || ''); }
-  } catch(err){}
+  if(many){ severalOpen(onStage().length); return; }
+  const who = watched();
+  /* A browser that is not running has no address, and `fleet` already says
+     which ones are running, so this is the difference between a blank bar
+     and a stale one. It is NO LONGER A SAFETY RULE here, and it was: when
+     this asked the tab tool, that tool resolved its browser through `ready`
+     and so woke a stopped one - 800 MB and seven seconds for a chip nobody
+     clicked twice. Nothing is asked from here at all now. The safety version
+     of the rule still binds the frame pump, the preview row and both cell
+     builders, which ask tools that DO wake. */
+  if(who && !fleet.some(b => b.id === who && b.running)){ paintUrl(''); return; }
+  paintUrl(addressOf(fleet, who));
 }

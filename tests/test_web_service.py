@@ -281,9 +281,11 @@ async def test_the_app_exposes_exactly_the_routes_the_page_calls():
                      # tools: /live/tabs, which drew the strip, and
                      # /live/select, which let a click move the active page
                      # under the agent - the same second-control defect the
-                     # four below were removed for. /live/address is what the
-                     # strip route was really being asked for.
-                     "/live/frame", "/live/address",
+                     # four below were removed for. And /live/address, which
+                     # briefly replaced the strip, went the same day it was
+                     # measured to ask `browser_list` a second time for a
+                     # field /live/browsers already returns.
+                     "/live/frame",
                      # The workspace, added in 0.18.0: which browsers to draw a
                      # pane for, and which one the commands go to.
                      # ⛔ AND FOUR THAT WENT AWAY IN 0.21.0: /live/open,
@@ -901,113 +903,16 @@ async def test_a_page_that_joins_an_idle_service_is_told_the_turn_is_over():
 # the address bar, which is what survived the tab strip
 # --------------------------------------------------------------------------
 #
-# ⛔ THIS BLOCK USED TO TEST `/live/tabs`, WHICH ASKED THE TAB TOOL. Both are
-# gone: a browser drives one page, so there is no strip to draw and no tool to
-# ask. What stayed is the address above the stage, and it now comes from
-# `browser_list` - the one tool that still reads the pages - so the interface
-# asks one question instead of two about the same thing.
-
-class ListingLink(FakeLink):
-    """Answers `browser_list` with `payload`, which is where the address now
-    comes from."""
-
-    def __init__(self, payload):
-        super().__init__()
-        self._payload = payload
-
-    async def call_text(self, name, arguments=None):
-        await self.call(name, arguments)
-        return self._payload
-
-
-async def _address_route(link, svc=None):
-    app = build_app(link, Sessions.around(svc or ChatService(link, SilentBrain())))
-    return [r for r in app.routes if r.path == "/live/address"][0].endpoint
-
-
-async def test_the_address_is_the_one_the_focused_browser_is_on():
-    """ONE call, and it is a call the interface was making anyway.
-
-    Known-bad: read `urls[0]` instead of `url`. With a single page the two agree,
-    which is why this fixture gives the focused browser a second page the site
-    opened and puts the live one second - the reading that looks right against
-    one page is wrong the moment a `target=_blank` lands.
-    """
-    link = ListingLink(json.dumps({
-        "focus": "main", "limit": 2,
-        "browsers": [
-            {"id": "main", "running": True, "focused": True,
-             "url": "https://b.example/x",
-             "urls": ["https://a.example/", "https://b.example/x"]},
-            {"id": "support", "running": True, "focused": False,
-             "url": "https://mail.example/", "urls": ["https://mail.example/"]},
-        ]}))
-    route = await _address_route(link)
-
-    class Req: query_params = {}
-    body = json.loads((await route(Req())).body)
-
-    assert body == {"url": "https://b.example/x"}
-    assert [n for n, _ in link.calls] == ["browser_list"], (
-        "the address in ONE call, on the tool the pane already asks")
-
-
-async def test_the_address_follows_the_browser_being_watched():
-    """The pane can be pinned to `support` while the agent drives `main`, and
-    then the bar has to say where SUPPORT is.
-
-    Known-bad: ignore the `b` parameter and answer the focused row, which is a
-    wrong address that looks exactly like a right one.
-    """
-    link = ListingLink(json.dumps({
-        "focus": "main", "limit": 2,
-        "browsers": [
-            {"id": "main", "running": True, "focused": True,
-             "url": "https://b.example/x", "urls": ["https://b.example/x"]},
-            {"id": "support", "running": True, "focused": False,
-             "url": "https://mail.example/", "urls": ["https://mail.example/"]},
-        ]}))
-    route = await _address_route(link)
-
-    class Req: query_params = {"b": "support"}
-    body = json.loads((await route(Req())).body)
-
-    assert body == {"url": "https://mail.example/"}
-
-
-async def test_an_answer_it_cannot_parse_leaves_the_address_blank():
-    """The picture is the point of the pane; the address is an extra that can be
-    absent. A server answering something else must not take the pane down."""
-    link = ListingLink("not json at all")
-    link.touched = True
-    route = await _address_route(link)
-
-    class Req: query_params = {}
-    body = json.loads((await route(Req())).body)
-
-    assert body == {"url": ""}
-
-
-async def test_the_address_never_causes_a_browser_to_start():
-    """Same invariant as the frame, and it has to be stated the same way.
-
-    The tab tool resolved its browser through `ready`, which STARTS it, so an
-    empty strip drawn by asking was an empty strip that cost an engine -
-    measured on 0.38.0 at 9 processes before and 16 after. `browser_list` is
-    the one question that starts nothing, which is why the address was moved
-    onto it rather than onto a tool of its own.
-
-    Known-bad: a route that asks `browser_status` or `browser_snapshot` for the
-    url instead. Both resolve a browser, and both would bring the engine up to
-    fill a text field.
-    """
-    link = ListingLink('{"focus": "", "limit": 2, "browsers": []}')
-    route = await _address_route(link)
-
-    class Req: query_params = {}
-    body = json.loads((await route(Req())).body)
-
-    assert body == {"url": ""}
-    assert [n for n, _ in link.calls] == ["browser_list"], (
-        "the address asks once, and only the tool that starts nothing: %s"
-        % [n for n, _ in link.calls])
+# ⛔ A BLOCK OF FOUR ROUTE TESTS STOOD HERE, AND THE ROUTE THEY TESTED IS
+# GONE. It began as `/live/tabs`, asking the tab tool; when a browser became
+# one page it was rewritten on `browser_list` - and at that moment it became
+# a second reader of the question `/live/browsers` was already asking, on a
+# second timer, for a field those rows carry.
+#
+# The choice it made - the row being WATCHED rather than the focused one,
+# and `url` rather than `urls[0]` - moved into the page as `addressOf`,
+# where it belongs: which browser a person is watching is a fact of the
+# page, and a pinned pane changes it faster than any poll can follow. Both
+# of those wrong answers look exactly like right ones, so they are held by a
+# gate that EXECUTES the function under a real engine, in
+# test_the_page_tells_the_truth.py, which is more than these four could do.

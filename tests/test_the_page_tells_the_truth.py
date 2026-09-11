@@ -220,19 +220,91 @@ def test_the_only_input_on_the_page_is_reachable_without_the_transcript():
 
 
 def test_a_stopped_browser_is_never_asked_anything():
-    """Asking a declared-but-stopped browser for its tabs STARTS it - the server
-    resolves the id and the registry wakes the engine. Clicking a stopped
-    browser's chip therefore spent 800 MB and seven seconds nobody asked for,
-    and then kept asking every two seconds because the pin never cleared. Four
-    places in this file already knew the rule; this was the fifth.
+    """A stopped browser has no address, and the bar goes blank rather than
+    keeping the last one.
+
+    ⛔ THIS USED TO BE A SAFETY RULE AND IS NOT ANY MORE, which is worth
+    saying because the reason it was written is the expensive one: asking a
+    declared-but-stopped browser for its tabs STARTED it - the server
+    resolved the id and the registry woke the engine - so clicking a stopped
+    browser's chip spent 800 MB and seven seconds nobody asked for, and then
+    kept asking every two seconds because the pin never cleared. `paintWhere`
+    asks nothing at all now: it reads the fleet the workspace already holds.
+    The safety version of the rule still binds the frame pump, the preview
+    row and both cell builders, which are tested beside this.
 
     Known-bad: drop the guard from `paintWhere`.
     """
-    where = CODE[CODE.index("async function paintWhere"):]
+    where = CODE[CODE.index("function paintWhere"):]
     where = where[:where.index("\n}")]
     assert "b.running" in where, (
         "the address bar asks about a browser without checking it is running, "
         "which starts it")
+
+def test_the_address_bar_says_where_the_browser_being_watched_is():
+    """⛔ EXECUTED, NOT SCANNED, because the two ways to get this wrong both
+    produce a url and both look right.
+
+    This choice used to be a route, `/live/address`, with four tests on the
+    server. It moved into the page when the route turned out to be asking
+    `browser_list` a second time, on a second timer, for a field the rows
+    `/live/browsers` already returns - and because which browser a person is
+    WATCHING is a fact of the page: a pinned pane changes it instantly and a
+    poll from three seconds ago cannot know.
+
+    Moving it must not cost the two properties those tests held, so this
+    runs the function rather than reading it. `node` is on this machine and
+    on every CI runner, and the function is pure, so it needs no DOM at all.
+
+    Known-bad, and both are one character away: read `urls[0]` instead of
+    `url`, which agrees until a site opens a second page; or answer the
+    focused row whatever was asked for, which names a browser nobody is
+    looking at.
+    """
+    import json
+    import shutil
+    import subprocess
+
+    import pytest
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("needs node to EXECUTE the page's address choice")
+
+    body = CODE[CODE.index("function addressOf"):]
+    body = body[:body.index(chr(10) + "}") + 2]
+
+    rows = [
+        {"id": "main", "running": True, "focused": True,
+         "url": "https://b.example/x",
+         "urls": ["https://a.example/", "https://b.example/x"]},
+        {"id": "support", "running": True, "focused": False,
+         "url": "https://mail.example/", "urls": ["https://mail.example/"]},
+    ]
+    js = body + "%sconst rows = %s;%s" % (chr(10), json.dumps(rows), chr(10)) + """
+const out = {
+  focused: addressOf(rows, ''),
+  watched: addressOf(rows, 'support'),
+  unknown: addressOf(rows, 'nope'),
+  empty: addressOf([], ''),
+  notalist: addressOf(null, ''),
+  nourl: addressOf([{id: 'x', focused: true}], ''),
+};
+process.stdout.write(JSON.stringify(out));
+"""
+    done = subprocess.run([node, "-e", js], capture_output=True, text=True,
+                          encoding="utf-8", timeout=30)
+    assert done.returncode == 0, done.stderr
+    got = json.loads(done.stdout)
+
+    assert got["focused"] == "https://b.example/x", (
+        "the bar shows a page the browser is not on: with two pages open it read the first one in the list instead of the live one")
+    assert got["watched"] == "https://mail.example/", (
+        "a pinned pane was told the focused browser's address, which is a wrong answer that looks exactly like a right one")
+    assert got["unknown"] == "", "a browser that is not in the fleet has no address"
+    assert got["empty"] == "" and got["notalist"] == "" and got["nourl"] == "", (
+        "an empty or unreadable fleet has to leave the bar blank rather than throw")
+
 
 
 def test_a_frame_is_revoked_before_its_element_is_thrown_away():
