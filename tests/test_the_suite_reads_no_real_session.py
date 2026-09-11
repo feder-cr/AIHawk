@@ -169,3 +169,79 @@ def test_only_a_real_request_for_those_markers_lifts_the_guard():
     assert asks(["pytest", "-m", "ui"]) is True
     assert asks(["pytest", "-me2e"]) is True
     assert asks(["pytest", "-m", "e2e and not ui"]) is True
+
+
+def test_only_one_place_knows_where_the_interface_is_stopped():
+    """⛔ A TEST THAT DRIVES `aihawk ui` CAN SERVE FOREVER, AND ON 2026-09-11
+    one did.
+
+    `cli.ui` builds a `Sessions` registry and asks it for a conversation, so
+    the only name worth patching is `aihawk.sessions.Link`. A test that
+    patched `aihawk.link.Link` instead stopped nothing: the command ran on,
+    uvicorn served the interface with no end, and all six CI matrix jobs hung
+    to GitHub's six-hour ceiling on four pushes while reporting `in_progress`
+    rather than failing. It was green on the developer machine only because
+    that machine's own interface held port 8765, so the bind failed there.
+
+    `_cli_brake` owns all three defences now - the seam, the proof that the
+    brake fired, and an address nothing can bind - and this keeps them from
+    being written a second time somewhere else, which is how the first one
+    came to be wrong. The scan covers `test_*.py` only, so the module itself
+    is out of scope by construction rather than by an exception: widen the
+    glob and the gate starts accusing the one file allowed to do this.
+
+    ⛔ READ FROM THE PARSE TREE, NOT FROM THE TEXT, and the first version was
+    not: it stripped `#` comments and then failed on this very docstring,
+    because the sentence naming the known-bad contains the call it forbids.
+    That is a defect this project has measured twice before. Python's own
+    parser is installed by definition here, so the gate uses it and the
+    whole class - comments, docstrings, a string that merely looks like
+    code - stops existing.
+
+    `--help` is exempt: it prints and exits before anything is served.
+    """
+    import ast
+    import pathlib
+
+    here = pathlib.Path(__file__).parent
+    offenders = []
+    for path in sorted(here.rglob("test_*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            called = (node.func.attr if isinstance(node.func, ast.Attribute)
+                      else getattr(node.func, "id", ""))
+            if called != "invoke":
+                continue
+            words = [n.value for n in ast.walk(node)
+                     if isinstance(n, ast.Constant) and isinstance(n.value, str)]
+            if "ui" in words and "--help" not in words:
+                offenders.append("%s:%d" % (path.name, node.lineno))
+
+    assert not offenders, (
+        "these drive the interface command without going through _cli_brake, "
+        "so nothing guarantees they ever stop: %s" % offenders)
+
+
+def test_the_brake_module_still_carries_all_three_defences():
+    """And the module has to still BE the three things, or the gate above is
+    enforcing an import and nothing else.
+
+    Known-bad: aim the brake at the module that only DEFINES `Link`, or take
+    the reserved address out of the runner. Either leaves every caller
+    reading correctly and stopping nothing.
+    """
+    import pathlib
+
+    import _cli_brake
+
+    assert _cli_brake.UNBINDABLE_HOST.startswith("203.0.113."), (
+        "the reserved address is gone, so a brake that goes inert can bind and "
+        "serve: %r" % _cli_brake.UNBINDABLE_HOST)
+
+    source = pathlib.Path(_cli_brake.__file__).read_text(encoding="utf-8")
+    assert 'monkeypatch.setattr(sessions_mod, "Link", rec)' in source, (
+        "the brake no longer sits on the name the command actually reads")
+    assert "UNBINDABLE_HOST" in source.split("def run_cli", 1)[1], (
+        "run_cli stopped imposing an address nothing can bind")

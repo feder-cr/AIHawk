@@ -17,10 +17,10 @@ import traceback
 
 import click
 import pytest
-from click.testing import CliRunner
 
 import aihawk.cli as climod
 import aihawk.sessions as sessions_mod
+from _cli_brake import LinkRecorder, brake, run_cli, stopped_at_link  # noqa: F401
 from aihawk.llm import BASE_URL, DEFAULT_MODEL
 from aihawk.runner import child_env
 
@@ -77,62 +77,23 @@ def clean_provider_env(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
 
 
-class _Stop(Exception):
-    """Raised by the recorder so the command stops before it serves anything."""
-
-
-class LinkRecorder:
-    """Stands in for `Link`: records how it was constructed, then stops.
-
-    `ui` decides everything this file is about - which key, which model, which
-    browser options - and then hands them to `Link`. Recording that hand-over is
-    the last point where the decisions are visible and the first point where a
-    real browser would be launched, so it is where the command is stopped.
-
-    ⛔ `opts` CARRIES ONE MORE KEY THAN THE CLI BUILT: `Sessions._spawn_link`
-    adds `session_id` before constructing `Link`, since 2026-09-11 that is the
-    only way a conversation's saved browsers are told apart at all. None of
-    the assertions here read the whole dict, so the extra key changes nothing
-    they check.
-    """
-
-    def __init__(self):
-        self.calls: list[dict] = []
-
-    def __call__(self, opts=None, *, key=None):
-        self.calls.append({"opts": dict(opts or {}), "key": key})
-        raise _Stop
-
-    @property
-    def call(self) -> dict:
-        assert len(self.calls) == 1, f"expected one Link, got {len(self.calls)}"
-        return self.calls[0]
-
-
 @pytest.fixture
 def link(monkeypatch):
-    """Patched where the name is actually LOOKED UP, not where it is defined.
+    """The brake, from the one module that knows where `ui` is stopped.
 
-    ⛔ `ui` NEVER IMPORTS `Link` ITSELF. It builds a `Sessions` and asks it for
-    a conversation; `Sessions._spawn_link` is where `Link(...)` is actually
-    called, bound there by `sessions.py`'s own `from .link import Link` at
-    import time. Patching `aihawk.link.Link` rebinds a name nothing reads any
-    more - `aihawk.sessions.Link` still points at the real class - so every
-    test using this fixture saw zero calls and a real `Link` was still one
-    `ui` invocation away from being constructed for real.
+    ⛔ NOT PATCHED HERE ANY MORE. It was, correctly, and the file next door
+    patched a different name that reached nothing - which is how a unit test
+    came to serve the interface forever. `_cli_brake` is now the only place
+    that knows the seam, and a gate in `test_the_suite_reads_no_real_session`
+    keeps it that way.
     """
-    rec = LinkRecorder()
-    monkeypatch.setattr(sessions_mod, "Link", rec)
-    return rec
+    return brake(monkeypatch)
 
 
 def run(*args, **kwargs):
-    return CliRunner().invoke(climod.main, list(args), **kwargs)
-
-
-def stopped_at_link(result) -> bool:
-    """The command got as far as connecting, which is as far as we let it."""
-    return isinstance(result.exception, _Stop)
+    """Every invocation in this file goes through the shared runner, which
+    also gives `ui` an address nothing can bind."""
+    return run_cli(*args, **kwargs)
 
 
 # --------------------------------------------------------------------------

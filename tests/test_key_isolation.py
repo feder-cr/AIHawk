@@ -444,55 +444,29 @@ def test_the_parent_client_is_the_one_that_gets_the_key(monkeypatch):
     tests above and cannot talk to OpenRouter at all. This drives the real
     command, because `cli.ui` is what builds the client now.
     """
-    from click.testing import CliRunner
-
-    import aihawk.cli as climod
-    import aihawk.web as web_mod
+    from _cli_brake import brake, run_cli, stopped_at_link
 
     seen = {}
     monkeypatch.setenv(KEY_NAME, KEY)
     monkeypatch.setattr(llm_mod, "make_client",
                         lambda key: seen.setdefault("client", {"api_key": key}))
 
-    class _Stop(Exception):
-        pass
+    # ⛔ THE BRAKE COMES FROM `_cli_brake`, WHICH IS THE ONLY PLACE THAT KNOWS
+    # WHERE `aihawk ui` STOPS. This test used to carry its own, aimed at
+    # `aihawk.link.Link` - a name the command stopped reading when it began
+    # building a `Sessions` registry, since `sessions.py` binds `Link` at
+    # import. The brake reached nothing, the command ran on, and uvicorn
+    # served the interface with no end inside this test: every CI matrix job
+    # hung to the six-hour ceiling on four pushes, always reporting
+    # `in_progress` rather than failing. The whole story is in that module.
+    brake(monkeypatch)
+    result = run_cli("ui")
 
-    def stop(*a, **k):
-        raise _Stop
-
-    # ⛔ THE BRAKE GOES ON `Sessions`, AND THE ASSERT BELOW IS WHY THAT IS
-    # NOT A DETAIL. It used to sit on `aihawk.link.Link`, which `cli.ui` built
-    # itself. Since the interface spawns one server per CONVERSATION it builds
-    # a `Sessions` registry instead, and `sessions.py` binds `Link` at import,
-    # so patching `aihawk.link.Link` reached nothing at all. The command then
-    # ran on: a real server subprocess, and then uvicorn serving the interface
-    # FOREVER, inside a unit test.
-    #
-    # Measured 2026-09-11, and the local green is the part worth remembering:
-    # this machine had the interface already listening on 8765, so uvicorn
-    # could not bind and exited, and the test passed in milliseconds. On a CI
-    # runner that port is free, and all six matrix jobs hung until GitHub
-    # killed them, three pushes running, reported as `in_progress` throughout.
-    #
-    # `from .web import Sessions` runs when `ui` is CALLED, so the attribute on
-    # `web` is what the command actually reads.
-    monkeypatch.setattr(web_mod, "Sessions", stop)
-    # ⛔ AND AN ADDRESS NOTHING CAN BIND, WHICH IS THE BELT TO THE BRACES
-    # ABOVE. The assert below can only speak once the command has RETURNED, so
-    # on its own it does not save a run where the brake goes inert and the
-    # thing behind it serves forever: that is precisely what happened, and it
-    # was invisible here only because this machine happened to have the port
-    # occupied. 203.0.113.0/24 is TEST-NET-3, reserved by RFC 5737 and routed
-    # nowhere, so the bind fails on every platform and the command ends
-    # whatever else has broken. The test is about the key, never the address.
-    result = CliRunner().invoke(climod.main, ["ui", "--host", "203.0.113.1"])
-
-    # ⛔ AND THE STOP HAS TO BE SHOWN TO HAVE FIRED, which is the whole
-    # lesson: a brake that no longer reaches the code looks exactly like a
-    # brake that works, until what sits behind it is a server with no end.
-    # This line makes the next such refactor a red in milliseconds instead of
-    # a job that never answers.
-    assert isinstance(result.exception, _Stop), (
+    # ⛔ AND THE STOP HAS TO BE SHOWN TO HAVE FIRED, which is the lesson a
+    # module docstring cannot enforce: a brake that no longer reaches the
+    # code looks exactly like a brake that works, until what sits behind it
+    # is a server with no end.
+    assert stopped_at_link(result), (
         "the command was not stopped where this test believes it stops, so it "
         "ran on past the point under test: %r" % (result.exception,))
 
