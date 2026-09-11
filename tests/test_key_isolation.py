@@ -447,6 +447,7 @@ def test_the_parent_client_is_the_one_that_gets_the_key(monkeypatch):
     from click.testing import CliRunner
 
     import aihawk.cli as climod
+    import aihawk.web as web_mod
 
     seen = {}
     monkeypatch.setenv(KEY_NAME, KEY)
@@ -459,8 +460,41 @@ def test_the_parent_client_is_the_one_that_gets_the_key(monkeypatch):
     def stop(*a, **k):
         raise _Stop
 
-    monkeypatch.setattr(link_mod, "Link", stop)
-    CliRunner().invoke(climod.main, ["ui"])
+    # ⛔ THE BRAKE GOES ON `Sessions`, AND THE ASSERT BELOW IS WHY THAT IS
+    # NOT A DETAIL. It used to sit on `aihawk.link.Link`, which `cli.ui` built
+    # itself. Since the interface spawns one server per CONVERSATION it builds
+    # a `Sessions` registry instead, and `sessions.py` binds `Link` at import,
+    # so patching `aihawk.link.Link` reached nothing at all. The command then
+    # ran on: a real server subprocess, and then uvicorn serving the interface
+    # FOREVER, inside a unit test.
+    #
+    # Measured 2026-09-11, and the local green is the part worth remembering:
+    # this machine had the interface already listening on 8765, so uvicorn
+    # could not bind and exited, and the test passed in milliseconds. On a CI
+    # runner that port is free, and all six matrix jobs hung until GitHub
+    # killed them, three pushes running, reported as `in_progress` throughout.
+    #
+    # `from .web import Sessions` runs when `ui` is CALLED, so the attribute on
+    # `web` is what the command actually reads.
+    monkeypatch.setattr(web_mod, "Sessions", stop)
+    # ⛔ AND AN ADDRESS NOTHING CAN BIND, WHICH IS THE BELT TO THE BRACES
+    # ABOVE. The assert below can only speak once the command has RETURNED, so
+    # on its own it does not save a run where the brake goes inert and the
+    # thing behind it serves forever: that is precisely what happened, and it
+    # was invisible here only because this machine happened to have the port
+    # occupied. 203.0.113.0/24 is TEST-NET-3, reserved by RFC 5737 and routed
+    # nowhere, so the bind fails on every platform and the command ends
+    # whatever else has broken. The test is about the key, never the address.
+    result = CliRunner().invoke(climod.main, ["ui", "--host", "203.0.113.1"])
+
+    # ⛔ AND THE STOP HAS TO BE SHOWN TO HAVE FIRED, which is the whole
+    # lesson: a brake that no longer reaches the code looks exactly like a
+    # brake that works, until what sits behind it is a server with no end.
+    # This line makes the next such refactor a red in milliseconds instead of
+    # a job that never answers.
+    assert isinstance(result.exception, _Stop), (
+        "the command was not stopped where this test believes it stops, so it "
+        "ran on past the point under test: %r" % (result.exception,))
 
     assert seen.get("client") == {"api_key": KEY}, (
         "the parent client never got the key, so nothing can call the model")
