@@ -149,26 +149,40 @@ def test_a_run_that_did_not_ask_for_an_engine_cannot_reach_one():
         "a test in the fast selection fetched an engine into %s" % cache)
 
 
-def test_only_a_real_request_for_those_markers_lifts_the_guard():
-    """The guard has to read `-m` the way pytest does, or it is wrong twice.
+def test_the_guard_arms_exactly_when_the_engine_tests_are_deselected():
+    """⛔ THE FIRST VERSION ASKED THE OTHER QUESTION AND WAS WRONG BOTH WAYS.
 
-    Known-bad, and the obvious first version: `"e2e" in expression`. The
-    default selection IS `not ui and not e2e`, so that reading treats every
-    plain run as a request for an engine and the guard is never in force. The
-    other direction matters too: a path that happens to contain `e2e` -
-    `tests/mcp_server/test_stdio_e2e.py` is one - is not a marker at all.
+    It asked "did somebody request an engine". `-m "not (e2e or ui)"` requests
+    neither, and it answered yes: the parentheses were stripped before the walk,
+    so the `not` landed on `e2e` alone and `ui` read as a bare request. The
+    guard was off for a run that cannot start a browser at all - the run it
+    exists for. And `-m "not ui"` SELECTS the engine tests while answering no,
+    so the guard armed and they died on the one second download deadline.
+
+    The question that is actually needed is whether those tests are going to
+    run. A plain `pytest -q` gets there through `addopts`, which never reaches
+    argv, so the absence of `-m` is the ordinary run and the one to guard.
+
+    Known-bad, and it is the shipped bug rather than an invented one: strip the
+    parentheses before walking.
     """
     import conftest
 
-    asks = conftest._asks_for_an_engine
-    assert asks(["pytest", "-q"]) is False
-    assert asks(["pytest", "-m", "not ui and not e2e"]) is False
-    assert asks(["pytest", "-m", "not e2e"]) is False
-    assert asks(["pytest", "tests/mcp_server/test_stdio_e2e.py"]) is False
-    assert asks(["pytest", "-m", "e2e", "tests/mcp_server"]) is True
-    assert asks(["pytest", "-m", "ui"]) is True
-    assert asks(["pytest", "-me2e"]) is True
-    assert asks(["pytest", "-m", "e2e and not ui"]) is True
+    off = conftest._e2e_is_excluded
+    #: deselected, so the guard belongs on.
+    assert off(["pytest", "-q"]) is True
+    assert off(["pytest", "-m", "not ui and not e2e"]) is True
+    assert off(["pytest", "-m", "not (e2e or ui)"]) is True
+    assert off(["pytest", "-m", "not(e2e or ui)"]) is True
+    assert off(["pytest", "tests/mcp_server/test_stdio_e2e.py"]) is True, (
+        "a path that happens to contain the marker name is not a marker")
+    #: selected, or possibly selected, so the guard must stay out of the way.
+    assert off(["pytest", "-m", "e2e", "tests/mcp_server"]) is False
+    assert off(["pytest", "-me2e"]) is False
+    assert off(["pytest", "-m", "e2e and not ui"]) is False
+    assert off(["pytest", "-m", "not ui"]) is False, (
+        "this one deselects `ui` and leaves the engine tests IN, so arming the "
+        "guard kills them on the download deadline")
 
 
 def test_only_one_place_knows_where_the_interface_is_stopped():
