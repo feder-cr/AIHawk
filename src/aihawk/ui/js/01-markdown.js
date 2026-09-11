@@ -173,7 +173,6 @@ const VERB = {
   browser_open:['Opening browser','Opened browser'],
   browser_close:['Closing browser','Closed browser'],
   browser_list:['Listing browsers','Listed browsers'],
-  browser_focus:['Switching browser','Switched browser'],
   session_list:['Listing sessions','Listed sessions'],
   session_forget:['Deleting session','Deleted session'],
   session_status:['Checking session','Checked session']

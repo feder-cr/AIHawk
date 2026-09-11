@@ -265,14 +265,14 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         """
         seen = which(request)
         # ⛔ THE PANE SAYS WHICH BROWSER, and without that the workspace is one
-        # picture drawn eight times. `browser_id` is the caller's to choose here
+        # picture drawn twice. `browser` is the caller's to choose here
         # exactly as `session_id` is not: which SESSION a request belongs to is
         # decided by the page's own url and imposed, while which BROWSER inside
         # it a pane is watching is what the pane is for.
         watching = request.query_params.get("b") or None
         try:
             result = await seen.link.call("browser_watch",
-                                          {"browser_id": watching} if watching else {})
+                                          {"browser": watching} if watching else {})
         except Exception as exc:
             return JSONResponse({"error": str(exc)[:200]}, status_code=503)
         got = image_of(result)
@@ -347,7 +347,7 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         try:
             raw = await seen.link.call_text(
                 "session_list_pages",
-                {"browser_id": watching} if watching else None)
+                {"browser": watching} if watching else None)
             rows = json.loads(raw)
         except Exception:
             return JSONResponse(NO_TABS)

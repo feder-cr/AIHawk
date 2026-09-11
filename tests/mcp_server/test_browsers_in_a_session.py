@@ -1,14 +1,15 @@
-"""A session holds several browsers: opening, closing, focusing, and the ceiling.
+"""A session holds two browsers with fixed roles: opening, closing, the ceiling.
 
 The addressing that makes this possible is pinned in `test_addressing.py`; this
 file is about the layer above it, where a session owns browsers and has to say
 how many, which one, and what happens when one is closed.
 
-⛔ THE CEILING IS A MEASUREMENT AND THE TESTS TREAT IT AS ONE. Eight live
-browsers were measured at 61 processes and about 6.5 GB on 2026-09-08, with the
-eighth taking 13.6 s to start against the first one's 6.8. A refusal that only
-said "no" would invite the next reader to raise the number, so the refusal
-carries the cost and one test reads it.
+⛔ THE CEILING IS A DECISION AND THE TESTS TREAT IT AS ONE. It was eight and
+eight was measured - 61 processes, 6.5 GB, the eighth taking twice as long to
+start as the first - and none of that stopped being true. What changed is that
+a session IS an identity, `main`, with one helper beside it, `support`, for
+what must not touch that identity. So the refusal carries the way OUT rather
+than the cost, and one test reads it.
 
 No browser starts here. The registry gets a factory that launches nothing, so
 what a tool did is observable as the keys the registry ends up holding.
@@ -56,52 +57,77 @@ def registry(monkeypatch):
     return reg
 
 
-async def test_a_second_browser_is_its_own_browser(registry):
-    """Opening one adds a browser rather than replacing the one there.
+async def test_the_helper_is_its_own_browser_and_not_the_identity(registry):
+    """Opening the helper ADDS a browser beside the identity rather than
+    replacing it, and the two share nothing - which is the whole reason the
+    helper is a browser and not another tab. A tab would carry the identity's
+    cookies and fingerprint onto the temp-mail site, and then the site the
+    account is being made on and the site the verification arrives at are one
+    person.
 
-    Known-bad: `browser_open` calling `restart` on the focused key instead of
-    the new one, which reads like opening and behaves like replacing.
+    Known-bad: `browser_open` calling `restart` on `main` whatever the role
+    says, which reads like opening a helper and behaves like throwing the
+    identity away.
     """
-    await server.browser_open(browser_id="docs")
-    await server.browser_open(browser_id="dash")
+    await server.browser_open()
+    await server.browser_open(browser="support")
 
-    assert server.browsers_in() == ["dash", "docs"]
-    assert registry.peek("default/docs") is not registry.peek("default/dash")
+    assert server.browsers_in() == ["main", "support"]
+    assert registry.peek("default/main") is not registry.peek("default/support"), (
+        "the helper and the identity are one browser, so the helper carries "
+        "the identity's cookies")
 
 
-async def test_the_one_just_opened_is_where_commands_go(registry):
-    """Opening a browser to then address every command to it by hand would make
-    the common case the tedious one.
+async def test_opening_the_helper_does_not_move_where_commands_go(registry):
+    """⛔ THIS TEST USED TO ASSERT THE OPPOSITE AND WAS RIGHT THEN. While a
+    session could hold eight browsers under names a caller invented, opening
+    one made it where unaddressed commands went, or every later call would have
+    had to repeat its id.
 
-    Known-bad: dropping the `_focus[...] = browser_id` line. The assertion on
-    `addressed()` then still answers "main".
+    There are two fixed roles now, and a command is about `main` unless it says
+    `support` - every time, on every tool. Opening the helper must NOT quietly
+    redirect the next command into it: that is the shape where an instruction
+    meant for the account lands in the temporary mailbox, and nothing raises.
+
+    Known-bad: put `_focus[at_session] = role` back into `browser_open`.
     """
-    await server.browser_open(browser_id="docs")
+    await server.browser_open(browser="support")
 
-    assert server.focused() == "docs"
-    assert server.addressed() == "default/docs"
-    # Naming one still reaches it whatever the focus is.
-    assert server.addressed(browser_id="other") == "default/other"
+    assert server.focused() == server.DEFAULT_BROWSER_ID
+    assert server.addressed() == "default/main", (
+        "opening the helper moved where an unaddressed command lands")
+    assert server.addressed(browser_id=server.SUPPORT_BROWSER_ID) == "default/support"
 
 
-async def test_the_ceiling_refuses_the_ninth_and_says_what_eight_cost(registry):
-    """Eight is a measurement, and the refusal has to carry it.
+async def test_a_third_browser_is_refused_and_the_refusal_says_where_to_go(registry):
+    """A session is one identity plus one helper, and the refusal has to carry
+    the way out.
 
-    Known-bad, two of them: raising `MAX_BROWSERS_PER_SESSION` past eight, and
-    a refusal reduced to "limit reached" - the second leaves the number looking
-    arbitrary, which is how a ceiling gets raised by somebody who never saw
-    what it cost.
+    ⛔ THE REFUSAL USED TO CARRY A COST - 61 processes, 6.5 GB - because the
+    ceiling was eight and eight was a measurement, and a refusal that only says
+    "no" invites the reader to raise the number. The ceiling is two now and it
+    is a DECISION, so what it must carry changed with it: not what a ninth
+    browser would cost, but what to do instead. A model told only "no" spends a
+    turn trying the same thing again.
+
+    Written as a loop over the constant rather than against the number two, so
+    it goes on testing the rule if the number ever moves.
+
+    Known-bad, two: drop the ceiling guard, and a third browser is opened; cut
+    the refusal down to "limit reached", and the model is left with nowhere to
+    go.
     """
-    for i in range(server.MAX_BROWSERS_PER_SESSION):
-        await server.browser_open(browser_id="b%d" % i)
-    assert len(server.browsers_in()) == 8
+    for role in ("main", "support"):
+        await server.browser_open(browser=role)
+    held = server.browsers_in()
+    assert len(held) == server.MAX_BROWSERS_PER_SESSION
 
-    said = await server.browser_open(browser_id="one-too-many")
+    said = await server.browser_open(browser="one-too-many")
 
-    assert len(server.browsers_in()) == 8, "the ninth browser was opened anyway"
-    assert "one-too-many" not in server.browsers_in()
-    assert "6.5 GB" in said and "61 processes" in said, \
-        "the refusal does not say what the ceiling costs: %r" % said
+    assert server.browsers_in() == held, "a third browser was opened anyway"
+    assert "session_start" in said, (
+        "the refusal does not name what to do instead, so the next turn is "
+        "another try at the same thing: %r" % said)
 
 
 async def test_closing_forgets_who_that_browser_was(registry):
@@ -116,13 +142,13 @@ async def test_closing_forgets_who_that_browser_was(registry):
     `registry.forget`. The configuration then survives and the next browser
     under that name is the same person resumed.
     """
-    await server.browser_open(browser_id="docs", seed=4242)
-    assert registry.config("default/docs") is not None
+    await server.browser_open(browser="support", seed=4242)
+    assert registry.config("default/support") is not None
 
-    await server.browser_close(browser_id="docs")
+    await server.browser_close(browser="support")
 
     assert server.browsers_in() == []
-    assert registry.config("default/docs") is None, \
+    assert registry.config("default/support") is None, \
         "the closed browser's identity is still remembered"
 
 
@@ -132,65 +158,65 @@ async def test_closing_the_focused_one_does_not_leave_commands_pointing_at_it(re
     under that name - a stranger wearing the name of somebody deliberately shut
     down.
     """
-    await server.browser_open(browser_id="docs")
-    await server.browser_close(browser_id="docs")
+    await server.browser_open(browser="support")
+    await server.browser_close(browser="support")
 
     assert server.focused() == server.DEFAULT_BROWSER_ID
     assert server.addressed() == "default/%s" % server.DEFAULT_BROWSER_ID
 
 
-async def test_two_sessions_do_not_share_their_browsers_or_their_focus(registry):
-    """The session is the container, so its browsers and its focus are its own.
+async def test_two_sessions_do_not_share_their_browsers(registry):
+    """The session is the container, so its browsers are its own.
 
-    Known-bad: keeping the focus in one variable instead of one per session,
-    which makes two sessions fight over where their commands land.
+    ⛔ AND IT IS A SHARPER TEST THAN IT WAS. Both sessions' browsers are called
+    `main` now, so the NAME cannot tell them apart: the session is the only
+    half of the key that can, which is exactly the half this is about.
+
+    Known-bad: have `addressed` ignore `session_id`. Both callers then share one
+    browser, which is one person's cookie jar handed to another.
     """
-    await server.browser_open(browser_id="docs", session_id="work")
-    await server.browser_open(browser_id="mail", session_id="home")
+    await server.browser_open(session_id="work")
+    await server.browser_open(session_id="home")
 
-    assert server.browsers_in("work") == ["docs"]
-    assert server.browsers_in("home") == ["mail"]
-    assert server.focused("work") == "docs"
-    assert server.focused("home") == "mail"
-    assert server.addressed("work") == "work/docs"
-    assert server.addressed("home") == "home/mail"
+    main = server.DEFAULT_BROWSER_ID
+    assert server.browsers_in("work") == [main]
+    assert server.browsers_in("home") == [main]
+    assert server.addressed("work") == "work/%s" % main
+    assert server.addressed("home") == "home/%s" % main
+    assert registry.peek("work/%s" % main) is not registry.peek("home/%s" % main), (
+        "two sessions were served by one browser")
 
 
 async def test_the_count_is_read_from_the_registry_and_not_from_a_second_list(registry):
-    """What frees a slot is the registry forgetting a browser, and nothing else.
+    """What frees a role is the registry forgetting a browser, and nothing else.
 
     ⛔ THE TWO HALVES ARE THE `drop`/`forget` DISTINCTION, COUNTED. A `drop` is
     what a failed retry does: the engine is gone, the person is not, and the
-    next command aimed at that name brings the SAME browser back with its seed,
-    its exit and its profile. So it still holds its slot - eight slots that a
-    dead engine vacated would let a session own nine identities and call it
-    eight. Only `forget`, which is what closing a browser does, gives the slot
-    back, because after it there is nobody left to come back.
+    next command aimed at that role brings the SAME browser back with its seed,
+    its exit and its profile. So it still holds its role. Only `forget`, which
+    is what closing does, gives the role back, because after it there is nobody
+    left to come back.
 
-    Known-bad, and it is the reason this test is phrased about the source of
-    the count rather than about either verb: keep the browsers in a list beside
-    the registry. The list has no idea what `forget` did, so the second half
-    goes red - a slot whose owner was deliberately closed stays taken forever.
+    Known-bad, and it is the reason this is phrased about the SOURCE of the
+    count rather than about either verb: keep the browsers in a list beside the
+    registry. The list has no idea what `forget` did, so the second half goes
+    red - a role whose browser was deliberately closed stays taken forever.
     """
-    for i in range(server.MAX_BROWSERS_PER_SESSION):
-        await server.browser_open(browser_id="b%d" % i)
+    await server.browser_open()
+    await server.browser_open(browser="support")
+    assert server.browsers_in() == ["main", "support"]
 
-    await registry.drop("default/b3")
+    await registry.drop("default/support")
 
-    assert "b3" in server.browsers_in(), (
+    assert "support" in server.browsers_in(), (
         "a browser whose engine died stopped being one of the session's "
         "browsers, so the identity it comes back as is now nobody's")
-    refused = await server.browser_open(browser_id="one-too-many")
-    assert "one-too-many" not in server.browsers_in(), (
-        "a dead engine handed its slot away while its owner still had it: %r"
-        % refused)
 
-    await registry.forget("default/b3")
+    await registry.forget("default/support")
 
-    assert "b3" not in server.browsers_in()
-    said = await server.browser_open(browser_id="replacement")
-    assert "replacement" in server.browsers_in(), \
-        "a freed slot was still counted as taken: %r" % said
+    assert server.browsers_in() == ["main"], (
+        "a browser that was deliberately forgotten is still one of the "
+        "session's, so the next helper would wear its identity")
 
 
 async def test_asking_what_a_session_holds_starts_nothing(registry):
@@ -211,3 +237,45 @@ async def test_asking_what_a_session_holds_starts_nothing(registry):
     assert answer["browsers"] == []
     assert answer["limit"] == server.MAX_BROWSERS_PER_SESSION
     assert "no browser open yet" in answer["note"]
+
+
+async def test_the_helper_goes_out_through_the_same_exit_as_the_identity(registry):
+    """⛔ SAME EXIT, DIFFERENT PERSON. The helper exists to do things the
+    identity must not be connected to - collect a verification, look something
+    up - so its fingerprint is its own. Its ADDRESS is not: a helper coming out
+    of a different exit than the browser it is helping is the one thing on the
+    wire that says these two are not the same person and yet are working
+    together, which is exactly the inference the helper exists to prevent.
+
+    Inherited only when the caller says nothing. An explicit `proxy` is a
+    decision and beats it.
+
+    ⛔ AND THE ABSENCE IS INHERITED TOO. A `main` that goes out direct has no
+    `proxy` at all, so the helper must go out direct as well rather than pick
+    up an environment proxy `main` never used - which would be the same leak
+    with the roles reversed.
+
+    Known-bad, three: drop the inheritance and the helper takes the
+    environment's exit; copy it even when the caller passed one, and an
+    explicit decision is silently overridden; copy the key without checking
+    `main` has one, and a direct `main` gives the helper a `None` exit that is
+    not the environment's either.
+    """
+    await server.browser_open(proxy="socks5://10.0.0.1:1080")
+    mine = registry.peek("default/main").kwargs["proxy"]
+
+    await server.browser_open(browser="support")
+
+    helper = registry.peek("default/support").kwargs
+    assert helper.get("proxy") == mine, (
+        "the helper came out of a different exit than the identity it helps: "
+        "%r against %r" % (helper.get("proxy"), mine))
+    assert helper.get("seed") != registry.peek("default/main").kwargs.get("seed"), (
+        "the helper wears the identity's fingerprint, so the two read as one "
+        "browser however separate their cookies are")
+
+    await server.browser_open(browser="support", proxy="socks5://10.0.0.9:1080")
+    told = registry.peek("default/support").kwargs["proxy"]
+    assert told != mine, (
+        "an explicit exit for the helper was overridden by the identity's: %r"
+        % (told,))

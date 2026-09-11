@@ -129,8 +129,8 @@ async def test_two_browser_ids_in_one_session_are_two_browsers(registry, echo):
     """Known-bad: have `addressed` ignore `browser_id`. Both calls then land on
     one key, the second returns the first browser, and a caller driving two
     accounts is driving one."""
-    a = await server.browser_read_text(browser_id="a")
-    b = await server.browser_read_text(browser_id="b")
+    a = await server.browser_read_text(browser="a")
+    b = await server.browser_read_text(browser="b")
 
     assert a is not b, "two browser ids were served by one browser"
     assert registry.ids() == [_key(browser_id="a"), _key(browser_id="b")], (
@@ -155,7 +155,7 @@ async def test_a_rebuild_of_one_browser_leaves_the_others_alone(registry, echo,
       and the last assertion goes red.
     """
     main = await server.browser_read_text()
-    other = await server.browser_read_text(browser_id="b")
+    other = await server.browser_read_text(browser="b")
 
     failures = {"left": 1}
 
@@ -166,7 +166,7 @@ async def test_a_rebuild_of_one_browser_leaves_the_others_alone(registry, echo,
         return session
 
     monkeypatch.setattr(actions, "new_page", _fails_once)
-    rebuilt = await server.session_new_page(browser_id="b")
+    rebuilt = await server.session_new_page(browser="b")
 
     assert rebuilt is not other, "the browser that failed was handed back, not rebuilt"
     assert other.closed, "the failing browser was dropped without being closed"
@@ -430,7 +430,7 @@ async def test_every_tool_that_reaches_a_browser_offers_a_way_to_name_it():
     keeps the rule able to catch the case it exists for: a tool that acts on a
     browser and cannot say which.
 
-    Known-bad: delete `session_id` and `browser_id` from any one tool.
+    Known-bad: delete `session_id` or `browser` from any one tool.
     """
     ASKS_ABOUT_THE_SESSION = {"browser_list", "session_forget"}
     needing = _tools_that_reach_a_browser() - ASKS_ABOUT_THE_SESSION
@@ -438,17 +438,40 @@ async def test_every_tool_that_reaches_a_browser_offers_a_way_to_name_it():
         "only %d tools were found reaching a browser; has the module moved? %r"
         % (len(needing), sorted(needing)))
 
-    published = {t.name: set(t.inputSchema.get("properties", {}))
-                 for t in await server.mcp.list_tools()}
+    tools = await server.mcp.list_tools()
+    published = {t.name: t.inputSchema.get("properties", {}) for t in tools}
     gone = sorted(ASKS_ABOUT_THE_SESSION - set(published))
     assert not gone, (
-        "exempted from needing a browser id, but the server no longer offers "
+        "exempted from needing a browser, but the server no longer offers "
         "them: %r. An exemption that names nothing exempts nothing." % gone)
     unknown = sorted(needing - set(published))
     assert not unknown, "found in the source but not registered: %r" % unknown
 
     mute = {name: sorted(published[name]) for name in sorted(needing)
-            if not {"session_id", "browser_id"} <= published[name]}
+            if not {"session_id", "browser"} <= set(published[name])}
     assert not mute, (
         "these act on a browser the caller cannot name, so they always act on "
         "the default one: %s" % mute)
+
+    # ⛔ AND THE NAME IS A ROLE, NOT A STRING. This is the half that keeps the
+    # eight browsers from coming back: not as a decision to restore them, but
+    # as one tool that needed to name something and took a `str`, and then a
+    # second for symmetry. A session holds `main` and `support`; anything else
+    # is a name a caller invented, and the schema is where that is refused -
+    # before a model spends a turn on it.
+    loose = {}
+    for name, props in sorted(published.items()):
+        spec = props.get("browser")
+        if spec is None:
+            continue
+        allowed = set()
+        for branch in spec.get("anyOf") or [spec]:
+            allowed |= set(branch.get("enum") or ())
+        if allowed != {"main", "support"}:
+            loose[name] = spec
+    assert not loose, (
+        "`browser` is not the closed pair of roles on these, so a caller can "
+        "invent a name: %s" % loose)
+    assert "browser_id" not in {k for p in published.values() for k in p}, (
+        "a tool offers a free-form browser id, which is the eight browsers "
+        "coming back one signature at a time")

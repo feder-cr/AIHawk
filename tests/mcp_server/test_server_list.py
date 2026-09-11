@@ -34,7 +34,7 @@ async def test_server_registers_expected_tools():
         # ask what it holds, and say which one the unaddressed commands mean.
         # `browser_list` takes a session and no browser on purpose - what a
         # session holds is not a question one browser can answer.
-        "browser_open", "browser_close", "browser_list", "browser_focus",
+        "browser_open", "browser_close", "browser_list",
         # Added in 0.16.0, when sessions started surviving the process. Without
         # these two a saved session could be reopened only by knowing its id
         # already, and could never be deleted at all - so the directory of them

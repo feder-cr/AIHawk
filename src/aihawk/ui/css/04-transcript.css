@@ -20,8 +20,15 @@
    top of it would space the answer twice. Now the parser eats the blank lines
    and the margins do the spacing, while pre-wrap survives exactly where a line
    break belongs to the author: inside a paragraph, an item, a cell. */
-.say   { color:var(--fg-2); padding-left:var(--indent) }
-.answer{ color:var(--fg);   padding-left:var(--indent) }
+/* ⛔ THE PROSE IS FLUSH AND THE STEPS ARE INDENTED, which is the way round it
+   was not until 2026-09-11. Both sat at `--indent` so that a sentence lined up
+   with the step text above it, and the only thing at the left edge was the step
+   NUMBERS - so the column a person actually reads began two and a bit rem in,
+   behind the machinery. The answer is the thing; the steps are how it got
+   there. `--indent` still does its job for `.out`, the step's own detail, which
+   has to hang under the step it belongs to. */
+.say   { color:var(--fg-2) }
+.answer{ color:var(--fg) }
 .say > :first-child, .answer > :first-child{ margin-top:0 }
 .say > :last-child,  .answer > :last-child { margin-bottom:0 }
 /* ⛔ THE RHYTHM IS THE FIRST THING THAT WAS WRONG once the blocks existed, and

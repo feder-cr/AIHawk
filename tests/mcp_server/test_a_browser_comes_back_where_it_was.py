@@ -77,8 +77,8 @@ async def test_where_a_browser_was_is_written_down_with_who_it_was(registry):
     with the right person and an empty window, which is the half of the promise
     nobody notices is missing until they look for their work.
     """
-    await server.browser_open(browser_id="docs", seed=4242)
-    session = await server.ready(browser_id="docs")
+    await server.browser_open(seed=4242)
+    session = await server.ready()
     await session.new_page()
     await actions.navigate(session, "http://example.test/one")
     # Any command aimed at it notes where it is; this is the one the interface
@@ -86,8 +86,8 @@ async def test_where_a_browser_was_is_written_down_with_who_it_was(registry):
     await server.browser_list()
 
     saved = store.load("default")
-    assert saved["browsers"]["docs"]["urls"] == ["http://example.test/one"]
-    assert saved["browsers"]["docs"]["seed"] == 4242
+    assert saved["browsers"]["main"]["urls"] == ["http://example.test/one"]
+    assert saved["browsers"]["main"]["seed"] == 4242
 
 
 async def test_a_browser_nobody_has_looked_at_does_not_report_an_empty_window(registry):
@@ -98,10 +98,10 @@ async def test_a_browser_nobody_has_looked_at_does_not_report_an_empty_window(re
     Known-bad: write `wrote["urls"] = been or []` instead of only when there is
     something.
     """
-    await server.browser_open(browser_id="docs")
+    await server.browser_open()
 
     saved = store.load("default")
-    assert "urls" not in saved["browsers"]["docs"], saved["browsers"]["docs"]
+    assert "urls" not in saved["browsers"]["main"], saved["browsers"]["main"]
 
 
 async def test_waking_a_declared_browser_reopens_the_tabs_it_had(registry, monkeypatch):
@@ -112,14 +112,14 @@ async def test_waking_a_declared_browser_reopens_the_tabs_it_had(registry, monke
     then pass `urls` to the session factory, which is a launch setting no
     browser has.
     """
-    store.save("default", {"docs": {"seed": 4242, "headless": True,
+    store.save("default", {"main": {"seed": 4242, "headless": True,
                                     "urls": ["http://a.test/", "http://b.test/"]}},
-               focus="docs")
+               focus="main")
 
-    assert server.browsers_in() == ["docs"]
+    assert server.browsers_in() == ["main"]
     assert registry.ids() == [], "reading a session back started a browser"
 
-    session = await server.ready(browser_id="docs")
+    session = await server.ready()
 
     assert session.kwargs.get("seed") == 4242, "it came back as somebody else"
     assert "urls" not in session.kwargs, (
@@ -135,12 +135,12 @@ async def test_the_tabs_are_reopened_once_and_not_on_every_command(registry):
 
     Known-bad: read `_tabs_owed` without removing the entry.
     """
-    store.save("default", {"docs": {"seed": 1, "headless": True,
+    store.save("default", {"main": {"seed": 1, "headless": True,
                                     "urls": ["http://a.test/"]}})
 
-    first = await server.ready(browser_id="docs")
-    await server.ready(browser_id="docs")
-    await server.ready(browser_id="docs")
+    first = await server.ready()
+    await server.ready()
+    await server.ready()
 
     assert first.pages == ["http://a.test/"], first.pages
 
@@ -155,10 +155,10 @@ async def test_a_url_that_will_not_load_does_not_cost_the_browser(registry, monk
         raise RuntimeError("NS_ERROR_UNKNOWN_HOST")
 
     monkeypatch.setattr(actions, "navigate", _refuses)
-    store.save("default", {"docs": {"seed": 1, "headless": True,
+    store.save("default", {"main": {"seed": 1, "headless": True,
                                     "urls": ["http://gone.test/"]}})
 
-    session = await server.ready(browser_id="docs")
+    session = await server.ready()
 
     assert session is not None
     assert session.kwargs.get("seed") == 1
@@ -168,7 +168,7 @@ async def test_a_browser_that_was_never_saved_is_woken_empty(registry):
     """Known-bad: default the owed tabs to something. A brand new browser then
     opens a page nobody asked for.
     """
-    session = await server.ready(browser_id="fresh")
+    session = await server.ready()
     assert session.pages == []
 
 

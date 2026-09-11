@@ -90,9 +90,6 @@ function splitter(){
   });
 }
 
-let sawGrid = null;
-try { sawGrid = localStorage.getItem(GRIDKEY); } catch(err){}
-setGrid(LAYOUTS.includes(Number(sawGrid)) ? Number(sawGrid) : 1);
 
 paint(); listen(); tick(); where(); fleetPoll(); slowTick(); splitter();
 if(!$('rail').hidden) drawChats();

@@ -118,15 +118,6 @@
 #url .hint{ color:var(--fg-3); font-family:var(--sans); font-size:var(--t-label) }
 #url .hint::before{ content:"  -  "; white-space:pre }
 
-#grid{ flex:none; display:flex; align-items:center; gap:2px; height:var(--h-ctl);
-       background:var(--well); border:1px solid var(--line-2);
-       border-radius:var(--r); padding:0 2px }
-#grid button{ min-width:30px; height:24px; padding:0 5px; border:0;
-              border-radius:var(--r-sm); background:none; cursor:pointer;
-              display:grid; place-items:center; color:var(--fg-3);
-              transition:background-color 120ms ease-out, color 120ms ease-out }
-#grid button:hover{ color:var(--fg-2) }
-#grid button[aria-pressed="true"]{ background:var(--raised); color:var(--fg) }
 
 /* The small things whose absence is felt without being noticed. */
 :focus{ outline:none }

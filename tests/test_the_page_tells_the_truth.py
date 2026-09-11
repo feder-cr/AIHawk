@@ -186,8 +186,8 @@ def test_a_control_that_cannot_act_is_out_of_reach_of_the_keyboard_too():
 
     Known-bad: go back to dimming them and nothing else.
     """
-    assert "box.inert = !anything" in CODE, (
-        "the disarmed controls are only dimmed, so they still answer the keyboard")
+    assert "$('mode').inert = !anything" in CODE, (
+        "the disarmed control is only dimmed, so it still answers the keyboard")
 
 
 def test_nothing_hides_behind_a_role_it_does_not_implement():
@@ -271,24 +271,28 @@ def test_a_password_is_not_written_into_the_transcript():
     assert "a@b.test" in ordinary, "an ordinary field is masked as well"
 
 
-def test_a_step_names_the_browser_when_the_call_named_one():
-    """A session holds up to eight browsers, and 35 rows of a live transcript
-    read exactly `Read body` or `Inspected`: the one fact that distinguishes
-    this product from a single-browser agent was the fact the log dropped. It is
-    named when the CALL names it - inventing a default would say more than the
-    call said.
+def test_a_step_says_support_when_the_call_went_to_the_helper():
+    """A session drives `main` and, while it is needed, `support`, and 35 rows
+    of a live transcript reading exactly `Read body` drop the one fact that
+    tells them apart: whether the agent was working in the identity or in the
+    helper beside it.
 
-    Known-bad: go back to discarding `browser_id`.
+    It is named only when it is the HELPER. `main` is where a step goes unless
+    it says otherwise, so writing it on every row is the same word repeated,
+    which is how the useful one stops being noticed.
+
+    Known-bad, two: discard `browser` and the rows are indistinguishable again;
+    name `main` too, and the mark that means something is buried.
     """
     from aihawk.actions_help import summarise
 
     assert summarise("browser_read_text", {"selector": "body",
-                                           "browser_id": "b-tech"}).endswith("b-tech")
-    assert "browser_id=" not in summarise("browser_open", {"browser_id": "walmart-jobs"}), (
-        "opening a browser still prints the name of an argument at the reader")
-    assert summarise("browser_open", {"browser_id": "walmart-jobs"}) == "walmart-jobs"
-    # And it stays quiet when the call was quiet.
+                                           "browser": "support"}) == "body in support"
+    assert summarise("browser_read_text", {"selector": "body",
+                                           "browser": "main"}) == "body"
     assert summarise("browser_read_text", {"selector": "body"}) == "body"
+    assert "browser=" not in summarise("browser_open", {"browser": "support"}), (
+        "opening a browser prints the name of an argument at the reader")
 
 
 def test_every_request_that_can_fail_goes_through_one_door():

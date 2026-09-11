@@ -49,7 +49,6 @@ $('mode').onclick = (e) => {
    wrong number. The ceiling below is the measured budget - 40 requests a
    second, about a quarter of the pipe - and the top rate is what the engine
    is asked to produce, so asking for more would make frames to throw away. */
-const LAYOUTS = [1, 2, 4];
 const TOPRATE = 25, CEILING = 40;
 const fps = (n) => Math.min(TOPRATE, Math.floor(CEILING / n));
 const onScreen = () => Math.max(1, $('stage').children.length);

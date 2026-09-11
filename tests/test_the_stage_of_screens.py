@@ -135,19 +135,45 @@ def test_the_strip_carries_what_the_stage_does_not():
         "the strip does not exclude the browsers already on screen")
 
 
-def test_the_layout_is_remembered_and_read_back_through_one_door():
-    """A choice made once is a choice made once. And the saved value goes
-    through `setGrid`, so there is a single path that sets the layout rather
-    than a boot that duplicates what the buttons do.
+def test_the_stage_follows_the_browsers_and_is_not_chosen():
+    """⛔ THIS TEST USED TO ASSERT THAT THE LAYOUT WAS REMEMBERED, and it was
+    right then: a session could hold eight browsers, so how many to watch at
+    once was a choice a person made and the page kept.
 
-    Known-bad: write the layout straight into `grid` at boot.
+    A session holds `main` and, while it is needed, `support`. Two screens when
+    the helper is up, one when it is not, and nothing to choose - so the picker
+    is gone, and with it the stored preference. What is held here instead is
+    that the number FOLLOWS the running browsers rather than sitting in a
+    variable somebody has to keep in step.
+
+    Known-bad, two: pin `grid` to 1, and the helper never gets a screen; pin it
+    to 2, and a session with only `main` draws an empty second cell.
     """
     code = re.sub(r"/\*.*?\*/", "", PAGE, flags=re.S)
-    assert "localStorage.setItem(GRIDKEY" in code, "the layout is not remembered"
-    assert re.search(r"setGrid\(LAYOUTS\.includes\(Number\(sawGrid\)\) \? Number\(sawGrid\) : 1\)",
-                     code), (
-        "the saved layout is not restored through setGrid, or is trusted "
-        "without checking it is one of the layouts on offer")
+    assert "GRIDKEY" not in code and "setGrid" not in code, (
+        "the layout picker is back, and there is nothing for it to choose")
+
+    # Anchored on `fleet`, because `let grid = 1, turnOf = 0;` sits earlier in
+    # the page and a looser pattern reads the declaration as the decision - it
+    # answers 1 for every fleet, which looks like a stage that never grows.
+    line = re.search(r"grid = fleet[^;]+;", code)
+    assert line, "nothing derives the number of screens from the fleet"
+
+    js = ("const answers = [];"
+          "let fleet, grid;"
+          "for(const running of [0, 1, 2]){"
+          "  fleet = Array.from({length: running}, () => ({running: true}));"
+          "  %s"
+          "  answers.push(grid);"
+          "}"
+          "process.stdout.write(JSON.stringify(answers));" % line.group(0))
+    done = subprocess.run([NODE, "-e", js], capture_output=True, text=True,
+                          encoding="utf-8", timeout=30)
+    assert done.returncode == 0, "the layout decision threw: %s" % done.stderr
+
+    assert json.loads(done.stdout) == [1, 1, 2], (
+        "the stage does not follow the browsers that are running: %s"
+        % done.stdout)
 
 
 def test_the_template_follows_the_screens_that_exist():

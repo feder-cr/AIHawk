@@ -663,8 +663,7 @@ async def test_the_stage_asks_for_frames_at_a_rate_it_has_measured():
     assert "fps(onScreen()) * onScreen()" in code, (
         "the pause is no longer derived from the screens actually on the stage")
 
-    decl = re.search(r"const LAYOUTS = \[[^\]]*\];\s*"
-                     r"const TOPRATE = \d+, CEILING = \d+;\s*"
+    decl = re.search(r"const TOPRATE = \d+, CEILING = \d+;\s*"
                      r"const fps = \(n\) => .+", code)
     assert decl, "the stage no longer declares the pace it keeps"
 
@@ -679,13 +678,18 @@ async def test_the_stage_asks_for_frames_at_a_rate_it_has_measured():
     # browsers running draws exactly three.
     js = decl.group(0) + chr(10) + (
         "process.stdout.write(JSON.stringify("
-        "[LAYOUTS, CEILING, [1,2,3,4].map(n => fps(n))]));")
+        "[CEILING, [1,2,3,4].map(n => fps(n))]));")
     done = subprocess.run([node, "-e", js], capture_output=True, text=True,
                           encoding="utf-8", timeout=30)
     assert done.returncode == 0, "the pace threw: %s" % done.stderr
-    layouts, ceiling, each = json.loads(done.stdout)
+    ceiling, each = json.loads(done.stdout)
 
-    assert layouts == [1, 2, 4], "the layouts on offer are %s" % layouts
+    # ⛔ THE LAYOUTS ARE GONE AND THE PACE IS STILL A FUNCTION OF n. There
+    # used to be a picker - one, two or four screens - and this gate read its
+    # options back. A session holds `main` and, while it is needed, `support`,
+    # so the stage draws one or two and nothing is chosen; the pace is asked
+    # for four anyway, because what it must never do is promise more frames
+    # than the pipe has, whatever number of screens a later change puts on it.
 
     from aihawk.mcp.session import StealthSession
 

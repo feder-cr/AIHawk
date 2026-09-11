@@ -154,7 +154,7 @@ session gets when nobody says anything.
 `session_list`, `session_forget`, `session_status`, `session_start`,
 `session_new_page`, `session_list_pages`,
 `session_select_page`, `session_close_page`, `browser_open`, `browser_close`,
-`browser_list`, `browser_focus`, `browser_navigate`,
+`browser_list`, `browser_navigate`,
 `browser_read_text`, `browser_snapshot`, `browser_read_html`,
 `browser_take_screenshot`, `browser_watch`, `browser_click`, `browser_click_at`,
 `browser_type`, `browser_select_option`, `browser_press_key`, `browser_evaluate`.
@@ -163,28 +163,35 @@ Tool names mirror the Microsoft Playwright MCP, so prompts written for it work
 here too. Three groups: who is browsing and which tab, reading the page, and
 acting on it.
 
-**Every tool below also takes `session_id` and `browser_id`, both optional, and
+**Every tool below also takes `session_id` and `browser`, both optional, and
 neither appears in the tables because the answer is the same for all of them.**
-Send neither and you get the default browser of the default session, which is
-what a client that never mentions either has always got and always will. Name
-them when a session holds more than one browser and the command has to reach a
-particular one.
+Leave both out and you get the `main` browser of the default session, which is
+what a client that never mentions either has always got and always will.
 
-The two are not the same thing. A **session** is the piece of work: it owns a
-conversation and the browsers that belong to it. A **browser** is one running
-engine inside that session, with its own tabs, its own cookies and its own
-identity, and it does not share any of that with its neighbours. Tabs live
-inside a browser, which is why the tab tools take a page id and not a third
-address.
+A **session is one identity**, `main`: its conversation, its tabs, its cookies,
+its fingerprint, its logins. Beside it a session may hold ONE helper,
+`support`, for what must not touch that identity: a temporary mailbox to
+receive a verification, a lookup, a page you want to read without the site
+connecting it to the account. The two share nothing. `browser` is a closed
+choice, `main` or `support` - there is no name to invent - and the helper is
+not saved: it lives for the task and dies with the process. Open it with
+`browser_open` when you need it and close it with `browser_close` when you are
+done. By default it goes out through the same exit as `main` and carries a
+fingerprint of its own.
+
+Tabs live inside a browser, which is why the tab tools take a page id and no
+third address.
+
+Until 0.39.0 a session could hold up to eight browsers under any names, and
+`browser_focus` chose which one unaddressed commands meant. Both are gone.
 
 ### Session and tabs
 
 | Tool | Arguments | What it does |
 |---|---|---|
-| `browser_open` | `browser_id`, `seed`, `proxy`, `profile`, all optional | Opens another browser in this session and makes it the one unaddressed commands go to. Each browser has its own tabs, cookies and identity and shares none of them. Refuses past eight, saying what eight cost when it was measured. |
-| `browser_close` | `browser_id` optional | Closes one browser and frees what it held. Its tabs go with it; the other browsers and the conversation do not. Forgets who it was, so the same name later is a new stranger rather than that person resumed. |
+| `browser_open` | `browser`, `seed`, `proxy`, `profile`, all optional | Opens `main` or `support`, or reopens one that is already up with those settings, which is how a session changes identity without changing session. `support` left without a `proxy` goes out through `main`'s exit. |
+| `browser_close` | `browser` optional | Closes `main` or `support` and frees what it held. Its tabs go with it; the other browser and the conversation do not. Forgets who it was, so the next one under that role is a new stranger rather than that person resumed. Close `support` when you are done with it. |
 | `browser_list` | `session_id` optional | Which browsers this session holds, where each one is, and which one commands go to. **Answers JSON** since 0.18.0: `session`, `focus`, `limit`, `note`, and `browsers` with `id`, `running`, `focused` and the `urls` of each one's tabs. A browser that is not running is one this session declared and has not needed yet. Starts nothing, so asking is free. |
-| `browser_focus` | `browser_id` | Chooses which browser the commands that name none land on. Naming a browser still reaches it whatever the focus is. |
 | `session_list` | none | Every saved session and what each one holds. Sessions survive the server, so this is how you find the one you were in. Starts nothing. |
 | `session_forget` | `session_id` | Delete a saved session: its browsers are closed and it stops being listed. Not the same as closing browsers, which frees the engines and keeps the session. |
 | `session_status` | none | Who is browsing right now: the seed, the exit, the profile and the open tabs. Starts nothing; if no browser is up it says so. |

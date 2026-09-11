@@ -30,9 +30,9 @@ class _Tool:
 
 
 FLEET = {
-    "session": "lavoro", "focus": "docs", "limit": 8,
+    "session": "lavoro", "focus": "main", "limit": 2,
     "browsers": [
-        {"id": "docs", "running": True, "focused": True, "urls": ["http://a/"]},
+        {"id": "main", "running": True, "focused": True, "urls": ["http://a/"]},
         {"id": "posta", "running": True, "focused": False, "urls": ["http://b/"]},
         {"id": "dormiente", "running": False, "focused": False, "urls": []},
     ],
@@ -57,13 +57,11 @@ class _Text:
 class FakeLink:
     def __init__(self):
         self.touched = False
-        self.tools = [_Tool("browser_watch", ["session_id", "browser_id"]),
+        self.tools = [_Tool("browser_watch", ["session_id", "browser"]),
                       _Tool("browser_list", ["session_id"]),
-                      _Tool("browser_focus", ["browser_id", "session_id"]),
-                      _Tool("session_list_pages", ["session_id", "browser_id"])]
+                      _Tool("session_list_pages", ["session_id", "browser"])]
         self.calls = []
         self.answers = {"browser_list": json.dumps(FLEET),
-                        "browser_focus": "commands now go to it",
                         "session_list_pages": "[]"}
 
     async def call(self, name, arguments=None):
@@ -101,8 +99,8 @@ async def test_the_workspace_is_read_from_the_server_like_any_other_client():
 
     got = client.get("/live/browsers?s=lavoro").json()
 
-    assert [b["id"] for b in got["browsers"]] == ["docs", "posta", "dormiente"]
-    assert got["focus"] == "docs" and got["limit"] == 8
+    assert [b["id"] for b in got["browsers"]] == ["main", "posta", "dormiente"]
+    assert got["focus"] == "main" and got["limit"] == 2
     assert any(name == "browser_list" for name, _ in link.calls)
 
 
@@ -129,7 +127,7 @@ async def test_the_workspace_asks_the_one_question_that_starts_nothing():
 
     got = client.get("/live/browsers?s=mai-usata").json()
 
-    assert [b["id"] for b in got["browsers"]] == ["docs", "posta", "dormiente"], (
+    assert [b["id"] for b in got["browsers"]] == ["main", "posta", "dormiente"], (
         "a session that has issued no instruction was shown no panes, so a "
         "reopened session cannot offer to wake the browsers it declared")
     assert [name for name, _ in link.calls] == ["browser_list"], (
@@ -168,7 +166,7 @@ async def test_a_pane_asks_for_its_own_browser_and_not_for_the_focused_one():
     client.get("/live/frame?s=lavoro&b=posta")
 
     watched = [args for name, args in link.calls if name == "browser_watch"]
-    assert watched and watched[-1].get("browser_id") == "posta", watched
+    assert watched and watched[-1].get("browser") == "posta", watched
     assert watched[-1].get("session_id") == "lavoro", (
         "a pane reached into another session: %r" % watched[-1])
 

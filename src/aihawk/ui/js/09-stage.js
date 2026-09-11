@@ -66,11 +66,9 @@ function screenFor(b, current){
 
 function drawStage(){
   const box = $('stage'), show = onStage();
-  /* ⛔ THE TEMPLATE FOLLOWS THE CELLS THAT EXIST. Two running browsers in
-     a four-up layout used to be laid on a 2x2 whose second row was empty, so
-     each of them got half the height for nothing - the layout control is a
-     ceiling on how many you watch at once, not a promise that there are that
-     many. */
+  /* The template follows the cells that exist: `grid` is derived from the
+     running browsers in `drawFleet`, so this is one or two, never a promise of
+     more cells than there are. */
   box.dataset.grid = String(Math.min(grid, Math.max(1, show.length)));
   /* Only when the SET changes, or every poll would throw away the pictures and
      make the whole stage flash once a second for no new fact. */
@@ -92,7 +90,7 @@ function drawStage(){
   /* Not decoration: `inert` removes them from the tab order and from the
      accessibility tree, which is what 'this control cannot do anything right
      now' has to mean for somebody who is not using a mouse. */
-  for(const box of [$('mode'), $('grid')]) box.inert = !anything;
+  $('mode').inert = !anything;
   if(!show.length){
     /* An empty state that only reports the emptiness leaves the person to
        guess where the button is. There is no button - browsers are opened by
@@ -108,19 +106,6 @@ function drawStage(){
   for(const b of show) box.appendChild(screenFor(b, b.id === watched()));
 }
 
-const GRIDKEY = 'aihawk.grid';
-function setGrid(n){
-  grid = n;
-  for(const b of $('grid').children)
-    b.setAttribute('aria-pressed', String(Number(b.dataset.n) === n));
-  try { localStorage.setItem(GRIDKEY, String(n)); } catch(err){}
-  drawStage(); drawStrip(); paintWhere();
-}
-$('grid').onclick = (e) => {
-  const b = e.target.closest('button');
-  if(b) setGrid(Number(b.dataset.n));
-};
-
 async function drawFleet(){
   let got = {browsers: []};
   try { const r = await door('/live/browsers', {cache:'no-store'});
@@ -128,6 +113,13 @@ async function drawFleet(){
   catch(err){ return; }
   fleet = got.browsers || [];
   focusHere = got.focus || '';
+  /* ⛔ THE LAYOUT IS NOT CHOSEN ANY MORE, IT FOLLOWS THE BROWSERS. There was a
+     picker - one, two or four screens - because a session could hold eight and
+     which ones to watch was a decision. A session holds `main` and, while it is
+     needed, `support`: two screens when the helper is up, one when it is not,
+     and nothing for a person to set. A control that chose between layouts of
+     the same single screen is the defect this page has written down twice. */
+  grid = fleet.filter(b => b.running).length >= 2 ? 2 : 1;
   drawStage();
   drawStrip();
 }
