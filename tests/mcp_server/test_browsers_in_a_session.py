@@ -51,8 +51,6 @@ def registry(monkeypatch):
     reg = server.new_registry(factory=_Recording,
                               defaults=lambda: {"seed": 7, "headless": True})
     monkeypatch.setattr(server, "registry", reg)
-    # The focus is module state, so a test that set it must not reach the next.
-    monkeypatch.setattr(server, "_focus", {})
     return reg
 
 
@@ -88,7 +86,8 @@ async def test_opening_the_helper_does_not_move_where_commands_go(registry):
     redirect the next command into it: that is the shape where an instruction
     meant for the account lands in the temporary mailbox, and nothing raises.
 
-    Known-bad: put `_focus[at_session] = role` back into `browser_open`.
+    Known-bad: have `browser_open` remember the role it just opened and send
+    later unaddressed commands there.
     """
     await server.browser_open(browser="support")
 
@@ -158,11 +157,14 @@ async def test_closing_forgets_who_that_browser_was(registry):
         "the closed browser's identity is still remembered"
 
 
-async def test_closing_the_focused_one_does_not_leave_commands_pointing_at_it(registry):
-    """Known-bad: leaving `_focus` alone on close. Every later command then
-    addresses a browser that is gone, and the registry quietly starts a new one
-    under that name - a stranger wearing the name of somebody deliberately shut
-    down.
+async def test_closing_the_helper_leaves_commands_pointing_at_the_identity(registry):
+    """Where an unaddressed command lands cannot depend on what was closed.
+
+    Known-bad: any scheme that remembers a "current" browser. Closing it would
+    leave every later command addressing a browser that is gone, and the
+    registry would quietly start a new one under that name - a stranger wearing
+    the name of somebody deliberately shut down. There is nothing to remember:
+    the answer is `main`, always.
     """
     await server.browser_open(browser="support")
     await server.browser_close(browser="support")

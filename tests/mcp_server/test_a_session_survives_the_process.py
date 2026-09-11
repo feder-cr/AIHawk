@@ -53,7 +53,6 @@ def _fresh(monkeypatch, **kwargs):
         factory=_Recording,
         defaults=lambda: dict({"seed": 7, "headless": True}, **kwargs))
     monkeypatch.setattr(server, "registry", reg)
-    monkeypatch.setattr(server, "_focus", {})
     monkeypatch.setattr(server, "_restored", False)
     return reg
 

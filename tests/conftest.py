@@ -80,7 +80,7 @@ def _the_server_remembers_nothing_from_the_last_test():
     """
     server = sys.modules.get("aihawk.mcp.server")
     if server is not None:
-        for held in ("_focus", "_seen_tabs", "_tabs_owed"):
+        for held in ("_seen_tabs", "_tabs_owed"):
             got = getattr(server, held, None)
             if got is not None:
                 got.clear()

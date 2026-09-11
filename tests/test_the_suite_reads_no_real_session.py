@@ -70,7 +70,7 @@ def test_the_server_starts_each_test_holding_nothing():
     """
     from aihawk.mcp import server
 
-    for held in ("_focus", "_seen_tabs", "_tabs_owed"):
+    for held in ("_seen_tabs", "_tabs_owed"):
         assert not getattr(server, held), (
             "server.%s arrived at this test with %r in it" % (held, getattr(server, held)))
     assert server._restored is False, (

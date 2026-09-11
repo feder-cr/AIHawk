@@ -239,15 +239,13 @@ Browser = Literal["main", "support"]
 MAX_BROWSERS_PER_SESSION = 2
 
 
-#: ⛔ THE FOCUS IS GONE, AND THIS DICT IS KEPT EMPTY rather than deleted because
-#: the tests monkeypatch it for isolation. Nothing writes to it.
-#:
-#: It used to say which of several browsers the unaddressed commands land on.
-#: With two fixed roles there is nothing to remember: a command is about `main`
-#: unless it says `support`, every time, on every tool. A focus would be hidden
-#: state the model has to track, and the way that fails is a command meant for
-#: the identity landing in the helper because the last one did.
-_focus: dict = {}
+# ⛔ `_focus` STOOD HERE, an empty dict kept alive because the tests
+# patched it. Nothing in the product had written to it since `browser_focus`
+# was removed: with two fixed roles there is nothing to remember, because a
+# command is about `main` unless it says `support`. State the product does
+# not use, kept so a fixture can reset it, is the fixture holding the
+# product's shape - so it is gone from both.
+
 
 
 #: ⛔ WHERE THIS PROCESS'S OWN PIECE OF WORK COMES FROM, AND THE ONLY PLACE

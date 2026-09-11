@@ -59,7 +59,6 @@ def registry(monkeypatch):
     reg = server.new_registry(factory=_Recording,
                               defaults=lambda: {"seed": 7, "headless": True})
     monkeypatch.setattr(server, "registry", reg)
-    monkeypatch.setattr(server, "_focus", {})
     monkeypatch.setattr(server, "_restored", False)
     monkeypatch.setattr(server, "_seen_tabs", {})
     monkeypatch.setattr(server, "_tabs_owed", {})

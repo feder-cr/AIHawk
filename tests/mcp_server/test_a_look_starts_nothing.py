@@ -55,7 +55,6 @@ def registry(monkeypatch):
     reg = server.new_registry(factory=_Recording,
                               defaults=lambda: {"seed": 7, "headless": True})
     monkeypatch.setattr(server, "registry", reg)
-    monkeypatch.setattr(server, "_focus", {})
     return reg
 
 
