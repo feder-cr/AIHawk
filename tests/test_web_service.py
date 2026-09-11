@@ -277,7 +277,13 @@ async def test_the_app_exposes_exactly_the_routes_the_page_calls():
                      "/sessions", "/sessions/new", "/sessions/rename",
                      "/sessions/forget",
                      "/chat/send", "/chat/stop", "/chat/fresh", "/chat/events",
-                     "/live/frame", "/live/tabs", "/live/select",
+                     # ⛔ AND TWO MORE WENT AWAY ON 2026-09-11 with the tab
+                     # tools: /live/tabs, which drew the strip, and
+                     # /live/select, which let a click move the active page
+                     # under the agent - the same second-control defect the
+                     # four below were removed for. /live/address is what the
+                     # strip route was really being asked for.
+                     "/live/frame", "/live/address",
                      # The workspace, added in 0.18.0: which browsers to draw a
                      # pane for, and which one the commands go to.
                      # ⛔ AND FOUR THAT WENT AWAY IN 0.21.0: /live/open,
@@ -390,9 +396,9 @@ class Result:
 #: What `browser_list` answers when there is something to look at. A double
 #: that can hand back a picture is a double with a browser running, so it has
 #: to say so: the views ask this first and draw nothing when the answer is no.
-RUNNING = ('{"session": "default", "focus": "main", "limit": 8, '
+RUNNING = ('{"focus": "main", "limit": 2, '
            '"browsers": [{"id": "main", "running": true, "focused": true, '
-           '"urls": []}]}')
+           '"url": "", "urls": []}]}')
 
 
 class WatchingLink(FakeLink):
@@ -892,82 +898,116 @@ async def test_a_page_that_joins_an_idle_service_is_told_the_turn_is_over():
 
 
 # --------------------------------------------------------------------------
-# the tab strip, which only became possible when the tool stopped lying
+# the address bar, which is what survived the tab strip
 # --------------------------------------------------------------------------
+#
+# ⛔ THIS BLOCK USED TO TEST `/live/tabs`, WHICH ASKED THE TAB TOOL. Both are
+# gone: a browser drives one page, so there is no strip to draw and no tool to
+# ask. What stayed is the address above the stage, and it now comes from
+# `browser_list` - the one tool that still reads the pages - so the interface
+# asks one question instead of two about the same thing.
 
-class TabbedLink(FakeLink):
-    """`browser_tab_list` answers `payload`; `browser_list` answers that the
-    browser is running, because a session with tabs to list has one."""
+class ListingLink(FakeLink):
+    """Answers `browser_list` with `payload`, which is where the address now
+    comes from."""
 
-    def __init__(self, payload, running=True):
+    def __init__(self, payload):
         super().__init__()
         self._payload = payload
-        self._running = running
 
     async def call_text(self, name, arguments=None):
         await self.call(name, arguments)
-        if name == "browser_list":
-            return RUNNING if self._running else '{"focus": "", "browsers": []}'
         return self._payload
 
 
-async def _tabs_route(link, svc=None):
+async def _address_route(link, svc=None):
     app = build_app(link, Sessions.around(svc or ChatService(link, SilentBrain())))
-    return [r for r in app.routes if r.path == "/live/tabs"][0].endpoint
+    return [r for r in app.routes if r.path == "/live/address"][0].endpoint
 
 
-async def test_the_address_comes_from_the_active_tab():
-    """One call where there were two.
+async def test_the_address_is_the_one_the_focused_browser_is_on():
+    """ONE call, and it is a call the interface was making anyway.
 
-    While `browser_tab_list` answered with ids only, this had to ask
-    `browser_evaluate` for `location.href`: script in the page, to learn
-    something the server already knew.
+    Known-bad: read `urls[0]` instead of `url`. With a single page the two agree,
+    which is why this fixture gives the focused browser a second page the site
+    opened and puts the live one second - the reading that looks right against
+    one page is wrong the moment a `target=_blank` lands.
     """
-    link = TabbedLink(json.dumps([
-        {"id": "tab-1", "title": "A", "url": "https://a.example/", "active": False},
-        {"id": "tab-2", "title": "B", "url": "https://b.example/x", "active": True},
-    ]))
-    route = await _tabs_route(link)
+    link = ListingLink(json.dumps({
+        "focus": "main", "limit": 2,
+        "browsers": [
+            {"id": "main", "running": True, "focused": True,
+             "url": "https://b.example/x",
+             "urls": ["https://a.example/", "https://b.example/x"]},
+            {"id": "support", "running": True, "focused": False,
+             "url": "https://mail.example/", "urls": ["https://mail.example/"]},
+        ]}))
+    route = await _address_route(link)
 
     class Req: query_params = {}
     body = json.loads((await route(Req())).body)
 
-    assert body["url"] == "https://b.example/x", "the address is the ACTIVE tab's"
-    assert [t["id"] for t in body["tabs"]] == ["tab-1", "tab-2"]
-    assert [n for n, _ in link.calls] == ["browser_tab_list"], (
-        "the tabs in ONE call, and not browser_evaluate on top of it")
+    assert body == {"url": "https://b.example/x"}
+    assert [n for n, _ in link.calls] == ["browser_list"], (
+        "the address in ONE call, on the tool the pane already asks")
 
 
-async def test_an_older_server_leaves_the_strip_empty_instead_of_breaking_the_pane():
-    """A server that still answers `["tab-1"]` is not an error here. The picture
-    is the point of the pane; the strip is an extra that can be absent."""
-    link = TabbedLink(json.dumps(["tab-1", "tab-2"]))
+async def test_the_address_follows_the_browser_being_watched():
+    """The pane can be pinned to `support` while the agent drives `main`, and
+    then the bar has to say where SUPPORT is.
+
+    Known-bad: ignore the `b` parameter and answer the focused row, which is a
+    wrong address that looks exactly like a right one.
+    """
+    link = ListingLink(json.dumps({
+        "focus": "main", "limit": 2,
+        "browsers": [
+            {"id": "main", "running": True, "focused": True,
+             "url": "https://b.example/x", "urls": ["https://b.example/x"]},
+            {"id": "support", "running": True, "focused": False,
+             "url": "https://mail.example/", "urls": ["https://mail.example/"]},
+        ]}))
+    route = await _address_route(link)
+
+    class Req: query_params = {"b": "support"}
+    body = json.loads((await route(Req())).body)
+
+    assert body == {"url": "https://mail.example/"}
+
+
+async def test_an_answer_it_cannot_parse_leaves_the_address_blank():
+    """The picture is the point of the pane; the address is an extra that can be
+    absent. A server answering something else must not take the pane down."""
+    link = ListingLink("not json at all")
     link.touched = True
-    route = await _tabs_route(link)
+    route = await _address_route(link)
 
     class Req: query_params = {}
     body = json.loads((await route(Req())).body)
 
-    assert body == {"url": "", "tabs": []}
+    assert body == {"url": ""}
 
 
-async def test_the_strip_never_causes_a_browser_to_start():
+async def test_the_address_never_causes_a_browser_to_start():
     """Same invariant as the frame, and it has to be stated the same way.
 
-    `browser_tab_list` resolves the browser through `ready`, which STARTS it,
-    so an empty strip drawn by asking is an empty strip that cost an engine.
-    Measured on 0.38.0: 9 processes before, 16 after, and the answer was
-    `{"url": "", "tabs": []}` either way.
+    The tab tool resolved its browser through `ready`, which STARTS it, so an
+    empty strip drawn by asking was an empty strip that cost an engine -
+    measured on 0.38.0 at 9 processes before and 16 after. `browser_list` is
+    the one question that starts nothing, which is why the address was moved
+    onto it rather than onto a tool of its own.
 
-    Known-bad: a guard that reads whether any call has been made on the link.
+    Known-bad: a route that asks `browser_status` or `browser_snapshot` for the
+    url instead. Both resolve a browser, and both would bring the engine up to
+    fill a text field.
     """
-    link = TabbedLink("[]", running=False)
-    route = await _tabs_route(link)
+    link = ListingLink('{"focus": "", "limit": 2, "browsers": []}')
+    route = await _address_route(link)
 
     class Req: query_params = {}
     body = json.loads((await route(Req())).body)
 
-    assert body == {"url": "", "tabs": []}
-    assert [n for n, _ in link.calls] == ["browser_tab_list"], (
-        "the strip asks once and reads the answer: %s"
+    assert body == {"url": ""}
+    assert [n for n, _ in link.calls] == ["browser_list"], (
+        "the address asks once, and only the tool that starts nothing: %s"
         % [n for n, _ in link.calls])

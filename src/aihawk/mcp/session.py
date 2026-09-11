@@ -127,7 +127,7 @@ class StealthSession:
         `list_pages` answers with ids alone, which is enough for this session's
         own bookkeeping and not enough for a caller. Choosing a tab by id with
         no idea what is in it is choosing blind, and until 0.9.0 that is exactly
-        what `browser_tab_list` handed a model, while its description
+        what the tab tool of the day handed a model, while its description
         promised these four fields. The description was the sensible half, so
         the data moved to meet it.
 
@@ -191,7 +191,7 @@ class StealthSession:
                     self._active = new_pid
                     return p
 
-        raise RuntimeError("no such tab; open one with browser_tab_new")
+        raise RuntimeError("this browser has no page open; browser_navigate opens one")
 
     #: The bound the window frame is scaled to fit. The frame is the whole
     #: window, chrome included, so this is a ceiling on the picture handed to

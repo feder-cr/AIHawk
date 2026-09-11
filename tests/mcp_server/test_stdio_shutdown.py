@@ -61,7 +61,8 @@ def test_closing_stdin_with_a_page_open_ends_the_server_and_its_browser():
         assert "result" in _recv(p)
         _send(p, {"jsonrpc": "2.0", "method": "notifications/initialized"})
         _send(p, {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
-                  "params": {"name": "browser_tab_new", "arguments": {}}})
+                  "params": {"name": "browser_navigate",
+                             "arguments": {"url": "data:text/html,<h1>up</h1>"}}})
         answer = _recv(p)
         assert not answer.get("result", {}).get("isError"), answer
         opened = _profiles() - before

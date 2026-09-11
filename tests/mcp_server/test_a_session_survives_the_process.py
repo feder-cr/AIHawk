@@ -106,8 +106,8 @@ async def test_the_session_nobody_opened_a_browser_in_is_written_down_too(regist
     async def _nothing(session, *args, **kwargs):
         return "ok"
 
-    monkeypatch.setattr(actions, "new_page", _nothing)
-    await server.browser_tab_new()
+    monkeypatch.setattr(actions, "navigate", _nothing)
+    await server.browser_navigate("http://127.0.0.1/")
 
     saved = store.load("default")
     assert saved is not None, (

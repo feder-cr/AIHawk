@@ -35,20 +35,20 @@ async def test_server_registers_expected_tools():
         # entirely into `browser_open`, which already had to open the FIRST
         # browser and only ever differed from a restart by name.
         #
-        # `session_new_page`/`session_list_pages`/`session_select_page`/
-        # `session_close_page` -> `browser_tab_new`/`browser_tab_list`/
-        # `browser_tab_select`/`browser_tab_close`, which is what Microsoft's
-        # own Playwright MCP calls them - the rename brings this server's
-        # stated goal, tool names mirroring that server, closer to true rather
-        # than further.
+        # ⛔ AND THE FOUR TAB TOOLS ARE GONE ENTIRELY (2026-09-11). They were
+        # briefly renamed `browser_tab_*` to match Microsoft's Playwright MCP,
+        # and then removed: a browser drives ONE page here, and the answer to
+        # "I need a second page" is the `support` browser, which is a better
+        # answer than a tab because a tab carries the identity's cookies and
+        # fingerprint to the second site. Nothing replaced them - `browser_
+        # navigate` opens the first page by itself.
         #
         # `session_list` and `session_forget` are GONE with no replacement:
         # enumerating or deleting another piece of work is precisely the
         # capability MCP no longer has. Listing THIS process's own two
         # browsers is still `browser_list`; deleting a whole piece of work is
         # done by whoever spawned this process closing it, not by a tool call.
-        "browser_status", "browser_tab_new", "browser_tab_list",
-        "browser_tab_select", "browser_tab_close",
+        "browser_status",
     }
     # EXACT, not a subset. `expected <= names` passed while a tool nobody
     # meant to publish sat in the list, and the surface of an MCP server is

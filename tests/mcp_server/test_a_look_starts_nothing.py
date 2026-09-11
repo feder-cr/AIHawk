@@ -2,7 +2,7 @@
 
 ⛔ THE DEFECT THIS EXISTS FOR SHIPPED IN 0.36.0, 0.37.0 AND 0.38.0, AND NOTHING
 IN THE SUITE COULD SEE IT. Opening the interface drew its panes, the panes asked
-`browser_watch` and `browser_tab_list`, both resolved their browser through
+`browser_watch` and the tab tool of the day, both resolved their browser through
 `ready`, and `ready` STARTS what it resolves. Measured on 0.38.0 with a fresh
 home and no instruction given: 9 firefox processes before, 16 after - roughly
 800 MB and seven seconds - and `browser_watch` then answered an error, so the
@@ -59,19 +59,28 @@ def registry(monkeypatch):
     return reg
 
 
-async def test_asking_for_the_tabs_of_a_browser_that_is_not_running_starts_nothing(registry):
-    """Known-bad: `await actions.list_pages(await ready(...))`, which is what it
-    said until 0.39.0. The registry then holds a session it did not hold, which
-    on a real machine is an engine.
+async def test_looking_at_a_declared_browser_does_not_wake_it(registry):
+    """⛔ THE CASE THE GUARD EXISTS FOR, and it needs a browser that is DECLARED
+    rather than absent. A declared browser is one a saved file brought back: it
+    has an identity and no engine, and it is exactly what `ready` would start
+    if a look reached for it. Against an empty registry the two implementations
+    are indistinguishable, because there is nothing to wake.
+
+    Known-bad: `await actions.list_pages(await ready(...))`, which is what the
+    tab tool said until 0.39.0, or any future `browser_list` that resolves
+    through `ready`. Either turns this look into 800 MB and seven seconds.
     """
-    assert registry.ids() == [], "something was already running before the look"
+    registry.declare(server.addressed(), {"seed": 7, "headless": True})
+    assert registry.ids() == [], "declaring a browser started one"
 
-    said = await server.browser_tab_list()
+    said = json.loads(await server.browser_list())
 
-    assert json.loads(said) == [], (
-        "a browser that is not running has no tabs, and this said otherwise")
+    assert [b["id"] for b in said["browsers"]] == ["main"], (
+        "a declared browser was not reported at all: %r" % said)
+    assert said["browsers"][0]["running"] is False, (
+        "a declared browser was reported as running: %r" % said)
     assert registry.ids() == [], (
-        "looking at the tabs built a browser: %r" % registry.ids())
+        "looking at what is held started the browser: %r" % registry.ids())
 
 
 async def test_asking_for_the_window_of_a_browser_that_is_not_running_starts_nothing(registry):
@@ -100,11 +109,17 @@ async def test_a_browser_that_IS_running_is_still_looked_at(registry):
     before = registry.ids()
     assert before, "the command did not start a browser, so the rest proves nothing"
 
-    rows = json.loads(await server.browser_tab_list())
+    said = json.loads(await server.browser_list())
+    row = said["browsers"][0]
 
-    assert [r["id"] for r in rows] == ["p-1"], (
-        "a running browser's tabs were not read: %r" % rows)
-    assert registry.ids() == before, "reading the tabs built a second browser"
+    assert row["running"] is True, "a running browser was reported as asleep: %r" % row
+    # ⛔ AND THE ADDRESS COMES FROM HERE NOW. With the tab tools gone this is
+    # the only tool that reads the pages, so the interface's address bar is
+    # this field: a `browser_list` that stopped reporting it would leave the
+    # bar blank over a live page and nothing else would notice.
+    assert row["url"] == "http://x/", (
+        "the live page's address was not reported: %r" % row)
+    assert registry.ids() == before, "looking at a running browser built a second one"
 
 
 async def test_a_command_still_starts_a_declared_browser(registry):

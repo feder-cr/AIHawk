@@ -1,7 +1,8 @@
-"""`browser_tab_list` has to return what its description promises.
+"""`describe_pages` has to return what the layer above it promises.
 
-Until 0.9.0 the tool described itself as "Every open tab: id, title, url, and
-which one is active" and returned `["tab-1"]`. Ids, and nothing else.
+Until 0.9.0 the tab tool of the day described itself as "Every open tab: id,
+title, url, and which one is active" and returned `["tab-1"]`. Ids, and nothing
+else.
 
 That is worse than an ordinary docstring drifting, and the reason is what this
 file exists to hold. A tool's description is not documentation for a person who
@@ -16,11 +17,9 @@ sensible half and the data moved to meet it.
 """
 from __future__ import annotations
 
-import json
 
 import pytest
 
-from aihawk.mcp import actions
 from aihawk.mcp.session import StealthSession
 
 pytestmark = pytest.mark.asyncio
@@ -84,9 +83,10 @@ async def test_every_tab_comes_back_with_all_four_fields():
 
 
 async def test_exactly_one_tab_is_flagged_active_and_it_is_the_current_one():
-    """The `active` flag is the half a caller cannot work around. Without it,
-    `browser_tab_select` is the only way to know where you are, and using it to
-    find out changes the answer."""
+    """The `active` flag is the half nothing above can work around. It is what
+    tells the address bar which of several pages the browser is actually on,
+    and a site opening one of its own is exactly when that stops being
+    guessable from the order."""
     s = await _session_with(_Page("https://a.example/", "A"),
                             _Page("https://b.example/", "B"))
     ids = s.list_pages()
@@ -119,19 +119,30 @@ async def test_a_tab_that_will_not_answer_contributes_what_it_can():
     assert set(rows[1]) == FIELDS
 
 
-async def test_the_tool_layer_serialises_all_four_fields():
-    """The gap the defect actually lived in: the session could have known and the
-    tool still returned less. This asserts the JSON a model receives."""
+async def test_every_field_the_readers_above_it_need_is_present():
+    """The gap the defect actually lived in: the session could have known and
+    the layer above still hand on less.
+
+    ⛔ THE LAYER ABOVE MOVED ON 2026-09-11 and this test moved down to meet it.
+    It used to assert the JSON of `actions.list_pages`, the tab tool's
+    serialiser; the tab tools are gone and the only reader of these rows is now
+    `browser_list`, which picks `active` to fill the interface's address bar and
+    `url` to fill the previews. So what has to hold is asserted here, on the
+    rows themselves, and that `browser_list` really carries them through is
+    asserted where that tool is tested - `test_a_look_starts_nothing.py` pins
+    the address, `test_browsers_in_a_session.py` pins the shape.
+    """
     s = await _session_with(_Page("https://a.example/", "A"))
-    payload = json.loads(await actions.list_pages(s))
+    rows = await s.describe_pages()
 
-    assert isinstance(payload, list) and payload
-    assert set(payload[0]) == FIELDS
-    assert payload[0]["url"] == "https://a.example/"
+    assert isinstance(rows, list) and rows
+    assert set(rows[0]) == FIELDS
+    assert rows[0]["url"] == "https://a.example/"
+    assert rows[0]["active"] is True, (
+        "no row is marked active, so the address bar has nothing to point at")
 
 
-async def test_no_tabs_is_an_empty_list_rather_than_an_error():
+async def test_no_pages_is_an_empty_list_rather_than_an_error():
     s = StealthSession()
     s._context = _Context()
     assert await s.describe_pages() == []
-    assert json.loads(await actions.list_pages(s)) == []

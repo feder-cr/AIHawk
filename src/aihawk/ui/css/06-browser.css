@@ -8,17 +8,6 @@
    edge started 4px before the address below it. Now the strip stands on the
    page's ground and the selected tab is the bar's own surface, which is what
    makes a tab look attached to what it opens - and both share one padding. */
-#tabs{ flex:none; display:flex; gap:2px; padding:6px var(--s3) 0;
-       background:var(--base); overflow-x:auto; scrollbar-width:none }
-#tabs button{ flex:0 1 190px; min-width:80px; height:28px; display:flex;
-              align-items:center; gap:6px; border:0; cursor:pointer;
-              border-radius:var(--r) var(--r) 0 0;
-              background:transparent; color:var(--fg-3); padding:0 10px;
-              font:var(--t-label)/1.4 var(--sans); white-space:nowrap;
-              overflow:hidden; text-overflow:ellipsis }
-#tabs button:hover{ background:var(--hover); color:var(--fg-2) }
-#tabs button[aria-selected="true"]{ background:var(--raised); color:var(--fg) }
-#tabs .t{ overflow:hidden; text-overflow:ellipsis }
 
 /* The same height as the conversation's header beside it. They were 38 and
    50, so the top edge of the product broke by twelve pixels on its main

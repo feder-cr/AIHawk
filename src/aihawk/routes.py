@@ -69,7 +69,7 @@ def resume_point(marker: str, epoch: str) -> tuple[int, bool]:
 #: on paths that exist precisely because something went wrong or is missing,
 #: which is where a shape written out a second time drifts unnoticed.
 NO_BROWSERS = {"browsers": [], "focus": "", "limit": 0}
-NO_TABS = {"url": "", "tabs": []}
+NO_ADDRESS = {"url": ""}
 
 
 def build_app(link: Link, sessions: "Sessions") -> Starlette:
@@ -330,19 +330,19 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
                              "focus": got.get("focus") or "",
                              "limit": got.get("limit") or 0})
 
-    async def tabs(request: Request) -> JSONResponse:
-        """Every tab, and which one is current.
+    async def address(request: Request) -> JSONResponse:
+        """Where the browser being watched currently is.
 
-        ONE call where there were two. It asks `browser_tab_list`, which since
-        0.9.0 of the server answers with id, title, url and active - the four
-        fields its description had always promised and had never returned. While
-        it returned ids only this had to ask `browser_evaluate` for
-        `location.href` instead, which is script in the page to learn something
-        the server already knew.
+        ⛔ THE TAB STRIP IS GONE AND SO IS THE TOOL THIS USED TO ASK. A browser
+        drives one page, so there is no strip to draw and no tab to choose;
+        what survives is the address above the stage, which is the half of this
+        route anybody actually reads. `browser_list` already knows it - it is
+        the one tool that still looks at the pages - so this reads the row for
+        the browser being watched instead of asking a second tool the same
+        question.
 
-        A stale or older server is not an error here: anything that does not
-        parse into those fields leaves the strip empty and the address blank,
-        and the pane keeps working as a picture.
+        A stale or older server is not an error: anything that does not parse
+        leaves the address blank and the pane keeps working as a picture.
         """
         seen = await which(request)
         # ⛔ WHICH BROWSER, like the frame route beside it. The address above the
@@ -351,24 +351,15 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         # moment clicking a screen became a way to look somewhere else.
         watching = request.query_params.get("b") or None
         try:
-            raw = await seen.link.call_text(
-                "browser_tab_list",
-                {"browser": watching} if watching else None)
-            rows = json.loads(raw)
+            got = json.loads(await seen.link.call_text("browser_list"))
+            rows = got.get("browsers") or []
         except Exception:
-            return JSONResponse(NO_TABS)
-        if not isinstance(rows, list) or not all(isinstance(r, dict) for r in rows):
-            return JSONResponse(NO_TABS)
-        here = next((r for r in rows if r.get("active")), rows[0] if rows else {})
-        return JSONResponse({"url": here.get("url") or "", "tabs": rows})
-
-    async def select(request: Request) -> JSONResponse:
-        body = await request.json()
-        page_id = (body or {}).get("id", "")
-        if not page_id:
-            return JSONResponse({"error": "no id"}, status_code=400)
-        await (await which(request)).link.call("browser_tab_select", {"page_id": page_id})
-        return JSONResponse({"ok": True})
+            return JSONResponse(NO_ADDRESS)
+        if not isinstance(rows, list):
+            return JSONResponse(NO_ADDRESS)
+        row = next((r for r in rows if isinstance(r, dict)
+                    and (r.get("id") == watching if watching else r.get("focused"))), None)
+        return JSONResponse({"url": (row or {}).get("url") or ""})
 
     async def vanished(_request: Request, exc: Exception) -> JSONResponse:
         """410, because the conversation existed and does not any more.
@@ -395,6 +386,5 @@ def build_app(link: Link, sessions: "Sessions") -> Starlette:
         Route("/chat/events", events),
         Route("/live/frame", frame),
         Route("/live/browsers", browsers),
-        Route("/live/tabs", tabs),
-        Route("/live/select", select, methods=["POST"]),
+        Route("/live/address", address),
     ])

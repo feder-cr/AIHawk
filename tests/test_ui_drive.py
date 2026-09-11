@@ -244,18 +244,16 @@ PAGES = {
 # ⛔ THIS SET WAS ALREADY STALE BEFORE 2026-09-11 AND NOTHING NOTICED, because
 # this file is opt-in (`pytest.mark.ui`) and nothing in CI runs it: it never
 # named `browser_open`, `browser_close` or `browser_list` at all, missing since
-# 0.15.0 introduced them. Twenty tools since the session-removal work on
-# 2026-09-11: `session_start` folded into `browser_open`; `session_status`
-# renamed `browser_status`; `session_new_page`/`session_list_pages`/
-# `session_select_page`/`session_close_page` renamed `browser_tab_new`/
-# `browser_tab_list`/`browser_tab_select`/`browser_tab_close`, matching what
-# Microsoft's own Playwright MCP calls them; `session_list` and
-# `session_forget` had no browser-scoped replacement, because enumerating or
-# deleting a piece of work other than this process's own is precisely the
-# capability MCP no longer has.
+# 0.15.0 introduced them. Sixteen tools after the two removals of 2026-09-11:
+# `session_start` folded into `browser_open`; `session_status` renamed
+# `browser_status`; `session_list` and `session_forget` went with no
+# replacement, because enumerating or deleting a piece of work other than this
+# process's own is precisely the capability MCP no longer has; and the four tab
+# tools went too, because a browser drives ONE page and the answer to "I need a
+# second page" is the `support` browser - which is the better answer anyway,
+# since a tab would carry the identity's cookies to the second site.
 EXPECTED_TOOLS = {
     "browser_open", "browser_close", "browser_list", "browser_status",
-    "browser_tab_new", "browser_tab_list", "browser_tab_select", "browser_tab_close",
     "browser_navigate", "browser_read_text",
     "browser_snapshot", "browser_read_html", "browser_take_screenshot",
     "browser_watch",
@@ -454,7 +452,8 @@ def browser():
         # Warmup, with a long ceiling: the first navigation is the one that
         # launches Firefox, and every timing assertion below assumes that cost
         # has already been paid.
-        driver.call("browser_tab_new", _timeout=300.0)
+        # `browser_navigate` opens the first page itself, which since
+        # 2026-09-11 is the only way a page is opened at all.
         driver.goto("about:blank", timeout=300.0)
         yield driver
     finally:

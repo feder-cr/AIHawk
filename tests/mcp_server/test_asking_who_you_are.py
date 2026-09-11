@@ -89,7 +89,14 @@ async def test_it_reports_the_running_identity(registry):
     assert "4242" in answer
     assert "socks5://exit-a.invalid:1080" in answer
     assert "C:/tmp/acct-a" in answer
-    assert "tab-1" in answer and "example.invalid" in answer
+    assert "example.invalid" in answer, "it does not say where the browser is"
+    # ⛔ THE PAGE ID IS DELIBERATELY ABSENT SINCE 2026-09-11. It used to report
+    # `tab-1 https://...`, which was a vocabulary a caller could act on while
+    # the tab tools existed. They are gone: there is no tool that takes a page
+    # id, so printing one offers a handle to something nothing accepts, and a
+    # model that reads it will spend a turn looking for the tool that uses it.
+    assert "tab-1" not in answer, (
+        "the status hands back a page id no tool takes any more: %r" % answer)
 
 
 async def test_it_reports_the_identity_of_a_browser_that_died(registry):

@@ -73,7 +73,6 @@ async def test_stdio_drive_screenshot_is_image_content():
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as client:
             await client.initialize()
-            await client.call_tool("browser_tab_new", {})
             await client.call_tool(
                 "browser_navigate", {"url": "data:text/html,<h1>ok-stdio</h1>"}
             )

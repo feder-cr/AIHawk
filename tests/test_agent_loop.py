@@ -35,8 +35,7 @@ REAL SHAPES COPIED, AND WHERE THEY WERE READ
   `await mcp.call_tool(name, args)` returning a CallToolResult.
 
   Tool names and schemas are the real ones, taken from the server itself
-  (browser_tab_new, browser_tab_list, browser_tab_select, browser_tab_close,
-  browser_navigate, browser_read_text, browser_snapshot, browser_read_html,
+  (browser_navigate, browser_read_text, browser_snapshot, browser_read_html,
   browser_take_screenshot, browser_click, browser_click_at, browser_type,
   browser_press_key, browser_evaluate).
 
@@ -252,8 +251,8 @@ def test_every_real_tool_name_survives_in_order():
     filter that drops the session_* half. The model can only call what appears
     in this list."""
     names = [
-        "browser_tab_new", "browser_tab_list", "browser_tab_select",
-        "browser_tab_close", "browser_navigate", "browser_read_text",
+        "browser_open", "browser_close", "browser_list",
+        "browser_status", "browser_navigate", "browser_read_text",
         "browser_snapshot", "browser_read_html", "browser_take_screenshot",
         "browser_click", "browser_click_at", "browser_type",
         "browser_press_key", "browser_evaluate",
@@ -319,10 +318,10 @@ def test_a_tool_with_no_input_schema_gets_a_valid_empty_object_schema():
     Known-bad: `getattr(t, "inputSchema", None)` alone, which yields None for the
     first case and {} for the second, both of which the API refuses."""
     class _NoSchemaTool:
-        name = "browser_tab_list"
+        name = "browser_list"
         description = "Every open tab."
 
-    defs = mcp_tools_to_openai([_NoSchemaTool(), tool("browser_tab_close", "Close a tab.", {})])
+    defs = mcp_tools_to_openai([_NoSchemaTool(), tool("browser_close", "Close a browser.", {})])
 
     for d in defs:
         params = d["function"]["parameters"]
@@ -776,15 +775,15 @@ async def test_empty_tool_arguments_become_an_empty_dict():
     Known-bad: `json.loads(call.function.arguments)`, which raises
     JSONDecodeError on the empty string and kills the run on the most ordinary
     call there is."""
-    mcp = ScriptedMCP(tools=tools_result(tool("browser_tab_list", "tabs", {})))
+    mcp = ScriptedMCP(tools=tools_result(tool("browser_list", "browsers", {})))
     model = ScriptedModel([
-        assistant_tool_calls(("c1", "browser_tab_list", "")),
+        assistant_tool_calls(("c1", "browser_list", "")),
         assistant_answer("listed"),
     ])
 
     await run_task(mcp, "list the tabs", client=model, model="m")
 
-    assert mcp.calls == [("browser_tab_list", {})]
+    assert mcp.calls == [("browser_list", {})]
 
 
 async def test_arguments_are_parsed_from_json_not_forwarded_as_a_string():

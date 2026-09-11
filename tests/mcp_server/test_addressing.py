@@ -81,7 +81,7 @@ def echo(monkeypatch):
     async def _echo(session, *args, **kwargs):
         return session
 
-    for name in ("new_page", "list_pages", "navigate", "read_text", "snapshot",
+    for name in ("navigate", "read_text", "snapshot",
                  "read_html", "click", "type_text", "press_key", "evaluate"):
         monkeypatch.setattr(actions, name, _echo)
 
@@ -98,12 +98,12 @@ async def test_a_caller_that_names_nothing_reaches_the_same_one_browser(registry
     """⛔ THE PROMISE OF THE WHOLE CHANGE. Clients written before browsers had
     names send no `browser`, and have to land exactly where they always did.
 
-    Three tools, and deliberately not three of a kind: `browser_tab_new` and
-    `browser_navigate` go through `_retrying`, `browser_read_text` calls
-    `ready` itself. They compose the key in two different places, so a change
-    that addresses only one of them leaves two calls looking at different
-    browsers - and both calls still succeed, which is what makes it the
-    dangerous shape rather than a crash.
+    Three tools, and deliberately not three of a kind: `browser_navigate` goes
+    through `_retrying`, `browser_read_text` and `browser_snapshot` call
+    `ready` themselves. They compose the key in two different places, so a
+    change that addresses only one of them leaves two calls looking at
+    different browsers - and both calls still succeed, which is what makes it
+    the dangerous shape rather than a crash.
 
     Two known-bad inputs, one for each assertion:
 
@@ -114,7 +114,7 @@ async def test_a_caller_that_names_nothing_reaches_the_same_one_browser(registry
       caller is filed under "default/None", every tool agrees with every
       other, and only the second assertion sees it.
     """
-    first = await server.browser_tab_new()
+    first = await server.browser_snapshot()
     second = await server.browser_read_text()
     third = await server.browser_navigate("http://127.0.0.1/")
 
@@ -166,8 +166,10 @@ async def test_a_rebuild_of_one_browser_leaves_the_others_alone(registry, echo,
             raise RuntimeError("the browser went away between two calls")
         return session
 
-    monkeypatch.setattr(actions, "new_page", _fails_once)
-    rebuilt = await server.browser_tab_new(browser="support")
+    # `browser_navigate` is the one tool left that goes through `_retrying`,
+    # which is the machinery under test here.
+    monkeypatch.setattr(actions, "navigate", _fails_once)
+    rebuilt = await server.browser_navigate("http://127.0.0.1/", browser="support")
 
     assert rebuilt is not support, "the browser that failed was handed back, not rebuilt"
     assert support.closed, "the failing browser was dropped without being closed"
@@ -419,13 +421,15 @@ async def test_every_tool_that_reaches_a_browser_offers_a_way_to_name_it():
     """
     ASKS_ABOUT_EVERYTHING_OPEN = {"browser_list"}
     needing = _tools_that_reach_a_browser() - ASKS_ABOUT_EVERYTHING_OPEN
-    # ⛔ THE FLOOR WENT FROM 18 TO 17 WHEN `session_start` WAS FOLDED INTO
-    # `browser_open` (2026-09-11): one fewer tool with its own body reaching the
-    # registry, because there is one fewer tool. The reason belongs here for the
-    # same cause as the floor above - a number that drops on its own, with
-    # nothing said about why, is how a gate goes quiet without anybody deciding
-    # that.
-    assert len(needing) >= 17, (
+    # ⛔ THE FLOOR HAS DROPPED TWICE IN ONE DAY AND BOTH DROPS ARE WRITTEN DOWN,
+    # because a number that falls on its own with nothing said about why is how
+    # a gate goes quiet without anybody deciding that. 18 -> 17 when
+    # `session_start` folded into `browser_open`. 17 -> 14 when the four tab
+    # tools were removed: three of them reached a browser through `ready` or
+    # `_retrying` and were counted here, while `browser_tab_list` went through
+    # `looking` and never was. Fewer tools reach a browser because there are
+    # fewer tools, not because fewer of them are addressed.
+    assert len(needing) >= 14, (
         "only %d tools were found reaching a browser; has the module moved? %r"
         % (len(needing), sorted(needing)))
 

@@ -8,7 +8,7 @@ nav_order: 29
 
 A stealth Firefox as an [MCP](https://modelcontextprotocol.io) server. Add it to
 Claude Code, Claude Desktop, Codex, Cursor or any other MCP client, and your
-assistant gets a real browser: tabs, navigation, reading, clicking, typing,
+assistant gets a real browser: navigation, reading, clicking, typing,
 dropdowns, keys, screenshots, a live view of the window, and a JavaScript
 reader, on a Firefox whose fingerprint is set inside the engine rather than
 bolted onto the page.
@@ -152,14 +152,13 @@ a browser gets when nobody says anything.
 ## Tools
 
 `browser_open`, `browser_close`, `browser_list`, `browser_status`,
-`browser_tab_new`, `browser_tab_list`, `browser_tab_select`, `browser_tab_close`,
 `browser_navigate`, `browser_read_text`, `browser_snapshot`, `browser_read_html`,
 `browser_take_screenshot`, `browser_watch`, `browser_click`, `browser_click_at`,
 `browser_type`, `browser_select_option`, `browser_press_key`, `browser_evaluate`.
 
 Tool names mirror the Microsoft Playwright MCP, so prompts written for it work
-here too. Three groups: the two browsers and their tabs, reading the page, and
-acting on it.
+here too, with one deliberate departure: **there are no tab tools.** Three
+groups: the two browsers, reading the page, and acting on it.
 
 **Every tool below also takes `browser`, optional, and it never appears in the
 tables because the answer is the same for all of them.** Leave it out and you
@@ -176,7 +175,7 @@ a separate server **per conversation** and tells each which one it is the
 moment it starts it, so two conversations are two processes with two saved
 files, never one server juggling several behind your back.
 
-A **session is one identity**, `main`: its tabs, its cookies, its fingerprint,
+A **session is one identity**, `main`: its page, its cookies, its fingerprint,
 its logins. Beside it there may be ONE helper, `support`, for what must not
 touch that identity: a temporary mailbox to receive a verification, a lookup, a
 page you want to read without the site connecting it to the account. The two
@@ -186,8 +185,13 @@ with the process. Open it with `browser_open` when you need it and close it
 with `browser_close` when you are done. By default it goes out through the
 same exit as `main` and carries a fingerprint of its own.
 
-Tabs live inside a browser, which is why the tab tools take a page id and no
-third address.
+⛔ **A browser drives ONE page, and there is no tool to open, list, choose or
+close another.** `browser_navigate` opens the page and every other tool acts on
+it. When you need a second page, that is what `support` is for - and it is the
+better answer anyway: a second tab inside `main` would carry that identity's
+cookies and fingerprint to the second site, which is the one thing the two
+browsers exist to keep apart. A site can still open a page of its own; the
+tools simply follow whichever page is live.
 
 ⛔ Until 0.39.0 a session could hold up to eight browsers under any names, and
 `browser_focus` chose which one unaddressed commands meant. Until 0.41.0 every
@@ -200,13 +204,9 @@ server serves exactly one session for its whole life.
 | Tool | Arguments | What it does |
 |---|---|---|
 | `browser_open` | `browser`, `seed`, `proxy`, `profile`, all optional | Opens `main` or `support`, or reopens one that is already up with those settings, which is how you change identity without changing which browser you are talking to. `support` left without a `proxy` goes out through `main`'s exit. |
-| `browser_close` | `browser` optional | Closes `main` or `support` and frees what it held. Its tabs go with it; the other browser is not touched. Forgets who it was, so the next one under that role is a new stranger rather than that person resumed. Close `support` when you are done with it. |
-| `browser_status` | `browser` optional | Who is browsing right now: the seed, the exit, the profile and the open tabs. Starts nothing; if that browser is not up it says so. |
-| `browser_list` | none | Which of the two browsers are open, where each one is, and which one commands that name none go to. **Answers JSON**: `focus`, `limit`, `note`, and `browsers` with `id`, `running`, `focused` and the `urls` of each one's tabs. A browser that is not running has been declared and has not been needed yet. Starts nothing, so asking is free. |
-| `browser_tab_new` | `browser` optional | Open a tab, make it the active one, return its id. |
-| `browser_tab_list` | `browser` optional | Every open tab: id, title, url, and which one is active. |
-| `browser_tab_select` | `page_id`, `browser` optional | Make a tab the active one. Every other `browser_*` tool acts on it. |
-| `browser_tab_close` | `page_id` optional, `browser` optional | Close a tab, or the active one when the id is left out. |
+| `browser_close` | `browser` optional | Closes `main` or `support` and frees what it held. Its page goes with it; the other browser is not touched. Forgets who it was, so the next one under that role is a new stranger rather than that person resumed. Close `support` when you are done with it. |
+| `browser_status` | `browser` optional | Who is browsing right now: the seed, the exit, the profile and the page it is on. Starts nothing; if that browser is not up it says so. |
+| `browser_list` | none | Which of the two browsers are open, where each one is, and which one commands that name none go to. **Answers JSON**: `focus`, `limit`, `note`, and `browsers` with `id`, `running`, `focused`, the `url` it is on and the `urls` of every page it holds. A browser that is not running has been declared and has not been needed yet. Starts nothing, so asking is free. |
 
 You can ignore `browser_open` entirely: the first tool that needs a page opens
 `main` on its own, as a different stranger every time, which is the right
@@ -223,12 +223,12 @@ standalone client that names none of that, and a checkout run directly, both
 land on the same place, `default`.
 
 The identity is written down as soon as `main` holds one, and what is written
-is the DECLARATION - who it is and where its tabs were pointing - not a running
+is the DECLARATION - who it is and where its page was pointing - not a running
 engine. Reopening it gives the identity back immediately; the engine starts
-when a command is aimed at it, as the right person, **and reopens the tabs it
-had** - the urls are saved with the identity, and the first command aimed at a
-declared browser is what pays them back. That happens once: after it, the tabs
-are the browser's own business. Cookies and logins come back only where a
+when a command is aimed at it, as the right person, **and reopens the page it
+had** - the url is saved with the identity, and the first command aimed at a
+declared browser is what pays it back. That happens once: after it, where the
+browser goes is its own business. Cookies and logins come back only where a
 browser had a `profile`, which is the mechanism that already exists for that.
 `support` is never written down: a helper that survived a restart would be a
 second identity, which is the thing having only two fixed roles rules out.
@@ -264,11 +264,11 @@ that was asked for.
 
 | Tool | Arguments | What it returns |
 |---|---|---|
-| `browser_navigate` | `url`, `wait_until` | Goes to the url in the active tab, opening one if none exists. Answers with the HTTP status and the url it landed on, so a 404 or a redirect to a login wall is visible instead of reading like a normal arrival. `wait_until` is `domcontentloaded` by default, which returns as soon as the markup is parsed; `load` waits for images and stylesheets, `networkidle` for a single-page app that fetches its content after load. |
+| `browser_navigate` | `url`, `wait_until` | Goes to the url in the browser's page, opening one if none exists. Answers with the HTTP status and the url it landed on, so a 404 or a redirect to a login wall is visible instead of reading like a normal arrival. `wait_until` is `domcontentloaded` by default, which returns as soon as the markup is parsed; `load` waits for images and stylesheets, `networkidle` for a single-page app that fetches its content after load. |
 | `browser_read_text` | `selector` (default `body`), `max_chars` (default 6000) | The visible text of an element, markup gone. The cheapest way to read a page. Long text is cut at `max_chars` and the cut is marked, so text without the marker is the whole thing. |
 | `browser_snapshot` | `max_chars` | Title, url, and the interactive elements that are actually visible, each with a `selector` when one can reach it and `at: [x, y]`, its centre in viewport pixels. Not the accessibility tree: a single country `<select>` would contribute about two hundred `<option>` nodes and fill the cap before the form appears. |
 | `browser_read_html` | `mode`: `form` (default), `text`, `full` | The page's HTML reduced to what is worth reading: `form` keeps the interactive surface and the text explaining it, `text` the prose alone, `full` the structure with the noise removed. Not capped, on purpose: cutting markup in the middle leaves tags that mean nothing, so on a large page the answer is long. |
-| `browser_take_screenshot` | none | A screenshot of the active tab, as an image. |
+| `browser_take_screenshot` | none | A screenshot of the page, as an image. |
 | `browser_watch` | none | The whole browser window as a person at the machine sees it: tab strip, address bar, page and the pointer, from a live capture the session keeps running on the active tab. |
 
 The selectors a snapshot hands out are built to match exactly one element, and
@@ -354,9 +354,8 @@ shows the live page beside the conversation.
 
 - This is a browser, not a captcha solver. It does not solve or bypass
   challenges for you; it makes an ordinary Firefox session look like a real one.
-- Up to two browsers per server process, `main` and `support`. Tabs are the
-  way to keep several pages open within one; a third identity needs a second
-  server.
+- Up to two browsers per server process, `main` and `support`, one page each.
+  A third identity needs a second server.
 
 ## License
 

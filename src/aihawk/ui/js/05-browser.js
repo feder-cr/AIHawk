@@ -223,32 +223,13 @@ function paintUrl(u){
   const part = (t,c) => urlEl.appendChild(el('span', c, t));
   part(a.protocol + '//', 'dim'); part(a.host, 'host'); part(a.pathname + a.search, 'dim');
 }
-function paintTabs(rows){
-  const box = $('tabs');
-  /* One tab is not a strip. Showing it would be chrome repeating the address
-     bar directly beneath it. */
-  if(!rows || rows.length < 2){ box.hidden = true; box.textContent = ''; return; }
-  box.hidden = false;
-  box.textContent = '';
-  for(const r of rows){
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.setAttribute('aria-selected', String(!!r.active));
-    b.title = (r.title || '') + (r.url ? '  -  ' + r.url : '');
-    b.dataset.id = r.id;
-    let host = '';
-    try { host = new URL(r.url).host; } catch(err) { host = ''; }
-    b.appendChild(el('span','t', r.title || host || r.id));
-    box.appendChild(b);
-  }
-}
-/* A tab DOES something, so it is the one thing in this chrome that may look
-   clickable. Selecting is an action on the browser like any other, and it goes
-   through the same tool an agent would call. */
-$('tabs').onclick = (e) => {
-  const b = e.target.closest('button'); if(!b) return;
-  ask('/live/select', {id: b.dataset.id}, 'Could not switch to that tab');
-};
+/* ⛔ THE TAB STRIP STOOD HERE AND IS GONE WITH THE TOOLS THAT FED IT. A
+   browser drives one page, so there was never more than one chip to draw -
+   this function already refused to draw a strip of one, calling it "chrome
+   repeating the address bar directly beneath it". What it still carried was a
+   CLICK: a way for the person to move the active page under the agent, which
+   is the same second-control defect the open/close/focus/wake buttons were
+   removed for. The address below is the half anybody read. */
 
 /* ⛔ THE ADDRESS FOLLOWS THE SCREEN YOU ARE LOOKING AT, and with four of them
    there is a case where no single address is the honest answer: nobody has
@@ -262,8 +243,7 @@ function severalOpen(n){
                el('span', 'hint', 'click a screen to follow it'));
 }
 
-/* ⛔ THE WORK AND THE TIMER ARE SEPARATE, for the reason the strip beside it
-   was: changing the layout changes what the address should say, and there is
+/* ⛔ THE WORK AND THE TIMER ARE SEPARATE. Changing the layout changes what the address should say, and there is
    nothing to wait for. While this was one function the bar kept the old answer
    until the next poll landed - two seconds showing one page's address over four
    screens. Calling `where` itself from a click would start a SECOND timer
@@ -272,7 +252,7 @@ async function where(){ if(looking()) await paintWhere(); setTimeout(where, 2000
 
 async function paintWhere(){
   const many = grid > 1 && !pinned2 && onStage().length > 1;
-  if(many){ severalOpen(onStage().length); paintTabs([]); }
+  if(many){ severalOpen(onStage().length); }
   else try {
     const who = watched();
     /* ⛔ AND NEVER OF A BROWSER THAT IS NOT RUNNING. Asking for the tabs of a
@@ -283,12 +263,12 @@ async function paintWhere(){
        preview row and both cell builders already know this rule; this was the
        fifth place that had to and did not. */
     if(who && !fleet.some(b => b.id === who && b.running)){
-      paintUrl(''); paintTabs([]); return;
+      paintUrl(''); return;
     }
     /* `at`, inside `door`, is what adds the question mark, so the browser goes
        in as one too and it appends its own with an ampersand. */
-    const r = await door(who ? '/live/tabs?b=' + encodeURIComponent(who)
-                             : '/live/tabs', {cache:'no-store'});
-    if(r.ok){ const j = await r.json(); paintUrl(j.url || ''); paintTabs(j.tabs); }
+    const r = await door(who ? '/live/address?b=' + encodeURIComponent(who)
+                             : '/live/address', {cache:'no-store'});
+    if(r.ok){ const j = await r.json(); paintUrl(j.url || ''); }
   } catch(err){}
 }

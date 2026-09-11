@@ -285,7 +285,7 @@ async def test_a_deleted_conversation_stays_deleted_while_a_page_is_still_open_o
     assert await sessions.forget("lavoro") is True
 
     # The three questions a page left open on it goes on asking.
-    for path in ("/live/browsers?s=lavoro", "/live/tabs?s=lavoro",
+    for path in ("/live/browsers?s=lavoro", "/live/address?s=lavoro",
                  "/live/frame?s=lavoro"):
         assert client.get(path).status_code == 410, (
             "%s answered a conversation that does not exist" % path)
@@ -479,7 +479,7 @@ async def test_every_request_the_page_makes_carries_the_conversation():
     shows another, and the picture on the right is then somebody else's browser
     with nothing red anywhere.
 
-    Known-bad: change any one `at('/live/tabs')` back to `'/live/tabs'`.
+    Known-bad: change any one `at('/live/address')` back to `'/live/address'`.
     """
     import re
 

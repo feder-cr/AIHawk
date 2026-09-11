@@ -11,11 +11,12 @@ a schema, never something a model can read or pass. A model working through
 this server cannot ask "what else is there" because there is no "else" to ask
 about.
 
-Tool names mirror the Microsoft Playwright MCP so prompts stay portable, and
-that mirror is closer now than it was: the tab tools are `browser_tab_*`,
-which is what Playwright's own MCP calls them - this file used to call them
-`session_*`, which is the last place the word had survived on the tool
-surface.
+Tool names mirror the Microsoft Playwright MCP so prompts stay portable, with
+one deliberate departure: there are no tab tools. A browser here drives ONE
+page. Playwright's MCP offers `browser_tab_*` and this server briefly did too;
+they were removed because the case they serve is better served by `support` -
+a second tab carries the identity's cookies and fingerprint to the second
+site, which is the one thing the two browsers exist to keep apart.
 
 Config comes from STEALTHFOX_* env vars. `browser_open` starts a browser lazily
 if nothing has, exactly as before.
@@ -178,9 +179,14 @@ when it says nothing.
 it exists for: you are signing up somewhere and need a mailbox for the
 verification, so you open `support`, go to a throwaway-mail site there, take the
 address, type it into the form in `main`, and come back to `support` for the
-link. A tab in `main` would carry the same cookies and the same fingerprint to
-both sites, and then the account and the mailbox are one person to anyone
-looking.
+link. A second page inside `main` would carry the same cookies and the same
+fingerprint to both sites, and then the account and the mailbox are one person
+to anyone looking.
+
+Each browser drives ONE page, and there is no way to open, list, choose or
+close another: browser_navigate opens the page and every other tool acts on
+it. When you need a second page, that is what `support` is. Going somewhere
+else and coming back is a navigation, not a second window.
 
 Open it with browser_open when you need it and close it with browser_close when
 you are done: it costs a real browser, it is not saved, and it goes away when
@@ -719,28 +725,37 @@ async def browser_list() -> str:
     rows = []
     for name in have:
         session = registry.peek(addressed(name))
-        urls, running = [], session is not None
+        urls, here_url, running = [], "", session is not None
         if running:
             try:
-                urls = [p["url"] or "" for p in await session.describe_pages()]
+                pages = await session.describe_pages()
+                urls = [p["url"] or "" for p in pages]
+                # ⛔ WHICH PAGE IS THE LIVE ONE, and it has to come from here
+                # now. The interface used to learn the address from the tab
+                # tool, which marked the active row; with the tab tools gone
+                # this is the only tool that still knows, and the answer the
+                # address bar needs is the ACTIVE page rather than the first -
+                # a site that opens one of its own makes those two different,
+                # and `session.page()` drives the newest live one.
+                shown = next((p for p in pages if p["active"]), pages[0] if pages else None)
+                here_url = (shown["url"] or "") if shown else ""
                 _note_tabs(addressed(name), urls)
             except Exception:
                 # Readable as a state rather than as an absence: a browser whose
-                # tabs cannot be read is not a browser with no tabs, and a pane
-                # drawing "no tabs" over a live window would be a lie.
+                # pages cannot be read is not a browser with no pages, and a pane
+                # drawing "nothing open" over a live window would be a lie.
                 running, urls = True, None
         rows.append({"id": name, "running": running, "focused": name == here,
-                     "urls": urls})
+                     "url": here_url, "urls": urls})
     # ⛔ JSON, WHERE THIS ANSWERED PROSE UNTIL 0.18.0, and the reason is the
     # stated architecture rather than taste: the interface is a client of these
     # tools like anybody else, with no privileged path, so a workspace that has
     # to draw one pane per browser needs this question answered in a shape a
     # program can read. The alternative was the page parsing a sentence, which
     # is two readers of one wire format, or a second tool saying the same thing,
-    # which is two sources for one fact. `browser_tab_list` has answered JSON
-    # since 0.9.0 and models read it without trouble; `note` carries the
-    # sentence that used to be the whole answer, because "there is nothing here
-    # yet" is worth saying in words.
+    # which is two sources for one fact. Models read JSON from these tools
+    # without trouble; `note` carries the sentence that used to be the whole
+    # answer, because "there is nothing here yet" is worth saying in words.
     return actions.json_capped({
         "focus": here,
         "limit": MAX_BROWSERS_PER_SESSION,
@@ -765,7 +780,7 @@ async def browser_list() -> str:
 
 @mcp.tool()
 async def browser_status(browser: Browser | None = None) -> str:
-    """Who is browsing right now: the identity, the exit, the profile and the tabs.
+    """Who is browsing right now: the identity, the exit, the profile and the page.
 
     Ask whenever you need to know which person the browser currently is, or
     from where its traffic leaves. The seed is what you would pass to
@@ -785,68 +800,42 @@ async def browser_status(browser: Browser | None = None) -> str:
                 "call browser_open to choose who it is.")
 
     session = registry.peek(at)
-    tabs = "no tabs open"
-    if session is not None:
+    if session is None:
+        where = "the browser is not up; the next tool restarts it as this person"
+    else:
         try:
             rows = await session.describe_pages()
-            tabs = ", ".join(
-                "%s%s %s" % (r["id"], "*" if r["active"] else "", r["url"] or "blank")
-                for r in rows) or "no tabs open"
+            here = next((r for r in rows if r["active"]), rows[0] if rows else None)
+            where = (here["url"] or "blank") if here else "no page open yet"
+            # ⛔ SAID ONLY WHEN IT IS TRUE, and it is not an invitation. There
+            # are no tab tools: a caller cannot make, choose or close a page.
+            # But a SITE can open one, and a status that reported only the
+            # active page would leave somebody reading about a window that has
+            # something else in it. Counted, never named - naming them would be
+            # offering a vocabulary nothing here accepts.
+            if len(rows) > 1:
+                where += " (the site has opened %d more)" % (len(rows) - 1)
         except Exception:
-            tabs = "tabs unreadable"
-    else:
-        tabs = "the browser is not up; the next tool restarts it as this person"
+            where = "the page is unreadable"
 
-    return plan.describe(config) + " tabs: %s." % tabs
+    return plan.describe(config) + " page: %s." % where
 
 
-# --- pages -----------------------------------------------------------------
-
-@mcp.tool()
-async def browser_tab_new(browser: Browser | None = None) -> str:
-    """Open a new tab and make it the active one. Returns its page id.
-
-    Tabs persist across calls and across clients, so this is how you keep one
-    page while working on another rather than navigating back and forth.
-
-    `browser` is `main` unless you say `support`, and they share nothing."""
-    return await _retrying(actions.new_page, browser_id=browser)
-
-
-@mcp.tool()
-async def browser_tab_list(browser: Browser | None = None) -> str:
-    """Every open tab: id, title, url, and which one is active.
-
-    Use it before browser_tab_select: the id alone does not tell you which tab
-    you are switching to.
-
-    Starts nothing: a browser that is not running has no tabs open, and this
-    answers the empty list rather than opening one to find out. Asking what is
-    there is not the same as asking for it to exist.
-
-    `browser` is `main` unless you say `support`, and they share nothing."""
-    session = looking(browser)
-    if session is None:
-        return "[]"
-    return await actions.list_pages(session)
-
-
-@mcp.tool()
-async def browser_tab_select(page_id: str, browser: Browser | None = None) -> str:
-    """Switch the active tab. Every other browser_* tool acts on it.
-
-    Take the id from browser_tab_list or from browser_tab_new.
-
-    `browser` is `main` unless you say `support`, and they share nothing."""
-    return actions.select_page(await ready(browser), page_id)
-
-
-@mcp.tool()
-async def browser_tab_close(page_id: str = "", browser: Browser | None = None) -> str:
-    """Close a tab, or the active one when page_id is left out.
-
-    `browser` is `main` unless you say `support`, and they share nothing."""
-    return await actions.close_page(await ready(browser), page_id)
+# ⛔ THE FOUR TAB TOOLS STOOD HERE AND ARE GONE (2026-09-11, owner's decision:
+# "si usa solo la tab principale e stop, se servono altre tab abbiamo il
+# browser di support"). A browser drives ONE page. The answer to "I need a
+# second page" is not a second tab, it is `support` - which is a better answer
+# for the case that actually comes up, because a tab in `main` carries the
+# identity's cookies and fingerprint to the second site while `support` does
+# not. That argument was already written in the instructions this server hands
+# every model; the tools contradicted it.
+#
+# What the removal does NOT claim is that a browser has exactly one page. A
+# site opens one whenever it likes - `target=_blank`, `window.open` - so the
+# machinery that decides WHICH page a command acts on stays exactly as it was,
+# in `session.page()`. What is gone is any way for a caller to make, list,
+# choose or close one: `browser_navigate` opens the first page by itself, and
+# everything else acts on the page that is there.
 
 
 # --- reading ---------------------------------------------------------------

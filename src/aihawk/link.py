@@ -15,16 +15,18 @@ like anybody else's agent.
 so would be exactly the kind of stale reasoning this project keeps finding one
 step past where it was written. The in-process view could once ask
 `registry.peek` - "is there a browser, without starting one" - and there was no
-such question over MCP at all: `browser_tab_list` called `ensure` regardless, so
-asking would start a browser just to be told nothing was running. `Link` used to
+such question over MCP at all: the tab tool of the day called `ensure`
+regardless, so asking would start a browser just to be told nothing was
+running. `Link` used to
 work around that by remembering whether it had EVER issued an instruction, and
 the live view stayed quiet until it had - a coarser answer than the real
 question, armed by the first call of any kind rather than by whether a browser
 was actually up.
 
-The real question exists now: `browser_watch` and `browser_tab_list` both
-refuse rather than start when nothing is running (`registry.peek` reached from
-`looking`, in `mcp/server.py`), so a client can simply ask and read the answer.
+The real question exists now: `browser_watch` refuses rather than starts when
+nothing is running, and `browser_list` answers what is held without waking any
+of it (`registry.peek` reached from `looking`, in `mcp/server.py`), so a client
+can simply ask and read the answer.
 `Link` remembers nothing any more; there is nothing left it needs to.
 """
 from __future__ import annotations

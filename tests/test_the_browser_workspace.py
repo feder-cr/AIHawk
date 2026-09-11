@@ -68,17 +68,17 @@ class FakeLink:
 
     ⛔ NO TOOL TAKES `session_id`. It never did once MCP stopped having a
     session concept: `browser_watch` and `browser_list` are addressed by
-    which PROCESS answers, never by an argument on the wire.
+    which PROCESS answers, never by an argument on the wire. And there is no
+    tab tool to advertise since 2026-09-11 - a browser drives one page.
     """
 
     def __init__(self):
         self.touched = False
         self.tools = [_Tool("browser_watch", ["browser"]),
                       _Tool("browser_list", []),
-                      _Tool("browser_tab_list", ["browser"])]
+                      ]
         self.calls = []
-        self.answers = {"browser_list": json.dumps(FLEET),
-                        "browser_tab_list": "[]"}
+        self.answers = {"browser_list": json.dumps(FLEET)}
 
     async def call(self, name, arguments=None):
         self.touched = True

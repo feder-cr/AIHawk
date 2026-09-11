@@ -167,8 +167,6 @@ const VERB = {
   browser_evaluate:['Evaluating','Evaluated'], browser_take_screenshot:['Capturing','Captured'],
   browser_watch:['Watching','Watched'],
   browser_select_option:['Choosing','Chose'],
-  browser_tab_new:['Opening tab','Opened tab'],       browser_tab_select:['Switching tab','Switched tab'],
-  browser_tab_close:['Closing tab','Closed tab'],     browser_tab_list:['Listing tabs','Listed tabs'],
   browser_open:['Opening browser','Opened browser'],
   browser_close:['Closing browser','Closed browser'],
   browser_list:['Listing browsers','Listed browsers'],
