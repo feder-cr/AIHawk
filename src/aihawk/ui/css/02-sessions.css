@@ -37,8 +37,11 @@
         box-shadow:14px 0 34px -18px #000 }
 /* The header of the column lines up with the header of the conversation beside
    it: same height, same padding, so the two read as one row across the app. */
-/* The left padding is the button's: it is drawn over this header now, so the
-   word starts after it instead of under it. */
+/* ⛔ NO LEFT PADDING FOR THE BUTTON ANY MORE, and this said the opposite until
+   2026-09-11. The button used to leave the flow when the column opened and be
+   redrawn over this header, which is what made the whole window slide 48px;
+   it stays in the frame now and the drawer starts to its right, so this header
+   has nothing of anybody else's to make room for. */
 #railhead{ flex:none; height:var(--topbar); display:flex; align-items:center;
            gap:8px; padding:0 var(--s3);
            border-bottom:1px solid var(--line-1) }

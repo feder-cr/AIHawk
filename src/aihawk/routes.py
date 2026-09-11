@@ -65,9 +65,14 @@ def resume_point(marker: str, epoch: str) -> tuple[int, bool]:
 
 #: The answer when there is nothing to say, in the shape of the answer when
 #: there is. The page reads the same fields either way, so an empty reply that
-#: omits a field is a reply the page cannot read - and both of these are given
-#: on paths that exist precisely because something went wrong or is missing,
-#: which is where a shape written out a second time drifts unnoticed.
+#: omits a field is a reply the page cannot read - and it is given on paths
+#: that exist precisely because something went wrong or is missing, which is
+#: where a shape written out a second time drifts unnoticed.
+#:
+#: ⛔ THERE WERE TWO OF THESE, AND THIS SENTENCE SAID SO UNTIL 2026-09-11.
+#: `NO_ADDRESS` went with the route that used it, and a comment counting a
+#: thing that is gone is how a reader concludes they are looking at the wrong
+#: file.
 NO_BROWSERS = {"browsers": [], "focus": "", "limit": 0}
 
 

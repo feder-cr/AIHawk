@@ -92,13 +92,23 @@
 [inert]{ opacity:.3 }
 
 #log{ flex:1; overflow:auto; scrollbar-gutter:stable;
-      padding:var(--s5) var(--s4);
-      transition:padding-left 180ms cubic-bezier(.23,1,.32,1) }
-/* ⛔ IT PUSHES, IT DOES NOT COVER. An overlay drawer is the phone pattern;
-   on a desktop the standard one moves the content over, and covering it here
-   sliced every line of the conversation down the middle - readable text with
-   a panel sitting on its first 224 pixels. The header is not moved: it lives
-   above the drawer, which is what the drawing asked for. */
+      padding:var(--s5) var(--s4) }
+/* ⛔ IT COVERS, IT DOES NOT PUSH, AND THE OPPOSITE WAS ARGUED HERE UNTIL
+   2026-09-11 - together with a `transition:padding-left` on the line above,
+   animating a property nothing had set since the rule that set it was
+   deleted. A file that argues against what it does is worse than one that
+   says nothing: the next reader corrects it backwards.
+
+   What the pushing version cost, measured: the padding changed the line
+   width, so every paragraph rewrapped while the panel appeared and the
+   content grew from 4234 to 4412 pixels - the words moving under the eyes of
+   whoever was reading them. The owner named the rule by looking at it: the
+   bar lives on top and the chat must not know a thing.
+
+   What covering costs is the near edge of the conversation, and the words
+   stay where they are to come back to. What it must NOT cover is a control,
+   which is why the drawer stops above the composer - see `--composer-h` in
+   the sessions stylesheet. */
 /* ⛔ AND THE CHAT DOES NOT KNOW THE COLUMN EXISTS. The transcript and the
    composer took a left padding here while the panel was open, to keep out
    from under it - but a padding that changes changes the line width, so every
