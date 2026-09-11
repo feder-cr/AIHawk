@@ -65,6 +65,7 @@ async def test_stdio_drive_screenshot_is_image_content():
     screenshot tool actually returns image bytes."""
     from mcp import ClientSession
     from mcp.client.stdio import stdio_client
+    from mcp.types import ImageContent
 
     from _stdio_helpers import server_params
 
