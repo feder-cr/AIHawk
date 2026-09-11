@@ -219,7 +219,7 @@ def known_chats() -> List[dict]:
     Reading them all to show a column of names would make the cheapest thing the
     interface does the most expensive.
     """
-    out = []
+    out: List[dict] = []
     try:
         files = sorted(_chats_dir().glob("*.json"))
     except Exception:

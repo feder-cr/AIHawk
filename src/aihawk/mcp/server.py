@@ -723,8 +723,12 @@ async def browser_list() -> str:
     rows = []
     for name in have:
         session = registry.peek(addressed(name))
-        urls, here_url, running = [], "", session is not None
-        if running:
+        # `urls` is a list, or None for "running and unreadable" - the two are
+        # different answers and the pane draws them differently, which is why
+        # the type says so rather than collapsing the second into an empty list.
+        urls: list | None = []
+        here_url, running = "", session is not None
+        if session is not None:
             try:
                 pages = await session.describe_pages()
                 urls = [p["url"] or "" for p in pages]
