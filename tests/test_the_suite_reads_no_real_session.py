@@ -107,3 +107,65 @@ def test_the_conftest_imports_nothing_the_light_jobs_do_not_have():
         "it: the two jobs that install pytest alone would fail at fixture "
         "setup, on tests that never touch it"
         % sorted(set(reached) - allowed))
+
+
+def test_a_run_that_did_not_ask_for_an_engine_cannot_reach_one():
+    """⛔ THE FAST JOB HAS NO ENGINE, AND UNTIL 2026-09-11 NOTHING HELD IT TO IT.
+
+    A test in the default selection spawned a real server and called
+    `browser_open`, which downloaded and extracted 665 MB of Firefox plus a
+    52 MB geoip database and launched the browser. It was green on the
+    developer machine in thirty seconds, because the engine was already there,
+    and on CI it took the suite from two minutes to the six-hour job ceiling,
+    on three pushes running, without ever going red: a job that hangs reports
+    `in_progress`, and `in_progress` reads as slow rather than as broken.
+
+    The missing `e2e` marker was the defect; this is the guard, because a
+    marker is the thing the next author forgets too. Same shape as the home
+    above and for the same reason: measure the property, not the calls.
+
+    Known-bad: delete the `INVISIBLE_PLAYWRIGHT_CACHE_DIR` block from
+    `tests/conftest.py`. The first assertion then goes red on every machine,
+    including one whose cache is warm and would otherwise never notice.
+    """
+    import pathlib
+
+    cache = os.environ.get("INVISIBLE_PLAYWRIGHT_CACHE_DIR")
+    assert cache, (
+        "nothing points the engine cache away from the real one, so a test in "
+        "the fast selection can download an engine and nobody will know until "
+        "a CI job stops answering")
+    where = pathlib.Path(cache)
+    assert where.name.startswith("aihawk-no-engine-"), (
+        "the cache points at %r, which is not the throwaway the conftest makes"
+        % cache)
+    assert os.environ.get("INVISIBLE_DOWNLOAD_DEADLINE") == "1", (
+        "without the deadline a test that reaches for an engine still gets one, "
+        "slowly, which is exactly the failure this exists to stop")
+    # And it stayed empty, which is the claim itself rather than a proxy for it.
+    # Order-dependent by construction: a test running after this one could still
+    # fetch, and would be caught by the deadline instead.
+    assert not list(where.iterdir()), (
+        "a test in the fast selection fetched an engine into %s" % cache)
+
+
+def test_only_a_real_request_for_those_markers_lifts_the_guard():
+    """The guard has to read `-m` the way pytest does, or it is wrong twice.
+
+    Known-bad, and the obvious first version: `"e2e" in expression`. The
+    default selection IS `not ui and not e2e`, so that reading treats every
+    plain run as a request for an engine and the guard is never in force. The
+    other direction matters too: a path that happens to contain `e2e` -
+    `tests/mcp_server/test_stdio_e2e.py` is one - is not a marker at all.
+    """
+    import conftest
+
+    asks = conftest._asks_for_an_engine
+    assert asks(["pytest", "-q"]) is False
+    assert asks(["pytest", "-m", "not ui and not e2e"]) is False
+    assert asks(["pytest", "-m", "not e2e"]) is False
+    assert asks(["pytest", "tests/mcp_server/test_stdio_e2e.py"]) is False
+    assert asks(["pytest", "-m", "e2e", "tests/mcp_server"]) is True
+    assert asks(["pytest", "-m", "ui"]) is True
+    assert asks(["pytest", "-me2e"]) is True
+    assert asks(["pytest", "-m", "e2e and not ui"]) is True

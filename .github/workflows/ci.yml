@@ -16,6 +16,7 @@ jobs:
   # already, which is why each package carries its own.
   english:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -28,6 +29,13 @@ jobs:
 
   test:
     runs-on: ${{ matrix.os }}
+    # ⛔ A CEILING, BECAUSE A JOB THAT HANGS IS NOT REPORTED AS BROKEN. On
+    # 2026-09-11 one test in the fast selection started downloading an engine
+    # and every one of these six jobs sat at 64% until GitHub killed it at its
+    # six-hour default - three pushes running. `in_progress` for six hours
+    # reads as a slow job, so nobody looks; a red one at twenty minutes is
+    # read the same minute. The whole matrix takes two minutes at rest.
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -52,6 +60,7 @@ jobs:
   # 2026-08-02 on the sibling packages, and the whole index is walked since.
   releases:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -71,6 +80,7 @@ jobs:
   # the server's own CI did before the merge, on one platform.
   e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -91,6 +101,7 @@ jobs:
   # install from the wheel can tell the difference.
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -121,6 +132,7 @@ jobs:
   version:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:

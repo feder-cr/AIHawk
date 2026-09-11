@@ -27,6 +27,15 @@ async def _open_main(session_id):
 
 
 @pytest.mark.asyncio
+# ⛔ AND `e2e`, BECAUSE `browser_open` STARTS A REAL ENGINE. That is what the
+# marker means, and this test was missing it: measured 2026-09-11, the two
+# servers below downloaded and extracted 665 MB of Firefox and launched it,
+# in the fast job whose contract is that it has no engine. Green here in
+# thirty seconds because the engine was already on this machine; on CI it hung
+# the whole suite to the six-hour ceiling, three pushes running, reported as
+# `in_progress` rather than as a failure. The `e2e` job runs it with the
+# engine named, which is where a test that needs one belongs.
+@pytest.mark.e2e
 async def test_two_real_processes_with_two_session_ids_persist_to_two_files():
     """⛔ THE BLACK-BOX PROOF THAT `AIHAWK_SESSION_ID` ACTUALLY WORKS, with real
     subprocesses rather than a monkeypatched module attribute. This is the

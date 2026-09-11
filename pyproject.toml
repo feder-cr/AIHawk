@@ -91,3 +91,10 @@ markers = [
     "e2e: the server's tests that start a real engine, downloading it when the cache is empty (slow, opt-in: pytest -m e2e tests/mcp_server)",
 ]
 addopts = "-m 'not ui and not e2e'"
+# ⛔ A HUNG TEST NAMES ITSELF INSTEAD OF BURNING THE JOB. Without this, the
+# suite stopped at 64% on every CI runner and stayed there until GitHub
+# killed it at six hours - three times - and the log held not one word about
+# which test it was, because the dots stop and nothing else is ever printed.
+# This dumps every thread's stack after five minutes on a single test, which
+# is a hundred times the whole suite. Measured 2026-09-11.
+faulthandler_timeout = 300

@@ -53,6 +53,60 @@ import pytest
 os.environ["AIHAWK_HOME"] = tempfile.mkdtemp(prefix="aihawk-tests-")
 
 
+def _asks_for_an_engine(argv) -> bool:
+    """Whether this run asked for the markers whose tests start a real browser.
+
+    Read off argv rather than off the pytest config, because this has to be
+    decided at IMPORT for the same reason the home above is set at import.
+    `addopts` never reaches argv, so a plain `pytest -q` answers False, which
+    is the case the guard below exists for, while `-m e2e` answers True.
+
+    A token walk and not a regular expression: the gate in
+    `test_the_suite_reads_no_real_session.py` holds this file to the imports a
+    `pip install pytest` job has, and `re` would pass on the merits - it is
+    stdlib - but the cheapest way to keep a gate strict is to never ask it for
+    an exception. The walk also reads `not e2e` correctly, which is the default
+    exclusion and must NOT count as a request.
+    """
+    expression = ""
+    for i, arg in enumerate(argv):
+        if arg == "-m" and i + 1 < len(argv):
+            expression = argv[i + 1]
+        elif arg.startswith("-m") and len(arg) > 2:
+            expression = arg[2:]
+    negated = False
+    for token in expression.replace("(", " ").replace(")", " ").split():
+        if token == "not":
+            negated = True
+            continue
+        if token in ("e2e", "ui") and not negated:
+            return True
+        negated = False
+    return False
+
+
+#: ⛔ AND NOTHING IN THE FAST SELECTION MAY REACH FOR AN ENGINE. Measured
+#: 2026-09-11: one test spawned a real server and called `browser_open`, which
+#: DOWNLOADED AND EXTRACTED 665 MB of Firefox, plus a 52 MB geoip database, and
+#: launched the browser - inside the job whose entire contract is that it has
+#: no engine. It was green on this machine in thirty seconds, because the
+#: engine was already here, and on CI it took the suite from two minutes to the
+#: six-hour job ceiling on three pushes running. It never went red: a job that
+#: hangs reports `in_progress`, which reads as a slow job rather than a broken
+#: one, so nobody looks.
+#:
+#: The `e2e` marker was the thing missing, and a marker is exactly what the
+#: next author forgets too. So for a run that did not ASK for an engine the
+#: cache is pointed at a throwaway directory and the download is given one
+#: second: a test that reaches for one now goes red in seconds, with the
+#: download named in its captured output, instead of quietly turning a two
+#: minute job into a six hour one.
+if not _asks_for_an_engine(sys.argv):
+    os.environ["INVISIBLE_PLAYWRIGHT_CACHE_DIR"] = tempfile.mkdtemp(
+        prefix="aihawk-no-engine-")
+    os.environ["INVISIBLE_DOWNLOAD_DEADLINE"] = "1"
+
+
 @pytest.fixture(autouse=True)
 def _aihawk_home_is_disposable(tmp_path, monkeypatch):
     monkeypatch.setenv("AIHAWK_HOME", str(tmp_path / "aihawk-home"))
