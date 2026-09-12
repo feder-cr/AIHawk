@@ -61,7 +61,7 @@
               transition:color 120ms ease-out }
 #mode button:hover:not([aria-pressed="true"]){ color:var(--fg-2) }
 #mode button[aria-pressed="true"]{ background:var(--top); color:var(--fg);
-                                    box-shadow:0 1px 2px rgba(0,0,0,.35) }
+                                    box-shadow:0 1px 2px var(--shade-1) }
 /* ⛔ A CONTROL THAT CANNOT DO ANYTHING DOES NOT LOOK READY. With no browser
    open, Live/Frozen, the layout picker and the address are three armed controls
    over an empty room: the bar looked identical whether the product was working

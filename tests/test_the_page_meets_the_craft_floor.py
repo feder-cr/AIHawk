@@ -268,3 +268,51 @@ def test_the_type_scale_has_steps_a_reader_can_see():
             assert rule and ("font-weight" in rule.group(1)
                              or "color" in rule.group(1)), (
                 "%s is the body's size and nothing else separates it" % role)
+
+
+def test_a_recipe_is_written_once_and_read_everywhere():
+    """⛔ THE SAME SURFACE, DESCRIBED TWICE, WITH DIFFERENT NUMBERS. The error
+    fill was 9% in one rule and 8% in the other, its edge 32% and 30%, on two
+    things that are the same thing to the eye - a free-standing box and a step
+    row. Seven shadows were written by hand with six geometries and five alphas,
+    one of them retyping a line token as a raw rgba. Two radii spelled out the
+    pixel value of a token declared a few lines above them. None of this is
+    visible as a defect: it is visible later, as the day one of the two copies
+    moves.
+
+    What is shared is the INK and not the geometry. A whole-value shadow token
+    cannot work here - the drawer throws sideways and the composer throws
+    upward, because it separates an input from a transcript scrolling under it
+    - so the depth is a token and the direction stays with the component.
+
+    Known-bad, four: write a raw rgba shadow ink; re-expand the error mix in a
+    rule; type a radius that a token already names; give a mono surface a rem
+    size when the file declares one for exactly that job.
+    """
+    css = re.sub(r"/\*.*?\*/", "", CSS, flags=re.S)
+    #: the token block itself is where the values are allowed to be literal.
+    body = css[css.index("}", css.index(":root")):]
+
+    inks = re.findall(r"box-shadow:[^;}]*rgba\(0,\s*0,\s*0", body)
+    assert not inks, (
+        "%d shadow(s) mix their own ink instead of taking a shade token, so the "
+        "page has that many opinions about how dark a shadow is: %s"
+        % (len(inks), inks))
+
+    mixes = re.findall(r"color-mix\([^)]*--err[^)]*\)", body)
+    assert not mixes, (
+        "the error surface is re-mixed in a rule instead of read from the two "
+        "tokens that describe it: %s" % mixes)
+
+    sizes = {"4px": "--r-sm", "8px": "--r", "12px": "--r-lg", "999px": "--r-pill"}
+    typed = [(m, sizes[m]) for m in re.findall(r"border-radius:\s*([\d]+px)", body)
+             if m in sizes]
+    assert not typed, (
+        "%d radius(es) spell out a value a token already names: %s"
+        % (len(typed), typed))
+
+    mono = re.findall(r"font:\s*([\d.]+rem)[^;}]*var\(--mono\)", body)
+    assert not mono, (
+        "%d mono surface(s) state their own size while the file declares one "
+        "for steps, code and addresses by name: %s" % (len(mono), mono))
+

@@ -214,7 +214,7 @@ def test_the_numbers_the_split_is_made_of_live_in_one_place():
     """
     body = PAGE[PAGE.index(FIRST):PAGE.index(LAST)]
     code = re.sub(r"/\*.*?\*/", "", body, flags=re.S)
-    typed = re.findall(r"(4[0-9]{2}|530|9)", code)
+    typed = re.findall(r"\b(4[0-9]{2}|530|9)\b", code)
     assert not typed, (
         "the drag code types the layout's numbers again instead of reading "
         "them, so the stylesheet and the control can disagree: %s" % typed)

@@ -48,7 +48,7 @@
         left:var(--spine); width:var(--drawer);
         z-index:5; display:flex; flex-direction:column;
         background:var(--raised); border-right:1px solid var(--line-3);
-        box-shadow:18px 0 36px -14px rgba(0,0,0,.85) }
+        box-shadow:18px 0 36px -14px var(--shade-3) }
 /* An animation and not a transition: the panel is toggled with `hidden`, so it
    goes from not being rendered to being rendered, and there is no `from` value
    for a transition to start at. The global reduced-motion block in the stage
@@ -76,8 +76,8 @@
    one description of what an error looks like. */
 #railsay{ flex:none; margin:0 var(--s2); padding:6px 8px;
           font-size:var(--t-label); line-height:1.4; color:var(--err);
-          background:color-mix(in srgb, var(--err) 9%, transparent);
-          border:1px solid color-mix(in srgb, var(--err) 32%, transparent);
+          background:var(--err-fill);
+          border:1px solid var(--err-edge);
           border-radius:var(--r-sm) }
 #railsay:empty{ display:none }
 #newchat{ flex:none; width:48px; height:48px; display:grid;
@@ -139,7 +139,7 @@
                  top:9px; white-space:nowrap; pointer-events:none; z-index:6;
                  background:var(--top); color:var(--fg); font-size:var(--t-label);
                  padding:4px 8px; border-radius:var(--r-sm);
-                 box-shadow:0 2px 8px rgba(0,0,0,.4);
+                 box-shadow:0 2px 8px var(--shade-1);
                  opacity:0; transition:opacity 125ms ease-out }
 #railtab:hover::after, #railtab:focus-visible::after{ opacity:1 }
 /* Open: the rail lifts a rung and the icon goes to full ink. The state is drawn
@@ -194,7 +194,7 @@
            laid out until they are scrolled to, and Ctrl+F still finds them. */
         content-visibility:auto; contain-intrinsic-size:auto 600px }
 .chat{ position:relative; display:flex; align-items:center; gap:6px; width:100%;
-       padding:7px 8px 7px 10px; border:0; border-radius:8px; background:none;
+       padding:7px 8px 7px 10px; border:0; border-radius:var(--r); background:none;
        /* --t-body and not --t-small: the latter was referenced here, exactly
           once, and declared nowhere, so the size silently fell back to what
           it inherited. A dangling token that renders plausibly is the kind
@@ -249,7 +249,7 @@
    that row is neither hovered nor focused, so the control that deletes a
    conversation was reachable in one direction only. Transparent instead, and
    it shows itself the moment it takes focus. */
-.chat .x{ flex:none; width:24px; height:24px; border:0; border-radius:4px;
+.chat .x{ flex:none; width:24px; height:24px; border:0; border-radius:var(--r-sm);
           background:none; color:var(--fg-3); cursor:pointer; line-height:1;
           opacity:0; transition:opacity 120ms ease-out }
 .chat:hover .x, .chat:focus-within .x, .chat .x:focus-visible{ opacity:1 }

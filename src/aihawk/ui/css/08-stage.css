@@ -29,7 +29,7 @@
          font:inherit; color:inherit; text-align:left; cursor:pointer }
 .frame{ position:relative; overflow:hidden; border:1px solid var(--line-2);
         border-radius:var(--r-lg); background:var(--well);
-        box-shadow:0 12px 30px -20px #000;
+        box-shadow:0 12px 30px -20px var(--shade-3);
         transition:border-color 120ms ease-out }
 .screen:hover .frame{ border-color:var(--line-3) }
 /* The one you are looking at, when there is more than one to look at. A border
@@ -89,7 +89,7 @@
 .tag, .stamp{ position:absolute; top:8px; height:20px; display:flex;
               align-items:center; gap:6px; padding:0 8px; pointer-events:none;
               border-radius:var(--r-sm); background:var(--well);
-              box-shadow:0 0 0 1px rgba(255,255,255,.14);
+              box-shadow:0 0 0 1px var(--line-3);
               font:var(--t-label)/1 var(--mono); letter-spacing:.02em }
 .tag{ left:8px; color:var(--fg-2); max-width:calc(100% - 96px);
       overflow:hidden; text-overflow:ellipsis; white-space:nowrap }

@@ -61,7 +61,9 @@ h3.md-h, h4.md-h, h5.md-h, h6.md-h{
    under it, which is a hierarchy only the weight was carrying. */
 h3.md-h{ font-size:var(--t-h1) }
 h4.md-h{ font-size:var(--t-h2); font-weight:600 }
-h5.md-h, h6.md-h{ font-size:var(--t-h3); font-weight:600; color:var(--fg-2) }
+/* h5 and h6 are dressed by the label rule in the token file: at the body's
+   size and face they were a dimmer paragraph, and the ladder had no slot
+   left for them that size and weight could carry. */
 /* A fenced block inside an answer is already inside the answer's indent, and
    `.out` carries its own for the tool output it was written for: the two
    stacked, so code sat a step to the right of the prose describing it. */
@@ -102,9 +104,9 @@ h5.md-h, h6.md-h{ font-size:var(--t-h3); font-weight:600; color:var(--fg-2) }
    house style of every framework and belongs to none of them; a tint plus a
    hairline in the same hue says the same thing without the costume. */
 .orph  { display:flex; gap:8px; font-size:var(--t-mono); color:var(--err);
-         background:color-mix(in srgb, var(--err) 9%, transparent);
+         background:var(--err-fill);
          border-radius:var(--r-sm);
-         border:1px solid color-mix(in srgb, var(--err) 32%, transparent);
+         border:1px solid var(--err-edge);
          padding:6px 10px }
 
 /* ONE grid: every row on the same rails, so nothing shifts as text changes. */
@@ -121,8 +123,14 @@ h5.md-h, h6.md-h{ font-size:var(--t-h3); font-weight:600; color:var(--fg-2) }
    reading. */
 .lab { user-select:text; grid-column:2; min-width:0; overflow:hidden;
        text-overflow:ellipsis; white-space:nowrap; font-size:var(--t-mono) }
-.lab b   { font-family:var(--sans); font-weight:600; color:var(--fg) }  /* the verb */
-.lab code{ color:var(--accent) }                                        /* the object */
+/* ⛔ THE INK MOVED BETWEEN THESE TWO, AND THEY HAVE TO MOVE TOGETHER. The
+   accent is the page's ACTION colour - it is on the send button - and its most
+   frequent appearance on screen was the address in a step row, which is not an
+   action and is not a thing to press. The address is the object of the line and
+   now carries full ink; the verb steps back to the quieter one, because two
+   full-ink things in one row is no hierarchy at all. */
+.lab b   { font-family:var(--sans); font-weight:600; color:var(--fg-2) } /* the verb */
+.lab code{ color:var(--fg) }                                            /* the object */
 .lab .inline{ color:var(--fg-3) }                    /* a short result, on the row */
 /* ⛔ SIX CHARACTERS OF ROOM, RESERVED, BECAUSE THE CLOCK GROWS WHILE IT RUNS.
    The timing is written ten times a second and the column was sized to its
@@ -181,11 +189,11 @@ h5.md-h, h6.md-h{ font-size:var(--t-h3); font-weight:600; color:var(--fg-2) }
    places had `--err` and `--well` re-expanded as rgba by hand, which is seven
    surfaces that would keep the old hue the day either token moves. */
 .ev[data-state="err"] > .row{
-     background:color-mix(in srgb, var(--err) 8%, transparent);
-     box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--err) 30%, transparent) }
+     background:var(--err-fill);
+     box-shadow:inset 0 0 0 1px var(--err-edge) }
 
 .out{ margin:2px 0 var(--s2) var(--indent);
-      max-height:290px; max-height:15lh; overflow:auto; overscroll-behavior:contain;
+      max-height:15lh; overflow:auto; overscroll-behavior:contain;
       white-space:pre-wrap; overflow-wrap:anywhere;
       /* And the opened detail is not SMALLER than the row that introduced
          it: clicking to read something made the something harder to read. */

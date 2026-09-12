@@ -56,6 +56,23 @@
   --on-accent: #151005;
   --ok:  #79bf94;         /* 8.6:1 */
   --err: #e88b76;         /* 7.4:1 */
+  /* The error SURFACE, written twice with two different percentages - 9 and 8
+     for the fill, 32 and 30 for the edge - on two things that are the same
+     thing to the eye. The mechanisms stay different on purpose (a border on a
+     free-standing box, an inset shadow on a grid row, where a border would
+     shift all four tracks by two pixels); only the colour is shared. */
+  --err-fill: color-mix(in srgb, var(--err) 9%, transparent);
+  --err-edge: color-mix(in srgb, var(--err) 32%, transparent);
+
+  /* ⛔ THE INK OF A SHADOW, NOT THE SHADOW. Seven shadows were written by hand
+     with six geometries and five alphas, and the temptation is a `--e-2` that
+     carries the whole value - which cannot work here, because the offsets are
+     genuinely different jobs: the drawer throws sideways, the composer throws
+     UPWARD because it separates an input from a transcript scrolling under it.
+     So the depth is shared and the direction stays with the component. */
+  --shade-1: rgba(0,0,0,.35);   /* a chip lifted off the thing behind it */
+  --shade-2: rgba(0,0,0,.5);    /* a bar, a tooltip */
+  --shade-3: rgba(0,0,0,.85);   /* a panel over the page */
 
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas,
@@ -137,7 +154,16 @@ code,pre,.g,.meta,.badge,#url{
    meaning, and the token's own comment in this file says what it is for. A
    label is a small word, not a faint one: `--fg-3` is 4.8:1 and still reads as
    quieter than the thing it labels. */
-.label{ font-size:var(--t-label); font-weight:600; letter-spacing:.07em;
+/* ⛔ AND THE TWO DEEPEST HEADINGS JOIN IT RATHER THAN RETYPING IT. `h5` had
+   the body's size, the body's face and less contrast than the paragraph
+   under it - 8.4:1 against 14.5 - so it read as a dimmer sentence rather
+   than as a heading. The file already says that levels sharing a size are
+   separated by weight and colour, and `h4` has taken that slot, so what is
+   left for `h5` is a different KIND: the label treatment this page already
+   uses for a small word that is not a faint one. Named here instead of
+   copied into the transcript, or the day this rule is retuned they drift. */
+.label, .say h5.md-h, .say h6.md-h, .answer h5.md-h, .answer h6.md-h{
+        font-size:var(--t-label); font-weight:600; letter-spacing:.07em;
         text-transform:uppercase; color:var(--fg-3); line-height:1 }
 .sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%) }
 .skip{ position:absolute; left:var(--s2); top:var(--s2); z-index:20;
