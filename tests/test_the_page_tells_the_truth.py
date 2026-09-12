@@ -844,7 +844,9 @@ def test_the_session_drawer_never_covers_the_input():
     a constant would be right until somebody wrote a third line.
 
     Known-bad: anchor the rail to the bottom of the window again, or publish a
-    constant instead of the composer's own height.
+    composer's HEIGHT instead of the distance to it: the same number only
+    while the composer sits at the bottom of the window, and below 720px the
+    panes stack and it does not.
     """
     import json
     import shutil
@@ -855,7 +857,7 @@ def test_the_session_drawer_never_covers_the_input():
     #: the panel has to stop at the variable, not at the window.
     style = CODE[CODE.index("#rail {"):]
     style = style[:style.index("}") + 1]
-    assert "bottom:var(--composer-h" in style.replace(" ", ""), (
+    assert "bottom:var(--rail-bottom" in style.replace(" ", ""), (
         "the drawer is anchored to the bottom of the window again, so it lies "
         "over the composer: %r" % " ".join(style.split()))
 
@@ -863,14 +865,14 @@ def test_the_session_drawer_never_covers_the_input():
     if not node:
         pytest.skip("needs node to EXECUTE the publisher")
 
-    src = CODE[CODE.index("function publishComposerHeight("):]
+    src = CODE[CODE.index("function publishRailFloor("):]
     src = src[:src.index(chr(10) + "}") + 2]
-    done = subprocess.run([node, "-e", src + chr(10) + "let set = {};\nglobalThis.$ = id => id === 'f'\n  ? {getBoundingClientRect: () => ({height: 83.4})}\n  : null;\nglobalThis.document = {documentElement: {style: {\n  setProperty(k, v){ set[k] = v; }}}};\nglobalThis.ResizeObserver = undefined;\npublishComposerHeight();\nprocess.stdout.write(JSON.stringify({set}));"],
+    done = subprocess.run([node, "-e", src + chr(10) + "let set = {};\nglobalThis.window = {innerHeight: 900};\nglobalThis.innerHeight = 900;\nglobalThis.addEventListener = () => {};\nglobalThis.$ = id => id === 'f'\n  ? {getBoundingClientRect: () => ({top: 783.2, height: 83.4})}\n  : null;\nglobalThis.document = {documentElement: {style: {\n  setProperty(k, v){ set[k] = v; }}}};\nglobalThis.ResizeObserver = undefined;\npublishRailFloor();\nprocess.stdout.write(JSON.stringify({set}));"],
                           capture_output=True, text=True,
                           encoding="utf-8", timeout=30)
     assert done.returncode == 0, done.stderr
     got = json.loads(done.stdout)["set"]
 
-    assert got.get("--composer-h") == "83px", (
-        "the height the panel stops at does not come from the composer itself, "
-        "so it is right until somebody types a third line: %r" % got)
+    assert got.get("--rail-bottom") == "117px", (
+        "the floor the panel stops at is not the distance to the composer, "
+        "so it is right until the panes stack and the input moves: %r" % got)

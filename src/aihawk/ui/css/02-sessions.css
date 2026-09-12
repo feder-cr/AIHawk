@@ -27,10 +27,17 @@
    the panel appeared, which is what it was removed for.
 
    So the CHAT still knows nothing: the coupling runs the other way, and the
-   panel knows where the input begins. `--composer-h` is measured from the
-   composer itself, because the textarea grows with what is typed into it - a
-   constant here would be right until somebody wrote three lines. */
-#rail { position:absolute; top:0; bottom:var(--composer-h, 0px);
+   panel knows where the input begins.
+
+   ⛔ AND IT IS THE DISTANCE TO THE INPUT, NOT THE HEIGHT OF IT. The first
+   version published the composer's height, which is the same number only
+   while the composer sits at the bottom of the window. Below 720px the panes
+   stack - the conversation becomes `60vh` with the browser under it - so the
+   input is in the MIDDLE of the window and the drawer ran straight over it
+   again: measured 34% at 719px and 43% at 600px, in a real browser, on the
+   build that was supposed to have fixed this. `I made it vertical so it holds
+   at every width` was the claim, and eight widths said otherwise. */
+#rail { position:absolute; top:0; bottom:var(--rail-bottom, 0px);
         left:var(--spine); width:var(--drawer);
         z-index:5; display:flex; flex-direction:column;
         background:var(--well); border-right:1px solid var(--line-1);
