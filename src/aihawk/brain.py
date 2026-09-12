@@ -20,7 +20,7 @@ from __future__ import annotations
 from typing import Awaitable, Callable
 
 from . import actions_help
-from .agent import SYSTEM_PROMPT, Conversation
+from .agent import Conversation, system_message
 from .link import Link
 
 Say = Callable[[str, str], Awaitable[None]]
@@ -89,7 +89,7 @@ class OpenRouterBrain(Brain):
         """
         if messages:
             self._convo.messages = (
-                [{"role": "system", "content": SYSTEM_PROMPT}]
+                [system_message()]
                 + [m for m in messages if m.get("role") != "system"])
         if usage:
             self._convo.usage.update(usage)
@@ -109,4 +109,5 @@ class OpenRouterBrain(Brain):
         # cancellation the stop button raises or something the interface's own
         # handler already reports.
         await self._convo.run(text, link.call, link.tools,
+                              instructions=getattr(link, "instructions", ""),
                               say=say, describe=actions_help.summarise)

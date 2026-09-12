@@ -22,8 +22,10 @@ SYSTEM_PROMPT = (
     "browser ONLY through the provided tools. Inspect pages with "
     "browser_read_text / browser_snapshot / browser_read_html before acting on "
     "them. A person may be watching the browser while you work, so prefer one "
-    "clear action at a time over long chains. When the task is done, reply with "
-    "the answer and do NOT call any more tools. Report only what the page "
+    "clear action at a time over long chains. When the task is done: first close "
+    "the support browser with browser_close if you opened it and nothing more "
+    "needs it, then reply with the answer, and call no more tools after that. "
+    "Report only what the page "
     "actually shows. Say plainly what failed and what you could not check: the "
     "person reading is deciding what to do next. Write the way a competent "
     "colleague talks: the answer first, then what supports it. Do not announce "
@@ -40,6 +42,33 @@ SYSTEM_PROMPT = (
 #: and wrong as a status marker at the head of every line", and the answers came
 #: back with a tick at the head of every line. A rule with an exception in it is
 #: a rule the model satisfies by finding the exception.
+
+#: ⛔ THE END-OF-TURN SENTENCE USED TO FORBID THE CALL THAT CLOSES `support`.
+#: It said "reply with the answer and do NOT call any more tools", and the
+#: only text that said to close the helper was the server's instructions,
+#: which the loop never sent. Measured 2026-09-12 with the real model on a
+#: task that needs both browsers: six runs out of six left `support` open,
+#: and in the owner's own sessions one conversation of 247 steps used it 29
+#: times and never closed it. The order is now part of the sentence about
+#: ending, because that is the moment the model was told to stop.
+
+
+def system_message(instructions: str = "") -> dict:
+    """The one system message, from this build's prompt plus what the server
+    says about itself.
+
+    ⛔ ONE FUNCTION, THREE WRITERS. The message was assembled in the
+    constructor, in the brain's restore and nowhere else, and the server's
+    instructions - the only text that defines what `support` is for and that
+    whoever opens it closes it - were in neither. They travel with the link
+    and are refreshed at the start of every run, so a restored transcript and
+    a new one carry the same current instructions.
+    """
+    text = SYSTEM_PROMPT
+    if instructions:
+        text += chr(10) + chr(10) + instructions.strip()
+    return {"role": "system", "content": text}
+
 
 Say = Callable[[str, str], Awaitable[None]]
 
@@ -148,7 +177,7 @@ class Conversation:
         self.client = client
         self.model = model
         self.max_tokens = max_tokens
-        self.messages: List[dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
+        self.messages: List[dict] = [system_message()]
         self.tool_defs: Optional[List[dict]] = None
         self.usage = {"prompt": 0, "completion": 0, "calls": 0, "last_prompt": 0}
 
@@ -168,7 +197,7 @@ class Conversation:
         self.usage["last_prompt"] = last
 
     async def run(self, task: str, call_tool, tools, *, say: Say = _silent,
-                  describe=None) -> str:
+                  describe=None, instructions: str = "") -> str:
         """Run one instruction to an answer.
 
         `call_tool(name, args)` performs a tool call and returns the MCP result;
@@ -178,6 +207,10 @@ class Conversation:
         """
         if self.tool_defs is None:
             self.tool_defs = mcp_tools_to_openai(tools)
+        # Refreshed every run rather than set once: the instructions belong to
+        # the server the link is talking to now, and a transcript restored from
+        # disk arrived with a system message this process did not write.
+        self.messages[0] = system_message(instructions)
         self.messages.append({"role": "user", "content": task})
 
         # No turn ceiling. There was one, and what it did in practice was end

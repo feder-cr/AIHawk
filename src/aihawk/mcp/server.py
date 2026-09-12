@@ -188,9 +188,10 @@ close another: browser_navigate opens the page and every other tool acts on
 it. When you need a second page, that is what `support` is. Going somewhere
 else and coming back is a navigation, not a second window.
 
-Open it with browser_open when you need it and close it with browser_close when
-you are done: it costs a real browser, it is not saved, and it goes away when
-this server does. There is no third browser and no way to get one from here -
+Open it with browser_open when the task needs it, and close it with
+browser_close as soon as the task no longer needs it, before you give your
+answer: it costs a real browser, it is not saved, and it goes away when this
+server does. There is no third browser and no way to get one from here -
 `main` and `support` are the whole of what this gives you."""
 
 
@@ -599,40 +600,34 @@ async def browser_open(browser: Browser | None = None, seed: int | None = None,
                        proxy: str | None = None, profile: str | None = None) -> str:
     """Open `main` or `support`, or reopen one as somebody else.
 
-    `main` is your own identity - its page, cookies, fingerprint, the logins - and
-    `support` is a helper beside it for what must not touch that identity: a
-    temporary mailbox to receive a verification, a lookup, a page you want to
-    read without the site connecting it to the account. They share nothing.
-    The helper is not saved: it lives for the task and dies with this server.
+    `main` is your own identity: its page, cookies, fingerprint, logins.
+    `support` is a helper beside it for what must not touch that identity - a
+    temporary mailbox for a verification, a lookup the site must not connect to
+    the account. They share nothing. `support` is yours to manage: open it when
+    the task needs a second identity, and close it with browser_close as soon
+    as the task no longer needs it, before you answer. It is not saved.
 
     Called on a browser that is already up, this REOPENS it with the settings
-    given, and what it held is gone - so this is also how you become somebody
-    else: a fresh stranger, the same person as last time by seed, or a saved
-    profile that is already logged in somewhere.
+    given, and what it held is gone.
 
-    seed     the browser's identity. Same seed, same fingerprint, every time.
-             Leave it out and one is drawn, and the answer tells you which, so
-             you can ask for it again later.
-    profile  a directory that keeps cookies and logins between opens. A
-             profile also KEEPS ITS SEED: the first open on a new one stores
-             the identity inside it, and every open after reuses it, so a
-             login does not come back wearing different hardware. Pass "" to
-             insist on no profile at all. A relative path is resolved against
-             the server's own directory, so the answer reports the full path
-             used.
-    proxy    where the traffic goes out, as `http://user:pass@host:port` or
-             `socks5://host:port`. Pass "" to insist on going out from this
-             machine's own address. Left out for `support`, it goes out
-             through the same exit `main` already has; give it a value only
-             if you mean `support` to look different. A profile does NOT pin
-             its exit the way it pins its seed: timezone, locale and
-             geography come from the exit, so the same login arriving from
-             another country is as visible as one arriving on different
-             hardware.
-
-    Opening one takes several seconds and costs real memory. browser_close
-    frees it.
+    seed     the identity; same seed, same fingerprint. Left out, one is drawn.
+    profile  a directory keeping cookies, logins and the seed between opens;
+             "" means none.
+    proxy    the exit, `http://user:pass@host:port` or `socks5://host:port`;
+             "" means this machine's own address; left out for `support`, it
+             shares the exit `main` has.
     """
+    # ⛔ THE DESCRIPTION ABOVE IS WHAT THE MODEL READS, AND IT IS CUT AT 1024
+    # CHARACTERS BY THE API. The version before this one was 1996: the model
+    # saw it end mid-word inside the paragraph about profiles, and the sentence
+    # that told it to close the helper was past the cut. A gate in the server
+    # tests now holds every tool's description under the limit. What was cut
+    # from here, kept for a reader of the source: a profile also keeps its
+    # seed, so a login does not come back wearing different hardware; a profile
+    # does NOT pin its exit - timezone, locale and geography come from the
+    # exit, so the same login arriving from another country is as visible as
+    # one arriving on different hardware; and `support` takes a proxy of its
+    # own only when it is meant to look different from `main`.
     role = browser or DEFAULT_BROWSER_ID
 
     if role not in (DEFAULT_BROWSER_ID, SUPPORT_BROWSER_ID):
@@ -997,24 +992,23 @@ async def browser_click_at(x: float, y: float, hold_seconds: float = 0.0,
                            browser: Browser | None = None) -> Image:
     """Click (or press-and-hold) a raw viewport coordinate instead of a
     selector - for targets a selector cannot reliably reach: a slider track, a
-    canvas-drawn captcha, or a precise point inside a wider element. Moves the
+    canvas-drawn captcha, a precise point inside a wider element. Moves the
     pointer there first (no teleport), then down, then up, holding first if
     hold_seconds is set. Returns a screenshot taken right after release.
 
-    hold_seconds needs invisible-playwright 0.9.0 or newer to mean anything. In
-    every earlier version the wait it is built on returned instantly, so the
-    press and the release happened in the same frame and the hold never
-    happened - on the one tool that exists for sliders and press-and-hold
-    challenges. The floor in pyproject.toml is set accordingly.
-
     Coordinates are relative to the VIEWPORT, not to the page, so the ones in a
-    snapshot go stale the moment anything scrolls: a click, a keypress, a lazy
-    image loading in above the fold. Nothing raises when that happens - the
-    click simply lands on whatever is at that spot now. Take a fresh snapshot
-    after anything that could have moved the page, and prefer browser_click with
-    the element's `selector` whenever it has one.
+    snapshot go stale the moment anything scrolls. Nothing raises when that
+    happens: the click lands on whatever is at that spot now. Take a fresh
+    snapshot after anything that could have moved the page, and prefer
+    browser_click with the element's `selector` whenever it has one.
 
     `browser` is `main` unless you say `support`, and they share nothing."""
+    # hold_seconds needs invisible-playwright 0.9.0 or newer to mean anything:
+    # in every earlier version the wait it is built on returned instantly, so
+    # the press and the release happened in the same frame and the hold never
+    # happened, on the one tool that exists for sliders and press-and-hold
+    # challenges. The floor in pyproject.toml is set accordingly. Said here and
+    # not in the description above, which the API cuts at 1024 characters.
     png = await actions.click_at(
         await ready(browser),
         x, y, hold_seconds)

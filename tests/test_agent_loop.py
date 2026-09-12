@@ -62,6 +62,7 @@ from openai.types.chat.chat_completion_message_function_tool_call import (
 
 from aihawk import agent as agent_module
 from aihawk.agent import (
+    system_message,
     SYSTEM_PROMPT,
     Conversation,
     _result_text,
@@ -1115,3 +1116,91 @@ def test_a_reopened_conversation_gets_THIS_build_instructions():
     assert brain.messages[0]["role"] == "system", "the prompt has to lead"
     assert [m["content"] for m in brain.messages[1:]] == [
         "open the listings", "three roles"], "the transcript itself was altered"
+
+
+async def test_the_server_instructions_reach_the_model():
+    """⛔ THE SERVER'S INSTRUCTIONS WENT NOWHERE. They are the one place the
+    two-browser contract is written - what `support` is for, and that whoever
+    opens it closes it - and the loop sent the system prompt and the tool
+    descriptions and nothing else. Measured 2026-09-12: six runs of a task that
+    needs both browsers, `support` left open in six.
+
+    They travel with the link and are put into the system message at the start
+    of every run, by the one function that builds it, so a transcript restored
+    from disk and a fresh one carry the same current instructions.
+
+    Known-bad, three: drop the argument; build the system message in the
+    constructor only, so a restored transcript keeps the old one; put the
+    instructions in a second system message instead of the one.
+    """
+    mcp = ScriptedMCP(tools=tools_result(tool("browser_open")), results={})
+    model = ScriptedModel([assistant_answer("done"), assistant_answer("done")])
+    convo = Conversation(model, "m")
+    tools = (await mcp.list_tools()).tools
+    await convo.run("go", mcp.call_tool, tools, instructions="There are two browsers.")
+
+    system = [m for m in model.requests[0]["messages"] if m["role"] == "system"]
+    assert len(system) == 1, "the instructions travel as a second system message"
+    assert system[0]["content"].startswith(SYSTEM_PROMPT), "the prompt is no longer first"
+    assert system[0]["content"].endswith("There are two browsers."), (
+        "the server's instructions do not reach the model: %r" % system[0]["content"][-80:])
+    assert convo.messages[0] == system_message("There are two browsers.")
+
+    #: and a run with a different server replaces them rather than stacking
+    await convo.run("again", mcp.call_tool, tools, instructions="Only one browser.")
+    system = [m for m in model.requests[1]["messages"] if m["role"] == "system"]
+    assert len(system) == 1 and system[0]["content"].endswith("Only one browser."), (
+        "the instructions of a previous run are still in the message")
+
+
+def test_the_end_of_the_turn_closes_the_helper_before_the_answer():
+    """⛔ THE SENTENCE ABOUT ENDING FORBADE THE CALL THAT CLOSES `support`. It
+    said `reply with the answer and do NOT call any more tools`, which is the
+    moment the model was told to stop - so the close never came, in every run
+    measured and in the owner's own 247-step session. The order is in the
+    sentence now, and without loophole vocabulary: an exception is what a model
+    reaches for.
+
+    Known-bad: put the old sentence back, or phrase the close as an exception.
+    """
+    low = SYSTEM_PROMPT.lower()
+    ending = next(s for s in low.split(". ") if "task is done" in s)
+    assert "support" in ending and "browser_close" in ending, (
+        "the end-of-turn sentence does not say to close support: %r" % ending)
+    assert ending.index("browser_close") < ending.index("answer"), (
+        "the close comes after the answer in the sentence, which is after the "
+        "model has stopped calling tools: %r" % ending)
+    for loophole in ("except", "unless", "only exception"):
+        assert loophole not in ending, (
+            "the close is phrased as an exception (%r), which is what a model "
+            "reaches for: %r" % (loophole, ending))
+
+
+async def test_the_brain_hands_the_link_instructions_to_the_loop():
+    """The loop can carry the instructions and the interface can still forget
+    to pass them: the brain is the one caller in the product, and this drives
+    it with a link that has some.
+
+    Known-bad: drop `instructions=` from the brain's call.
+    """
+    from aihawk.brain import OpenRouterBrain
+
+    class LinkWithInstructions:
+        instructions = "Two browsers, main and support."
+
+        def __init__(self, mcp):
+            self.tools = tools_result(tool("browser_open")).tools
+            self.call = mcp.call_tool
+
+    mcp = ScriptedMCP(tools=tools_result(tool("browser_open")), results={})
+    model = ScriptedModel([assistant_answer("done")])
+
+    async def say(kind, text):
+        pass
+
+    await OpenRouterBrain(model, "m").handle("go", LinkWithInstructions(mcp), say)
+    system = [m for m in model.requests[0]["messages"] if m["role"] == "system"]
+    assert len(system) == 1 and system[0]["content"].endswith("Two browsers, main and support."), (
+        "the interface's brain does not hand the server's instructions to the "
+        "loop: %r" % system[0]["content"][-80:])
+

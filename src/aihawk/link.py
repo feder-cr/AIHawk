@@ -58,6 +58,12 @@ class Link:
         self._ctx: Any = None
         self._sess_ctx: Optional[ClientSession] = None
         self._tools: Optional[list] = None
+        #: What the server says about itself at `initialize`. It is the one
+        #: place the two-browser contract is written - what `support` is for,
+        #: and that whoever opens it closes it - and until 2026-09-12 nothing
+        #: read it: the loop sent the system prompt and the tool descriptions
+        #: and the server's own instructions went nowhere.
+        self._instructions: str = ""
         # One instruction at a time. Two tool calls racing on one browser is not
         # a transport problem, it is two hands on the same mouse.
         self._lock = asyncio.Lock()
@@ -72,7 +78,8 @@ class Link:
         read, write = await self._ctx.__aenter__()
         self._sess_ctx = ClientSession(read, write)
         self._session = await self._sess_ctx.__aenter__()
-        await self._session.initialize()
+        started = await self._session.initialize()
+        self._instructions = getattr(started, "instructions", None) or ""
         self._tools = (await self._session.list_tools()).tools
         return self
 
@@ -90,6 +97,11 @@ class Link:
     @property
     def tools(self):
         return self._tools or []
+
+    @property
+    def instructions(self) -> str:
+        """The server's own instructions, verbatim, or an empty string."""
+        return self._instructions
 
     @property
     def session(self) -> ClientSession:
