@@ -136,10 +136,15 @@
      the room is a property of the TASK - reading a long answer wants one
      ratio, watching a form being filled wants another - so it is not a number
      this file gets to decide once. -->
+<!-- ⛔ NO `aria-valuemin` ON THE SEPARATOR, AND NO COMMENT INSIDE ITS TAG.
+     The floor is a token the script reads, and a literal here would be a
+     second copy of it that nothing updates; the script writes all three
+     bounds on the first pass. The first version of this note sat BETWEEN the
+     attributes, where the `>` that ends a comment ends the start tag instead:
+     every attribute after it became visible text between the two panes,
+     `aria-label="Width of the conversation"` printed down the seam, with
+     577 tests green. Found by looking at a screenshot. -->
 <div id="split" role="separator" aria-orientation="vertical" tabindex="0"
-     <!-- No `aria-valuemin` here: the floor is a token the script reads, and a
-          literal in the markup would be a second copy of it that nothing
-          updates. The script writes all three bounds on the first pass. -->
      aria-label="Width of the conversation"
      aria-valuenow="530"></div>
 

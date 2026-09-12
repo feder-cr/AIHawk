@@ -115,3 +115,51 @@ def test_nothing_you_have_to_click_is_smaller_than_the_floor():
     assert not small, (
         "%d control(s) declare less than the 24px WCAG 2.2 asks for: %s"
         % (len(small), ", ".join(small)))
+
+
+def test_no_attribute_leaks_onto_the_page_as_text():
+    """⛔ A COMMENT INSIDE A START TAG ENDS THE TAG. The `>` that closes an HTML
+    comment is the `>` that closes whatever tag it sits in, so every attribute
+    written after it becomes visible text. It happened to the separator on
+    2026-09-12: `aria-label="Width of the conversation" aria-valuenow="530">`
+    printed down the seam between the two panes, in body type, with 577 tests
+    green - because nothing in the suite reads the page the way a browser
+    does. Found by looking at a screenshot.
+
+    Two checks, from the parser side and from the source side: no text node
+    outside script and style may carry attribute syntax, and no start tag may
+    contain a comment opener.
+
+    Known-bad: put a comment back between two attributes of any tag.
+    """
+    from html.parser import HTMLParser
+
+    class Reader(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.inside = None
+            self.leaks = []
+
+        def handle_starttag(self, tag, attrs):
+            if tag in ("script", "style"):
+                self.inside = tag
+
+        def handle_endtag(self, tag):
+            if tag == self.inside:
+                self.inside = None
+
+        def handle_data(self, data):
+            if self.inside is None and '="' in data:
+                self.leaks.append(" ".join(data.split())[:90])
+
+    reader = Reader()
+    reader.feed(PAGE)
+    assert not reader.leaks, (
+        "attribute syntax is drawn on the page as text, which is what a comment "
+        "inside a start tag does to everything after it: %s" % reader.leaks)
+
+    inside = re.findall(r"<[a-zA-Z][^<>]*<!--", PAGE)
+    assert not inside, (
+        "%d start tag(s) carry a comment opener, and the comment's closing "
+        "bracket will end the tag early: %s" % (len(inside), inside))
+
