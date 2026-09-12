@@ -1,0 +1,23 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.feder-cr/aihawk",
+  "title": "AIHawk",
+  "description": "AI browser agent: browses, clicks, types, and reads real web pages from plain-English instructions.",
+  "repository": {
+    "url": "https://github.com/feder-cr/AIHawk",
+    "source": "github"
+  },
+  "version": "0.43.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "aihawk",
+      "version": "0.43.0",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
