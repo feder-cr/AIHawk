@@ -968,3 +968,190 @@ def test_the_sessions_panel_puts_the_page_behind_it_out_of_play():
         "closing the panel released a hold it never took: a conversation "
         "deleted elsewhere had the browser pane out of play, and this brought "
         "it back fully lit on a page where nothing is live")
+
+
+def test_a_step_nobody_landed_stops_claiming_to_be_running():
+    """⛔ PRESS STOP WITH A CLICK IN FLIGHT AND THAT ROW BREATHED FOR EVER.
+
+    No result ever arrives for a step that was cancelled, and `land` is the only
+    thing that settles a row, so it kept `data-state="run"` - the breathing dot,
+    the present-tense verb - for the life of the page. A line in a log asserting
+    that something is happening, hours after it stopped.
+
+    The same pass found the other half: a row that FAILED was marked by colour
+    alone, `--err` mixed at 8% against the row, which is 1.12:1, and it carried
+    the same present-tense verb as a row still in flight. Scrolling back through
+    a ten minute run to find what went wrong, there was nothing to look for.
+
+    So the outcome is a word, and the past tense is kept for the one case that
+    earned it. Executed through the dispatcher, because the fact under test is
+    that the END OF A TURN settles a step nobody landed - a unit test of `close`
+    could not see a caller that never calls it.
+
+    Known-bad, three: drop the `if(live) close(...)` from the `busy 0` branch,
+    and the row stays in the running state; give a failed or stopped step the
+    past tense, and the log asserts the thing happened; drop the word and the
+    outcome is a tint again.
+    """
+    import json
+    import shutil
+    import subprocess
+
+    import pytest
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("needs node to EXECUTE the dispatcher")
+
+    def whole(start, end):
+        src = CODE[CODE.index(start):]
+        return src[:src.index(end) + len(end)]
+
+    harness = [
+        "globalThis.VERB = {browser_click: ['Clicking', 'Clicked']};",
+        "globalThis.el = (tag, cls, t) => ({tag, cls, t});",
+        "const made = () => {",
+        "  const lab = {b:{textContent:'Clicking'}, words:[],",
+        "    /* only the outcome word: `land` also appends the inline result */",
+        "    append(...xs){ for (const x of xs)",
+        "      if (x && x.cls === 'mark') this.words.push(x.t); }};",
+        "  const row = {querySelector: s => s === '.lab b' ? lab.b : lab,",
+        "               lastElementChild:{textContent:''}};",
+        "  return {dataset:{name:'browser_click', state:'run'},",
+        "          firstElementChild: row, appendChild(){}, lab};",
+        "};",
+        "globalThis.timer = 0; globalThis.t0 = 0; globalThis.turn = null;",
+        "globalThis.queued = null; globalThis.LONG = 48;",
+        "globalThis.busyNow = true;",
+        "for (const name of ['clearInterval','flush','waiting','waited','put',",
+        "                    'drawChats','paint','settleOnce','newTurn','step',",
+        "                    'orphan','setQueued','send','rich'])",
+        "  globalThis[name] = () => {};",
+        "globalThis.performance = {now: () => 0};",
+        "globalThis.dur = () => '0ms';",
+        "",
+        "/* a turn that ends with a step still open: Stop, or a run that died */",
+        "const open = made(); globalThis.live = open;",
+        "onEvent({data: JSON.stringify({kind:'busy', text:'0'})});",
+        "const stopped = {state: open.dataset.state,",
+        "                 verb: open.lab.b.textContent, words: open.lab.words};",
+        "",
+        "/* and a step the server refused */",
+        "const bad = made(); globalThis.live = bad;",
+        "land('err', 'timeout', false);",
+        "const failed = {state: bad.dataset.state,",
+        "                verb: bad.lab.b.textContent, words: bad.lab.words};",
+        "",
+        "/* and one that actually worked */",
+        "const good = made(); globalThis.live = good;",
+        "land('result', 'ok', false);",
+        "const worked = {state: good.dataset.state,",
+        "                verb: good.lab.b.textContent, words: good.lab.words};",
+        "process.stdout.write(JSON.stringify({stopped, failed, worked}));",
+    ]
+
+    js = (whole("function close(", chr(10) + "}") + chr(10)
+          + whole("function land(", chr(10) + "}") + chr(10)
+          + whole("const onEvent =", chr(10) + "};") + chr(10)
+          + chr(10).join(harness))
+    done = subprocess.run([node, "-e", js], capture_output=True, text=True,
+                          encoding="utf-8", timeout=30)
+    assert done.returncode == 0, done.stderr
+    got = json.loads(done.stdout)
+
+    assert got["stopped"]["state"] == "off", (
+        "the end of a turn leaves a step in the running state, so its dot goes "
+        "on breathing for the life of the page: %r" % (got["stopped"],))
+    assert got["stopped"]["verb"] == "Clicking", (
+        "a step that never finished is written in the past tense, which asserts "
+        "the thing happened: %r" % (got["stopped"],))
+    assert "stopped" in got["stopped"]["words"], (
+        "nothing but a colour says the step did not finish: %r"
+        % (got["stopped"],))
+
+    assert got["failed"]["state"] == "err" and got["failed"]["verb"] == "Clicking", (
+        "a failed step is written as though it had happened: %r" % (got["failed"],))
+    assert "failed" in got["failed"]["words"], (
+        "a failed step is marked by colour only, at 1.12:1, and reads with the "
+        "same verb as a step still running: %r" % (got["failed"],))
+
+    assert got["worked"]["state"] == "ok" and got["worked"]["verb"] == "Clicked", (
+        "a step that worked lost its past tense: %r" % (got["worked"],))
+    assert got["worked"]["words"] == [], (
+        "an ordinary result is annotated with an outcome word, which is noise "
+        "on the rows that make up most of a run: %r" % (got["worked"],))
+
+
+def test_the_queued_sentence_is_on_screen_and_survives_a_click():
+    """⛔ A SECOND ENTER DESTROYED THE FIRST SENTENCE, SILENTLY.
+
+    The chip read `1 message queued` - a literal in the markup - so the words
+    waiting to be sent were never drawn anywhere. Type a follow-up while the
+    agent works, think of a better wording, press Enter: the first one is gone,
+    with nothing on screen that ever showed it and no way back.
+
+    The same control destroyed work in the other direction. Clicking the chip to
+    see what was queued assigned over the composer, so a draft in the box was
+    overwritten by the queued text - from the one control whose whole purpose is
+    to give typed words back.
+
+    Executed, because both facts are about what `paint` and the click handler
+    DO: a scan can see the literal leave the markup and cannot see what replaces
+    it, which is how the string ended up in two places to begin with.
+
+    Known-bad, two: leave the count in the markup and do not write the sentence;
+    assign over `i.value` again and the draft is eaten.
+    """
+    import json
+    import shutil
+    import subprocess
+
+    import pytest
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("needs node to EXECUTE the composer")
+
+    paint = CODE[CODE.index("function paint(){"):]
+    paint = paint[:paint.index(chr(10) + "}") + 2]
+    click = CODE[CODE.index("chip.onclick = "):]
+    click = click[:click.index("; };") + 4]
+
+    harness = [
+        "const what = {textContent: ''};",
+        "globalThis.chip = {hidden: true, querySelector: () => what,",
+        "                   focus(){}};",
+        "globalThis.i = {value: '', placeholder: '',",
+        "                dispatchEvent(){}, focus(){}};",
+        "globalThis.go = {disabled:false, setAttribute(){}};",
+        "globalThis.halt = {hidden:true}; globalThis.fresh = {disabled:false};",
+        "globalThis.Event = function(){};",
+        "globalThis.queued = 'go to the second page and read the heading';",
+        "globalThis.busyNow = true;",
+        "globalThis.setQueued = (v) => { globalThis.queued = v; };",
+        "paint();",
+        "const shown = what.textContent;",
+        "/* a draft in the box, and the chip pressed to look at what is queued */",
+        "i.value = 'and stop before sending anything';",
+        "chip.onclick();",
+        "process.stdout.write(JSON.stringify({shown, box: i.value}));",
+    ]
+
+    #: the stubs first, then the code that binds to them, then the actions:
+    #: `chip.onclick = ...` runs the moment the script is evaluated.
+    at = harness.index("paint();")
+    js = (chr(10).join(harness[:at]) + chr(10) + paint + chr(10) + click
+          + chr(10) + chr(10).join(harness[at:]))
+    done = subprocess.run([node, "-e", js], capture_output=True, text=True,
+                          encoding="utf-8", timeout=30)
+    assert done.returncode == 0, done.stderr
+    got = json.loads(done.stdout)
+
+    assert got["shown"] == "go to the second page and read the heading", (
+        "the chip does not show the sentence it is holding, so replacing it is "
+        "invisible and what was lost cannot even be read: %r" % (got["shown"],))
+    assert "and stop before sending anything" in got["box"], (
+        "clicking the chip ate the draft in the box: %r" % (got["box"],))
+    assert "go to the second page" in got["box"], (
+        "clicking the chip did not give the queued sentence back: %r"
+        % (got["box"],))

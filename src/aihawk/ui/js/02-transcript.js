@@ -108,16 +108,39 @@ function step(text, replay){
   }
 }
 
+/* ⛔ THE THREE THINGS THAT SETTLE A STEP, IN ONE PLACE, because the end of a
+   turn has to settle a step that nobody landed. Press Stop with a click in
+   flight and no result ever arrives, so that row kept `data-state="run"` and
+   its breathing dot for the life of the page, under a verb in the present
+   tense saying it was still happening.
+
+   ⛔ AND THE OUTCOME IS A WORD, NOT A TINT. A failed row was marked by colour
+   alone - `--err` mixed at 8% against the row, 1.12:1 - and carried the SAME
+   present-tense verb as a row still running, so scrolling back through a ten
+   minute run to find what went wrong there was nothing to look for. In
+   greyscale, or for anybody who does not separate amber from salmon, the
+   failure was not marked at all.
+
+   Past tense only when it finished. `Navigated <address>` on a row that never
+   navigated is the worst kind of line a log can carry. */
+function close(d, state, word){
+  clearInterval(timer);
+  const s = d.firstElementChild;
+  d.dataset.state = state;
+  s.querySelector('.lab b').textContent =
+    (VERB[d.dataset.name] || ['Calling','Called'])[state === 'ok' ? 1 : 0];
+  if(word) s.querySelector('.lab').append(' ', el('span','mark', word));
+  return s;
+}
+
 /* A result or an error folds into the step above it, which is what makes a step
    one unit carrying its target, its timing, its state and its own disclosure. */
 function land(kind, text, replay){
   clearInterval(timer);
   if(!live) return orphan(kind, text, replay);
-  const d = live, s = d.firstElementChild;
+  const d = live;
   live = null;
-  d.dataset.state = kind === 'err' ? 'err' : 'ok';
-  s.querySelector('.lab b').textContent =
-    (VERB[d.dataset.name] || ['Calling','Called'])[kind === 'err' ? 0 : 1];
+  const s = close(d, kind === 'err' ? 'err' : 'ok', kind === 'err' ? 'failed' : '');
   if(!replay) s.lastElementChild.textContent = dur(performance.now() - t0);
   /* Short output goes ON the row and the row stops being expandable. In an
      ordinary run most rows are then one line with the answer already visible,

@@ -18,6 +18,13 @@ function paint(){
   i.placeholder = queued ? 'Type to replace the queued message'
     : busyNow ? 'Type to queue a message' : 'What should the agent do?';
   chip.hidden = !queued;
+  /* ⛔ AND IT SAYS WHAT IT IS HOLDING. The chip read `1 message queued` and
+     the queued words were never drawn anywhere, so a second Enter replaced a
+     sentence nobody could see with another one, silently and with no way back.
+     Typed work destroyed by a keystroke that looks like sending. With the
+     words on screen the replacement is visible, and what was lost can at least
+     be read off the row before it goes. */
+  if(queued) chip.querySelector('.what').textContent = queued;
 }
 i.addEventListener('input', () => {
   /* ⛔ ONE FORCED LAYOUT PER KEYSTROKE, NOT TWO. Reading scrollHeight after
@@ -47,8 +54,17 @@ document.addEventListener('keydown', e => {
       'The stop did not reach the agent - it is still running');
 });
 /* A pencil and not a cross: a cross would read as "cancel the queued message".
-   This returns it to the composer to be edited. */
-chip.onclick = () => { i.value = queued; setQueued(null); i.focus();
+   This returns it to the composer to be edited.
+
+   ⛔ AND IT DOES NOT EAT WHAT IS IN THE BOX. It assigned over `i.value`, so
+   clicking the chip to see what was queued destroyed whatever was being typed
+   - the same loss as the silent replacement above, in the other direction, and
+   from a control whose whole purpose is to get typed words back. Both survive:
+   the queued sentence arrives above the draft, and what to do with the two of
+   them is a decision for the person rather than for this line. */
+chip.onclick = () => { const draft = i.value.trim();
+                       i.value = draft ? queued + '\n' + i.value : queued;
+                       setQueued(null); i.focus();
                        i.dispatchEvent(new Event('input')); };
 
 /* ⛔ THE BOX IS NOT EMPTIED UNTIL THE SERVER HAS THE SENTENCE. This page

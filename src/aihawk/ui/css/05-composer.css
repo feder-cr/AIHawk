@@ -39,7 +39,13 @@ form{ position:relative; padding:var(--s3) var(--s4) var(--s4);
    thing that ends a run that will not converge. It follows the RUN. */
 #halt{ background:var(--stop) }
 #chip{ display:inline-flex; align-items:center; gap:6px; margin-bottom:var(--s2);
+       max-width:100%;
        background:var(--hover); border:1px solid var(--line-2); color:var(--fg-2);
        font-size:var(--t-label); padding:3px 9px; border-radius:var(--r-pill);
        cursor:pointer }
+/* The queued sentence can be a paragraph. It gives way to the width there is
+   rather than to a character count guessed in advance - a `ch` is the width of
+   a zero, not of a letter, and this file is not the place to relearn that. */
+#chip .what{ min-width:0; overflow:hidden; text-overflow:ellipsis;
+             white-space:nowrap }
 

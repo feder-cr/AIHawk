@@ -100,7 +100,13 @@
          size, so at 200% with a queued message it landed on top of the thing
          it floats above. -->
     <button id="jump" hidden type="button">jump to latest</button>
-    <button id="chip" type="button" hidden>1 message queued
+    <!-- ⛔ THE SENTENCE ITSELF, NOT A COUNT OF SENTENCES. This read
+         `1 message queued`, a literal, so the one thing worth showing - the
+         words waiting to be sent - was the one thing never on screen. The
+         composer paints it, because the composer is the single writer of how
+         the composer looks. The hidden prefix keeps the button's name saying
+         what it is, without putting a word on screen that is not needed. -->
+    <button id="chip" type="button" hidden><span class="sr">Queued message: </span><span class="what"></span>
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"
            stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
            stroke-linejoin="round"><path d="M10.6 2.9l2.5 2.5L5.6 12.9 2.5 13.5l.6-3.1z"/></svg></button>

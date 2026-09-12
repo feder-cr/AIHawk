@@ -93,6 +93,38 @@ def _result_text(result) -> tuple[str, bool]:
     return (getattr(first, "text", None) or "[non-text result]"), failed
 
 
+#: How much of a tool result the WATCHER is shown, and how much the MODEL is
+#: sent. Two different jobs - the page is a window on the work, the message list
+#: is what every later turn pays for - so the two numbers differ on purpose.
+SHOWN, SENT = 1200, 8000
+
+
+def shorten(text: str, limit: int, where: str) -> str:
+    """`text` cut to `limit`, saying so whenever it cuts.
+
+    ⛔ IT CUT IN SILENCE, AND THE PERSON WATCHING GOT THE SMALLER COPY. A read
+    of a real page is tens of kilobytes; the page showed the first 1200
+    characters, stopping mid-word with no ellipsis, no count and no hint that
+    anything had been removed, while the line below handed the model nearly
+    seven times as much. Somebody expanding a step to audit what the agent saw
+    read a partial page as the whole one. The product's whole claim is that you
+    can watch what it does, and the watcher was the one being given less.
+
+    Both callers say it now, because the model reading a truncated page without
+    being told is the same defect one level up: it can ask for the rest, but
+    only if it knows there is a rest.
+
+    The marker starts on a new line so the page files the result into an
+    expandable block rather than onto the step row, and it is ASCII: a
+    non-ASCII character on a line this server may print is a known way to kill
+    the process on Windows.
+    """
+    if len(text) <= limit:
+        return text
+    return "%s\n[... %d more characters, not %s]" % (
+        text[:limit], len(text) - limit, where)
+
+
 class Conversation:
     """One transcript, and the loop that grows it.
 
@@ -216,9 +248,10 @@ class Conversation:
                     text = f"{type(exc).__name__}: {exc}"
                     await say("err", text)
                 else:
-                    await say("err" if failed else "result", text[:1200])
+                    await say("err" if failed else "result",
+                              shorten(text, SHOWN, "shown"))
                 self.messages.append({"role": "tool", "tool_call_id": call.id,
-                                      "content": text[:8000]})
+                                      "content": shorten(text, SENT, "sent")})
 
 
 async def run_task(mcp, task: str, *, client, model: str,

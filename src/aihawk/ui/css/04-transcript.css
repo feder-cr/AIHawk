@@ -130,6 +130,21 @@ h5.md-h, h6.md-h{ font-size:var(--t-h3); font-weight:600; color:var(--fg-2) }
   width:6px; height:6px; border-radius:50%; background:var(--accent);
   animation:breathe 1.4s ease-in-out infinite }
 .ev[data-state="err"] .g{ color:var(--err) }
+/* ⛔ THE OUTCOME IN WORDS, because the tint that carried it alone measures
+   1.12:1 against the row and says nothing in greyscale. `failed` on a step the
+   server refused, `stopped` on one the end of the turn had to close because no
+   result ever came. The face is the prose one on purpose: it is a word being
+   read, not part of the address beside it. */
+.lab .mark{ font-family:var(--sans); font-size:var(--t-label) }
+.ev[data-state="err"] .lab .mark{ color:var(--err) }
+.ev[data-state="off"] .lab .mark{ color:var(--fg-3) }
+/* And the inline result of a failed step is the reason it failed: it read in
+   the same quiet grey as an ordinary answer. */
+.ev[data-state="err"] .lab .inline{ color:var(--err) }
+/* A step nobody landed. Not an error - Stop is a correct thing to press - so
+   it takes no red, only the end of the running state, which is what stops the
+   dot that was asserting work nobody was doing. */
+.ev[data-state="off"] .g{ color:var(--fg-3) }
 /* The wait between steps, wearing the same row as a step so the sequence does
    not change shape when the agent is thinking rather than acting. Its verb is
    muted, because nothing has happened yet and a bold one would claim it had. */

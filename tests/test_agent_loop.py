@@ -619,9 +619,17 @@ async def test_a_tool_result_longer_than_8000_characters_is_truncated_to_8000():
     await run_task(mcp, "read", client=model, model="m")
 
     sent = tool_messages(model.requests[1])[0]["content"]
-    assert len(sent) == 8000
-    assert sent.endswith("Z")
-    assert "b" not in sent
+    kept, _, said = sent.partition("\n[...")
+    assert len(kept) == 8000
+    assert kept.endswith("Z")
+    assert "b" not in kept
+    # ⛔ AND IT IS TOLD THAT THERE IS MORE. A model reading the first 8000
+    # characters of a page with no sign that it is the first 8000 answers about
+    # the whole page from a fragment. The count is in the sentence so it can
+    # decide whether to go and get the rest.
+    assert said.startswith(" 1000 more characters, not sent]"), (
+        "the cut is silent, so the model reads a fragment as the whole thing: "
+        "%r" % sent[-80:])
 
 
 async def test_a_result_at_or_below_the_limit_is_sent_whole():

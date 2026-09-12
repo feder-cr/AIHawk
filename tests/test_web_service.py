@@ -219,8 +219,15 @@ async def test_stop_cancels_a_run_in_flight_and_says_so():
             kinds.append(await asyncio.wait_for(q.get(), 1))
         except asyncio.TimeoutError:
             break
-    texts = [e["text"] for e in kinds if e["kind"] == "err"]
-    assert texts == ["stopped"], f"expected one 'stopped', got {kinds}"
+    # ⛔ AND IT IS NOT AN ERROR, WHICH IS WHAT THIS USED TO ASSERT. The person
+    # pressed the button: a deliberate, correct action was answered with a red
+    # box, announced to a screen reader as "error stopped", and any step in
+    # flight was flipped to the failed state. A `note` draws as an ordinary
+    # line, and the gate keeps the half that matters - it is SAID, once.
+    assert not [e for e in kinds if e["kind"] == "err"], (
+        f"stopping is reported to the person as a failure: {kinds}")
+    texts = [e["text"] for e in kinds if e["kind"] == "note"]
+    assert texts == ["Stopped."], f"expected one 'Stopped.', got {kinds}"
     # and the lock is released, or the next instruction would hang forever
     assert not svc._busy.locked()
 

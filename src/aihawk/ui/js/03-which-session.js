@@ -24,8 +24,32 @@ function listen(){
   es.onerror = () => {
     if(es.readyState === EventSource.CONNECTING) say('offline', 'reconnecting');
     if(es.readyState === EventSource.CLOSED) say('offline', 'the stream closed');
+    dropped();
   };
-  es.onopen = () => { if(right.dataset.state === 'offline') say(frozen ? 'frozen' : 'live'); };
+  es.onopen = () => { lost = false;
+                      if(right.dataset.state === 'offline') say(frozen ? 'frozen' : 'live'); };
+}
+
+/* ⛔ THE CLOCK WENT ON COUNTING ON A DEAD STREAM, AND THE CONVERSATION SAID
+   NOTHING. Only a `busy`, `said`, `tool` or `result` event ever ends the wait,
+   so when the stream died mid-run - the server restarted, the laptop slept -
+   the transcript kept a row reading `Thinking 412.7s` and climbing: a counter
+   asserting that an agent is alive, with no way to tell it from one that is.
+   The only contradicting signal was a 7px dot in the OTHER pane.
+
+   Once per drop, cleared when the stream comes back, because EventSource
+   retries on its own and a sentence per retry would be a column of them.
+
+   And the sentence is careful about what it claims: losing the page's
+   connection does not stop the agent, which goes on working server-side, so it
+   must not say that nothing is running. */
+let lost = false;
+function dropped(){
+  if(lost) return;
+  lost = true;
+  waited();
+  orphan('err', 'The connection to the server dropped. Reconnecting - anything '
+         + 'the agent does while it is down appears when it comes back.');
 }
 const onEvent = (e) => {
   const m = JSON.parse(e.data), r = m.replay;
@@ -38,7 +62,15 @@ const onEvent = (e) => {
       busyNow = m.text === '1';
       /* Not on a replay: those events describe a wait that is over. */
       if(busyNow && !r) waiting(); else waited();
-      if(!busyNow){ flush(true, r); live = null; clearInterval(timer);
+      if(!busyNow){ flush(true, r);
+                    /* A turn can end with a step still open: Stop pressed with
+                       a click in flight, a run that died, a model that never
+                       answered. The row is settled HERE because this is the one
+                       place that knows the turn is over - otherwise it keeps
+                       the running state and its breathing dot for as long as
+                       the page stays up, asserting work nobody is doing. */
+                    if(live) close(live, 'off', 'stopped');
+                    live = null; clearInterval(timer);
                     /* The name of a conversation is decided by its FIRST
                        instruction, on the server, so the column is stale from
                        the moment a new session is used until it is redrawn.

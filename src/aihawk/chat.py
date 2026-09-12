@@ -234,10 +234,28 @@ class ChatService:
                 # its thread and its answer is discarded, so a run stopped
                 # mid-turn is still billed for that reply. Stopping cuts what
                 # comes next, never what is already in the air.
-                await self.emit("err", "stopped")
+                # ⛔ NOT AN ERROR. THE PERSON PRESSED THE BUTTON. This emitted
+                # `err` with the single word `stopped`, so a deliberate and
+                # correct action was answered with a red box, announced to a
+                # screen reader as "error stopped", and any step in flight was
+                # flipped to the failed state. The page treated the user's own
+                # instruction as a fault.
+                await self.emit("note", "Stopped.")
                 raise
             except Exception as exc:
-                await self.emit("err", f"{type(exc).__name__}: {exc}")
+                # ⛔ AND THIS PRINTED A PYTHON CLASS NAME AND THE PROVIDER'S
+                # RAW JSON INTO THE CONVERSATION. It is the one line in the
+                # product a person reads at the exact moment something has gone
+                # wrong, and it said nothing about what to do next or about the
+                # instruction they had just lost sight of. The detail stays -
+                # it is the only clue when the cause is real - behind a sentence
+                # that says what happened and what is still true.
+                detail = " ".join(str(exc).split())
+                await self.emit("err", "The turn ended early. What you asked is "
+                                "still in the transcript, so you can send it "
+                                "again once this is dealt with. (%s%s)"
+                                % (type(exc).__name__,
+                                   ": " + detail[:200] if detail else ""))
             finally:
                 await self.emit("busy", "0")
                 # After the turn and not during it: a transcript written
