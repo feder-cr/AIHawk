@@ -1,6 +1,14 @@
 /* ---------------- one turn ---------------- */
 .turn + .turn{ margin-top:var(--s6) }   /* between turns */
-.turn > * + *{ margin-top:var(--s3) }   /* inside a turn */
+/* ⛔ 20 AND NOT 12, BECAUSE THE SPACING SAID THE WRONG THING ABOUT WHAT
+   BELONGS TOGETHER. Two paragraphs of one answer are 16px apart, and the
+   answer sat 12px from the step row under it: a two-paragraph answer read as
+   two separate things and the step below read as part of the second one.
+   Raised here rather than lowering the paragraph gap - at the 1.6 leading
+   this file declares, 12px is under half a line and paragraphs stop
+   separating at all. The ladder is 4 / 8 / 16 / 20 / 24 / 32 and never goes
+   down as the things it separates get further apart. */
+.turn > * + *{ margin-top:var(--s5) }   /* inside a turn */
 /* A turn that has scrolled out of sight costs no layout and no paint. Chosen
    over hiding or removing old turns because it is the only one of the three
    that leaves the text findable with Ctrl+F and readable by a screen reader:

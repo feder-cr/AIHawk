@@ -115,13 +115,21 @@
    the other way round for one commit - band across the whole width, rail
    hanging below - and the owner asked for this one back. It is also the older
    of the two: the strip belongs to the room, not to the pane beside it. */
-#railtab{ flex:none; width:var(--spine); padding:11px 0 0; cursor:pointer; border:0;
+/* ⛔ CENTRED IN A ROW ONE HEADER TALL, AND NOT BY A NUMBER. An 11px top
+   padding put the icon 4.5px above the line the drawer title, the model chip
+   and the address bar all share: the kind of miss nobody names and everybody
+   reads as unfinished, on the app's most visible seam. A margin computed from
+   the icon's size would work and would put that size in a second file, so a
+   redrawn icon would silently un-centre itself. A grid row exactly one header
+   tall centres whatever is drawn in it. */
+#railtab{ flex:none; width:var(--spine); padding:0; cursor:pointer; border:0;
+          display:grid; grid-template-rows:calc(var(--topbar) - 1px) 1fr;
+          justify-items:center; align-items:center;
           position:relative; background:var(--base); color:var(--fg-3);
 
           /* Half the weight it was: a hairline that says where the room ends
              rather than a rule that draws attention to itself. */
           box-shadow:inset -.5px 0 0 var(--accent);
-          display:flex; justify-content:center; align-items:flex-start;
           transition:background-color 120ms ease-out, color 120ms ease-out }
 #railtab svg{ flex:none; display:block }
 /* The word, on screen, the moment a pointer or the keyboard arrives. Drawn

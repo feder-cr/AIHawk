@@ -189,6 +189,10 @@
 #log > *{ overflow-anchor:none }
 #anchor{ height:1px; overflow-anchor:auto }
 
+/* 46ch is 397px, which is about 57 characters at the 16px body: a `ch` is the
+   width of a zero, not of a letter, and this file carries the warning about
+   exactly that a few rules up. 57 is inside the measure every source here
+   quotes, so the number is right and it was the LABEL that was lying. */
 #hint{ color:var(--fg-3); max-width:46ch; margin:var(--s6) auto 0; text-align:center }
 #hint p{ margin:0 0 var(--s4) }
 #hint .eg{ font:var(--t-mono)/1.9 var(--mono); color:var(--fg-2);

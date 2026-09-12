@@ -860,3 +860,36 @@ def test_the_only_way_into_the_sessions_is_visible_when_the_keyboard_reaches_it(
         "the focus ring on the sessions button is not drawn inside it: %s"
         % " ".join(rule.group(1).split()))
 
+
+def test_the_top_row_is_one_line_across_the_whole_app():
+    """⛔ THE ICON SAT 4.5px ABOVE THE LINE EVERYTHING ELSE SHARES. The drawer
+    title, the model chip and the address bar all centre on the same pixel; the
+    one control on the spine was pushed down by an 11px top padding and landed
+    just off it. Nobody names that miss and everybody reads it as unfinished,
+    and it is on the app's most visible seam. Measured after the fix in a real
+    browser at 1440px: icon, chip and title all on 27.5.
+
+    Centred by a grid row exactly one header tall, NOT by a margin computed from
+    the icon's size: that size is declared in the markup, and a rule that
+    repeated it here would let a redrawn icon un-centre itself silently while
+    both files still looked right.
+
+    Known-bad, two: put a top padding back on the strip; centre it with a margin
+    that names the icon's height.
+    """
+    import re
+
+    css = re.sub(r"/\*.*?\*/", "",
+                 PAGE[PAGE.index("<style>"):PAGE.index("</style>")], flags=re.S)
+    rule = css[css.index("#railtab{"):]
+    rule = " ".join(rule[:rule.index("}")].split())
+    assert "grid-template-rows:calc(var(--topbar)" in rule.replace(" ", ""), (
+        "the strip no longer centres its icon in a row one header tall: %s" % rule)
+    assert not re.search(r"(padding|margin)[^;]*[1-9]", rule), (
+        "the icon is positioned by a number again, so it is centred until "
+        "somebody changes the header or the icon: %s" % rule)
+    assert "24" not in rule, (
+        "the icon's drawn size is repeated in the stylesheet, so the markup and "
+        "this rule now both know it and only one of them will be updated: %s"
+        % rule)
+
