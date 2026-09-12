@@ -1265,31 +1265,41 @@ def test_the_browser_state_is_only_announced_when_it_changes():
 
 
 def test_the_one_input_on_the_page_keeps_its_focus_ring():
-    """⛔ `#i{outline:none}` BEAT `:focus-visible` ON SPECIFICITY, so the only
-    way to talk to the agent had no focus indicator at all for anybody arriving
-    by keyboard. The caret was the whole signal - invisible at a glance, in a
-    screenshot, and to most people scanning a window.
+    """⛔ FIRST THE INPUT HAD NO FOCUS RING; THEN IT HAD TWO. `#i{outline:none}`
+    beat `:focus-visible` on specificity, so the only way to talk to the agent
+    signalled the keyboard with a caret and nothing else. The first repair
+    scoped the removal to `:focus:not(:focus-visible)` - and on a textarea
+    `:focus-visible` matches on EVERY focus, a click included, because the
+    element takes keyboard input. So the page opened on two nested rectangles,
+    the accent ring on the field inside the bordered box, and drew them again
+    on every click. Found in the final screenshot pass, not by any assertion.
 
-    The declaration was written for the mouse case, where the composer's own
-    border answers a click, so it is scoped to exactly that instead of removed:
-    the pointer path stays clean and the keyboard path gets the page's ring.
+    The visible control and the focusable element are two different boxes
+    here, which is the one place on the page where that is true. So the BOX
+    says it has the keyboard: a 2px ring at 3.92:1 on `.composer:focus-within`,
+    for everybody, and the field draws none of its own.
 
-    Known-bad, two: put the bare `outline:none` back into the `#i` rule, or
-    drop the scoped rule and leave the keyboard path relying on a caret.
+    Known-bad, two: give the field a ring of its own again; drop the shadow and
+    leave a 1px border as the whole indicator.
     """
     import re
 
     css = re.sub(r"/\*.*?\*/", "",
                  PAGE[PAGE.index("<style>"):PAGE.index("</style>")], flags=re.S)
-    rule = css[css.index("#i{"):]
-    rule = rule[:rule.index("}")]
-    assert "outline:none" not in rule.replace(" ", ""), (
-        "the composer kills its own focus ring for every path, including the "
-        "keyboard: %s" % " ".join(rule.split()))
-    assert "#i:focus:not(:focus-visible)" in css.replace(" ", ""), (
-        "nothing scopes the outline removal to the pointer, so either the "
-        "mouse case draws a ring it does not need or the keyboard case has "
-        "none at all")
+    box = re.search(r"\.composer:focus-within\{([^}]*)\}", css)
+    assert box, "the composer no longer says it has the keyboard"
+    flat = box.group(1).replace(" ", "")
+    assert "box-shadow:" in flat and "0001pxvar(--fg-4)" in flat and "border-color:var(--fg-4)" in flat, (
+        "the composer's focus indicator is not a 2px ring at the documented "
+        "3.9:1 ink: %s" % " ".join(box.group(1).split()))
+
+    #: and the field draws nothing of its own, or the two stack.
+    own = [m for m in re.findall(r"#i[^{,]*\{([^}]*)\}", css)
+           if re.search(r"outline:(?!none)", m.replace(" ", ""))]
+    assert not own, (
+        "the field draws a ring of its own inside the box's, so a focused "
+        "composer is two nested rectangles: %s" % own)
+
 
 
 def test_clearing_the_conversation_leaves_the_page_able_to_explain_itself():

@@ -11,15 +11,21 @@ form{ position:relative; padding:var(--s3) var(--s4) var(--s4);
    box has the keyboard, and a border at 1.2:1 against the surface is not a
    signal. #6b747d reads at 3.92:1 against the ground, over the 3:1 floor for a
    non-text indicator, without inventing a token. */
-.composer:focus-within{ border-color:var(--fg-4) }
-/* ⛔ NO BLANKET `outline:none`, WHICH IS WHAT THIS RULE USED TO CARRY. It beats
-   the page-wide `:focus-visible` outline on specificity, so the one input on
-   the page - the only way to talk to the agent - had no focus ring at all for
-   anybody arriving by keyboard: the caret was the whole indication, and a caret
-   is invisible in a screenshot, at a distance, and to most people scanning a
-   window. Scoped to the case the declaration was actually written for. */
-#i:focus:not(:focus-visible){ outline:none }
-#i{ flex:1; background:transparent; border:0; resize:none; color:var(--fg);
+/* ⛔ ONE INDICATOR, ON THE CONTAINER, TWO PIXELS WIDE. The keyboard ring was
+   drawn on the textarea INSIDE this bordered box, and on a textarea
+   `:focus-visible` matches on every focus - a click included, because the
+   element takes keyboard input - so the page opened on two nested rectangles
+   and drew them again on every click into the box. The box is the control a
+   person sees, so the box says it has the keyboard: the border goes to
+   `--fg-4` and a 1px shadow doubles it to a 2px ring at 3.92:1 against the
+   ground, over the 3:1 floor for a focus indicator, with nothing moving. */
+.composer:focus-within{ border-color:var(--fg-4);
+                        box-shadow:var(--lip), 0 0 0 1px var(--fg-4) }
+/* `outline:none` on the field itself, because the ring belongs to the box
+   around it - see `.composer:focus-within` above. Not a blanket removal of the
+   focus signal: it is the one place on the page where the visible control and
+   the focusable element are two different boxes. */
+#i{ flex:1; background:transparent; border:0; outline:none; resize:none; color:var(--fg);
     font:var(--t-body)/1.55 var(--sans); min-height:24px; max-height:200px;
     overflow-y:hidden; padding:0; caret-color:var(--accent) }
 /* --fg-3 and not --fg-4: the placeholder is the only hint the composer gives,
