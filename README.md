@@ -171,3 +171,8 @@ not read.
 [MIT](https://github.com/feder-cr/AIHawk/blob/main/LICENSE). Everything
 distributed before 2 September 2026 was released under AGPL-3.0 and stays under
 it.
+
+<!-- The Official MCP Registry verifies ownership of a PyPI package by finding
+     this token in the published description, which is this file. It must match
+     the `name` in server.json exactly. -->
+<!-- mcp-name: io.github.feder-cr/aihawk -->
