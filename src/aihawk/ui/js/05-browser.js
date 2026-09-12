@@ -25,9 +25,18 @@ let frozen = false;
    Guarded here rather than at the pump, because there are eight callers and
    the fact "the state changed" is one fact. The early return is safe because
    all three writes below are functions of the two arguments. */
-function say(s, why){ if(right.dataset.state === s && stateEl.title === (why || '')) return;
+/* ⛔ AGAINST WHAT THIS FUNCTION HAS DRAWN, NOT AGAINST THE ATTRIBUTE. The first
+   version compared with `right.dataset.state`, which the MARKUP declares as
+   `idle` before any script runs - so the very first call was swallowed as a
+   repeat and the word never got the class that hides it. Caught by opening the
+   page: IDLE in bright capitals in the corner of an empty room, which is the
+   exact thing a rule deleted in the same change had been there to prevent. A
+   guard that reads the DOM cannot tell "already drawn" from "never drawn". */
+let shown = null;
+function say(s, why){ if(shown === s && stateEl.title === (why || '')) return;
+                      shown = s;
                       right.dataset.state = s; stateEl.textContent = s;
-                      stateEl.classList.toggle('sr', s === 'live' || s === 'frozen');
+                      stateEl.classList.toggle('sr', s === 'live' || s === 'frozen' || s === 'idle');
                       stateEl.title = why || ''; }
 async function reason(r){ try { return (await r.json()).error || ''; } catch(err) { return ''; } }
 

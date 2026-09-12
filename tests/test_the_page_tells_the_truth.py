@@ -1206,15 +1206,25 @@ def test_the_browser_state_is_only_announced_when_it_changes():
         pytest.skip("needs node to EXECUTE say()")
 
     end = "stateEl.title = why || ''; }"
-    src = CODE[CODE.index("function say(s, why){"):]
+    #: from the variable the guard keeps, not from the function: what has
+    #: been DRAWN is the thing being remembered, and slicing below it was
+    #: how the harness first reported a defect that was its own.
+    src = CODE[CODE.index("let shown = null;"):]
     src = src[:src.index(end) + len(end)]
 
     harness = [
         "let writes = 0;",
-        "globalThis.right = {dataset: new Proxy({}, {set(t, k, v){",
+        "/* the markup declares the first state before any script runs, which is",
+        "   where the first version of this guard went wrong: it read the DOM,",
+        "   saw its own starting value, and swallowed the call that normalises",
+        "   the page. */",
+        "globalThis.right = {dataset: new Proxy({state: 'idle'}, {set(t, k, v){",
         "  writes++; t[k] = v; return true; }})};",
         "globalThis.stateEl = {textContent:'', title:'',",
         "                      classList:{toggle(){}}};",
+        "/* the state the markup already declares: the call must still draw */",
+        "say('idle');",
+        "const normalised = writes;",
         "/* the pump, a hundred passes of a browser that has not changed */",
         "for (let k = 0; k < 100; k++) say('live');",
         "const steady = writes;",
@@ -1222,7 +1232,7 @@ def test_the_browser_state_is_only_announced_when_it_changes():
         "const afterChange = writes;",
         "/* and the same state with a different reason is a change too */",
         "say('offline', 'reconnecting');",
-        "process.stdout.write(JSON.stringify({steady, afterChange,",
+        "process.stdout.write(JSON.stringify({normalised, steady, afterChange,",
         "                                     afterReason: writes}));",
     ]
 
@@ -1232,14 +1242,19 @@ def test_the_browser_state_is_only_announced_when_it_changes():
     assert done.returncode == 0, done.stderr
     got = json.loads(done.stdout)
 
-    assert got["steady"] == 1, (
+    assert got["normalised"] == 1, (
+        "the first call is swallowed because the markup already declares that "
+        "state, so the page is never normalised: the word IDLE stays in bright "
+        "capitals in the corner of an empty room, which is what this guard "
+        "shipped with for one commit")
+    assert got["steady"] == 2, (
         "a hundred passes of an unchanged browser wrote the live region %d "
         "times, which a screen reader reads out %d times"
-        % (got["steady"], got["steady"]))
-    assert got["afterChange"] == 2, (
+        % (got["steady"] - 1, got["steady"] - 1))
+    assert got["afterChange"] == 3, (
         "the guard swallowed a real change, which is the one thing it must "
         "never do: %r" % (got,))
-    assert got["afterReason"] == 3, (
+    assert got["afterReason"] == 4, (
         "the same state with a different reason was swallowed, so the word "
         "explaining WHY it went offline never arrives: %r" % (got,))
 
@@ -1326,3 +1341,76 @@ def test_clearing_the_conversation_leaves_the_page_able_to_explain_itself():
         "clearing the conversation leaves a pane with nothing in it, on a "
         "product whose whole first-run explanation was what it just deleted: "
         "%r" % (got["left"],))
+
+
+def test_pressing_stop_when_nothing_is_running_says_so():
+    """⛔ THE PANIC BUTTON ANSWERED `stopped:false` AND THE PAGE SAID NOTHING.
+
+    The server replies that there was nothing to stop whenever the page's idea
+    of the run is stale: a restarted server, a second tab that already stopped
+    it, a few seconds of lag. The press did nothing, said nothing, and left the
+    button offering to stop a run that had already ended - so the only reading
+    available to the person is that the product ignores its own stop.
+
+    And there was one request written twice, here and on the key, with the same
+    failure sentence: the half added to either one reached whichever path the
+    reader happened to be looking at. The key presses the button now.
+
+    `busyNow` is deliberately not written by this path. The event stream is its
+    one writer, and a second writer is how two places start disagreeing about
+    whether the agent is working.
+
+    Known-bad, three: stop reading the body; write the sentence for a successful
+    stop as well, which turns the ordinary case into noise; give the key its own
+    copy of the request again.
+    """
+    import json
+    import shutil
+    import subprocess
+
+    import pytest
+
+    #: one request, one sentence about it failing.
+    assert CODE.count("'/chat/stop'") == 1, (
+        "the stop is written %d times, so the next thing added to it reaches "
+        "one path and not the other" % CODE.count("'/chat/stop'"))
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("needs node to EXECUTE the stop")
+
+    src = CODE[CODE.index("halt.onclick = async"):]
+    src = src[:src.index("};") + 2]
+
+    harness = [
+        "let said = [];",
+        "globalThis.orphan = (kind, text) => said.push(kind + ': ' + text);",
+        "globalThis.halt = {};",
+        "globalThis.answer = {stopped: false};",
+        "globalThis.ask = async () => ({json: async () => answer});",
+        "HERE",
+        "(async () => {",
+        "  await halt.onclick();",
+        "  const nothing = said.slice();",
+        "  said = []; answer = {stopped: true};",
+        "  await halt.onclick();",
+        "  process.stdout.write(JSON.stringify({nothing, ordinary: said}));",
+        "})();",
+    ]
+    js = chr(10).join(harness).replace("HERE", src)
+
+    done = subprocess.run([node, "-e", js], capture_output=True, text=True,
+                          encoding="utf-8", timeout=30)
+    assert done.returncode == 0, done.stderr
+    got = json.loads(done.stdout)
+
+    assert len(got["nothing"]) == 1 and "nothing running to stop" in got["nothing"][0], (
+        "pressing stop on a run that had already ended says nothing at all, so "
+        "the press is indistinguishable from one that never arrived: %r"
+        % (got["nothing"],))
+    assert not got["nothing"][0].startswith("err"), (
+        "a stale page is reported to the person as an error, which is the same "
+        "defect as calling their own Stop a failure: %r" % (got["nothing"],))
+    assert got["ordinary"] == [], (
+        "an ordinary stop writes a line into the transcript, which is noise on "
+        "the path that works: %r" % (got["ordinary"],))

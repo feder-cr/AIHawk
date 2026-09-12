@@ -47,11 +47,12 @@ i.addEventListener('keydown', e => {
 document.addEventListener('keydown', e => {
   if(e.key !== 'Escape' || !busyNow) return;
   if(document.activeElement === i && i.value.trim()) return;
-  /* Through the same door as the button: a hoisted declaration, so calling it
-     from above where it is written is safe and nothing here depends on the
-     order of the lines. */
-  ask('/chat/stop', undefined,
-      'The stop did not reach the agent - it is still running');
+  /* ⛔ THE BUTTON'S OWN HANDLER, NOT A SECOND COPY OF IT. The same request with
+     the same failure sentence was written out twice, here and on the button, so
+     the half added to either one - reading the answer, saying that nothing was
+     running - reached whichever path the reader happened to be looking at. The
+     key IS the button, so it presses it. */
+  halt.onclick();
 });
 /* A pencil and not a cross: a cross would read as "cancel the queued message".
    This returns it to the composer to be edited.
@@ -246,8 +247,25 @@ fresh.onclick = () => {
   ask('/chat/fresh', undefined, 'Could not clear this conversation');
 };
 
-halt.onclick = () => ask('/chat/stop', undefined,
-                         'The stop did not reach the agent - it is still running');
+/* ⛔ AND THE ANSWER IS READ. `/chat/stop` replies `stopped:false` when there
+   was nothing to stop, which is not hypothetical: a restarted server, a second
+   tab that already stopped the run, a page whose idea of the state is a few
+   seconds stale. The press then did nothing, said nothing, and left the button
+   offering to stop a run that had already ended - so the next reading available
+   to the person is that the product ignores its own panic button.
+
+   `busyNow` is deliberately NOT written here. The event stream is its single
+   writer, and a second one is how two places start disagreeing about whether
+   the agent is working. */
+halt.onclick = async () => {
+  const r = await ask('/chat/stop', undefined,
+                      'The stop did not reach the agent - it is still running');
+  if(!r) return;
+  let stopped = true;
+  try { stopped = (await r.json()).stopped; } catch(err){}
+  if(!stopped) orphan('said', 'There was nothing running to stop: this page was '
+                      + 'showing a run that had already ended.');
+};
 f.onsubmit = (e) => {
   e.preventDefault();
   const t = i.value.trim();

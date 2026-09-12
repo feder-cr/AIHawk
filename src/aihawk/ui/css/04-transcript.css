@@ -85,7 +85,10 @@ h5.md-h, h6.md-h{ font-size:var(--t-h3); font-weight:600; color:var(--fg-2) }
    whatever page the agent last read, and the browser it drives is right there.
    The address is printed next to them so an injected one is legible. */
 .lk  { color:var(--fg) }
-.href{ color:var(--fg-3); font:.75rem/1.5 var(--mono); overflow-wrap:anywhere }
+/* ⛔ `--t-mono`, THE SIZE THIS FILE'S OWN TOKEN NAMES FOR AN ADDRESS. It was hand-written at .75rem,
+   which made the printed address the SMALLEST type on the page - the one string that exists
+   so that an injected link can be read before it is trusted. */
+.href{ color:var(--fg-3); font:var(--t-mono)/1.5 var(--mono); overflow-wrap:anywhere }
 .href::before{ content:" " }
 /* ⛔ NO COLOURED BAR DOWN THE LEFT EDGE. A 2px stripe on a callout is the
    house style of every framework and belongs to none of them; a tint plus a
@@ -176,7 +179,9 @@ h5.md-h, h6.md-h{ font-size:var(--t-h3); font-weight:600; color:var(--fg-2) }
 .out{ margin:2px 0 var(--s2) var(--indent);
       max-height:290px; max-height:15lh; overflow:auto; overscroll-behavior:contain;
       white-space:pre-wrap; overflow-wrap:anywhere;
-      font:.75rem/1.5 var(--mono); color:var(--fg-3);
+      /* And the opened detail is not SMALLER than the row that introduced
+         it: clicking to read something made the something harder to read. */
+      font:var(--t-mono)/1.5 var(--mono); color:var(--fg-3);
       background:var(--raised); border-left:2px solid var(--line-2);
       border-radius:0 var(--r-sm) var(--r-sm) 0; padding:8px 10px }
 

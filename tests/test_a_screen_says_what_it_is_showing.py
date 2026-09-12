@@ -280,9 +280,26 @@ def test_an_empty_stage_says_what_to_do_about_being_empty():
 
     Known-bad: go back to naming the condition and stopping.
     """
-    code = re.sub(r"/\*.*?\*/", "", PAGE, flags=re.S)
-    assert "el('div','empty')" in code, "the empty stage is a screen with no picture again"
+    code = re.sub(r"/\*.*?\*/|<!--.*?-->", "", PAGE, flags=re.S)
+    # ⛔ AND IT IS THERE FROM THE FIRST PAINT, which is what this used to miss by
+    # asserting that the SCRIPT built the cell. Built in the script, the right
+    # half of the window was a near-black rectangle under an armed toolbar until
+    # `/live/browsers` answered: one round trip for the default conversation and
+    # seconds for any other, because asking spawns a server process first. Half
+    # the product showed nothing at all exactly while a new user was deciding
+    # what this is. So it ships as markup, and the script CLONES it - one
+    # declaration, in the place that draws before any request.
+    stage = code[code.index('id="stage"'):]
+    stage = stage[:stage.index("</div>")]
+    assert 'class="empty"' in stage, (
+        "the empty state is built by the script again, so the stage is blank "
+        "until the first answer comes back: %r" % stage[:120])
+    assert "emptyCell.cloneNode(true)" in code, (
+        "nothing puts the empty state back after a browser closes")
     assert "Ask in the chat and one opens here" in PAGE, \
         "the empty stage no longer says how a browser gets opened"
     assert "open a browser and go to example.com" in PAGE, \
         "the empty stage says to ask but not what asking looks like"
+    assert PAGE.count("Ask in the chat and one opens here") == 1, (
+        "the sentence is written in two places, which is how one of them goes "
+        "stale")

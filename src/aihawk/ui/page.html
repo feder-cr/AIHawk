@@ -151,9 +151,26 @@
       <button aria-pressed="false" data-v="hold" type="button"
               title="Stop updating the picture. The agent keeps working.">Frozen</button>
     </span>
-    <span id="state" class="label" aria-live="polite">idle</span>
+    <!-- ⛔ IT STARTS OFF-SCREEN, BECAUSE THE WORD IT STARTS WITH IS THE ONE
+         WORD NOT WORTH SHOWING. `idle` in capitals was the brightest thing
+         on a bar describing an empty room, and it was hidden by a CSS rule
+         keyed on the room being empty - a second place deciding what `say`
+         already decides, and the one that hid every OTHER word too: drop
+         the stream on a first run and `offline` landed in a box one pixel
+         wide. The rule is gone, so the starting state is drawn here the way
+         `say` would draw it, and the word stays for a screen reader. -->
+    <span id="state" class="label sr" aria-live="polite">idle</span>
   </div>
-  <div id="stage" data-grid="1"></div>
+  <!-- ⛔ THE EMPTY STATE SHIPS AS MARKUP, because the right half of the
+       window was a black rectangle from first paint until the browsers came
+       back: one round trip for the default conversation, seconds for any
+       other, because asking spawns a server process first. Half the product
+       showed nothing at all, under an armed toolbar, exactly while a new
+       user was deciding what this is. The script clones this node when it
+       needs it again, so the words are declared once. -->
+  <div id="stage" data-grid="1">
+    <div class="empty"><b>No browser open</b><span>Ask in the chat and one opens here. There is no button for it, on purpose.</span><code>open a browser and go to example.com</code></div>
+  </div>
   <!-- role, or the label is ignored: a bare div takes no accessible name. -->
   <div id="thumbs" role="group" aria-label="The other browsers in this session"></div>
 </section>

@@ -191,15 +191,42 @@ def test_the_template_follows_the_screens_that_exist():
 def test_the_state_word_says_nothing_when_it_would_repeat_the_tab():
     """The Live/Frozen tabs are a control that shows its own state, and the word
     beside them said `live` while Live was selected: one fact printed twice, the
-    second time in the place the eye goes for news. `idle`, `busy` and `error`
+    second time in the place the eye goes for news. `busy`, `offline` and `error`
     are news and still appear, and the dot goes on carrying live and frozen,
     which is what a dot is for.
 
-    Known-bad: print every state, which is what it did.
+    ⛔ `idle` JOINED THE QUIET THREE, AND IT WAS ALREADY QUIET THE WRONG WAY.
+    A rule in the browser stylesheet clipped the WHOLE state box to one pixel
+    whenever the pane was empty, which is right for `idle` - capitals, the
+    brightest thing on a bar describing an empty room - and wrong for every
+    other word that box can hold. Drop the stream on a first run and `offline`
+    was written into a clipped box: a 7px dot changed colour and nobody got the
+    word. Two places decided whether a word is worth showing; the one that knows
+    WHICH word decides now, and the rule is gone.
+
+    Known-bad, two: print every state, which is what it did; or add `offline` or
+    `error` to this list, which hides the two words that exist to be read.
     """
     code = re.sub(r"/\*.*?\*/", "", PAGE, flags=re.S)
-    assert "stateEl.classList.toggle('sr', s === 'live' || s === 'frozen')" in code, (
-        "the state word is shown even when it only repeats the selected switch")
+    quiet = re.search(r"stateEl\.classList\.toggle\('sr',([^)]*)\)", code)
+    assert quiet, "nothing decides whether the state word is worth showing"
+    said = quiet.group(1)
+    assert set(re.findall(r"'([a-z]+)'", said)) == {"live", "frozen", "idle"}, (
+        "the states the word stays quiet for are %s: live and frozen repeat the "
+        "switch beside them and idle names an empty room, and anything else in "
+        "that list is a word somebody needs" % sorted(re.findall(r"'([a-z]+)'", said)))
+    # ⛔ AND THE MARKUP STARTS THE WAY `say` WOULD DRAW IT. Nothing calls
+    # `say('idle')` on a first load - the state only moves when a browser does -
+    # so with the clipping rule gone the word came back on screen in capitals,
+    # in the corner of an empty room. Found by opening the page after the rule
+    # was deleted, not by any assertion here.
+    state = re.search(r'<span id="state"[^>]*class="([^"]*)"', PAGE)
+    assert state and "sr" in state.group(1).split(), (
+        "the state box starts on screen carrying the one word that is never "
+        "worth showing: %s" % (state.group(1) if state else "no span"))
+    assert '#right[data-empty="1"] #state' not in code, (
+        "the empty room clips the state box again, so the word that says the "
+        "stream died lands in a box one pixel wide")
     # ⛔ AND IT GOES OFF-SCREEN, NOT AWAY. `hidden` is display:none, and a live
     # region mutated inside a display:none subtree announces nothing - so the one
     # transition that matters, live to error, was silent for a screen reader

@@ -74,11 +74,14 @@
    controls that look dead, and a screen reader announced them as ordinary
    enabled buttons. `inert` takes them out of both. */
 #right[data-empty="1"] #mode{ pointer-events:none }
-/* And the state word goes altogether: with nothing running it said IDLE, in
-   capitals, and was the brightest thing on a bar describing an empty room -
-   while the room itself already says what it is. */
-#right[data-empty="1"] #state{ position:absolute; width:1px; height:1px;
-                              overflow:hidden; clip-path:inset(50%) }
+/* ⛔ AND `idle` IS HIDDEN BY THE STATE ITSELF, NOT BY THE EMPTY ROOM. A rule
+   here clipped `#state` to one pixel whenever the pane was empty, which is
+   right for the word `idle` - capitals, the brightest thing on a bar describing
+   an empty room - and wrong for every other word that box can hold. Drop the
+   stream on a first run and `offline` was written into a clipped box: the
+   sighted user got a 7px dot changing colour, and nobody got the word. Two
+   places decided whether that word is worth showing; now the one that knows
+   WHICH word it is decides, in `say`. */
 
 /* The frame is solved from the available height, so a wide shot fills the width
    and a tall one fills the height. What is left over is stage, never a hole

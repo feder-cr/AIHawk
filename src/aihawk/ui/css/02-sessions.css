@@ -137,6 +137,13 @@
 /* Open: the rail lifts a rung and the icon goes to full ink. The state is drawn
    on the thing you press, where a hand already is - and the word goes quiet,
    because the column beside it is now saying its own name. */
+/* ⛔ INSIDE, OR THE RING IS CLIPPED ON THREE SIDES. The strip is flush with
+   the window on the left, the top and the bottom, so the page-wide focus
+   outline drew outside the viewport and the only segment left was a 2px
+   amber line beside the permanent amber hairline this strip already
+   carries - two similar marks 2.5px apart, on the single keyboard route
+   into the whole sessions feature. */
+#railtab:focus-visible{ outline-offset:-4px }
 #railtab:hover{ background:var(--raised); color:var(--fg) }
 /* ⛔ OPEN, THE RAIL GIVES ITS WIDTH AWAY. A 48px strip beside an open column is
    48px that says nothing: the column beside it already carries the name, the

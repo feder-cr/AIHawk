@@ -96,15 +96,16 @@ function drawStage(){
        guess where the button is. There is no button - browsers are opened by
        asking - so this is the one place that has to say so, and to show the
        shape of the sentence that does it. */
-    const cell = el('div','empty');
-    cell.append(el('b', null, 'No browser open'),
-                el('span', null, 'Ask in the chat and one opens here. There is no button for it, on purpose.'),
-                el('code', null, 'open a browser and go to example.com'));
-    box.appendChild(cell);
+    box.appendChild(emptyCell.cloneNode(true));
     return;
   }
   for(const b of show) box.appendChild(screenFor(b, b.id === watched()));
 }
+
+/* Taken before anything can empty the stage: the same three lines used to be
+   built here AND described in the markup, which is one sentence in two
+   places waiting to disagree. */
+const emptyCell = $('stage').firstElementChild.cloneNode(true);
 
 async function drawFleet(){
   let got = {browsers: []};

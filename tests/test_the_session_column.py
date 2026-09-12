@@ -829,3 +829,34 @@ def test_the_panel_closes_the_three_ways_a_person_tries():
         "theSpineStillCloses": True,
     }, ("the panel cannot be dismissed the way a person expects, or it swallows "
         "a key that is not its own: %r" % (got,))
+
+
+def test_the_only_way_into_the_sessions_is_visible_when_the_keyboard_reaches_it():
+    """⛔ ITS FOCUS RING WAS CLIPPED ON THREE SIDES AND THE SLIVER LEFT WAS THE
+    COLOUR OF THE LINE ALREADY THERE.
+
+    The strip is flush with the window on the left, the top and the bottom, so
+    the page's focus outline was drawn outside the viewport on all three: the
+    only visible segment was a 2px amber line about 2.5px from the permanent
+    amber hairline the strip already carries. Two similar marks side by side, on
+    the single keyboard route into the whole sessions feature.
+
+    An element-local exception to a global rule, which is the one kind of
+    exception worth having: the offset goes negative so the ring is drawn
+    INSIDE the strip, where there is room for it.
+
+    Known-bad: drop the offset and the ring goes back outside the window.
+    """
+    import re
+
+    css = re.sub(r"/\*.*?\*/", "",
+                 PAGE[PAGE.index("<style>"):PAGE.index("</style>")], flags=re.S)
+    rule = re.search(r"#railtab:focus-visible\{([^}]*)\}", css)
+    assert rule, (
+        "nothing pulls the focus ring inside the strip, so it is drawn outside "
+        "the window on three sides and what is left is a line beside a line")
+    offset = re.search(r"outline-offset:\s*(-?[\d.]+)px", rule.group(1))
+    assert offset and float(offset.group(1)) < 0, (
+        "the focus ring on the sessions button is not drawn inside it: %s"
+        % " ".join(rule.group(1).split()))
+
