@@ -5,7 +5,7 @@
    somebody actually used a session. */
 async function drawChats(){
   let rows = [];
-  try { const r = await fetch('/sessions', {cache:'no-store'});
+  try { const r = await plainDoor('/sessions', {cache:'no-store'});
         if(r.ok) rows = (await r.json()).sessions || []; }
   catch(err){ return; }
   const box = $('chats');

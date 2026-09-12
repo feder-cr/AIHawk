@@ -69,7 +69,7 @@ async function forgetChat(id, name){
      said it had worked. */
   let gone = false;
   try {
-    const r = await fetch('/sessions/forget', {method:'POST',
+    const r = await plainDoor('/sessions/forget', {method:'POST',
                           headers:{'Content-Type':'application/json'},
                           body: JSON.stringify({id})});
     gone = r.ok && (await r.json()).forgotten;

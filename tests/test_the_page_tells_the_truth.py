@@ -389,25 +389,40 @@ def test_every_request_that_can_fail_goes_through_one_door():
         "failure and most of them will not")
 
 
-def test_every_question_about_this_conversation_goes_through_one_door():
-    """⛔ AND THAT DOOR IS WHERE THE PAGE LEARNS THE CONVERSATION IS GONE. Six
-    fetches carried `?s=`, and while they each asked on their own, a page left
-    open on a session somebody deleted went on asking forever - and every one of
-    those questions declared the session again on the server, so the delete came
-    back as an empty row for as long as that tab stayed open.
+def test_every_question_this_page_asks_goes_through_one_of_two_doors():
+    """⛔ AND ONE PLACE READS THE ANSWER FOR BOTH. Six fetches carried `?s=` and
+    each asked on its own, so a page left open on a session somebody deleted
+    went on asking forever - and every one of those questions declared the
+    session again on the server, so the delete came back as an empty row for as
+    long as that tab stayed open.
 
-    Known-bad: put `fetch(at(...))` back into any of the six callers, or take
-    the 410 out of `door`.
+    ⛔ AND TWO MORE WERE OUTSIDE IT ALTOGETHER until 2026-09-12. `/sessions` and
+    `/sessions/forget` are about the SET of conversations rather than one, so
+    they must not have `?s=` appended - and they skipped the whole door to avoid
+    it, which also skipped what a 404 and a 410 mean. Delete a session on a
+    server that no longer serves that route and the page said `That session is
+    still working`: a wrong explanation, which is worse than none, because it
+    sends somebody to stop a run that is not running.
+
+    Addressing and reading the answer are two jobs. `door` does both, `plainDoor`
+    only the second, and `readStatus` is the one place that knows what an answer
+    means.
+
+    Known-bad: call `fetch` anywhere else, or take the 410 out of the reader.
     """
-    doors = re.findall(r"fetch\(at\(", CODE)
-    assert len(doors) == 1, (
-        "%d places build a session-scoped request; one of them is `door` and "
-        "the rest will not notice a conversation that no longer exists"
-        % len(doors))
-    body = CODE[CODE.index("async function door(path, init)"):]
-    body = body[:body.index("\n}")]
+    assert len(re.findall(r"fetch\(at\(", CODE)) == 1, (
+        "more than one place builds a session-scoped request, and the rest will "
+        "not notice a conversation that no longer exists")
+    assert len(re.findall(r"[^.\w]fetch\(", CODE)) == 2, (
+        "%d places call fetch; there are two doors and everything else has to go "
+        "through one of them, or it cannot be told the page is stale or the "
+        "conversation gone" % len(re.findall(r"[^.\w]fetch\(", CODE)))
+    body = CODE[CODE.index("function readStatus(path, r)"):]
+    body = body[:body.index(chr(10) + "}")]
     assert "410" in body and "vanish()" in body, (
-        "the door does not read the one answer that will never stop being true")
+        "the reader does not read the one answer that will never stop being true")
+    assert "404" in body and "outOfDate(" in body, (
+        "the reader stopped noticing a route this server does not have")
 
 
 def test_a_deleted_conversation_stops_the_page_asking_about_it():
@@ -633,6 +648,7 @@ def test_a_page_older_than_the_server_says_so_instead_of_going_quiet():
         return src[:src.index(chr(10) + "}") + 2]
 
     js = (whole("async function door(") + chr(10)
+          + whole("function readStatus(") + chr(10)
           + whole("function outOfDate(") + chr(10)
           + "let notices = [], vanished = false, outdated = false, status = 200;\nglobalThis.at = p => p;\nglobalThis.orphan = (kind, t) => notices.push(t);\nglobalThis.vanish = () => { vanished = true; };\nglobalThis.fetch = async () => ({status, ok: status >= 200 && status < 300});\n(async () => {\n  const out = {};\n  status = 200; await door('/live/browsers?s=x'); out.afterOk = notices.length;\n  status = 404; await door('/live/address?s=x');\n  out.afterFirst = notices.length; out.text = notices[0] || '';\n  await door('/live/address?s=x'); out.afterSecond = notices.length;\n  status = 410;\n  try { await door('/chat/send?s=x'); } catch (e) { out.threw = true; }\n  out.vanished = vanished;\n  process.stdout.write(JSON.stringify(out));\n})();")
     done = subprocess.run([node, "-e", js], capture_output=True, text=True,
@@ -685,8 +701,15 @@ def test_opening_the_rail_moves_nothing_outside_it():
 
     style = CODE[CODE.index("<style"):CODE.index("</style>")]
     #: what moves a box, as opposed to what colours it.
+    #: ⛔ WIDENED 2026-09-12. The first list had position, the offsets, width,
+    #: height, padding, margin, display, float and transform - and missed
+    #: `flex`, the min/max pair and a custom property, each of which moves the
+    #: spine just as surely. A list of what counts as moving is a list somebody
+    #: has to keep, so it is written wide rather than tight.
     boxy = ("position", "top", "left", "right", "bottom", "inset", "width",
-            "height", "padding", "margin", "display", "float", "transform")
+            "height", "padding", "margin", "display", "float", "transform",
+            "flex", "min", "max", "gap", "order", "grid", "translate",
+            "scale", "zoom", "contain", "aspect")
 
     outside, moved = [], []
     for selector, decls in re.findall(r"([^{}]+)\{([^{}]*)\}", style):
@@ -696,8 +719,14 @@ def test_opening_the_rail_moves_nothing_outside_it():
         keyed = "aria-expanded" in sel or ":not([hidden])" in sel
         if not keyed:
             continue
-        #: a combinator after the rail reaches something that is not the rail.
-        if "~" in sel or "+" in sel:
+        #: ⛔ THE SUBJECT HAS TO BE THE RAIL, and the first version only looked
+        #: for sibling combinators - so the deleted rule came straight back
+        #: written as a descendant, or hung off `body:has(#rail:not([hidden]))`,
+        #: and this said nothing. Two conditions instead: the selector STARTS at
+        #: the rail, and it never steps sideways out of it. A descendant of the
+        #: rail is the rail's own business and stays allowed.
+        first = sel.replace(">", " ").split()[0] if sel.split() else ""
+        if not first.startswith("#rail") or "~" in sel or "+" in sel:
             outside.append(sel)
             continue
         if "#railtab" in sel:

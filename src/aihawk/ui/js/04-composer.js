@@ -100,7 +100,28 @@ let outdated = false;
    the transcript came straight back as an empty row, for as long as one tab
    stayed open on it. */
 async function door(path, init){
-  const r = await fetch(at(path), init);
+  return readStatus(path, await fetch(at(path), init));
+}
+
+/* ⛔ THE SAME READING, FOR THE THREE ROUTES THAT ARE NOT ADDRESSED. `/sessions`,
+   `/sessions/forget` and `/sessions/rename` are about the SET of conversations
+   rather than one, so they carry their id in the body and must not have `?s=`
+   appended - and two of them were calling `fetch` directly to avoid it, which
+   also skipped what a 404 and a 410 mean.
+
+   What that cost, and it is a sentence rather than a silence: delete a session
+   on a server that no longer serves that route and the page says `That session
+   is still working, so it was not deleted`, because a 404 is not `ok` and the
+   only other reading of `forgotten:false` is that one. A wrong explanation is
+   worse than none - it sends somebody to stop a run that is not running.
+
+   Addressing and reading the answer are two jobs; only the first of them
+   belongs to some routes and not others. */
+async function plainDoor(path, init){
+  return readStatus(path, await fetch(path, init));
+}
+
+function readStatus(path, r){
   /* 410 and nothing else. Every other failure is worth trying again; this one
      is the only one that will never stop being true. */
   if(r.status === 410){ vanish(); throw new Error('this conversation was deleted'); }

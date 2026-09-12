@@ -242,11 +242,19 @@ def test_the_brake_module_still_carries_all_three_defences():
     """And the module has to still BE the three things, or the gate above is
     enforcing an import and nothing else.
 
-    Known-bad: aim the brake at the module that only DEFINES `Link`, or take
-    the reserved address out of the runner. Either leaves every caller
-    reading correctly and stopping nothing.
+    ⛔ RUN, NOT READ, AND THE FIRST VERSION READ. It asserted that the source
+    CONTAINED `monkeypatch.setattr(sessions_mod, "Link", rec)` and the word
+    `UNBINDABLE_HOST`, as substrings of the raw file - so a comment saying what
+    the module must do satisfied it, and an import of the wrong module under
+    the right spelling would too. That is the defect this project has recorded
+    more than any other, and I wrote it into a gate about brakes on the same
+    day I wrote another one that went red on its own docstring.
+
+    Known-bad: aim the brake at the module that only DEFINES `Link`, or drop
+    the reserved address from the runner. Both are invisible to a substring
+    and both fail here.
     """
-    import pathlib
+    import aihawk.sessions as sessions_mod
 
     import _cli_brake
 
@@ -254,8 +262,40 @@ def test_the_brake_module_still_carries_all_three_defences():
         "the reserved address is gone, so a brake that goes inert can bind and "
         "serve: %r" % _cli_brake.UNBINDABLE_HOST)
 
-    source = pathlib.Path(_cli_brake.__file__).read_text(encoding="utf-8")
-    assert 'monkeypatch.setattr(sessions_mod, "Link", rec)' in source, (
-        "the brake no longer sits on the name the command actually reads")
-    assert "UNBINDABLE_HOST" in source.split("def run_cli", 1)[1], (
-        "run_cli stopped imposing an address nothing can bind")
+    class _Recorder:
+        """Enough of monkeypatch to see WHERE the brake is put."""
+
+        def __init__(self):
+            self.calls = []
+
+        def setattr(self, target, name, value):
+            self.calls.append((target, name, value))
+
+    mp = _Recorder()
+    rec = _cli_brake.brake(mp)
+    assert mp.calls == [(sessions_mod, "Link", rec)], (
+        "the brake is not put on the name the command reads: %r"
+        % [(getattr(t, "__name__", t), n) for t, n, _ in mp.calls])
+
+    seen = {}
+
+    class _Runner:
+        def invoke(self, app, argv, **kwargs):
+            seen["argv"] = list(argv)
+            return None
+
+    monkey = getattr(_cli_brake, "CliRunner")
+    try:
+        _cli_brake.CliRunner = _Runner
+        _cli_brake.run_cli("ui")
+        imposed = list(seen["argv"])
+        _cli_brake.run_cli("ui", "--host", "127.0.0.1")
+        left_alone = list(seen["argv"])
+    finally:
+        _cli_brake.CliRunner = monkey
+
+    assert imposed[:3] == ["ui", "--host", _cli_brake.UNBINDABLE_HOST], (
+        "the runner let `ui` reach an address it could bind: %r" % imposed)
+    assert left_alone.count("--host") == 1 and "127.0.0.1" in left_alone, (
+        "a caller naming its own host had a second one imposed on it: %r"
+        % left_alone)
