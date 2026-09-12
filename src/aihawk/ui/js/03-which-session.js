@@ -53,6 +53,15 @@ function dropped(){
 }
 const onEvent = (e) => {
   const m = JSON.parse(e.data), r = m.replay;
+  /* ⛔ A REPLAY IS NOT NEWS, AND IT WAS ANNOUNCED AS IF IT WERE. The
+     transcript is the page's only live region, and a reconnect - a
+     restarted server, a laptop waking, a tab coming back - replays the
+     whole conversation into it, so a screen reader read out an entire
+     hour of work from the beginning while the agent went on adding to
+     it. The burst is silenced and the region comes BACK: switching it
+     off for good would be the louder bug, told quietly. */
+  if(r){ thread.setAttribute('aria-live', 'off'); clearTimeout(quiet);
+         quiet = setTimeout(() => thread.setAttribute('aria-live', 'polite'), 200); }
   switch(m.kind){
     case 'model': $('model').textContent = m.text; break;
     /* Sent to every listener, so a second tab clears too instead of showing a

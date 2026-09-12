@@ -113,7 +113,16 @@ h5.md-h, h6.md-h{ font-size:var(--t-h3); font-weight:600; color:var(--fg-2) }
 .lab b   { font-family:var(--sans); font-weight:600; color:var(--fg) }  /* the verb */
 .lab code{ color:var(--accent) }                                        /* the object */
 .lab .inline{ color:var(--fg-3) }                    /* a short result, on the row */
-.meta{ grid-column:3; white-space:nowrap; font-size:var(--t-label); color:var(--fg-3) }
+/* ⛔ SIX CHARACTERS OF ROOM, RESERVED, BECAUSE THE CLOCK GROWS WHILE IT RUNS.
+   The timing is written ten times a second and the column was sized to its
+   contents, so every time the number gained a digit - `5ms` to `58ms` to
+   `412ms` to `1.0s` - the label beside it lost about 6.6px and re-truncated
+   under the reader's eye, three times in the first second of every step. A
+   `ch` really is one character here: this is the mono face and it is tabular,
+   which is the one place in this file where that unit means what it looks
+   like. */
+.meta{ grid-column:3; white-space:nowrap; font-size:var(--t-label);
+       min-width:6ch; text-align:right; color:var(--fg-3) }
 
 /* The chevron is the row's own pseudo-element in its own track: no svg, no icon
    font, and it cannot shift the label when it turns. */

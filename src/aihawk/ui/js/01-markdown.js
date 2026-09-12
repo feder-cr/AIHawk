@@ -184,5 +184,5 @@ const LONG = 48;
 
 const thread = $('thread'), anchor = $('anchor'), log = $('log');
 let turn = null, live = null, hold = null, n = 0, t0 = 0, timer = 0;
-let busyNow = false, queued = null, pinned = false, settle = 0;
+let busyNow = false, queued = null, pinned = false, settle = 0, quiet = 0;
 

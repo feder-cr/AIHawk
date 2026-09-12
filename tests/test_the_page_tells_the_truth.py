@@ -855,7 +855,7 @@ def test_a_reopened_conversation_keeps_the_answer_of_every_turn():
 
     js = (whole("function flush(", chr(10) + "}") + chr(10)
           + whole("const onEvent =", chr(10) + "};") + chr(10)
-          + "let drawn = [];\nglobalThis.hold = null; globalThis.busyNow = false;\nglobalThis.live = null; globalThis.timer = 0; globalThis.queued = null;\nglobalThis.LEAD = /^(I will |I'll |Let me )/i;\nglobalThis.el = (tag, cls, t) => ({tag, cls, t, kids: [],\n                                   appendChild(k){ this.kids.push(k); }});\nglobalThis.rich = t => ({tag: 'rich', t});\nglobalThis.put = n => drawn.push(n);\nglobalThis.$ = () => ({textContent: '', hidden: false});\nfor (const name of ['wipe','waiting','waited','drawChats','paint',\n                    'settleOnce','newTurn','step','land','orphan',\n                    'setQueued','send','clearInterval'])\n  globalThis[name] = () => {};\n\nconst feed = m => onEvent({data: JSON.stringify(m)});\nconst history = [\n  {kind:'you',    text:'first instruction',  replay:true},\n  {kind:'said',   text:'Let me open the page.', replay:true},\n  {kind:'tool',   text:'browser_navigate a', replay:true},\n  {kind:'result', text:'ok',                 replay:true},\n  {kind:'said',   text:'THE FIRST ANSWER.',  replay:true},\n  {kind:'you',    text:'second instruction', replay:true},\n  {kind:'tool',   text:'browser_navigate b', replay:true},\n  {kind:'result', text:'ok',                 replay:true},\n  {kind:'said',   text:'THE SECOND ANSWER.', replay:true},\n];\nhistory.forEach(feed);\n/* what the server sends after the replay, once it is idle */\nfeed({kind:'busy', text:'0'});\nconst answers = drawn.filter(d => d.cls === 'answer')\n                     .map(d => (d.kids[0] && d.kids[0].t) || '');\nprocess.stdout.write(JSON.stringify({answers, total: drawn.length}));")
+          + "let drawn = [];\nglobalThis.hold = null; globalThis.busyNow = false;\nlet announced = [], later = null;\nglobalThis.quiet = 0;\nglobalThis.thread = {setAttribute(k, v){ announced.push(v); }};\nglobalThis.clearTimeout = () => {};\nglobalThis.setTimeout = (fn) => { later = fn; return 1; };\nglobalThis.live = null; globalThis.timer = 0; globalThis.queued = null;\nglobalThis.LEAD = /^(I will |I'll |Let me )/i;\nglobalThis.el = (tag, cls, t) => ({tag, cls, t, kids: [],\n                                   appendChild(k){ this.kids.push(k); }});\nglobalThis.rich = t => ({tag: 'rich', t});\nglobalThis.put = n => drawn.push(n);\nglobalThis.$ = () => ({textContent: '', hidden: false});\nfor (const name of ['wipe','waiting','waited','drawChats','paint',\n                    'settleOnce','newTurn','step','land','orphan',\n                    'setQueued','send','clearInterval'])\n  globalThis[name] = () => {};\n\nconst feed = m => onEvent({data: JSON.stringify(m)});\nconst history = [\n  {kind:'you',    text:'first instruction',  replay:true},\n  {kind:'said',   text:'Let me open the page.', replay:true},\n  {kind:'tool',   text:'browser_navigate a', replay:true},\n  {kind:'result', text:'ok',                 replay:true},\n  {kind:'said',   text:'THE FIRST ANSWER.',  replay:true},\n  {kind:'you',    text:'second instruction', replay:true},\n  {kind:'tool',   text:'browser_navigate b', replay:true},\n  {kind:'result', text:'ok',                 replay:true},\n  {kind:'said',   text:'THE SECOND ANSWER.', replay:true},\n];\nhistory.forEach(feed);\n/* what the server sends after the replay, once it is idle */\nfeed({kind:'busy', text:'0'});\nconst answers = drawn.filter(d => d.cls === 'answer')\n                     .map(d => (d.kids[0] && d.kids[0].t) || '');\nif (later) later();\nprocess.stdout.write(JSON.stringify({answers, total: drawn.length, announced}));")
     done = subprocess.run([node, "-e", js], capture_output=True, text=True,
                           encoding="utf-8", timeout=30)
     assert done.returncode == 0, done.stderr
@@ -864,6 +864,18 @@ def test_a_reopened_conversation_keeps_the_answer_of_every_turn():
     assert got["answers"] == ["THE FIRST ANSWER.", "THE SECOND ANSWER."], (
         "a reopened conversation lost the answer of a turn that is not the "
         "last: %r" % (got["answers"],))
+    #: ⛔ AND THE REPLAY IS NOT READ OUT. The transcript is the page's only
+    #: live region, and a reconnect pours the whole conversation back into it:
+    #: a screen reader announced an hour of finished work from the top while
+    #: the agent went on adding to it. Silenced for the burst and restored
+    #: after, because leaving it off for good is the louder bug told quietly.
+    assert got["announced"] and got["announced"][0] == "off", (
+        "a replayed conversation is announced as though it were happening "
+        "now: %r" % (got["announced"],))
+    assert got["announced"][-1] == "polite", (
+        "the live region is left switched off after a replay, so nothing the "
+        "agent does afterwards is announced at all: %r" % (got["announced"],))
+
     #: and the lead-in is still dropped, which is the thing this must not undo.
     assert not any("open the page" in a for a in got["answers"]), (
         "the sentence that came with the tool calls came back as an answer")
@@ -1016,7 +1028,7 @@ def test_a_step_nobody_landed_stops_claiming_to_be_running():
         "    append(...xs){ for (const x of xs)",
         "      if (x && x.cls === 'mark') this.words.push(x.t); }};",
         "  const row = {querySelector: s => s === '.lab b' ? lab.b : lab,",
-        "               lastElementChild:{textContent:''}};",
+        "               tabIndex: 0, lastElementChild:{textContent:''}};",
         "  return {dataset:{name:'browser_click', state:'run'},",
         "          firstElementChild: row, appendChild(){}, lab};",
         "};",
@@ -1045,7 +1057,8 @@ def test_a_step_nobody_landed_stops_claiming_to_be_running():
         "/* and one that actually worked */",
         "const good = made(); globalThis.live = good;",
         "land('result', 'ok', false);",
-        "const worked = {state: good.dataset.state,",
+        "const worked = {state: good.dataset.state, body: good.dataset.body,",
+        "                tab: good.firstElementChild.tabIndex,",
         "                verb: good.lab.b.textContent, words: good.lab.words};",
         "process.stdout.write(JSON.stringify({stopped, failed, worked}));",
     ]
@@ -1077,6 +1090,15 @@ def test_a_step_nobody_landed_stops_claiming_to_be_running():
 
     assert got["worked"]["state"] == "ok" and got["worked"]["verb"] == "Clicked", (
         "a step that worked lost its past tense: %r" % (got["worked"],))
+    #: ⛔ AND A ROW WITH NOTHING TO OPEN LEAVES THE TAB ORDER. Every finished
+    #: step stayed a focusable disclosure, so crossing a fifty step run by
+    #: keyboard was fifty presses through rows where Enter opens nothing: the
+    #: distance between the sessions button and the composer was a minefield of
+    #: controls that do not control anything. Decided by the same statement that
+    #: decides the row has no body, so the two cannot drift apart.
+    assert got["worked"]["body"] == "none" and got["worked"]["tab"] == -1, (
+        "a step with its whole result on the row is still a tab stop that "
+        "opens nothing: %r" % (got["worked"],))
     assert got["worked"]["words"] == [], (
         "an ordinary result is annotated with an outcome word, which is noise "
         "on the rows that make up most of a run: %r" % (got["worked"],))
@@ -1155,3 +1177,152 @@ def test_the_queued_sentence_is_on_screen_and_survives_a_click():
     assert "go to the second page" in got["box"], (
         "clicking the chip did not give the queued sentence back: %r"
         % (got["box"],))
+
+
+def test_the_browser_state_is_only_announced_when_it_changes():
+    """⛔ IT REWROTE THE PAGE'S LIVE REGION 25 TIMES A SECOND.
+
+    The frame pump calls `say` on every pass, and `say` wrote the state, the
+    word beside it and a title whether or not anything had changed. A screen
+    reader announces every one of those writes: the word `live`, over and over,
+    with the queue never emptying - so the one transition that matters, live to
+    error, could never be reached. Somebody using this product by ear was shut
+    out of it for exactly as long as it was working.
+
+    Guarded in `say` and not at the pump, because there are eight callers and
+    "the state changed" is one fact. Executed: the defect is not visible in the
+    text of a function that always wrote the same three properties.
+
+    Known-bad: drop the guard, or guard only the pump's call site.
+    """
+    import json
+    import shutil
+    import subprocess
+
+    import pytest
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("needs node to EXECUTE say()")
+
+    end = "stateEl.title = why || ''; }"
+    src = CODE[CODE.index("function say(s, why){"):]
+    src = src[:src.index(end) + len(end)]
+
+    harness = [
+        "let writes = 0;",
+        "globalThis.right = {dataset: new Proxy({}, {set(t, k, v){",
+        "  writes++; t[k] = v; return true; }})};",
+        "globalThis.stateEl = {textContent:'', title:'',",
+        "                      classList:{toggle(){}}};",
+        "/* the pump, a hundred passes of a browser that has not changed */",
+        "for (let k = 0; k < 100; k++) say('live');",
+        "const steady = writes;",
+        "say('offline', 'the stream closed');",
+        "const afterChange = writes;",
+        "/* and the same state with a different reason is a change too */",
+        "say('offline', 'reconnecting');",
+        "process.stdout.write(JSON.stringify({steady, afterChange,",
+        "                                     afterReason: writes}));",
+    ]
+
+    done = subprocess.run([node, "-e", src + chr(10) + chr(10).join(harness)],
+                          capture_output=True, text=True, encoding="utf-8",
+                          timeout=30)
+    assert done.returncode == 0, done.stderr
+    got = json.loads(done.stdout)
+
+    assert got["steady"] == 1, (
+        "a hundred passes of an unchanged browser wrote the live region %d "
+        "times, which a screen reader reads out %d times"
+        % (got["steady"], got["steady"]))
+    assert got["afterChange"] == 2, (
+        "the guard swallowed a real change, which is the one thing it must "
+        "never do: %r" % (got,))
+    assert got["afterReason"] == 3, (
+        "the same state with a different reason was swallowed, so the word "
+        "explaining WHY it went offline never arrives: %r" % (got,))
+
+
+def test_the_one_input_on_the_page_keeps_its_focus_ring():
+    """⛔ `#i{outline:none}` BEAT `:focus-visible` ON SPECIFICITY, so the only
+    way to talk to the agent had no focus indicator at all for anybody arriving
+    by keyboard. The caret was the whole signal - invisible at a glance, in a
+    screenshot, and to most people scanning a window.
+
+    The declaration was written for the mouse case, where the composer's own
+    border answers a click, so it is scoped to exactly that instead of removed:
+    the pointer path stays clean and the keyboard path gets the page's ring.
+
+    Known-bad, two: put the bare `outline:none` back into the `#i` rule, or
+    drop the scoped rule and leave the keyboard path relying on a caret.
+    """
+    import re
+
+    css = re.sub(r"/\*.*?\*/", "",
+                 PAGE[PAGE.index("<style>"):PAGE.index("</style>")], flags=re.S)
+    rule = css[css.index("#i{"):]
+    rule = rule[:rule.index("}")]
+    assert "outline:none" not in rule.replace(" ", ""), (
+        "the composer kills its own focus ring for every path, including the "
+        "keyboard: %s" % " ".join(rule.split()))
+    assert "#i:focus:not(:focus-visible)" in css.replace(" ", ""), (
+        "nothing scopes the outline removal to the pointer, so either the "
+        "mouse case draws a ring it does not need or the keyboard case has "
+        "none at all")
+
+
+def test_clearing_the_conversation_leaves_the_page_able_to_explain_itself():
+    """⛔ CLEAR DELETED THE PRODUCT'S ONLY GUIDANCE OUT OF THE DOM FOR GOOD.
+
+    The three sentences that say what this is live in the markup and the first
+    turn removes them, which is right. `wipe()` emptied the transcript without
+    putting them back, so pressing Clear on a finished conversation left a void
+    - and the page had forgotten how to introduce itself until the tab was
+    reloaded.
+
+    Cloned from the markup rather than rebuilt in a builder: the same three
+    sentences written twice is the duplication that makes one of the two go
+    stale.
+
+    Known-bad: drop the restore from `wipe`, or write the sentences a second
+    time in the script instead of cloning the node.
+    """
+    import json
+    import shutil
+    import subprocess
+
+    import pytest
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("needs node to EXECUTE wipe()")
+
+    src = CODE[CODE.index("function wipe(){"):]
+    src = src[:src.index(chr(10) + "}") + 2]
+
+    harness = [
+        "let kids = ['a turn', 'another turn'];",
+        "globalThis.thread = {",
+        "  set textContent(v){ kids = []; },",
+        "  get firstElementChild(){ return kids.length ? kids[0] : null; },",
+        "  appendChild(n){ kids.push(n); }};",
+        "globalThis.hintNode = {cloneNode: () => 'the guidance'};",
+        "globalThis.turn = 1; globalThis.live = 1; globalThis.hold = 1;",
+        "globalThis.n = 3; globalThis.timer = 0; globalThis.busyNow = true;",
+        "globalThis.waited = () => {}; globalThis.setQueued = () => {};",
+        "globalThis.clearInterval = () => {};",
+        "wipe();",
+        "process.stdout.write(JSON.stringify({left: kids}));",
+    ]
+
+    done = subprocess.run([node, "-e", src + chr(10) + chr(10).join(harness)],
+                          capture_output=True, text=True, encoding="utf-8",
+                          timeout=30)
+    assert done.returncode == 0, done.stderr
+    got = json.loads(done.stdout)
+
+    assert got["left"] == ["the guidance"], (
+        "clearing the conversation leaves a pane with nothing in it, on a "
+        "product whose whole first-run explanation was what it just deleted: "
+        "%r" % (got["left"],))

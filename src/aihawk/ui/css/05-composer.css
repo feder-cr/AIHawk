@@ -7,8 +7,19 @@ form{ position:relative; padding:var(--s3) var(--s4) var(--s4);
            background:var(--base); border:1px solid var(--line-2);
            border-radius:var(--r-lg); padding:10px 10px 10px var(--s3);
            box-shadow:var(--lip); transition:border-color 120ms ease-out }
-.composer:focus-within{ border-color:var(--line-3) }
-#i{ flex:1; background:transparent; border:0; outline:none; resize:none; color:var(--fg);
+/* --fg-4 and not --line-3: this is the only signal a pointer user gets that the
+   box has the keyboard, and a border at 1.2:1 against the surface is not a
+   signal. #6b747d reads at 3.92:1 against the ground, over the 3:1 floor for a
+   non-text indicator, without inventing a token. */
+.composer:focus-within{ border-color:var(--fg-4) }
+/* ⛔ NO BLANKET `outline:none`, WHICH IS WHAT THIS RULE USED TO CARRY. It beats
+   the page-wide `:focus-visible` outline on specificity, so the one input on
+   the page - the only way to talk to the agent - had no focus ring at all for
+   anybody arriving by keyboard: the caret was the whole indication, and a caret
+   is invisible in a screenshot, at a distance, and to most people scanning a
+   window. Scoped to the case the declaration was actually written for. */
+#i:focus:not(:focus-visible){ outline:none }
+#i{ flex:1; background:transparent; border:0; resize:none; color:var(--fg);
     font:var(--t-body)/1.55 var(--sans); min-height:24px; max-height:200px;
     overflow-y:hidden; padding:0; caret-color:var(--accent) }
 /* --fg-3 and not --fg-4: the placeholder is the only hint the composer gives,

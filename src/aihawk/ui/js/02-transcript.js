@@ -37,6 +37,17 @@ let pend = null, pendTimer = 0;
 
 const dur = ms => ms < 1000 ? Math.round(ms) + 'ms' : (ms/1000).toFixed(1) + 's';
 
+/* ⛔ THE GUIDANCE IS KEPT, BECAUSE CLEAR USED TO DELETE IT FOR GOOD. It lives
+   in the markup and the first turn removes it, which is right - and `wipe()`
+   then left an empty pane with nothing in it at all, on a page whose entire
+   first-run explanation was those three sentences. Press Clear on a finished
+   conversation and the product forgot how to introduce itself until the tab was
+   reloaded.
+
+   A clone taken before anything can remove it, rather than the same words
+   written a second time in a builder: one declaration, and it is the markup. */
+const hintNode = $('hint').cloneNode(true);
+
 function newTurn(){
   const hint = $('hint'); if(hint) hint.remove();
   n = 0; turn = el('section','turn'); thread.appendChild(turn); return turn;
@@ -146,7 +157,14 @@ function land(kind, text, replay){
      ordinary run most rows are then one line with the answer already visible,
      which is the difference between a list and a stack of accordions. */
   if(text.length <= LONG && text.indexOf('\n') < 0){
-    d.dataset.body = 'none';
+    /* ⛔ AND IT LEAVES THE TAB ORDER WITH THE SAME STATEMENT THAT DECIDES IT
+       HAS NO BODY. Every finished step stayed a focusable disclosure, so a
+       keyboard user crossing a fifty step run pressed Tab fifty times through
+       rows where Enter opens nothing - the transcript between the sessions
+       button and the composer was a minefield of controls that do not
+       control anything. Still reachable by click and in a screen reader's
+       browse mode; only the sequential order gives it up. */
+    d.dataset.body = 'none'; s.tabIndex = -1;
     s.querySelector('.lab').append(' ', el('span','inline', text));
   } else {
     /* Anything that does not fit keeps a body, so the chevron is present for

@@ -104,6 +104,11 @@ function wipe(){
      otherwise left the composer saying "queue for next turn" forever. */
   busyNow = false;
   setQueued(null);
+  /* And the page can introduce itself again. Clear emptied the pane to
+     nothing at all, on a product whose whole first-run explanation was
+     those three sentences: press it on a finished conversation and it
+     had forgotten how to say what it is until the tab was reloaded. */
+  if(!thread.firstElementChild) thread.appendChild(hintNode.cloneNode(true));
 }
 let vanished = false;
 let outdated = false;
@@ -252,4 +257,14 @@ f.onsubmit = (e) => {
   send(t); paint();
 };
 
+/* ⛔ AND THE CARET STARTS WHERE THE WORK STARTS. The one input on the page
+   never had the keyboard on any load or any session switch, so every
+   visit began with a click or a Tab through the frame before a word could
+   be typed - on a page whose entire purpose is to receive a sentence.
 
+   `preventScroll` is not optional: without it the focus drags a restored
+   transcript to the bottom, which is the thing the replay goes out of its
+   way not to do. And if the sessions panel comes back open, it is a modal
+   and the composer is inert behind it, so this quietly does nothing and
+   the panel takes the keyboard instead - which is the right order. */
+i.focus({preventScroll:true});
