@@ -1028,6 +1028,9 @@ def test_a_step_nobody_landed_stops_claiming_to_be_running():
         "globalThis.el = (tag, cls, t) => ({tag, cls, t});",
         "const made = () => {",
         "  const lab = {b:{textContent:'Clicking'}, words:[],",
+        "    /* the row's own label, which `echoes` reads to decide whether the",
+        "       inline result says anything new */",
+        "    querySelector(sel){ return sel === 'b' ? this.b : null; },",
         "    /* only the outcome word: `land` also appends the inline result */",
         "    append(...xs){ for (const x of xs)",
         "      if (x && x.cls === 'mark') this.words.push(x.t); }};",
@@ -1067,7 +1070,8 @@ def test_a_step_nobody_landed_stops_claiming_to_be_running():
         "process.stdout.write(JSON.stringify({stopped, failed, worked}));",
     ]
 
-    js = (whole("function close(", chr(10) + "}") + chr(10)
+    js = (whole("function echoes(", chr(10) + "}") + chr(10)
+          + whole("function close(", chr(10) + "}") + chr(10)
           + whole("function land(", chr(10) + "}") + chr(10)
           + whole("const onEvent =", chr(10) + "};") + chr(10)
           + chr(10).join(harness))
