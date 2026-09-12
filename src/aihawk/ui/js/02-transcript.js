@@ -144,6 +144,19 @@ function close(d, state, word){
   return s;
 }
 
+/* Whether a result says nothing the row does not already say: the settled
+   verb plus the target, compared by words, case and a trailing full stop
+   aside. Read from the row itself rather than recomputed from the tool name,
+   so the two cannot disagree about what the row says. */
+function echoes(s, text){
+  const lab = s.querySelector('.lab');
+  const code = lab.querySelector('code');
+  const said = lab.querySelector('b').textContent + ' ' + (code ? code.textContent : '');
+  const flat = (x) => { x = x.toLowerCase().split(' ').filter(Boolean).join(' ');
+                        return x.endsWith('.') ? x.slice(0, -1) : x; };
+  return flat(text) === flat(said);
+}
+
 /* A result or an error folds into the step above it, which is what makes a step
    one unit carrying its target, its timing, its state and its own disclosure. */
 function land(kind, text, replay){
@@ -169,7 +182,13 @@ function land(kind, text, replay){
        control anything. Still reachable by click and in a screen reader's
        browse mode; only the sequential order gives it up. */
     d.dataset.body = 'none'; s.tabIndex = -1;
-    s.querySelector('.lab').append(' ', el('span','inline', text));
+    /* ⛔ NOT WHEN IT ONLY REPEATS THE ROW. A click answers `clicked <target>`
+       and the row already reads `Clicked <target>`, so the most frequent line
+       in the product said the same four words twice - eighteen times in a
+       row on a real run, and in the owner's own screenshot. An echo is not
+       information. A result that says anything more than the row does, an
+       address with a status, a heading that was read, is still shown. */
+    if(!echoes(s, text)) s.querySelector('.lab').append(' ', el('span','inline', text));
   } else {
     /* Anything that does not fit keeps a body, so the chevron is present for
        exactly the rows that need it. */

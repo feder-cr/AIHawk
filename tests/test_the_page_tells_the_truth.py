@@ -1429,3 +1429,73 @@ def test_pressing_stop_when_nothing_is_running_says_so():
     assert got["ordinary"] == [], (
         "an ordinary stop writes a line into the transcript, which is noise on "
         "the path that works: %r" % (got["ordinary"],))
+
+
+def test_a_result_that_only_repeats_the_row_is_not_drawn_twice():
+    """⛔ THE MOST FREQUENT LINE IN THE PRODUCT SAID THE SAME WORDS TWICE. A
+    click answers `clicked <target>` and the row already reads `Clicked
+    <target>`, so a run of eighteen clicks was eighteen rows of the same four
+    words repeated across the line - in the owner's own screenshot, `clicked
+    [aria-label='continue']` twice on one row. An echo is not information, and
+    the owner had already asked for the noise to go.
+
+    Executed through `land`, because the decision reads the settled row - the
+    past-tense verb the row now carries and the target beside it - and a scan
+    cannot see what a row says after it has been settled.
+
+    Known-bad, two: drop the guard and the echo is back; compare against the
+    tool name instead of the row and a result that adds a status is hidden too.
+    """
+    import json
+    import shutil
+    import subprocess
+
+    import pytest
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("needs node to EXECUTE land")
+
+    def whole(start, end):
+        src = CODE[CODE.index(start):]
+        return src[:src.index(end) + len(end)]
+
+    harness = [
+        "globalThis.VERB = {browser_click: ['Clicking','Clicked'],",
+        "                   browser_navigate: ['Navigating','Navigated']};",
+        "globalThis.el = (tag, cls, t) => ({tag, cls, t});",
+        "const made = (name, target) => {",
+        "  const lab = {b:{textContent:''}, code:{textContent: target}, shown:[],",
+        "    querySelector(sel){ return sel === 'b' ? this.b : sel === 'code' ? this.code : null; },",
+        "    append(...xs){ for (const x of xs) if (x && x.cls === 'inline') this.shown.push(x.t); }};",
+        "  const row = {querySelector: s => s === '.lab b' ? lab.b : lab,",
+        "               tabIndex: 0, lastElementChild:{textContent:''}};",
+        "  return {dataset:{name, state:'run'}, firstElementChild: row, appendChild(){}, lab};",
+        "};",
+        "globalThis.timer = 0; globalThis.t0 = 0; globalThis.LONG = 48;",
+        "for (const name of ['clearInterval','orphan']) globalThis[name] = () => {};",
+        "globalThis.performance = {now: () => 0}; globalThis.dur = () => '0ms';",
+        "const out = {};",
+        "let d = made('browser_click', 'a:nth-of-type(1)'); globalThis.live = d;",
+        "land('result', 'clicked a:nth-of-type(1)', false); out.echo = d.lab.shown;",
+        "d = made('browser_click', '#buy'); globalThis.live = d;",
+        "land('result', 'Clicked #buy.', false); out.echoDressed = d.lab.shown;",
+        "d = made('browser_navigate', 'https://x'); globalThis.live = d;",
+        "land('result', 'navigated to https://x/ (HTTP 200)', false); out.news = d.lab.shown;",
+        "process.stdout.write(JSON.stringify(out));",
+    ]
+    js = (whole("function echoes(", chr(10) + "}") + chr(10)
+          + whole("function close(", chr(10) + "}") + chr(10)
+          + whole("function land(", chr(10) + "}") + chr(10)
+          + chr(10).join(harness))
+    done = subprocess.run([node, "-e", js], capture_output=True, text=True,
+                          encoding="utf-8", timeout=30)
+    assert done.returncode == 0, done.stderr
+    got = json.loads(done.stdout)
+
+    assert got["echo"] == [] and got["echoDressed"] == [], (
+        "a result that only repeats the row is drawn beside it, so the most "
+        "frequent line in the product says the same words twice: %r" % (got,))
+    assert got["news"] == ["navigated to https://x/ (HTTP 200)"], (
+        "a result that says more than the row - here a status - was hidden: %r"
+        % (got,))
