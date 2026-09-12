@@ -463,7 +463,8 @@ def test_every_handler_the_page_wires_up_exists():
     defined = set(re.findall(r"(?:async\s+)?function\s+([A-Za-z_$][\w$]*)", code))
     defined |= set(re.findall(r"(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=", code))
     # Things the language and the document provide.
-    BUILT_IN = {"fetch", "alert", "confirm", "prompt", "parseInt", "String",
+    BUILT_IN = {"fetch", "alert", "confirm", "prompt", "parseInt", "parseFloat",
+                "getComputedStyle", "String",
                 "Number", "JSON", "Math", "Object", "Array", "setTimeout",
                 "clearTimeout", "setInterval", "clearInterval", "el", "$"}
 
@@ -499,8 +500,15 @@ def test_the_answer_measure_is_inside_the_range_every_source_agrees_on():
     """
     import re
 
-    pane = float(re.search(r"#left \{ width:clamp\([\d.]+px, ?\d+%, ?([\d.]+)px\)",
-                           PAGE).group(1))
+    #: ⛔ THE FLOOR IS A TOKEN NOW, so the rule no longer spells three pixel
+    #: literals and a regex pinned to that shape stopped matching at all -
+    #: which is an AttributeError, not a red assertion, and reads as the gate
+    #: being broken rather than as the page having changed. The only pixel
+    #: literal left in the rule is the ceiling, which is the number this
+    #: whole calculation is about.
+    rule = PAGE[PAGE.index("#left {"):]
+    rule = " ".join(rule[:rule.index("}")].split())
+    pane = float(re.search(r"([\d.]+)px", rule).group(1))
     assert re.search(r"#log\{[^}]*padding:var\(--s5\) var\(--s4\)", PAGE), (
         "the transcript no longer states its own padding, so this cannot be "
         "computed from the file")

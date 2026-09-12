@@ -1,10 +1,19 @@
-#left { width:clamp(420px, 44%, 530px); display:flex; flex-direction:column;
+/* ⛔ 44% OF THE ROOM THE TWO PANES ACTUALLY SHARE, not of the window. The
+   percentage was measured against the whole window while the spine and the
+   separator are outside the split, so the conversation was quietly 25px
+   narrower than the number said at every width where the clamp was not
+   already binding. The floor and the separator are tokens now, read here and
+   by the separator's own rule and by the code that drags it: one number, three
+   readers, instead of the same 420 and 9 written out in four places. */
+#left { width:clamp(var(--pane-min),
+                    calc((100% - var(--spine) - var(--split)) * .44), 530px);
+        display:flex; flex-direction:column;
         position:relative }
 /* The separator carries the line that used to be `#left`'s right border, so
    the thing you drag and the thing you see are the same thing. Wider than the
    line it draws: a 1px target is a 1px target, and this one is grabbed by
    hand. */
-#split{ flex:0 0 9px; cursor:col-resize; position:relative; background:none;
+#split{ flex:0 0 var(--split); cursor:col-resize; position:relative; background:none;
         border:0; padding:0; touch-action:none }
 /* ⛔ NINE PIXELS OF LINE, TWENTY-FIVE OF TARGET. WCAG 2.2 puts the floor at
    24px and none of its exceptions cover a separator: the arrow keys are a

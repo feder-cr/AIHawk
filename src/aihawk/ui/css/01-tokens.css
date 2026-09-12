@@ -109,6 +109,9 @@
      and the kind of number nobody questions because it looks round in decimal. */
   --spine:48px;                               /* the sessions rail */
   --drawer:256px;                             /* the standard drawer's width */
+  --split:9px;                                /* the separator, and its own width */
+  --pane-min:420px;                           /* the conversation, at its narrowest */
+  --stage-min:480px;                          /* the picture, below which it is a strip */
   --topbar:56px;                              /* every header, one height */
   --h-ctl:40px;                               /* every control on a bar */
   --gutter:1.75rem;                            /* three digits of 11px mono */

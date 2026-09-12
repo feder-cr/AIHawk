@@ -11,15 +11,27 @@
    the top level of this script may depend on the order of the lines. */
 const SPLITKEY = 'aihawk.split';
 
+/* ⛔ THE FLOOR AND THE CEILING COME FROM THE TOKENS, AND THE CEILING WAS 57px
+   OPTIMISTIC WITHOUT THEM. It subtracted the picture's minimum from the whole
+   WINDOW, while the spine and the separator sit outside the split: dragged to
+   the end, the browser pane got 423px where the number promised 480, and the
+   separator announced a ceiling it could not reach. Four places knew 420 and
+   two knew 9; now one declaration has three readers - this, the pane's own
+   clamp, and the separator's width. */
+function limits(){
+  const css = getComputedStyle(document.documentElement);
+  const px = name => parseFloat(css.getPropertyValue(name)) || 0;
+  const min = px('--pane-min');
+  return {min, max: Math.max(min, window.innerWidth - px('--stage-min')
+                                  - px('--spine') - px('--split'))};
+}
+
 function splitTo(px, remember){
-  /* The floor is the narrowest the conversation stays usable at; the ceiling
-     leaves the browser pane enough to be a picture rather than a strip. Both
-     are recomputed against the window, so a value dragged wide on a big
-     monitor does not strand the right pane on a laptop. */
-  const min = 420, max = Math.max(min, window.innerWidth - 480);
+  const {min, max} = limits();
   const w = Math.round(Math.min(max, Math.max(min, px)));
   $('left').style.width = w + 'px';
   $('split').setAttribute('aria-valuenow', String(w));
+  $('split').setAttribute('aria-valuemin', String(min));
   $('split').setAttribute('aria-valuemax', String(max));
   if(remember){ try { localStorage.setItem(SPLITKEY, String(w)); } catch(e) {} }
 }
@@ -30,9 +42,12 @@ function splitReset(){
   $('split').setAttribute('aria-valuenow',
                           String(Math.round($('left').getBoundingClientRect().width)));
   /* The ceiling too: this is the FIRST-RUN path, so without it a range widget
-     was announced with a floor and a value and no top for every new user. */
-  $('split').setAttribute('aria-valuemax',
-                          String(Math.max(420, window.innerWidth - 480)));
+     was announced with a floor and a value and no top for every new user.
+     And the floor, which was in the markup as a literal: three numbers
+     describing one range, from one place. */
+  const {min, max} = limits();
+  $('split').setAttribute('aria-valuemin', String(min));
+  $('split').setAttribute('aria-valuemax', String(max));
 }
 
 function splitter(){
@@ -81,7 +96,12 @@ function splitter(){
     const now = $('left').getBoundingClientRect().width;
     if(e.key === 'ArrowLeft'){ splitTo(now - step, true); e.preventDefault(); }
     else if(e.key === 'ArrowRight'){ splitTo(now + step, true); e.preventDefault(); }
-    else if(e.key === 'Home' || e.key === 'Escape'){ splitReset(); e.preventDefault(); }
+    /* ⛔ AND NOT ESCAPE. It reset the split here AND reached the document,
+       where it stops the run: one key, two things, one of them the thing
+       that ends the agent's work. Home is what returns a control to its
+       default everywhere else, and Escape now means close the panel, or
+       stop the run, and nothing at all when neither applies. */
+    else if(e.key === 'Home'){ splitReset(); e.preventDefault(); }
   });
   /* A width saved on a wide monitor is not a width on a laptop: put it back
      through the same clamp whenever the window changes. */

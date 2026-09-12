@@ -133,7 +133,10 @@
      ratio, watching a form being filled wants another - so it is not a number
      this file gets to decide once. -->
 <div id="split" role="separator" aria-orientation="vertical" tabindex="0"
-     aria-label="Width of the conversation" aria-valuemin="420"
+     <!-- No `aria-valuemin` here: the floor is a token the script reads, and a
+          literal in the markup would be a second copy of it that nothing
+          updates. The script writes all three bounds on the first pass. -->
+     aria-label="Width of the conversation"
      aria-valuenow="530"></div>
 
 <section id="right" data-state="idle" aria-label="The browsers this session holds">
