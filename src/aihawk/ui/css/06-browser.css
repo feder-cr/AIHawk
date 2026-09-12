@@ -66,8 +66,13 @@
    open, Live/Frozen, the layout picker and the address are three armed controls
    over an empty room: the bar looked identical whether the product was working
    or waiting to be told what to do. */
-#right[data-empty="1"] #url,
-#right[data-empty="1"] #mode{ opacity:.4 }
+/* ⛔ NEITHER LINE IS HERE ANY MORE, FOR TWO DIFFERENT REASONS. The picker
+   goes inert when the room is empty, and inert has one look, declared once in
+   the shell - a second opacity here was the second of the two numbers the
+   page used for "cannot be used". And the address is TEXT, not a control:
+   `opacity:.4` put `no page yet` at 2.13:1 on every first run, where the
+   `.dim` class the script already sets on an empty address reads at 6.6:1. Ink
+   for words, the shared rule for controls. */
 /* ⛔ AND `pointer-events` IS NOT A DISABLED STATE. It only stops the
    mouse: the five buttons kept their place in the tab order, kept the focus
    ring, and Enter still fired the handler - so a keyboard could operate five

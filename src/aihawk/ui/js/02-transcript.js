@@ -156,6 +156,10 @@ function land(kind, text, replay){
   /* Short output goes ON the row and the row stops being expandable. In an
      ordinary run most rows are then one line with the answer already visible,
      which is the difference between a list and a stack of accordions. */
+  /* On both branches: the row says its whole result on hover whether or not
+     it fits, so a result truncated on the row is readable without opening
+     anything. It used to be set only on the long branch. */
+  s.querySelector('.lab').title = text.slice(0, 400);
   if(text.length <= LONG && text.indexOf('\n') < 0){
     /* ⛔ AND IT LEAVES THE TAB ORDER WITH THE SAME STATEMENT THAT DECIDES IT
        HAS NO BODY. Every finished step stayed a focusable disclosure, so a
@@ -170,9 +174,6 @@ function land(kind, text, replay){
     /* Anything that does not fit keeps a body, so the chevron is present for
        exactly the rows that need it. */
     d.appendChild(el('pre','out', text));
-    /* And the row says it on hover too: nobody should have to open a
-       disclosure to find out whether it is worth opening. */
-    s.querySelector('.lab').title = text.slice(0, 400);
   }
 }
 

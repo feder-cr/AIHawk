@@ -35,7 +35,11 @@ function screenFor(b, current){
   const cell = document.createElement('button');
   cell.type = 'button'; cell.className = 'screen'; cell.dataset.id = b.id;
   cell.setAttribute('aria-current', String(current));
+  /* The NAME is the action and the state is the description. With the name
+     taken from the contents, a screen reader heard the address, the tag and
+     the veil's sentence run together, and `title` was never the name. */
   cell.title = 'Watch ' + b.id;
+  cell.setAttribute('aria-label', 'Watch ' + b.id);
   const box = el('div','frame');
   const im = document.createElement('img'); im.alt = ''; im.hidden = true;
   const tag = el('span','tag');
@@ -48,7 +52,9 @@ function screenFor(b, current){
     tag.appendChild(dot);
   }
   const stamp = el('span','stamp'); stamp.hidden = true;
-  box.append(im, el('div','veil'), tag, stamp);
+  const veil = el('div','veil'); veil.id = 'veil-' + b.id;
+  cell.setAttribute('aria-describedby', veil.id);
+  box.append(im, veil, tag, stamp);
   cell.appendChild(box);
   /* Three states and not two, and the third is the one that reads as a
      failure: a browser that is RUNNING WITH NO TAB cannot be captured - the

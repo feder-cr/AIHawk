@@ -472,7 +472,11 @@ def test_a_subtree_that_cannot_be_used_does_not_look_usable():
     Known-bad: drop the rule and let each caller remember to dim its own subtree.
     """
     css = CODE[CODE.index("<style>"):CODE.index("</style>")]
-    assert re.search(r"\[inert\]\{[^}]*opacity", css), (
+    # ⛔ ONE RULE FOR THE CLASS, so the selector is shared with `:disabled` and
+    # `[aria-disabled]`: four rules used to say "cannot be used" with two
+    # different numbers. The pattern allows the company and still demands that
+    # an inert subtree is what the rule dims.
+    assert re.search(r"\[inert\][^{]*\{[^}]*opacity", css), (
         "nothing makes an inert subtree look inert, so every control inside one "
         "keeps inviting an action it cannot perform")
 
@@ -1145,8 +1149,9 @@ def test_the_queued_sentence_is_on_screen_and_survives_a_click():
         "                   focus(){}};",
         "globalThis.i = {value: '', placeholder: '',",
         "                dispatchEvent(){}, focus(){}};",
-        "globalThis.go = {disabled:false, setAttribute(){}};",
-        "globalThis.halt = {hidden:true}; globalThis.fresh = {disabled:false};",
+        "globalThis.go = {disabled:false, dataset:{}, setAttribute(){}};",
+        "globalThis.halt = {hidden:true};",
+        "globalThis.fresh = {disabled:false, setAttribute(){}};",
         "globalThis.Event = function(){};",
         "globalThis.queued = 'go to the second page and read the heading';",
         "globalThis.busyNow = true;",

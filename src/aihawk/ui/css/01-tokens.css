@@ -152,7 +152,7 @@ code,pre,.g,.meta,.badge,#url{
    the meter at 2.71, the placeholder inside a screen at 2.51, the layout icons
    at 2.51. WCAG AA wants 4.5:1 for text and 3:1 for a graphic that carries
    meaning, and the token's own comment in this file says what it is for. A
-   label is a small word, not a faint one: `--fg-3` is 4.8:1 and still reads as
+   label is a small word, not a faint one: `--fg-3` is 6.3:1 on the ground and 5.9:1 on --raised and still reads as
    quieter than the thing it labels. */
 /* ⛔ AND THE TWO DEEPEST HEADINGS JOIN IT RATHER THAN RETYPING IT. `h5` had
    the body's size, the body's face and less contrast than the paragraph

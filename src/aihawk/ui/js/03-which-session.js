@@ -63,7 +63,7 @@ const onEvent = (e) => {
   if(r){ thread.setAttribute('aria-live', 'off'); clearTimeout(quiet);
          quiet = setTimeout(() => thread.setAttribute('aria-live', 'polite'), 200); }
   switch(m.kind){
-    case 'model': $('model').textContent = m.text; break;
+    case 'model': $('model').textContent = m.text; $('model').hidden = false; break;
     /* Sent to every listener, so a second tab clears too instead of showing a
        transcript the server has already forgotten. */
     case 'fresh': wipe(); break;
@@ -117,5 +117,10 @@ const onEvent = (e) => {
 
 new IntersectionObserver(([e]) => { $('jump').hidden = e.isIntersecting; },
                          {root: log}).observe(anchor);
-$('jump').onclick = () => anchor.scrollIntoView({block:'end', behavior:'smooth'});
+/* ⛔ THE LARGEST MOTION ON THE PAGE, AND THE ONE THE REDUCED-MOTION BLOCK
+   COULD NOT REACH: a smooth scroll is asked for in script, not in CSS, so the
+   rule that quiets every animation had no say over it. Read at click time and
+   not at load, because the setting can change while the tab is open. */
+$('jump').onclick = () => anchor.scrollIntoView({block:'end',
+  behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
 

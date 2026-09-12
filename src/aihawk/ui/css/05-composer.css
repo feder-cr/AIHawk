@@ -43,7 +43,20 @@ form{ position:relative; padding:var(--s3) var(--s4) var(--s4);
 #go:hover:not(:disabled){ background:var(--accent-hi) }
 #halt:hover{ background:var(--stop-hi) }
 #go:active, #halt:active{ transform:scale(.92); box-shadow:none }
-#go:disabled{ opacity:.3; cursor:default }
+#go:disabled{ cursor:default }
+/* ⛔ QUEUE LOOKS DIFFERENT FROM SEND, on the button itself. While the agent
+   works, Enter queues the sentence for the next turn, and the only thing that
+   said so was a placeholder that vanished at the first keystroke: the button
+   looked exactly like Send. Outlined rather than filled - the same shape, held
+   back - and the hover rule below has to be this specific or the ordinary
+   hover fills it in again and undoes the signal. */
+#go[data-mode="queue"]:not(:disabled), #go[data-mode="replace"]:not(:disabled){
+     background:transparent; color:var(--accent);
+     box-shadow:inset 0 0 0 1.5px var(--accent) }
+#go[data-mode="queue"]:hover:not(:disabled), #go[data-mode="replace"]:hover:not(:disabled){
+     background:color-mix(in srgb, var(--accent) 14%, transparent) }
+/* #chip sits on `--hover`; the next rung up is `--top`. */
+#chip:hover{ background:var(--top) }
 /* Its own button, not a mode of the send button. As a mode it disappeared the
    moment somebody typed, because the same control then meant "queue this for
    the next turn" - and the loop has no turn ceiling, so this button is the only

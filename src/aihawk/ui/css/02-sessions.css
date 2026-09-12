@@ -1,8 +1,9 @@
-/* ---------------- panes ---------------- */
-/* The session column is FIXED width and the two panes beside it share what is
-   left, because the column holds names and a name does not get more readable
-   with more room, while the transcript and the picture both do. It collapses
-   below 900px rather than squeezing the two things that matter. */
+/* ---------------- the sessions panel ---------------- */
+/* A FIXED-width panel that lies OVER the conversation as a modal, closed until
+   asked for. Fixed because it holds names, and a name does not get more
+   readable with more room; over rather than beside, because a column that
+   took its width out of the room moved and rewrapped the conversation every
+   time it opened. Below 900px it narrows, and nothing about it collapses. */
 /* ⛔ CLOSED UNTIL SOMEBODY ASKS FOR IT. A column of sessions standing open
    beside a conversation somebody is reading is a list nobody needed yet taking
    a fifth of the width; open by default it reads as scaffolding rather than as
@@ -92,6 +93,7 @@
    this - when a panel goes up a rung, what sits on it goes up a rung. */
 #newchat:hover{ background:var(--hover); color:var(--fg);
                 border-color:var(--line-2) }
+#newchat:active{ background:var(--top) }
 
 /* ⛔ AN ICON, AND THE WORD WHEN IT IS WANTED. The rail carried SESSIONS set
    vertically, and the word was the whole objection: it is the only thing on
@@ -135,13 +137,25 @@
 /* The word, on screen, the moment a pointer or the keyboard arrives. Drawn
    rather than left to `title`: the native tooltip waits about a second, takes
    the operating system's colours, and never appears for a keyboard at all. */
-#railtab::after{ content:attr(data-tip); position:absolute; left:calc(100% + var(--s2));
-                 top:9px; white-space:nowrap; pointer-events:none; z-index:6;
-                 background:var(--top); color:var(--fg); font-size:var(--t-label);
-                 padding:4px 8px; border-radius:var(--r-sm);
-                 box-shadow:0 2px 8px var(--shade-1);
-                 opacity:0; transition:opacity 125ms ease-out }
+/* ⛔ ONE LOOK FOR A DRAWN WORD, WHEREVER IT HANGS. The rail's tip was the only
+   one and its look was written into its own rule; the second tip - F2 on a
+   session row, for the keyboard that the native tooltip never serves - would
+   have copied all nine declarations. The look is shared by the attribute, and
+   each element keeps only where it puts the word and when it shows it. */
+[data-tip]::after{ content:attr(data-tip); position:absolute; white-space:nowrap;
+                   pointer-events:none; z-index:6;
+                   background:var(--top); color:var(--fg); font-size:var(--t-label);
+                   padding:4px 8px; border-radius:var(--r-sm);
+                   box-shadow:0 2px 8px var(--shade-1);
+                   opacity:0; transition:opacity 125ms ease-out }
+#railtab::after{ left:calc(100% + var(--s2)); top:9px }
 #railtab:hover::after, #railtab:focus-visible::after{ opacity:1 }
+/* On the row, at the right, and only while the NAME has keyboard focus: a
+   pointer user has the double click and the native title, and a tip that
+   appeared on every hover would be a label on every row. */
+.chat::after{ right:var(--s2); top:calc(100% - 4px); text-transform:none;
+              letter-spacing:0; font-weight:400 }
+.chat:has(.nm:focus-visible)::after{ opacity:1 }
 /* Open: the rail lifts a rung and the icon goes to full ink. The state is drawn
    on the thing you press, where a hand already is - and the word goes quiet,
    because the column beside it is now saying its own name. */
@@ -153,18 +167,7 @@
    into the whole sessions feature. */
 #railtab:focus-visible{ outline-offset:-4px }
 #railtab:hover{ background:var(--raised); color:var(--fg) }
-/* ⛔ OPEN, THE RAIL GIVES ITS WIDTH AWAY. A 48px strip beside an open column is
-   48px that says nothing: the column beside it already carries the name, the
-   state and the way out. So the button leaves the flow - the conversation gets
-   those pixels back and the panel starts at the edge of the window - and is
-   drawn over the panel's own header, in the same place on screen it was a
-   moment ago.
-
-   Moved, not duplicated. It is the same button, and it has to be: a second
-   control that opens the same column is a second thing to keep in step with the
-   first, which this page carried for half an hour once and a gate now forbids.
-   It is also the only thing that CLOSES the column, so it cannot simply be
-   hidden. */
+#railtab:active{ background:var(--hover) }
 /* ⛔ ABOVE THE PANEL, AND 5 IS THE PANEL. Both were 5, and the panel comes
    later in the document, so it painted over the button: the icon was exactly
    where it belonged, 48 by 56 at the top-left corner, and invisible. The
@@ -202,6 +205,10 @@
        color:var(--fg-2); font:inherit; font-size:var(--t-body);
        text-align:left }
 .chat:hover{ background:var(--hover); color:var(--fg) }
+/* Pressed is one rung above hovered, on every control that hovers to a rung:
+   not a global scale on `button:active`, which would shrink a full-width row,
+   the segmented pair and the delete cross alike - decoration by category. */
+.chat:active{ background:var(--top) }
 /* A mark on the edge rather than a filled row: the current session should be
    findable at a glance without the list turning into a row of blocks. */
 /* The attribute sits on the BUTTON now, where the name is, so the row is
@@ -254,6 +261,7 @@
           opacity:0; transition:opacity 120ms ease-out }
 .chat:hover .x, .chat:focus-within .x, .chat .x:focus-visible{ opacity:1 }
 .chat .x:hover{ background:var(--line-2); color:var(--fg) }
+.chat .x:active{ background:var(--line-3) }
 
 
 /* ⛔ A PERCENTAGE ALONE GIVES THE SURPLUS TO THE WRONG PANE. The conversation

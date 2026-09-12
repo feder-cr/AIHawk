@@ -56,7 +56,7 @@
    conversation is costing and running, then the one thing you can do to it.
    The rule that separates the last is the same hairline the panes use. */
 #head { flex:none; height:var(--topbar); display:flex; align-items:center;
-        gap:var(--s2); padding:0 var(--s4);
+        justify-content:flex-end; gap:var(--s2); padding:0 var(--s4);
         border-bottom:1px solid var(--line-1) }
 #head .vr{ width:1px; height:18px; flex:none; background:var(--line-2);
            margin:0 var(--s1) }
@@ -65,7 +65,9 @@
    model and Clear against the left edge, under the transcript's own margin and
    nowhere near the edge they had always sat on. The push belongs to the first
    of whatever survives, not to whichever element happened to be there. */
-#head #model{ margin-left:auto }
+/* The push is the CONTAINER'S now (`justify-content:flex-end` above), so it
+   no longer depends on which child happens to exist: the badge is hidden until
+   the server names a model, and a hidden child cannot carry a margin. */
 /* The heading is out of flow (`.sr` is absolute), so it is not one of the
    things being pushed, and this rule only describes the size it is announced
    at rather than drawn at. */
@@ -87,8 +89,9 @@
    22 and 23 - close enough to look fine and short enough to fail. */
 #fresh{ font-family:var(--sans); cursor:pointer;
         transition:background-color 120ms ease-out, color 120ms ease-out }
-#fresh:hover:not(:disabled){ background:var(--hover); color:var(--fg) }
-#fresh:disabled{ opacity:.3; cursor:default }
+#fresh:hover:not([aria-disabled="true"]){ background:var(--hover); color:var(--fg) }
+#fresh:active:not([aria-disabled="true"]){ background:var(--top) }
+#fresh[aria-disabled="true"]{ cursor:default }
 
 /* ⛔ `inert` HAS NO LOOK, AND A CONTROL THAT CANNOT BE USED MUST NOT LOOK
    USABLE. This page already spells that `opacity:.3` on a disabled button, and
@@ -98,7 +101,11 @@
    to see, and stayed fully lit the whole time. Seen on the running page, a
    deleted conversation left a composer inviting a sentence it could not send.
    One rule, so the look follows the mechanism rather than whoever remembers. */
-[inert]{ opacity:.3 }
+/* ⛔ AND ONE VALUE FOR THE WHOLE CLASS. Four rules said "this control cannot
+   be used" with two different numbers - .3 on two disabled buttons and on
+   inert subtrees, .4 on the empty room's picker - and the newest control was
+   left out altogether. Whatever the mechanism, the look is this one. */
+:disabled, [inert], [aria-disabled="true"]{ opacity:.3 }
 
 #log{ flex:1; overflow:auto; scrollbar-gutter:stable;
       padding:var(--s5) var(--s4) }
@@ -147,11 +154,15 @@
    characters per line, past every source that has a number: 65-72 in the chat
    design guidance, 75 as Baymard's upper bound, 80 as the WCAG 2.1 AAA cap.
 
-   66ch is 498px here; minus the 37px indent that is 461px of text, and at
-   6.11px a character that is 75 characters. The unit stays `ch` because it
-   tracks the font's own metrics if the font ever changes; the number comes
-   from the measurement, and the conversion is written down here so the next
-   person does not redo it in the wrong unit for the third time.
+   ⛔ MEASURED AT 14px, AND THE BODY IS 16px NOW. The ratio is what survives
+   a size change: at the size this page ships `0` is 8.63px and the average
+   character 6.98px, and one `ch` is still 1.24 characters. The cap itself
+   is gone - the pane is the measure, see the block below - so the number
+   that matters is the DEFAULT: a 530px pane minus its padding holds about
+   71 characters at 16px, inside every range quoted above, and the gate that
+   computes it reads the pane's own ceiling rather than a number written
+   here. The conversion stays written down so the next person does not redo
+   it in the wrong unit for the third time.
 
    Left aligned rather than centred: centring splits the slack in two and puts
    half on the LEFT, which reads as the column having been pushed away from the
@@ -204,14 +215,22 @@
    quotes, so the number is right and it was the LABEL that was lying. */
 #hint{ color:var(--fg-3); max-width:46ch; margin:var(--s6) auto 0; text-align:center }
 #hint p{ margin:0 0 var(--s4) }
-#hint .eg{ font:var(--t-mono)/1.9 var(--mono); color:var(--fg-2);
+#hint .eg{ display:block; width:100%; cursor:pointer;
+           font:var(--t-mono)/1.9 var(--mono); color:var(--fg-2);
            background:var(--raised); border:1px solid var(--line-1);
-           border-radius:var(--r); padding:var(--s3) var(--s4); text-align:left }
+           border-radius:var(--r); padding:var(--s3) var(--s4); text-align:left;
+           transition:background-color 120ms ease-out }
+#hint .eg:hover{ background:var(--hover); color:var(--fg) }
+#hint .eg:active{ background:var(--top) }
 #hint .sm{ font-size:var(--t-label); color:var(--fg-3) }
 
 #jump{ position:absolute; bottom:100%; margin-bottom:var(--s2);
        left:50%; transform:translateX(-50%); z-index:2;
        background:var(--top); border:1px solid var(--line-2); color:var(--fg);
        font:var(--t-ui)/1 var(--sans); padding:7px 13px;
-       border-radius:var(--r-pill); cursor:pointer }
+       border-radius:var(--r-pill); cursor:pointer;
+       transition:border-color 120ms ease-out }
+/* It sits on `--top`, the last rung, so there is no background above it: the
+   edge answers the pointer instead. */
+#jump:hover{ border-color:var(--line-3) }
 

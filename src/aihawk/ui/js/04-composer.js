@@ -11,12 +11,28 @@ function paint(){
   /* Refused while a run is in flight, and shown as refused rather than left to
      fail at the server: dropping a transcript something is still writing into
      is not undoable. */
-  fresh.disabled = busyNow;
+  /* ⛔ `aria-disabled`, NOT `disabled`, BECAUSE A DEAD BUTTON CANNOT SAY
+     WHY. Clear greyed out for the whole of a run and never explained itself,
+     and a `disabled` control fires no events - no hover, no click, and in this
+     engine no tooltip either - so there was no way to hang the explanation on
+     it. It keeps the same look through the shared rule, stays reachable, and a
+     press while the agent works says what to do instead of doing nothing. */
+  fresh.setAttribute('aria-disabled', busyNow ? 'true' : 'false');
   go.disabled = !typed;
-  go.setAttribute('aria-label',
-    queued ? 'Replace queued message' : busyNow ? 'Queue for next turn' : 'Send');
-  i.placeholder = queued ? 'Type to replace the queued message'
-    : busyNow ? 'Type to queue a message' : 'What should the agent do?';
+  /* ⛔ THE MODE IS DECIDED ONCE AND DRAWN, because nothing visible said that
+     Enter would QUEUE rather than send. The placeholder said it, and a
+     placeholder disappears at the first keystroke - so the moment a person had
+     typed a follow-up while the agent worked, the one control in front of them
+     looked exactly like Send. The same three-way choice was also written twice,
+     once for the label and once for the placeholder, which is how the two
+     drift. `data-mode` on the button is what the stylesheet draws. */
+  const mode = queued ? 'replace' : busyNow ? 'queue' : 'send';
+  go.dataset.mode = mode;
+  go.setAttribute('aria-label', {replace: 'Replace queued message',
+                                 queue: 'Queue for next turn', send: 'Send'}[mode]);
+  i.placeholder = {replace: 'Type to replace the queued message',
+                   queue: 'Type to queue a message',
+                   send: 'What should the agent do?'}[mode];
   chip.hidden = !queued;
   /* ⛔ AND IT SAYS WHAT IT IS HOLDING. The chip read `1 message queued` and
      the queued words were never drawn anywhere, so a second Enter replaced a
@@ -67,6 +83,20 @@ chip.onclick = () => { const draft = i.value.trim();
                        i.value = draft ? queued + '\n' + i.value : queued;
                        setQueued(null); i.focus();
                        i.dispatchEvent(new Event('input')); };
+
+/* ⛔ THE EXAMPLE IS A BUTTON THAT DOES WHAT IT LOOKS LIKE IT DOES. It was
+   drawn as a suggestion chip - a bordered mono line in the empty transcript -
+   and clicking it did nothing, on the first screen a new user sees. It fills
+   the composer and does not send, the same shape as the queued-message chip:
+   the words are put where the person can read them and change them. Wired by
+   class on the transcript rather than on the node, because the node is cloned
+   back after Clear and a handler on the original would not travel with it. */
+thread.addEventListener('click', (e) => {
+  const eg = e.target.closest('.eg'); if(!eg) return;
+  i.value = eg.textContent.trim();
+  i.dispatchEvent(new Event('input'));
+  i.focus();
+});
 
 /* ⛔ THE BOX IS NOT EMPTIED UNTIL THE SERVER HAS THE SENTENCE. This page
    already argues, about the QUEUED path, that losing typed text with nothing
@@ -203,8 +233,13 @@ function vanish(){
   vanished = true;
   if(es) es.close();
   say('offline', 'deleted');
+  /* The way out is named AND put on screen: the word Sessions is drawn
+     nowhere while the panel is closed - the spine is an icon - so the sentence
+     sent people looking for a label that did not exist. Opening the panel here
+     writes the remembered preference, which is accepted: splitting persistence
+     out of `showRail` would cost more than it saves. */
   orphan('err', 'This conversation was deleted. Nothing here is live any more '
-         + '- open another one from Sessions, or start a new one.');
+         + '- pick another one from the panel, or start a new one.');
   /* Everything goes inert EXCEPT the way out. `inert` rather than `disabled`
      because these are subtrees and not single controls, and it takes them out
      of the pointer AND the tab order - a composer that answers the keyboard
@@ -212,7 +247,7 @@ function vanish(){
      sessions keeps its full contrast, because the sentence above tells the
      person to use it. */
   for(const box of [f, $('right'), $('fresh')]) outOfPlay(box, 'deleted', true);
-  drawChats();
+  showRail(true);
 }
 
 /* ⛔ ONE PLACE KNOWS WHAT TO DO WHEN A REQUEST DOES NOT ARRIVE. Six
@@ -243,6 +278,11 @@ async function ask(path, body, whatFailed){
    guard was on the wrong control. Named on the message, and named again on
    the button. */
 fresh.onclick = () => {
+  if(busyNow){
+    orphan('said', 'Clear is off while the agent is working: stop the run '
+           + 'first, then clear.');
+    return;
+  }
   if(!confirm('Clear this conversation? The agent forgets everything you have told it. Its browsers stay open.')) return;
   ask('/chat/fresh', undefined, 'Could not clear this conversation');
 };

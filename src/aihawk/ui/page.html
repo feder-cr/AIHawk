@@ -73,7 +73,11 @@
          here. What was removed is the NAME ON THE SCREEN, which said the same
          thing as the tab, the window and the address bar. -->
     <h1 class="sr">AIHawk</h1>
-    <span class="badge" id="model">no model</span>
+    <!-- Empty and hidden until the server says which model: `no model` was a
+         literal here, a second declaration of a fact the server owns, and it
+         was on screen for the first second of every load as though it were
+         true. -->
+    <span class="badge" id="model" hidden></span>
     <span class="vr" aria-hidden="true"></span>
     <button id="fresh" type="button" title="Clear this conversation">Clear</button></div>
   <div id="log">
@@ -86,7 +90,7 @@
       <div id="hint">
         <p>Tell it what to do, in a sentence. It opens the pages, reads them and
            clicks, and you watch on the right.</p>
-        <p class="eg">Go to example.com and tell me the main heading.</p>
+        <button type="button" class="eg">Go to example.com and tell me the main heading.</button>
         <p class="sm">Plain language: the model works out the clicks. One
            instruction at a time works best.</p>
       </div>
@@ -172,7 +176,7 @@
        user was deciding what this is. The script clones this node when it
        needs it again, so the words are declared once. -->
   <div id="stage" data-grid="1">
-    <div class="empty"><b>No browser open</b><span>Ask in the chat and one opens here. There is no button for it, on purpose.</span><code>open a browser and go to example.com</code></div>
+    <div class="empty"><b>No browser open</b><span>Ask in the chat and one opens here. There is no button for it, on purpose.</span></div>
   </div>
   <!-- role, or the label is ignored: a bare div takes no accessible name. -->
   <div id="thumbs" role="group" aria-label="The other browsers in this session"></div>

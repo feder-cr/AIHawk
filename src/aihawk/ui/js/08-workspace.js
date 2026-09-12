@@ -37,7 +37,10 @@ function thumbFor(b){
   if(!b.running){
     const chip = document.createElement('button');
     chip.type = 'button'; chip.className = 'chip'; chip.dataset.id = b.id;
-    chip.title = 'Watch ' + b.id;
+    /* "Not running" was a 6px ring and nothing else - no text anywhere. The
+       state goes into the name, from the one place that already knows it. */
+    chip.title = 'Watch ' + b.id + ' - not running';
+    chip.setAttribute('aria-label', 'Watch ' + b.id + ' - not running');
     /* Clicking a chip changes what the address bar and the stage follow, and
        nothing said so: the identical control one row up, the preview card,
        has carried this mark from the start. */
@@ -48,7 +51,8 @@ function thumbFor(b){
   }
   const el2 = document.createElement('button');
   el2.type = 'button'; el2.className = 'thumb'; el2.dataset.id = b.id;
-  el2.title = 'Watch ' + b.id;
+  el2.title = 'Watch ' + b.id + ' - running';
+  el2.setAttribute('aria-label', 'Watch ' + b.id + ' - running');
   const pic = el('div','pic');
   /* Three states, not two, and the third is the one that read as a failure.
      A browser that is RUNNING WITH NO TAB cannot be captured - the engine

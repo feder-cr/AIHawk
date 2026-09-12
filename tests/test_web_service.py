@@ -339,8 +339,14 @@ async def test_the_stop_control_is_its_own_button_and_follows_the_run():
     assert "halt.hidden = !busyNow;" in page, \
         "the stop button is no longer tied to the run alone"
 
-    assert 'data-mode' not in page, \
-        "the send button has a mode again, which is how stop went missing before"
+    # The send button publishes a MODE again - send, queue, replace - and that
+    # is not the regression this line was written against: stop used to be one
+    # of those modes and vanished with it. What must hold is that stop is never
+    # among them, and that the dedicated button above still exists.
+    mode = page[page.index('const mode = '):]
+    mode = mode[:mode.index(';')]
+    assert 'stop' not in mode, \
+        'stop is a mode of the send button again, which is how it went missing before'
 
 
 async def test_the_live_view_never_causes_a_browser_to_start():
