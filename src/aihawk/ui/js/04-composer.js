@@ -153,6 +153,25 @@ function outOfDate(path){
          + 'Reload to get the current page.');
 }
 
+/* ⛔ ONE OWNER FOR `inert` WHEREVER TWO REASONS CAN HOLD THE SAME BOX. The
+   browser pane goes out of play when this conversation is deleted, and again
+   while the sessions panel lies on top of it, and those two are set from
+   different files. Written by hand, whichever one lets go last wins: press
+   Escape on the panel over a deleted conversation and the browser pane comes
+   back fully lit on a page where nothing is live. A box is inert while ANY
+   reason holds it, and each reason releases only its own.
+
+   A box only one thing can hold does not need this - the layout picker in the
+   stage file has a single reason and writes the flag directly. This is for the
+   boxes where the question "is it still held?" has more than one answer. */
+const heldBy = new WeakMap();
+function outOfPlay(box, why, on){
+  let why_not = heldBy.get(box);
+  if(!why_not){ why_not = new Set(); heldBy.set(box, why_not); }
+  if(on) why_not.add(why); else why_not.delete(why);
+  box.inert = why_not.size > 0;
+}
+
 /* Deleted from the other tab, or from another window. The page says so and
    stops asking, in that order. It does NOT navigate anywhere: the column
    beside it still works, and where to go next is not this page's decision to
@@ -170,7 +189,7 @@ function vanish(){
      while it cannot send is the same lie in a different place. The column of
      sessions keeps its full contrast, because the sentence above tells the
      person to use it. */
-  for(const box of [f, $('right'), $('fresh')]) box.inert = true;
+  for(const box of [f, $('right'), $('fresh')]) outOfPlay(box, 'deleted', true);
   drawChats();
 }
 

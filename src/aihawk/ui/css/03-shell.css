@@ -105,16 +105,19 @@
    whoever was reading them. The owner named the rule by looking at it: the
    bar lives on top and the chat must not know a thing.
 
-   What covering costs is the near edge of the conversation, and the words
-   stay where they are to come back to. What it must NOT cover is a control,
-   which is why the drawer stops above the composer - see `--composer-h` in
-   the sessions stylesheet. */
-/* ⛔ AND THE CHAT DOES NOT KNOW THE COLUMN EXISTS. The transcript and the
-   composer took a left padding here while the panel was open, to keep out
-   from under it - but a padding that changes changes the line width, so every
-   paragraph rewrapped as the panel appeared: the text moved under the eyes of
-   whoever was reading it. The panel is an overlay. It covers the near edge and
-   the rest of the words stay where they are, to come back to by closing it. */
+   What covering costs is the near edge of the conversation, and the words stay
+   where they are to come back to. What it must not do is cover them while they
+   still look readable, which is what it did until 2026-09-12: that is answered
+   in the sessions stylesheet, where the panel became a modal and the two panes
+   go inert behind it. Nothing about it is known here, and that is the point -
+   the coupling runs one way and it does not start in this file.
+
+   ⛔ AND THE `--composer-h` THIS PARAGRAPH USED TO SEND THE READER TO HAD BEEN
+   DEAD FOR A DAY BEFORE THE DRAWER STOPPED NEEDING ONE AT ALL. It was renamed
+   to `--rail-bottom` on the same afternoon it was written, and the variable is
+   now gone with the function, the observer and the listener that maintained it.
+   A pointer to a name that does not exist is worse than no pointer: it reads as
+   a fact somebody could go and check. */
 /* Capped in CHARACTERS and not in pixels, because the thing being limited is
    the measure and 680px is only one screen's worth of it: on a 1920 window the
    same column ran to about 92 characters, past the 80 the WCAG asks for and

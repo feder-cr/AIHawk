@@ -19,29 +19,42 @@
    Anchored to the spine's own width so the two are one object, and lifted with
    a shadow rather than a border, because what says "this is over that" is the
    shadow. */
-/* ⛔ IT STOPS ABOVE THE COMPOSER, AND THAT IS NOT DECORATION. Full height, it
-   covered 256px of the 530px input - measured 2026-09-11, and `elementFromPoint`
-   on the corner of the textarea answered `chats`, so half of the only input on
-   the page was dead with nothing saying so. The rule that used to prevent it
-   padded the transcript out of the way, and that rewrapped every paragraph as
-   the panel appeared, which is what it was removed for.
+/* ⛔ IT IS A MODAL NOW, AND THAT IS WHAT ANSWERS THE THING THE OWNER SAW. It
+   floated over the near edge of the conversation and left what it covered
+   looking READABLE: measured 2026-09-12 in a real browser, 240px off the front
+   of every line at every desktop width - 48% of the measure at 1440px, 61% at
+   960px, 29 rows buried at once and one of them whole. Lines read
+   `.com/it/ navigated to` with the verb and the step number underneath the
+   panel. That is not a panel over a page, that is text that looks broken.
 
-   So the CHAT still knows nothing: the coupling runs the other way, and the
-   panel knows where the input begins.
+   Covering is not the defect. Covering while the page underneath still claims
+   to be usable is. So the two panes go `inert` behind it and dim to 2.36:1 by
+   the shell's one `[inert]` rule, Escape closes it, a click outside closes it,
+   and choosing a conversation closes it on the way out. What is covered is
+   visibly out of play, for as long as it takes to pick a name.
 
-   ⛔ AND IT IS THE DISTANCE TO THE INPUT, NOT THE HEIGHT OF IT. The first
-   version published the composer's height, which is the same number only
-   while the composer sits at the bottom of the window. Below 720px the panes
-   stack - the conversation becomes `60vh` with the browser under it - so the
-   input is in the MIDDLE of the window and the drawer ran straight over it
-   again: measured 34% at 719px and 43% at 600px, in a real browser, on the
-   build that was supposed to have fixed this. `I made it vertical so it holds
-   at every width` was the claim, and eight widths said otherwise. */
-#rail { position:absolute; top:0; bottom:var(--rail-bottom, 0px);
+   ⛔ AND THAT IS WHY `--rail-bottom` IS GONE, with the function that published
+   it, its observer and its listener. It existed so the drawer would stop short
+   of the composer: a second place that knew where the input is, re-measured on
+   every resize, because the input moves when the panes stack. With the composer
+   inert behind the panel there is nothing to keep clear of - it cannot be typed
+   into either way - so the drawer runs the full height and one mechanism does
+   what two had to agree on.
+
+   The surface is `--raised` and not `--well`: the recessed rung against the
+   ground is 1.04:1, so the edge that was supposed to say "this is on top of
+   that" was invisible, and the shadow was carrying the separation alone. */
+#rail { position:absolute; top:0; bottom:0;
         left:var(--spine); width:var(--drawer);
         z-index:5; display:flex; flex-direction:column;
-        background:var(--well); border-right:1px solid var(--line-1);
-        box-shadow:14px 0 34px -18px #000 }
+        background:var(--raised); border-right:1px solid var(--line-3);
+        box-shadow:18px 0 36px -14px rgba(0,0,0,.85) }
+/* An animation and not a transition: the panel is toggled with `hidden`, so it
+   goes from not being rendered to being rendered, and there is no `from` value
+   for a transition to start at. The global reduced-motion block in the stage
+   stylesheet reaches this, like every other animation on the page. */
+#rail:not([hidden]){ animation:railin 150ms ease-out }
+@keyframes railin{ from{ transform:translateX(-100%) } }
 /* The header of the column lines up with the header of the conversation beside
    it: same height, same padding, so the two read as one row across the app. */
 /* ⛔ NO LEFT PADDING FOR THE BUTTON ANY MORE, and this said the opposite until
@@ -53,12 +66,31 @@
            gap:8px; padding:0 var(--s3);
            border-bottom:1px solid var(--line-1) }
 #railhead .label{ flex:1 }
+/* ⛔ THE PANEL ANSWERS IN THE PANEL. A rename that the server refuses and a
+   delete it refuses because the agent is mid-run were both reported into the
+   transcript - which, with the panel open, is the thing the panel is covering
+   and the page has just put out of play. The sentence landed where nobody
+   could read it. Cleared by `drawChats`, which already runs on every path that
+   changes this list, so no caller has to remember to empty it. The colours are
+   the transcript's own `.orph` recipe rather than a second set picked by hand:
+   one description of what an error looks like. */
+#railsay{ flex:none; margin:0 var(--s2); padding:6px 8px;
+          font-size:var(--t-label); line-height:1.4; color:var(--err);
+          background:color-mix(in srgb, var(--err) 9%, transparent);
+          border:1px solid color-mix(in srgb, var(--err) 32%, transparent);
+          border-radius:var(--r-sm) }
+#railsay:empty{ display:none }
 #newchat{ flex:none; width:48px; height:48px; display:grid;
           place-items:center; padding:0; border-radius:var(--r);
           border:1px solid transparent; background:none;
           color:var(--fg-3); cursor:pointer;
           transition:background-color 120ms ease-out, color 120ms ease-out }
-#newchat:hover{ background:var(--raised); color:var(--fg);
+/* ⛔ `--hover` AND NOT `--raised`, AND THE WHOLE GROUP MOVED TOGETHER. The panel
+   itself is `--raised` now, so a row that lit up to `--raised` on hover lit up
+   to the colour it was already sitting on: the feedback would have been deleted
+   by a one-line change to the surface behind it. The ladder exists for exactly
+   this - when a panel goes up a rung, what sits on it goes up a rung. */
+#newchat:hover{ background:var(--hover); color:var(--fg);
                 border-color:var(--line-2) }
 
 /* ⛔ AN ICON, AND THE WORD WHEN IT IS WANTED. The rail carried SESSIONS set
@@ -154,11 +186,13 @@
           nobody reports. */
        color:var(--fg-2); font:inherit; font-size:var(--t-body);
        text-align:left }
-.chat:hover{ background:var(--raised); color:var(--fg) }
+.chat:hover{ background:var(--hover); color:var(--fg) }
 /* A mark on the edge rather than a filled row: the current session should be
    findable at a glance without the list turning into a row of blocks. */
-.chat[aria-current="true"]{ color:var(--fg) }
-.chat[aria-current="true"]::before{ content:""; position:absolute; left:0;
+/* The attribute sits on the BUTTON now, where the name is, so the row is
+   selected through it rather than carrying a second copy of the same fact. */
+.chat:has([aria-current="true"]){ color:var(--fg) }
+.chat:has([aria-current="true"])::before{ content:""; position:absolute; left:0;
        top:7px; bottom:7px; width:2px; border-radius:2px; background:var(--fg-3) }
 /* The name is a button so it can be reached by keyboard, and the whole of the
    user agent's button chrome has to come off or it draws as a raised box with
@@ -173,9 +207,18 @@
    The height comes from a min-height rather than padding: the row is a flex
    child and padding would move the text off the baseline it shares with the
    count beside it. */
+/* ⛔ NOT A FLEX CONTAINER, AND THE ELLIPSIS IS THE WHOLE REASON.
+   `text-overflow` does nothing on one: the text becomes an anonymous flex item
+   and there is no line box for the ellipsis to hang off. So this rule asked for
+   the ellipsis and the display mode switched it off - measured on the running
+   page 2026-09-12, a name overflowing its box by 10px and cut dead with no
+   mark, which reads as a broken row rather than as a long name. The row itself
+   is already `display:flex; align-items:center`, so nothing here has to centre
+   anything, and `font:inherit` brings the body's 1.55 leading, which puts the
+   line box at 24.8px and meets the 24px target floor without a second number
+   being declared. */
 .chat .nm{ cursor:pointer; flex:1; min-width:0; overflow:hidden;
-           text-overflow:ellipsis; min-height:24px; display:flex;
-           align-items:center;
+           text-overflow:ellipsis; min-height:24px;
            white-space:nowrap; border:0; background:none; color:inherit;
            font:inherit; text-align:left; padding:0 }
 #chats .none{ margin:0; padding:var(--s3) var(--s2); color:var(--fg-3);

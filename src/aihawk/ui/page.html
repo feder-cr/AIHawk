@@ -30,7 +30,14 @@
     <path d="M9.2 4.4v15.2" stroke="currentColor" stroke-width="1.6"/>
   </svg></button>
 
-<nav id="rail" aria-labelledby="railtitle" hidden>
+<!-- ⛔ A DIALOG, BECAUSE THAT IS WHAT IT BEHAVES LIKE NOW. It lies over the
+     conversation and puts the two panes behind it out of play, which is a modal
+     whatever the element is called. `role` overrides the `nav` mapping, and
+     `aria-modal` is what tells a screen reader that the rest of the page is not
+     there for the moment - the half that `inert` does for everybody else. It
+     was a plain `nav` floating over live content, which announced a page where
+     everything was still reachable while a panel covered half of it. -->
+<nav id="rail" role="dialog" aria-modal="true" aria-labelledby="railtitle" hidden>
   <!-- No title here any more: the spine to the left of this column carries the
        word, and with the column open the two sat twenty pixels apart saying the
        same thing. The row keeps its height from its padding, so it still lines
@@ -47,6 +54,10 @@
            stroke-width="1.6" stroke-linecap="round"><path d="M9 3.5v11M3.5 9h11"/></svg>
     </button>
   </div>
+  <!-- Where this panel answers for itself: a refused rename, a delete the
+       server would not do. Empty until there is something to say, and emptied
+       again the next time the list is drawn. -->
+  <p id="railsay" role="status"></p>
   <div id="chats" role="list"></div>
 </nav>
 

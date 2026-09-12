@@ -5,31 +5,35 @@
    property of the work. */
 const RAILKEY = 'aihawk.rail';
 
-/* How far the drawer must stop short of the bottom, so that it never lies
-   over the input. Measured rather than declared: the textarea grows with what
-   is typed. The composer knows nothing about the panel - this reads the
-   composer, and the CSS reads this.
+/* The panel's own line, for what the panel itself failed to do. Emptied by the
+   next `drawChats`, so nothing has to remember to clear it. */
+function railsay(words){ $('railsay').textContent = words || ''; }
 
-   ⛔ THE DISTANCE TO THE INPUT, NOT ITS HEIGHT, and the first version had it
-   the other way. The two are the same number only while the composer sits at
-   the bottom of the window; below 720px the panes stack and the input is in
-   the middle, where the drawer ran over it again - 34% at 719px, 43% at 600.
-   Re-measured on window resize as well as on the composer's own, because the
-   input MOVES without changing size when the layout stacks. */
-function publishRailFloor(){
-  const f = $('f'); if(!f) return;
-  const gap = Math.max(0, Math.round(window.innerHeight
-                                     - f.getBoundingClientRect().top));
-  document.documentElement.style.setProperty('--rail-bottom', gap + 'px');
-}
-if(typeof ResizeObserver === 'function' && $('f')){
-  new ResizeObserver(publishRailFloor).observe($('f'));
-}
-addEventListener('resize', publishRailFloor);
-publishRailFloor();
+/* ⛔ OPENING IT PUTS THE PAGE BEHIND IT OUT OF PLAY, AND THAT IS THE WHOLE
+   CORRECTION. It used to lie over the near edge of the conversation and leave
+   it looking readable: 240px off the front of every line, 29 rows at a time,
+   the verb and the step number underneath the panel. The words were not gone,
+   they were unreachable while still inviting you to read them.
+
+   Now the two panes are held inert - dimmed to 2.36:1 by the shell's one
+   `[inert]` rule, out of the tab order, out of reach of the pointer - so what
+   is covered is visibly not in play. That is only honest because it is also
+   cheap to undo: Escape, a click on the page behind, or choosing a name, all
+   below.
+
+   Held through `outOfPlay` rather than written here, because the browser pane has a
+   second reason to be out of play - a conversation deleted elsewhere - and
+   whichever of the two let go last would otherwise revive it. */
 function showRail(open){
-  $('rail').hidden = !open;
+  const rail = $('rail');
+  /* Where the keyboard was, before hiding the panel can take it away: a
+     subtree that holds the focus and goes `hidden` drops it on the document,
+     and the next Tab starts at the top of the page instead of at the control
+     that was just used. */
+  const hadFocus = !open && rail.contains(document.activeElement);
+  rail.hidden = !open;
   $('railtab').setAttribute('aria-expanded', open ? 'true' : 'false');
+  for(const box of [$('left'), $('right')]) outOfPlay(box, 'sessions', open);
   /* ⛔ AND NO aria-label ANY MORE. It used to say "Show sessions" / "Hide
      sessions", which was right while the control was three lines and nothing
      else. Now the button says Sessions in words, and an aria-label REPLACES
@@ -40,9 +44,43 @@ function showRail(open){
      source: removing the attribute from the markup left this line putting it
      back. */
   try { localStorage.setItem(RAILKEY, open ? '1' : '0'); } catch(err){}
-  if(open) drawChats();
+  if(open){
+    drawChats();
+    /* The keyboard follows the eyes. Tab would walk in here anyway, but
+       Escape, the arrows and a screen reader all start from wherever the focus
+       is standing - which, a moment after this, is behind an inert subtree
+       none of them can reach. */
+    $('newchat').focus();
+  } else if(hadFocus){
+    $('railtab').focus();
+  }
 }
 $('railtab').onclick = () => showRail($('rail').hidden);
+
+/* ⛔ ESCAPE, ON THE WAY DOWN, AND THE INTERCEPTION IS DELIBERATE. Two other
+   handlers on `document` answer this key: one stops the run, the other resets
+   the split. Capture runs before both, so `stopPropagation` here keeps the key
+   from reaching them, and that is the point rather than a side effect - while
+   a modal is up, Escape means close the modal and nothing else, which is what
+   it means in every other window on the machine. Without this the key a person
+   presses to dismiss a panel STOPPED THE AGENT instead. */
+addEventListener('keydown', (e) => {
+  if(e.key !== 'Escape' || $('rail').hidden) return;
+  e.stopPropagation();
+  showRail(false);
+}, true);
+
+/* And a press on the page behind it, which is the other half of what makes
+   covering honest. Both guards are needed and the second one is not obvious:
+   without it, pressing the spine closes the panel here and the button's own
+   handler reopens it in the same gesture, so the one control that opens the
+   panel could never close it. */
+addEventListener('pointerdown', (e) => {
+  if($('rail').hidden) return;
+  if($('rail').contains(e.target) || $('railtab').contains(e.target)) return;
+  showRail(false);
+}, true);
+
 try { showRail(localStorage.getItem(RAILKEY) === '1'); } catch(err){ showRail(false); }
 
 async function renameChat(id, was){
@@ -52,10 +90,12 @@ async function renameChat(id, was){
      `renamed:false`; without reading it the column simply redrew the old
      name, which reads as the rename having been ignored. */
   const r = await ask('/sessions/rename', {id, name}, 'Could not rename it');
-  if(r && !(await r.json()).renamed){
-    orphan('err', 'A session needs a name with something in it.');
-  }
-  drawChats();
+  const refused = r && !(await r.json()).renamed;
+  /* The draw first and the sentence after, in that order: `drawChats` empties
+     the panel's line, so a sentence written before it would be wiped by the
+     redraw it was written about. */
+  await drawChats();
+  if(refused) railsay('A session needs a name with something in it.');
 }
 
 async function forgetChat(id, name){
@@ -75,9 +115,13 @@ async function forgetChat(id, name){
     gone = r.ok && (await r.json()).forgotten;
   } catch(err){ gone = false; }
   if(!gone){
-    orphan('err', 'That session is still working, so it was not deleted. '
-           + 'Stop its run first, then delete it.');
-    drawChats();
+    /* ⛔ AND IT IS SAID IN THE PANEL, NOT IN THE TRANSCRIPT. This went to the
+       conversation, which is the thing the panel is lying on top of and the
+       page has just put out of play: the sentence landed where the person who
+       pressed the button could not read it. */
+    await drawChats();
+    railsay('That session is still working, so it was not deleted. '
+            + 'Stop its run first, then delete it.');
     return;
   }
   if(id === here){ location.search = ''; return; }

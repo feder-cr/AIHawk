@@ -684,3 +684,148 @@ def test_the_spine_is_part_of_the_frame_and_is_the_only_way_in():
     assert not hidden, (
         "%d rule(s) hide the sessions column or the only way into it: %s"
         % (len(hidden), hidden))
+
+
+def test_a_long_name_ends_in_an_ellipsis_instead_of_stopping_mid_word():
+    """⛔ THE RULE ASKED FOR THE ELLIPSIS AND THE DISPLAY MODE SWITCHED IT OFF.
+
+    `text-overflow` does nothing on a flex container: the text inside becomes an
+    anonymous flex item, and there is no line box for the ellipsis to hang off
+    the end of. So `.chat .nm` declared `text-overflow:ellipsis` next to
+    `display:flex` and a name that did not fit was simply cut through, mid-word,
+    with no mark. Measured on the running page 2026-09-12: a name overflowing
+    its box by 10px, `text-overflow` computing to `ellipsis` and doing nothing.
+    On screen it does not read as a long name, it reads as a broken row.
+
+    The gate is on the CLASS and not on the one selector, which is what this
+    project does with defects it has seen once: any rule that asks for the
+    ellipsis while laying its contents out as flex is the same mistake wearing a
+    different name.
+
+    Known-bad: put `display:flex` back into `.chat .nm`.
+    """
+    import re
+
+    css = re.sub(r"/\*.*?\*/", "",
+                 PAGE[PAGE.index("<style>"):PAGE.index("</style>")], flags=re.S)
+    both = []
+    for sel, decl in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+        flat = decl.replace(" ", "")
+        if "text-overflow:ellipsis" in flat and re.search(r"display:(inline-)?flex",
+                                                          flat):
+            both.append(sel.strip())
+    assert not both, (
+        "%d rule(s) ask for an ellipsis and lay their contents out as flex, "
+        "which switches it off - the text is cut mid-word instead: %s"
+        % (len(both), both))
+
+    #: and the rule that needs one still asks for it
+    nm = css[css.index(".chat .nm{"):]
+    assert "text-overflow:ellipsis" in nm[:nm.index("}")].replace(" ", ""), (
+        "the name in a session row no longer asks for an ellipsis at all")
+
+
+def test_the_panel_closes_the_three_ways_a_person_tries():
+    """⛔ IT COULD ONLY BE CLOSED BY THE 48px ICON THAT OPENED IT, and the key
+    everybody presses to dismiss an overlay STOPPED THE AGENT instead.
+
+    Measured on the running page 2026-09-12: Escape left the panel open and
+    reached the composer's handler, a click on the conversation behind it did
+    nothing, and choosing a conversation carried the panel across the navigation
+    so the page you had just asked for arrived already covered.
+
+    That is what made covering unacceptable rather than merely bold. A panel
+    that lies over the page and puts it out of play has to be one gesture away
+    from gone, and there are three gestures: the key, the click outside, and
+    picking the thing you opened it for.
+
+    Executed, because none of it can be read off the text: the handlers are
+    registered in capture on `document`, and what matters is the ORDER they run
+    in and which events they swallow. Escape while the panel is CLOSED must not
+    be swallowed - that key belongs to the composer, where it stops a run.
+
+    The spine case is the subtle one. `pointerdown` and `click` both fire on a
+    real press, so without the second guard the panel closes on the press and
+    the button's own handler reopens it on the click: the one control that opens
+    it could never close it.
+
+    Known-bad, four, all run: drop the `stopPropagation`, drop the `hidden`
+    check so a closed panel swallows Escape, drop the `railtab` guard in the
+    pointer handler, drop the `showRail(false)` on choosing a conversation.
+    """
+    import json
+    import re
+    import shutil
+    import subprocess
+
+    import pytest
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("needs node to EXECUTE the handlers rather than read them")
+
+    code = re.sub(r"/\*.*?\*/|<!--.*?-->", "", PAGE, flags=re.S)
+    owner = code[code.index("const heldBy = new WeakMap();"):]
+    owner = owner[:owner.index(chr(10) + "}") + 2]
+    panel = code[code.index("const RAILKEY"):]
+    panel = panel[:panel.index("async function renameChat(")]
+
+    harness = [
+        "const made = {};",
+        "const box = id => (made[id] = {id, hidden:false, inert:false,",
+        "  attrs:{}, kids:[],",
+        "  setAttribute(k, v){ this.attrs[k] = v; },",
+        "  getAttribute(k){ return this.attrs[k]; },",
+        "  contains(n){ return n === this || this.kids.indexOf(n) >= 0; },",
+        "  focus(){ globalThis.document.activeElement = this; }});",
+        "['rail','railtab','left','right','newchat','chats','f','railsay']",
+        "  .forEach(box);",
+        "made.rail.kids = [made.newchat, made.chats, made.railsay];",
+        "made.left.kids = [made.f];",
+        "globalThis.$ = id => made[id];",
+        "globalThis.document = {activeElement: made.railtab};",
+        "globalThis.drawChats = () => {};",
+        "globalThis.localStorage = {seen:{},",
+        "  setItem(k, v){ this.seen[k] = v; }, getItem(k){ return this.seen[k]; }};",
+        "const heard = [];",
+        "globalThis.addEventListener = (type, fn) => heard.push({type, fn});",
+        "HERE",
+        "let swallowed = 0;",
+        "const esc = () => ({key:'Escape', stopPropagation(){ swallowed++; }});",
+        "const fire = (type, ev) => { for(const l of heard)",
+        "                               if(l.type === type) l.fn(ev); };",
+        "const press = () => made.railtab.onclick();",
+        "const out = {closedOnLoad: made.rail.hidden};",
+        "fire('keydown', esc());",
+        "out.leavesEscapeAloneWhenClosed = swallowed === 0;",
+        "press(); out.opens = !made.rail.hidden;",
+        "fire('keydown', esc());",
+        "out.escapeCloses = made.rail.hidden;",
+        "out.swallowedWhileOpen = swallowed === 1;",
+        "press(); fire('pointerdown', {target: made.f});",
+        "out.aPressOutsideCloses = made.rail.hidden;",
+        "press(); fire('pointerdown', {target: made.newchat});",
+        "out.aPressInsideDoesNot = !made.rail.hidden;",
+        "/* a real press on the spine: pointerdown, then the button's own click */",
+        "fire('pointerdown', {target: made.railtab}); press();",
+        "out.theSpineStillCloses = made.rail.hidden;",
+        "process.stdout.write(JSON.stringify(out));",
+    ]
+    js = chr(10).join(harness).replace("HERE", owner + chr(10) + panel)
+
+    done = subprocess.run([node, "-e", js], capture_output=True, text=True,
+                          encoding="utf-8", timeout=30)
+    assert done.returncode == 0, done.stderr
+    got = json.loads(done.stdout)
+
+    assert got == {
+        "closedOnLoad": True,
+        "leavesEscapeAloneWhenClosed": True,
+        "opens": True,
+        "escapeCloses": True,
+        "swallowedWhileOpen": True,
+        "aPressOutsideCloses": True,
+        "aPressInsideDoesNot": True,
+        "theSpineStillCloses": True,
+    }, ("the panel cannot be dismissed the way a person expects, or it swallows "
+        "a key that is not its own: %r" % (got,))

@@ -46,12 +46,20 @@ def test_a_refused_delete_is_not_drawn_as_a_delete():
     being navigated away, and leaving the session and its browsers exactly where
     they were - with every visible signal saying it had worked.
 
-    Known-bad: stop reading the answer.
+    ⛔ AND IT SAYS SO IN THE PANEL, NOT IN THE TRANSCRIPT, which is what this
+    assertion used to name. The sentence went to the conversation - the thing
+    the open panel is lying on top of and has just put out of play - so it
+    landed where the person who pressed the button could not read it. The
+    property is unchanged and the place it is said moved, so the literal moved
+    with it rather than the gate being dropped.
+
+    Known-bad: stop reading the answer, or say it into the transcript again.
     """
     body = CODE[CODE.index("async function forgetChat"):]
     body = body[:body.index("\n}")]
     assert "forgotten" in body, "the answer to the delete is never read"
-    assert "orphan(" in body, "a refused delete says nothing to the person who asked"
+    assert "railsay(" in body, (
+        "a refused delete says nothing where the person who asked can read it")
 
 
 def test_every_event_the_server_can_send_is_drawn():
@@ -429,17 +437,26 @@ def test_a_deleted_conversation_stops_the_page_asking_about_it():
     """The other half of the same defect: the server refuses now, and the page
     has to stop rather than retry a 410 four times a second in three loops.
 
-    Known-bad: leave `looking` reading only `document.hidden`, or drop the
-    `vanish` guard so the page keeps a live composer over a dead session.
+    ⛔ AND THE FLAG IS NOT WRITTEN BY HAND ANY MORE, which is why this names a
+    call instead of an assignment. The browser pane has a SECOND reason to be
+    out of play - the sessions panel lying on top of it - and the two are set
+    from different files, so whichever let go last won: closing the panel over
+    a deleted conversation brought the pane back fully lit on a page where
+    nothing is live. A box is held while any reason holds it.
+
+    Known-bad: leave `looking` reading only `document.hidden`; drop the
+    `vanish` guard so the page keeps a live composer over a dead session; or
+    write `box.inert = true` here again, which passes every assertion in this
+    file and loses the hold the moment a panel is closed.
     """
     assert "!document.hidden && !vanished" in CODE, (
         "the four loops go on polling a conversation that does not exist")
     body = CODE[CODE.index("function vanish()"):]
     body = body[:body.index("\n}")]
     assert "es.close()" in body, "the event stream is left open on a dead session"
-    assert "box.inert = true" in body, (
+    assert "outOfPlay(box, 'deleted', true)" in body, (
         "the composer still answers the keyboard for a conversation that cannot "
-        "receive anything")
+        "receive anything, or it is held by a flag anybody else can clear")
     assert "orphan(" in body, "the page says nothing about why it went quiet"
 
 
@@ -852,30 +869,34 @@ def test_a_reopened_conversation_keeps_the_answer_of_every_turn():
         "the sentence that came with the tool calls came back as an answer")
 
 
-def test_the_session_drawer_never_covers_the_input():
-    """⛔ THE DRAWER COVERED HALF THE ONLY INPUT ON THE PAGE, and the gate
-    written for the drawer could not see it.
+def test_the_sessions_panel_puts_the_page_behind_it_out_of_play():
+    """⛔ IT COVERED HALF THE CONVERSATION AND LEFT IT LOOKING READABLE.
 
-    That gate asserts that nothing outside the rail reacts to the rail being
-    open, which is true and was the defect of the day before. It is a scan over
-    selectors, so it knows nothing about where a box ends up: the rail ran the
-    full height of the window and lay over the composer. Measured 2026-09-11 in
-    a real browser: 256px of the 530px input, and `elementFromPoint` on the
-    corner of the textarea answered `chats`. Half of the only way to talk to
-    the agent was dead, with nothing saying so.
+    Measured 2026-09-12 in a real browser at eight widths, drawer open: 240px
+    off the front of every line at every desktop width - 48% of the measure at
+    1440px, 61% at 960px, 29 rows buried at once and one of them whole. The
+    owner read it off his own screen before any gate did: lines beginning
+    `.com/it/ navigated to`, with the verb and the step number underneath the
+    panel.
 
-    The rule that used to prevent it padded the transcript out of the way, and
-    that rewrapped every paragraph as the panel appeared - which is what it was
-    removed for. So the coupling runs the other way now: the CHAT still knows
-    nothing, and the PANEL knows where the input begins.
+    The gate that stood here asserted that the drawer stopped SHORT of the
+    composer, which was the defect of the day before and is now a question that
+    cannot be asked: with the page behind it inert, the panel may cover the
+    input, because the input is out of play anyway. So the property moved. It
+    is no longer where the panel stops, it is what it holds while it is up.
 
-    Measured and not declared, because the textarea grows with what is typed:
-    a constant would be right until somebody wrote a third line.
+    Three things are executed rather than read, because the text cannot answer
+    any of them: that opening holds both panes and closing releases them, that
+    the keyboard goes in and comes back, and that a hold SOMEBODY ELSE is
+    keeping survives this panel letting go of its own. The last one is why
+    `outOfPlay` exists at all - a conversation deleted in another tab holds the
+    browser pane, and a plain `inert = false` from here would bring that pane
+    back fully lit on a page where nothing is live.
 
-    Known-bad: anchor the rail to the bottom of the window again, or publish a
-    composer's HEIGHT instead of the distance to it: the same number only
-    while the composer sits at the bottom of the window, and below 720px the
-    panes stack and it does not.
+    Known-bad, all three run: write `box.inert = open` in place of the call to
+    `outOfPlay` and the deleted pane revives; drop the `hadFocus` check and the
+    keyboard is left standing on the document; drop the focus into the panel
+    and it never arrives.
     """
     import json
     import shutil
@@ -883,25 +904,67 @@ def test_the_session_drawer_never_covers_the_input():
 
     import pytest
 
-    #: the panel has to stop at the variable, not at the window.
-    style = CODE[CODE.index("#rail {"):]
-    style = style[:style.index("}") + 1]
-    assert "bottom:var(--rail-bottom" in style.replace(" ", ""), (
-        "the drawer is anchored to the bottom of the window again, so it lies "
-        "over the composer: %r" % " ".join(style.split()))
-
     node = shutil.which("node")
     if not node:
-        pytest.skip("needs node to EXECUTE the publisher")
+        pytest.skip("needs node to EXECUTE the panel rather than read it")
 
-    src = CODE[CODE.index("function publishRailFloor("):]
-    src = src[:src.index(chr(10) + "}") + 2]
-    done = subprocess.run([node, "-e", src + chr(10) + "let set = {};\nglobalThis.window = {innerHeight: 900};\nglobalThis.innerHeight = 900;\nglobalThis.addEventListener = () => {};\nglobalThis.$ = id => id === 'f'\n  ? {getBoundingClientRect: () => ({top: 783.2, height: 83.4})}\n  : null;\nglobalThis.document = {documentElement: {style: {\n  setProperty(k, v){ set[k] = v; }}}};\nglobalThis.ResizeObserver = undefined;\npublishRailFloor();\nprocess.stdout.write(JSON.stringify({set}));"],
-                          capture_output=True, text=True,
-                          encoding="utf-8", timeout=30)
+    #: `outOfPlay` and its map, from the file that owns them.
+    owner = CODE[CODE.index("const heldBy = new WeakMap();"):]
+    owner = owner[:owner.index(chr(10) + "}") + 2]
+    #: the key, the panel's own line and `showRail`, up to its first caller.
+    panel = CODE[CODE.index("const RAILKEY"):]
+    panel = panel[:panel.index("$('railtab').onclick")]
+
+    harness = [
+        "const made = {};",
+        "const box = id => (made[id] = {id, hidden:false, inert:false,",
+        "  attrs:{}, kids:[],",
+        "  setAttribute(k, v){ this.attrs[k] = v; },",
+        "  getAttribute(k){ return this.attrs[k]; },",
+        "  contains(n){ return n === this || this.kids.indexOf(n) >= 0; },",
+        "  focus(){ globalThis.document.activeElement = this; }});",
+        "['rail','railtab','left','right','newchat','chats','f'].forEach(box);",
+        "made.rail.kids = [made.newchat, made.chats];",
+        "made.left.kids = [made.f];",
+        "globalThis.$ = id => made[id];",
+        "globalThis.document = {activeElement: made.railtab};",
+        "globalThis.drawChats = () => {};",
+        "globalThis.addEventListener = () => {};",
+        "globalThis.localStorage = {seen:{},",
+        "  setItem(k, v){ this.seen[k] = v; }, getItem(k){ return this.seen[k]; }};",
+        "const shot = () => ({left: made.left.inert, right: made.right.inert,",
+        "  hidden: made.rail.hidden, focus: document.activeElement.id,",
+        "  expanded: made.railtab.getAttribute('aria-expanded'),",
+        "  remembered: localStorage.getItem('aihawk.rail')});",
+        "showRail(true);  const opened = shot();",
+        "showRail(false); const closed = shot();",
+        "/* somebody else is holding the browser pane: opening and closing this",
+        "   panel over it must not hand that pane back. */",
+        "outOfPlay(made.right, 'deleted', true);",
+        "showRail(true); showRail(false);",
+        "process.stdout.write(JSON.stringify({opened, closed,",
+        "                                     survives: made.right.inert}));",
+    ]
+
+    done = subprocess.run(
+        [node, "-e", owner + chr(10) + panel + chr(10) + chr(10).join(harness)],
+        capture_output=True, text=True, encoding="utf-8", timeout=30)
     assert done.returncode == 0, done.stderr
-    got = json.loads(done.stdout)["set"]
+    got = json.loads(done.stdout)
 
-    assert got.get("--rail-bottom") == "117px", (
-        "the floor the panel stops at is not the distance to the composer, "
-        "so it is right until the panes stack and the input moves: %r" % got)
+    assert got["opened"] == {"left": True, "right": True, "hidden": False,
+                             "focus": "newchat", "expanded": "true",
+                             "remembered": "1"}, (
+        "opening the panel does not take the page behind it out of play, or "
+        "does not take the keyboard with it: %r" % (got["opened"],))
+
+    assert got["closed"] == {"left": False, "right": False, "hidden": True,
+                             "focus": "railtab", "expanded": "false",
+                             "remembered": "0"}, (
+        "closing the panel leaves the page held, or leaves the keyboard "
+        "standing on the document: %r" % (got["closed"],))
+
+    assert got["survives"] is True, (
+        "closing the panel released a hold it never took: a conversation "
+        "deleted elsewhere had the browser pane out of play, and this brought "
+        "it back fully lit on a page where nothing is live")
