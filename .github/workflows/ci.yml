@@ -160,10 +160,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - uses: astral-sh/setup-uv@v5
+      # uv from astral's installer, not from astral-sh/setup-uv: this
+      # repository's Actions policy allows actions by feder-cr, by GitHub, or
+      # pypa/gh-action-pypi-publish, and the first run of this job died at
+      # startup on exactly that. The line is the README's Linux line.
       - name: the bundle packs, holds only the server, and runs
         run: |
           set -euo pipefail
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          source "$HOME/.local/bin/env"
           npx -y @anthropic-ai/mcpb validate .
           python scripts/pack_bundle.py --output /tmp/bundle
           python scripts/pack_bundle.py --smithery --output /tmp/bundle
