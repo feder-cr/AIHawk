@@ -110,7 +110,14 @@ the page from JavaScript after load; Patchright patches the driver. The engine
 wiki has the distinction in detail.
 
 **Which one is safest to depend on?** Judge by push date and issue tempo, not by
-star count. The survey figures above are dated for that reason.
+star count. The survey figures above are dated for that reason, and
+[MCP servers on GitHub](mcp-servers-on-github.md) is the same judgement applied
+to any listing rather than to this one category.
+
+**Is a stealth server even the category I want?** Only if the site recognising
+the browser is your actual complaint.
+[How to choose among MCP servers](best-mcp-servers.md) puts this category next
+to the others first, which is the cheaper question to answer.
 
 **See also:** [Choosing an MCP server for browser automation](best-mcp-server-for-browser-automation.md),
 [Playwright MCP alternatives](playwright-mcp-alternative.md), and
