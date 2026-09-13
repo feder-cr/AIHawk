@@ -1,0 +1,12 @@
+{
+  "name": "aihawk",
+  "displayName": "AIHawk",
+  "description": "AI browser agent: browses, clicks, types, and reads real web pages from plain-English instructions.",
+  "author": {
+    "name": "feder-cr",
+    "url": "https://github.com/feder-cr"
+  },
+  "license": "MIT",
+  "keywords": ["browser", "browser-agent", "web-automation", "playwright", "firefox", "computer-use"],
+  "logo": "assets/aihawk-icon-400.png"
+}

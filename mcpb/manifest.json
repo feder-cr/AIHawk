@@ -16,6 +16,8 @@
   "homepage": "https://github.com/feder-cr/AIHawk",
   "documentation": "https://github.com/feder-cr/AIHawk/wiki",
   "support": "https://github.com/feder-cr/AIHawk/issues",
+  "icon": "https://raw.githubusercontent.com/feder-cr/AIHawk/main/assets/aihawk-icon-400.png",
+  "privacy_policies": ["https://github.com/feder-cr/AIHawk#privacy-policy"],
   "server": {
     "type": "python",
     "entry_point": "src/server.py",

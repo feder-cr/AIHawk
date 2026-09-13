@@ -230,7 +230,6 @@ def cli_commands(cli_path):
 #: reason beside each entry rather than being a mute list.
 NON_TOOL = {"session_id", "browser_id", "session_name", "browser_name"}
 TOOL_RE = re.compile(r"`((?:browser|session)_[a-z_]+)`")
-TOOL_DEF_RE = re.compile(r"@\w+\.tool\([^)]*\)\s*(?:async\s+)?def\s+(\w+)")
 
 #: (path, name) -> why that name may appear there without being one of ours.
 TOOL_MENTIONS_ALLOWED = {
@@ -245,9 +244,36 @@ TOOL_MENTIONS_ALLOWED = {
 }
 
 
+def tool_defs(server_path):
+    """(name, docstring) of every function the server decorates with `.tool`.
+
+    `ast` rather than a regex or an import. An import needs the server's
+    dependencies, which the content gate may not have. A regex was what this
+    used until 2026-09-13, `@\\w+\\.tool\\([^)]*\\)`, and it stopped at the
+    first `)` inside the decorator's arguments: the day the decorators gained
+    `annotations=ToolAnnotations(...)` it found no tool at all, and an empty
+    set reads downstream as "no server to check against", which switched the
+    tool-name check OFF without a word. A docstring is a literal in the file
+    either way, and the decorator is a node with or without nested calls.
+    """
+    import ast
+
+    tree = ast.parse(server_path.read_text(encoding="utf-8"))
+    out = []
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        for dec in node.decorator_list:
+            target = dec.func if isinstance(dec, ast.Call) else dec
+            if isinstance(target, ast.Attribute) and target.attr == "tool":
+                out.append((node.name, ast.get_docstring(node, clean=False) or ""))
+                break
+    return out
+
+
 def mcp_tools(server_path):
-    """The tools the server actually declares (`@mcp.tool()` above a `def`)."""
-    return set(TOOL_DEF_RE.findall(server_path.read_text(encoding="utf-8")))
+    """The tools the server actually declares."""
+    return {name for name, _ in tool_defs(server_path)}
 
 
 #: ⛔ A PUBLISHED NUMBER GOES STALE AND NOTHING SAYS SO, which is the failure
@@ -293,26 +319,11 @@ def _surface_number(match):
 
 
 def tool_surface(server_path):
-    """(tool count, total description characters) read from the source.
-
-    `ast` rather than an import: the content gate runs where the server's
-    dependencies may not be installed, and a docstring is a literal in the
-    file either way.
-    """
-    import ast
-
-    tree = ast.parse(server_path.read_text(encoding="utf-8"))
-    count, chars = 0, 0
-    for node in ast.walk(tree):
-        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            continue
-        for dec in node.decorator_list:
-            target = dec.func if isinstance(dec, ast.Call) else dec
-            if isinstance(target, ast.Attribute) and target.attr == "tool":
-                count += 1
-                chars += len(ast.get_docstring(node, clean=False) or "")
-                break
-    return count, chars
+    """(tool count, total description characters) read from the source, by
+    the same walk `mcp_tools` uses, so the two cannot disagree about what a
+    tool is."""
+    defs = tool_defs(server_path)
+    return len(defs), sum(len(doc) for _, doc in defs)
 
 
 def check_surface(rel, text, count, chars):
@@ -473,9 +484,14 @@ def selftest():
         (root / "src" / "aihawk" / "mcp").mkdir(parents=True)
         # The docstrings have a KNOWN length, because the seventh check
         # compares published numbers against this measurement: 2 tools, 8
-        # characters.
+        # characters. One decorator carries a nested call, the shape the
+        # real file has had since the tools gained annotations: a reader that
+        # stops at the first `)` sees one tool here, and the "removed MCP
+        # tool" mutation below is then caught for the wrong reason or not at
+        # all - the surface figures ("2 tools", 8 characters) are what pin it.
         (root / "src" / "aihawk" / "mcp" / "server.py").write_bytes(
-            b'@mcp.tool()\nasync def browser_open(url):\n    """One."""\n'
+            b'@mcp.tool(annotations=_says("Open", destructive=True))\n'
+            b'async def browser_open(url):\n    """One."""\n'
             b'@mcp.tool()\ndef browser_click(selector):\n    """Two."""\n')
         # The README is the source the fifth check reads: one block, one
         # launcher, the same shape as the real page.

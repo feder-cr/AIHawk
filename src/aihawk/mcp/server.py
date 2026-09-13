@@ -48,6 +48,7 @@ from contextlib import asynccontextmanager
 from typing import Literal
 
 from mcp.server.fastmcp import FastMCP, Image
+from mcp.types import ToolAnnotations
 
 from . import NOTHING_RUNNING, actions, identity, plan, store
 from .registry import BrowserRegistry
@@ -200,6 +201,26 @@ server does. There is no third browser and no way to get one from here -
 
 
 mcp = FastMCP("stealth", instructions=INSTRUCTIONS, lifespan=_lifespan)
+
+
+def _says(title: str, *, read_only: bool = False, destructive: bool = False,
+          open_world: bool = True) -> ToolAnnotations:
+    """What a client may assume about a tool before it calls it.
+
+    Every tool declares a title and one of the two hints a directory review
+    asks for: `read_only` (readOnlyHint) for a tool that changes nothing, so
+    a client may run it without asking each time, and `destructive`
+    (destructiveHint) for one that acts on the page or on a browser, which a
+    client confirms. Anything that types, clicks, navigates or closes is
+    `destructive` here: a form submitted or a page left behind cannot be
+    undone from this side. `open_world` says the tool reaches the live web.
+
+    The title lives in the annotations rather than on the tool because
+    `FastMCP.tool(title=)` exists from mcp 1.10 and this package's floor is
+    1.8, where annotations already carry one (measured on both wheels).
+    """
+    return ToolAnnotations(title=title, readOnlyHint=read_only,
+                           destructiveHint=destructive, openWorldHint=open_world)
 
 
 #: The browser a caller means when it names nothing. Callers that were written
@@ -599,7 +620,7 @@ async def _retrying(fn, *args, browser_id=None, **kwargs):
 
 # --- the two browsers -------------------------------------------------------
 
-@mcp.tool()
+@mcp.tool(annotations=_says("Open a browser", destructive=True, open_world=False))
 async def browser_open(browser: Browser | None = None, seed: int | None = None,
                        proxy: str | None = None, profile: str | None = None) -> str:
     """Open `main` or `support`, or reopen one as somebody else.
@@ -693,7 +714,7 @@ async def browser_open(browser: Browser | None = None, seed: int | None = None,
     return "the %s browser is open. %s" % (role, plan.describe(registry.config(at) or {}))
 
 
-@mcp.tool()
+@mcp.tool(annotations=_says("Close a browser", destructive=True, open_world=False))
 async def browser_close(browser: Browser | None = None) -> str:
     """Close one browser and free what it was holding.
 
@@ -714,7 +735,7 @@ async def browser_close(browser: Browser | None = None) -> str:
             % (name, ", ".join(left) if left else "none"))
 
 
-@mcp.tool()
+@mcp.tool(annotations=_says("List the browsers", read_only=True, open_world=False))
 async def browser_list() -> str:
     """Which of the two browsers are open, where each one is, and which one
     the commands that name none go to.
@@ -789,7 +810,7 @@ async def browser_list() -> str:
 
 # --- who is browsing ---------------------------------------------------------
 
-@mcp.tool()
+@mcp.tool(annotations=_says("Who is browsing", read_only=True, open_world=False))
 async def browser_status(browser: Browser | None = None) -> str:
     """Who is browsing right now: the identity, the exit, the profile and the page.
 
@@ -855,7 +876,7 @@ async def browser_status(browser: Browser | None = None) -> str:
 
 # --- reading ---------------------------------------------------------------
 
-@mcp.tool()
+@mcp.tool(annotations=_says("Go to a URL", destructive=True))
 async def browser_navigate(url: str, wait_until: str = "domcontentloaded",
                            browser: Browser | None = None) -> str:
     """Go to a url in this browser's page, opening it if none exists.
@@ -876,7 +897,7 @@ async def browser_navigate(url: str, wait_until: str = "domcontentloaded",
                            browser_id=browser)
 
 
-@mcp.tool()
+@mcp.tool(annotations=_says("Read the page text", read_only=True))
 async def browser_read_text(selector: str = "body", max_chars: int = 6000,
                             browser: Browser | None = None) -> str:
     """The visible text of an element, with the markup gone.
@@ -894,7 +915,7 @@ async def browser_read_text(selector: str = "body", max_chars: int = 6000,
         selector, max_chars)
 
 
-@mcp.tool()
+@mcp.tool(annotations=_says("Snapshot the page", read_only=True))
 async def browser_snapshot(max_chars: int = 0, browser: Browser | None = None) -> str:
     """Title, url, and the interactive elements that are actually visible.
 
@@ -918,7 +939,7 @@ async def browser_snapshot(max_chars: int = 0, browser: Browser | None = None) -
         await ready(browser), max_chars)
 
 
-@mcp.tool()
+@mcp.tool(annotations=_says("Read the page HTML", read_only=True))
 async def browser_read_html(mode: str = "form", browser: Browser | None = None) -> str:
     """The page's HTML, cleaned down to what is worth reading.
 
@@ -941,7 +962,7 @@ async def browser_read_html(mode: str = "form", browser: Browser | None = None) 
         await ready(browser), mode)
 
 
-@mcp.tool()
+@mcp.tool(annotations=_says("Take a screenshot", read_only=True))
 async def browser_take_screenshot(browser: Browser | None = None) -> Image:
     """One screenshot of this browser's page, on demand.
 
@@ -951,7 +972,7 @@ async def browser_take_screenshot(browser: Browser | None = None) -> Image:
     return Image(data=png, format="png")
 
 
-@mcp.tool()
+@mcp.tool(annotations=_says("Watch the browser window", read_only=True))
 async def browser_watch(browser: Browser | None = None) -> Image:
     """The whole browser window as a person at the machine sees it: tab strip,
     address bar, the page and the pointer, from a live capture kept running on
@@ -978,7 +999,7 @@ async def browser_watch(browser: Browser | None = None) -> Image:
 
 # --- acting ----------------------------------------------------------------
 
-@mcp.tool()
+@mcp.tool(annotations=_says("Click an element", destructive=True))
 async def browser_click(selector: str, browser: Browser | None = None) -> str:
     """Click the first element matching a CSS selector.
 
@@ -991,7 +1012,7 @@ async def browser_click(selector: str, browser: Browser | None = None) -> str:
         await ready(browser), selector)
 
 
-@mcp.tool()
+@mcp.tool(annotations=_says("Click at a point", destructive=True))
 async def browser_click_at(x: float, y: float, hold_seconds: float = 0.0,
                            browser: Browser | None = None) -> Image:
     """Click (or press-and-hold) a raw viewport coordinate instead of a
@@ -1019,7 +1040,7 @@ async def browser_click_at(x: float, y: float, hold_seconds: float = 0.0,
     return Image(data=png, format="png")
 
 
-@mcp.tool()
+@mcp.tool(annotations=_says("Type into a field", destructive=True))
 async def browser_type(selector: str, text: str, browser: Browser | None = None) -> str:
     """Fill a field, replacing whatever it holds.
 
@@ -1032,7 +1053,7 @@ async def browser_type(selector: str, text: str, browser: Browser | None = None)
         await ready(browser), selector, text)
 
 
-@mcp.tool()
+@mcp.tool(annotations=_says("Choose a dropdown option", destructive=True))
 async def browser_select_option(selector: str, value: str,
                                 browser: Browser | None = None) -> str:
     """Choose an option in a dropdown (`<select>`), by its visible label or by
@@ -1048,7 +1069,7 @@ async def browser_select_option(selector: str, value: str,
         await ready(browser), selector, value)
 
 
-@mcp.tool()
+@mcp.tool(annotations=_says("Press a key", destructive=True))
 async def browser_press_key(key: str, browser: Browser | None = None) -> str:
     """Press a key on whatever has focus: "Enter", "Tab", "Escape",
     "ArrowDown", "Control+a", or a single character.
@@ -1058,7 +1079,7 @@ async def browser_press_key(key: str, browser: Browser | None = None) -> str:
         await ready(browser), key)
 
 
-@mcp.tool()
+@mcp.tool(annotations=_says("Read the page with JavaScript", read_only=True))
 async def browser_evaluate(expression: str, browser: Browser | None = None) -> str:
     """READ from the page with JavaScript and get the result as JSON.
 

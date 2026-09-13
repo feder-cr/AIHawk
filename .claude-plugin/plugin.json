@@ -1,0 +1,15 @@
+{
+  "name": "aihawk",
+  "displayName": "AIHawk",
+  "version": "1.0.0",
+  "description": "AI browser agent: browses, clicks, types, and reads real web pages from plain-English instructions.",
+  "author": {
+    "name": "feder-cr",
+    "url": "https://github.com/feder-cr"
+  },
+  "homepage": "https://github.com/feder-cr/AIHawk/wiki/mcp-server",
+  "repository": "https://github.com/feder-cr/AIHawk",
+  "license": "MIT",
+  "keywords": ["browser", "browser-agent", "web-automation", "playwright", "firefox", "computer-use"],
+  "mcpServers": "./mcp.json"
+}
