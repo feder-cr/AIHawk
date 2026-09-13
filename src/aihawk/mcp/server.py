@@ -129,7 +129,11 @@ atexit.register(_close_sessions_at_exit)
 # went from "click the select" straight to running `s.value='beta'` as script,
 # skipping the two rungs in between - coordinates, and a screenshot - because
 # nothing had told it they were rungs.
-INSTRUCTIONS = """Drive the page the way a person would. Everything here goes
+INSTRUCTIONS = """Two browsers, `main` and `support`, are already there. There is
+nothing to list, start or choose before acting: go straight to the task with
+browser_navigate on `main`, or browser_snapshot to see what it is already on.
+
+Drive the page the way a person would. Everything here goes
 through the real pointer and the real keyboard.
 
 Try things in this order. It matters, because a page can tell the difference.

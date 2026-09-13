@@ -1204,3 +1204,60 @@ async def test_the_brain_hands_the_link_instructions_to_the_loop():
         "the interface's brain does not hand the server's instructions to the "
         "loop: %r" % system[0]["content"][-80:])
 
+
+async def test_a_tool_the_model_remembers_and_this_server_lacks_gets_a_map():
+    """⛔ THE MODEL ASKED FOR `session_list` IN SIX RUNS OUT OF TWELVE, on a
+    page that never says the word. Earlier public versions of this server had
+    the session tools, a model trained on that repository still reaches for
+    them, and the server answered `Unknown tool: session_list` - a shrug, after
+    a round trip, and the model guessed again.
+
+    The loop knows the real list, so it answers itself: no call reaches the
+    server, the model is told that nothing has to be listed or started, and it
+    is handed the names it can use. The person watching sees the step fail
+    with that sentence rather than a bare error.
+
+    Known-bad, three: let the call through to the server; answer without the
+    real names; answer without saying the browsers are already there.
+    """
+    mcp = ScriptedMCP(tools=tools_result(tool("browser_navigate"), tool("browser_open")),
+                      results={})
+    model = ScriptedModel([
+        assistant_tool_calls(("c1", "session_list", "{}")),
+        assistant_answer("nothing to list"),
+    ])
+    seen = []
+
+    async def say(kind, text):
+        seen.append((kind, text))
+
+    convo = Conversation(model, "m")
+    tools = (await mcp.list_tools()).tools
+    await convo.run("go", mcp.call_tool, tools, say=say)
+
+    assert mcp.calls == [], (
+        "the call for a tool that does not exist went to the server: %r" % (mcp.calls,))
+    told = [m for m in model.requests[1]["messages"] if m["role"] == "tool"][-1]["content"]
+    assert "session_list" in told and "browser_navigate" in told and "browser_open" in told, (
+        "the model is not handed the real names: %r" % told)
+    assert "already there" in told and "main" in told and "support" in told, (
+        "the model is not told that the browsers exist and nothing has to be "
+        "started: %r" % told)
+    assert ("err", told) in seen, (
+        "the person watching does not see the step fail with the sentence: %r" % (seen,))
+
+
+def test_the_instructions_open_by_saying_there_is_nothing_to_start():
+    """The other half of the same defect, one step earlier: before the model
+    can reach for an old session tool, the first paragraph it reads says the
+    browsers are already there and where to begin.
+
+    Known-bad: move the paragraph down, or drop the two names from it.
+    """
+    from aihawk.mcp.server import INSTRUCTIONS
+    first = INSTRUCTIONS.split(chr(10) + chr(10))[0].lower()
+    assert "main" in first and "support" in first and "already there" in first, (
+        "the instructions do not open by saying the two browsers exist: %r" % first)
+    assert "browser_navigate" in first, (
+        "the opening does not say where to begin: %r" % first)
+
