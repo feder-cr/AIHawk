@@ -198,3 +198,97 @@ jobs:
           fi
           gh release create "$TAG" --title "${TAG#v}" --notes-file notes.md
           echo "::notice::created the release page for $TAG"
+
+  # The Official MCP Registry lists this server from `server.json`, and the
+  # entry names a version, so a release that does not also publish here leaves
+  # the registry describing the previous one. 0.43.0 was published by hand on
+  # 2026-09-12; from the next tag this job does it.
+  #
+  # It runs when `upload` succeeded AND when the index already had the version,
+  # so a `workflow_dispatch` exercises the whole path (install, OIDC login,
+  # probe, verify) against the version on the index without publishing anything
+  # twice: the registry refuses a duplicate version, so the probe asks first and
+  # an entry that is already there is a logged no-op, the same rule `upload`
+  # applies to the index. It does NOT run when `gate` failed: then `upload` is
+  # skipped and the index has nothing to verify, and the registry checks the
+  # package on the index before accepting the entry.
+  #
+  # Its own job, and after `upload`: the OIDC token that speaks for this
+  # repository at the registry has no business in the job that holds the PyPI
+  # trust, and the registry needs the package to be on the index first. The
+  # index answers minutes before its mirrors do, and the registry reads the
+  # index, so the wait below asks the index for the package's description
+  # rather than trusting that `upload` returned.
+  registry:
+    needs: [already-published, upload]
+    if: >-
+      always() && needs.already-published.result == 'success' &&
+      (needs.upload.result == 'success' || needs.already-published.outputs.present == 'yes')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      id-token: write          # OIDC for the registry; no token in a secret anywhere
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: server.json names the version being built
+        shell: bash
+        run: |
+          set -euo pipefail
+          HAVE="${{ needs.already-published.outputs.version }}"
+          SJ="$(jq -r '.version' server.json)"
+          PKG="$(jq -r '.packages[0].version' server.json)"
+          if [ "$SJ" != "$HAVE" ] || [ "$PKG" != "$HAVE" ]; then
+            echo "server.json says $SJ (package entry $PKG) and pyproject.toml says $HAVE" >&2
+            exit 1
+          fi
+          echo "NAME=$(jq -r '.name' server.json)" >> "$GITHUB_ENV"
+          echo "VERSION=$HAVE" >> "$GITHUB_ENV"
+      - name: the index serves this version with the ownership token
+        shell: bash
+        # The registry validates the package by reading the description PyPI
+        # serves. Right after `upload` the index can answer 404 for a while, so
+        # this waits for the version AND for the token inside its description,
+        # which is the exact thing the registry will look for.
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 40); do
+            BODY="$(curl -s "https://pypi.org/pypi/aihawk/$VERSION/json" || true)"
+            if printf '%s' "$BODY" | jq -e --arg n "$NAME" '.info.description | contains("mcp-name: " + $n)' > /dev/null 2>&1; then
+              echo "index serves $VERSION with the token for $NAME"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "after 10 minutes the index does not serve $VERSION with 'mcp-name: $NAME' in its description" >&2
+          exit 1
+      - name: install mcp-publisher
+        run: |
+          curl -sL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+          ./mcp-publisher --help > /dev/null
+      - name: authenticate to the registry
+        run: ./mcp-publisher login github-oidc
+      - name: publish, unless the registry already has this version
+        shell: bash
+        run: |
+          set -euo pipefail
+          ENC="$(printf '%s' "$NAME" | jq -sRr @uri)"
+          CODE="$(curl -s -o /dev/null -w '%{http_code}' "https://registry.modelcontextprotocol.io/v0.1/servers/$ENC/versions/$VERSION")"
+          case "$CODE" in
+            200) echo "::notice::$NAME $VERSION is already on the registry. No-op, not a failure." ;;
+            404) ./mcp-publisher validate
+                 ./mcp-publisher publish ;;
+            *)   echo "the registry answered $CODE for $NAME $VERSION, which is neither present nor absent. Refusing rather than guessing." >&2
+                 exit 1 ;;
+          esac
+      - name: the registry serves it
+        shell: bash
+        run: |
+          set -euo pipefail
+          ENC="$(printf '%s' "$NAME" | jq -sRr @uri)"
+          GOT="$(curl -sf "https://registry.modelcontextprotocol.io/v0.1/servers/$ENC/versions/$VERSION" | jq -r '.server.version')"
+          if [ "$GOT" != "$VERSION" ]; then
+            echo "the registry serves version '$GOT' for $NAME, expected $VERSION" >&2
+            exit 1
+          fi
+          echo "registry: $NAME $VERSION"
