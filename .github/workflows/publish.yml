@@ -292,3 +292,57 @@ jobs:
             exit 1
           fi
           echo "registry: $NAME $VERSION"
+
+  # The bundle is a release ASSET, so it has a URL: Smithery's "Publish via
+  # URL", a one-click install in Claude Desktop, and anybody who wants the
+  # archive get the one this workflow packed from the tagged tree, never one
+  # packed by hand. Two archives per release, both from scripts/pack_bundle.py,
+  # which refuses an archive holding anything beyond the server: the spec's
+  # (server.type uv) and the Smithery variant (type python, the one word its
+  # CLI reads). After the release page exists; also on a workflow_dispatch
+  # against the version already on the index, where release_page is skipped;
+  # never on a red gate, because then there is no page; and an asset already
+  # on the page is left alone, so a re-run cannot replace what people fetched.
+  bundle:
+    needs: [already-published, upload, release_page]
+    if: >-
+      always() && needs.already-published.result == 'success' &&
+      (needs.upload.result == 'success' || needs.already-published.outputs.present == 'yes') &&
+      (needs.release_page.result == 'success' || needs.release_page.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: pack both bundles from the tagged tree
+        run: |
+          set -euo pipefail
+          python scripts/pack_bundle.py --output dist
+          python scripts/pack_bundle.py --smithery --output dist
+          ls -l dist/*.mcpb
+      - name: attach them to the release page
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ needs.already-published.outputs.version }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            echo "::notice::no release page for $TAG, nothing to attach to"
+            exit 0
+          fi
+          HAVE="$(gh release view "$TAG" --json assets --jq '.assets[].name')"
+          for f in dist/*.mcpb; do
+            if printf '%s\n' "$HAVE" | grep -qx "$(basename "$f")"; then
+              echo "::notice::$(basename "$f") is already on $TAG. Left alone."
+            else
+              gh release upload "$TAG" "$f"
+              echo "attached $(basename "$f") to $TAG"
+            fi
+          done

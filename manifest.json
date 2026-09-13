@@ -16,14 +16,13 @@
   "homepage": "https://github.com/feder-cr/AIHawk",
   "documentation": "https://github.com/feder-cr/AIHawk/wiki",
   "support": "https://github.com/feder-cr/AIHawk/issues",
-  "icon": "https://raw.githubusercontent.com/feder-cr/AIHawk/main/assets/aihawk-icon-400.png",
-  "privacy_policies": ["https://github.com/feder-cr/AIHawk#privacy-policy"],
+  "icon": "assets/aihawk-icon-400.png",
   "server": {
-    "type": "python",
-    "entry_point": "src/server.py",
+    "type": "uv",
+    "entry_point": "src/aihawk/__main__.py",
     "mcp_config": {
       "command": "uv",
-      "args": ["run", "--directory", "${__dirname}", "src/server.py"]
+      "args": ["run", "--directory", "${__dirname}", "python", "-m", "aihawk"]
     }
   },
   "compatibility": {
@@ -33,5 +32,6 @@
     }
   },
   "keywords": ["browser", "browser-agent", "web-automation", "playwright", "firefox", "computer-use"],
-  "license": "MIT"
+  "license": "MIT",
+  "privacy_policies": ["https://github.com/feder-cr/AIHawk#privacy-policy"]
 }

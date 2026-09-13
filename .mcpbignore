@@ -1,0 +1,28 @@
+# What the MCP bundle does NOT carry. The repository is the bundle (manifest.json
+# at the root, server.type "uv", the package under src/); everything that is not
+# the server stays out, and scripts/pack_bundle.py refuses an archive that holds
+# anything beyond the allowed set.
+.git/
+.github/
+.claude-plugin/
+.cursor-plugin/
+.pytest_cache/
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.env
+.env.*
+.gitignore
+tests/
+docs/
+articles/
+scripts/
+assets/*
+!assets/aihawk-icon-400.png
+plugin.json
+mcp.json
+gemini-extension.json
+server.json
