@@ -154,6 +154,19 @@ def shorten(text: str, limit: int, where: str) -> str:
         text[:limit], len(text) - limit, where)
 
 
+def unknown_tool(name: str, known) -> str:
+    """What the model is told when it calls a tool this server does not have.
+
+    Written for the mistake actually made rather than for a typo in general:
+    the names it reaches for are the old session tools, and what they used to
+    do - find or start a session - is a thing that no longer needs doing.
+    """
+    return ("There is no tool called %s here. The two browsers, main and support, "
+            "are already there: nothing has to be listed, started or chosen before "
+            "acting, and every tool takes `browser` to say which one. Go straight to "
+            "the task with one of: %s." % (name, ", ".join(known)))
+
+
 class Conversation:
     """One transcript, and the loop that grows it.
 
@@ -207,6 +220,7 @@ class Conversation:
         """
         if self.tool_defs is None:
             self.tool_defs = mcp_tools_to_openai(tools)
+            self.known = [d["function"]["name"] for d in self.tool_defs]
         # Refreshed every run rather than set once: the instructions belong to
         # the server the link is talking to now, and a transcript restored from
         # disk arrived with a system message this process did not write.
@@ -275,6 +289,23 @@ class Conversation:
 
                 await say("tool", f"{name} {describe(name, args)}".strip()
                           if describe else name)
+                # ⛔ A TOOL THE MODEL REMEMBERS AND THIS SERVER DOES NOT HAVE.
+                # Earlier public versions of this server had session_list,
+                # session_start and session_status, and a model trained on
+                # that repository reaches for them: measured 2026-09-13 with
+                # the real model, `session_list` as the FIRST call in six runs
+                # out of twelve, on a page that never mentions the word. The
+                # server answered `Unknown tool: session_list` and nothing
+                # else, so the model guessed again. The loop knows the real
+                # list, so it answers here - no round trip - and says what
+                # the model was looking for: nothing has to be listed or
+                # started, the two browsers are already there.
+                if name not in self.known:
+                    text = unknown_tool(name, self.known)
+                    await say("err", text)
+                    self.messages.append({"role": "tool", "tool_call_id": call.id,
+                                          "content": text})
+                    continue
                 try:
                     text, failed = _result_text(await call_tool(name, args))
                 except Exception as exc:
