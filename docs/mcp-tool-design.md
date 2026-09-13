@@ -9,7 +9,9 @@ nav_order: 30
 Reference for anyone building on this server rather than just using it.
 [The MCP server page](mcp-server.md) says what the tools are; this says why
 they return what they return, and carries the measurements behind each
-decision.
+decision. If you are building a server of your own rather than reading about
+ours, [how to build an MCP server](how-to-build-an-mcp-server.md) is the
+general version of the same argument.
 
 Moved out of what is now [the MCP server page](mcp-server.md) on 2026-09-03: it was 82 of 227 lines, sitting between
 the tool list and everything else, on a page whose job is to get somebody

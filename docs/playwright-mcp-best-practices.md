@@ -1,6 +1,6 @@
 ---
 title: "Playwright MCP best practices: four decisions that matter"
-description: "Capability scope, profile strategy, how the instruction is written, and when to stop using the model. Measured: our own tool surface costs 3.5k tokens."
+description: "Capability scope, profile strategy, how the instruction is written, and when to stop using the model. Measured: our own tool surface costs 3.2k tokens."
 parent: "Using the Agent"
 nav_order: 33
 ---
@@ -18,10 +18,11 @@ model's context on **every turn**. A browsing session is dozens of turns. This
 is the single largest avoidable cost in the category.
 
 Measured on our own server, because we can read our own source and nobody
-publishes this number: **24 tools, 14,064 characters of tool description, which
-is roughly 3,500 tokens sent again on every single turn** (median 442
-characters per tool, read from `src/aihawk/mcp/server.py` on 2026-09-10). A
-forty-turn session therefore spends on the order of 140,000 tokens restating
+publishes this number: **16 tools whose complete definitions are 3,192 tokens,
+sent again on every single turn** (9,145 characters of description plus each
+tool's argument schema, enumerated from the server's own registry on 2026-09-13
+and counted with a tokenizer). A
+forty-turn session therefore spends on the order of 128,000 tokens restating
 what the tools are, before a single page has been read. That is the budget the
 next two paragraphs are about.
 
@@ -104,13 +105,14 @@ more often than a browser question:
 ## What this project does differently, and what it costs
 
 [AIHawk](https://github.com/feder-cr/AIHawk) makes two of these decisions
-structural rather than optional. Concurrency is named rather than flagged, so
-practice 2 is harder to get wrong. Identity is derived from a seed, so a session
-that failed can be replayed as the same browser, which turns "it worked
-yesterday" into something you can test.
+structural rather than optional. A server is one identity for its whole life, so
+practice 2 has no shared profile to get wrong. Identity is derived from a seed,
+so a session that failed can be replayed as the same browser, which turns "it
+worked yesterday" into something you can test.
 
-The cost is that you name things on day one, and the engine covers Windows and
-Linux only. [The MCP server](mcp-server.md) has the configuration.
+The cost is that a second identity is a second registered server rather than an
+argument, and the engine covers Windows and Linux only.
+[The MCP server](mcp-server.md) has the configuration.
 
 ## Short answers to the questions that lead here
 

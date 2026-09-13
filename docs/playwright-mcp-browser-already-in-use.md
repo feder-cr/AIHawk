@@ -73,12 +73,20 @@ fixes. Deleting a lock that a running browser holds corrupts the profile.
 
 ## Why this does not happen the same way here
 
-[AIHawk](https://github.com/feder-cr/AIHawk)'s server is built around named
-sessions and named browsers rather than one implicit profile: `session_start`,
-`browser_open`, `browser_focus`, `session_list`. Two concurrent things are two
-named things, and asking for a browser that is already open focuses it instead
-of colliding with it. That is a design difference, not a claim of superiority
-over Playwright MCP, and it comes with its own cost: you have to name things.
+[AIHawk](https://github.com/feder-cr/AIHawk)'s server went the other way
+entirely, and the history is worth the paragraph because it is the same trade
+seen from both ends. Until 0.39.0 a session could hold up to eight browsers
+under names you invented; until 0.41.0 every tool also carried a session
+identifier, and one process juggled several sessions behind it. Both are gone:
+**a server serves exactly one identity for its whole life**, with one helper
+browser beside it that shares nothing, and `browser_open` chooses between those
+two rather than adding to a pool.
+
+The collision cannot happen the way it does above, because there is no pool to
+collide inside. What you give up is running several identities through one
+registered server: you register a second server instead. Neither shape is
+better in the abstract - Microsoft's puts the choice in a flag and ours puts it
+in how many servers you register.
 
 Where the same class of problem does reach us is persistent profiles, because
 the constraint is the browser's, not the server's - the same reason a

@@ -71,24 +71,32 @@ sessions, not inside one.
 
 ## In this project
 
-[AIHawk](https://github.com/feder-cr/AIHawk)'s server takes the proxy per
-session rather than per process, so two sessions in one server can sit behind
-two different exits. It is set at `session_start`, alongside the seed. The
-timezone can follow the exit rather than the host, which closes the third leak
-above by construction instead of by remembering.
+[AIHawk](https://github.com/feder-cr/AIHawk)'s server takes the proxy in two
+places rather than one. `STEALTHFOX_PROXY` in the config block that registers
+the server is the default exit for everything it opens. `browser_open` also
+takes a `proxy` argument, so the exit is changeable mid-conversation without
+touching the config, and the helper browser can leave by a different address
+than the main one - or, given no proxy of its own, by the same one.
 
-That is a convenience, not an advantage over anything: the same result is
-reachable with any server plus care. [The MCP server](mcp-server.md) has the
-settings.
+What that buys is the third leak above, closed by construction rather than by
+remembering: with a proxy set, the timezone and locale are derived from the exit
+instead of from the host, so the contradiction this page warns about cannot be
+introduced by forgetting. `STEALTHFOX_NO_PROXY` goes out from the machine's own
+address when you want that deliberately, and passing `""` for `proxy` insists on
+no proxy for one browser even when the environment sets one.
+
+It is a different shape, not a better one: deriving the timezone costs you the
+ability to proxy while keeping your own clock, which is occasionally what
+someone wants. [The MCP server](mcp-server.md) has the full settings table.
 
 ## Short answers to the questions that lead here
 
 **How do I set a proxy in Playwright MCP?** `--proxy-server` on the server
 command line, with `--proxy-bypass` for hosts that should go direct.
 
-**Can I use a different proxy per session?** Not with a single process and a
+**Can I use a different proxy per browser?** Not with a single process and a
 command-line flag. Either run one server per proxy, or use a server that takes
-the proxy per session.
+the proxy as a tool argument rather than only at startup.
 
 **Does a proxy hide that I am automating?** No. It changes where the request
 comes from. Everything a page can read about the browser is unchanged, and so is
@@ -114,6 +122,6 @@ are pacing.
 
 ---
 
-*Written while maintaining a server that takes the proxy per session. The page
+*Written while maintaining a server that takes the proxy per browser. The page
 says that is a convenience rather than an advantage, because the same result is
 reachable with the tool most readers already have.*

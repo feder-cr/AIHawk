@@ -57,7 +57,7 @@ The newest layer, and the cheapest to try, because it adds a browser to an
 assistant you are already paying for instead of standing up a new program.
 
 **Microsoft's playwright-mcp** is the reference implementation: Apache-2.0,
-36.9k stars when read on 2026-09-10, driving Chrome, Firefox, WebKit or Edge,
+36.9k stars when read on 2026-09-13, driving Chrome, Firefox, WebKit or Edge,
 and exposing the page to the model as an accessibility tree rather than pixels.
 It is the one to start with, and
 [what it is and how it differs from the CLI](playwright-mcp-vs-cli.md) is on its

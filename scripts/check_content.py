@@ -82,15 +82,33 @@ OTHER_WAYS = ("pip install aihawk", "pip install invisible-playwright-mcp",
 FENCE = chr(96) * 3
 
 
-def fenced_blocks(text):
-    """The lines of every fenced code block, block by block, fences excluded."""
-    blocks, current = [], None
+#: The languages in which a page can actually teach the way in: a shell, or a
+#: client's config block. A `python` block cannot - there `aihawk` is a string
+#: inside an argument list, not a command - and reading one as shell accuses
+#: healthy code. Happened 2026-09-13 on `args=["-m", "aihawk"]` in a thirty-line
+#: MCP client: the gate reported that the page runs `" aihawk`. A block with no
+#: declared language stays in, because that is the form shell blocks use most.
+WAY_IN_LANGUAGES = ("", "text", "sh", "bash", "shell", "console",
+                    "powershell", "ps1", "json", "toml", "jsonc")
+
+
+def fenced_blocks(text, only_languages=None):
+    """The lines of every fenced code block, block by block, fences excluded.
+
+    `only_languages` keeps just the blocks whose fence declares one of those
+    languages, so a caller that reads blocks AS SHELL does not also read
+    Python source as shell.
+    """
+    blocks, current, language = [], None, ""
     for line in text.split(chr(10)):
-        if line.lstrip().startswith(FENCE):
+        stripped = line.lstrip()
+        if stripped.startswith(FENCE):
             if current is None:
                 current = []
+                language = stripped[len(FENCE):].strip().lower()
             else:
-                blocks.append(current)
+                if only_languages is None or language in only_languages:
+                    blocks.append(current)
                 current = None
             continue
         if current is not None:
@@ -143,7 +161,7 @@ def check_way_in(rel, text, launcher, block, readme_text):
                            "line `%s`" % (rel, want.strip()))
     command_key = re.compile(r'command[\s"]*[:=]\s*"$')
     launcher_key = re.compile(r'command[\s"]*[:=]\s*"%s"' % re.escape(launcher))
-    for lines in fenced_blocks(text):
+    for lines in fenced_blocks(text, WAY_IN_LANGUAGES):
         joined = chr(10).join(lines)
         for line in lines:
             for cmd in WAY_IN:
@@ -183,6 +201,43 @@ def cli_commands(cli_path):
     return cmds
 
 
+#: The MCP TOOL NAMES a page teaches, read from the server instead of
+#: remembered. Twin of the CLI check above, born of the same failure a release
+#: later: 0.39.0 and 0.41.0 between them removed the session tools, the focus
+#: tool and the `session_id` parameter, and FOUR already published pages went
+#: on teaching them - one told the reader to set the proxy "at `session_start`",
+#: that is, to call a tool that no longer exists. The CLI check could not see
+#: it: it looks at `aihawk <subcommand>`, and an MCP tool is not a subcommand.
+#: The first draft accused THREE healthy lines out of seven, which is how a
+#: gate goes red for the wrong reason and then gets switched off. All three
+#: causes were legitimate: a PARAMETER shaped like a tool (`session_id`); the
+#: historical note in `mcp-server.md`, which names removed tools precisely to
+#: say they are gone; and ANOTHER server's tools - `browser_install` is
+#: Microsoft's, on a page about theirs. The first two are handled here, the
+#: third by the allowlist below, which like the banned-topic one carries its
+#: reason beside each entry rather than being a mute list.
+NON_TOOL = {"session_id", "browser_id", "session_name", "browser_name"}
+TOOL_RE = re.compile(r"`((?:browser|session)_[a-z_]+)`")
+TOOL_DEF_RE = re.compile(r"@\w+\.tool\([^)]*\)\s*(?:async\s+)?def\s+(\w+)")
+
+#: (path, name) -> why that name may appear there without being one of ours.
+TOOL_MENTIONS_ALLOWED = {
+    ("docs/mcp-server.md", "browser_focus"):
+        "the historical note saying it has not existed since 0.39.0",
+    ("docs/playwright-mcp-browser-already-in-use.md", "browser_install"):
+        "a tool of Microsoft's server, which is what the page is about",
+    ("docs/how-to-build-an-mcp-server.md", "session_forget"):
+        "cited as the defect of a test that could not tell that tool's two "
+        "replies apart: a case told in the past tense, not an instruction "
+        "to call it",
+}
+
+
+def mcp_tools(server_path):
+    """The tools the server actually declares (`@mcp.tool()` above a `def`)."""
+    return set(TOOL_DEF_RE.findall(server_path.read_text(encoding="utf-8")))
+
+
 def content_files(root):
     files = []
     for base in ("docs", "articles"):
@@ -196,6 +251,9 @@ def check_tree(root):
     findings = []
     valid = cli_commands(root / "src" / "aihawk" / "cli.py") \
         if (root / "src" / "aihawk" / "cli.py").exists() else None
+
+    server = root / "src" / "aihawk" / "mcp" / "server.py"
+    tools = mcp_tools(server) if server.exists() else None
 
     docs_names = {f.stem for f in (root / "docs").glob("*.md")} | {"Home"}
     readme_text = (root / "README.md").read_text(encoding="utf-8") \
@@ -233,6 +291,17 @@ def check_tree(root):
                         "%s: teaches `aihawk %s`, which cli.py does not "
                         "define (valid: %s)"
                         % (rel, token, ", ".join(sorted(valid))))
+
+        if tools:
+            for m in TOOL_RE.finditer(text):
+                name = m.group(1)
+                if name in tools or name in NON_TOOL:
+                    continue
+                if (rel, name) in TOOL_MENTIONS_ALLOWED:
+                    continue
+                findings.append(
+                    "%s: teaches the MCP tool `%s`, which the server does "
+                    "not expose" % (rel, name))
 
         if f.parent == root / "docs":
             for m in re.finditer(r"\]\(([^)#\s]+?)\.md(#[^)]*)?\)", text):
@@ -279,6 +348,11 @@ def selftest():
             b'@click.option("--model", default=None,\n'
             b'              help="Model id.")\n'
             b"def ui(model):\n    pass\n")
+        # Il server, per il controllo sui tool MCP: due dichiarati e basta.
+        (root / "src" / "aihawk" / "mcp").mkdir(parents=True)
+        (root / "src" / "aihawk" / "mcp" / "server.py").write_bytes(
+            b"@mcp.tool()\nasync def browser_open(url):\n    pass\n"
+            b"@mcp.tool()\ndef browser_click(selector):\n    pass\n")
         # The README is the source the fifth check reads: one block, one
         # launcher, the same shape as the real page.
         (root / "README.md").write_bytes(
@@ -305,6 +379,9 @@ def selftest():
             "argv-list command": ("docs/argv.md",
                                   b'subprocess.run(["uvx", "aihawk", "do"])\n'),
             "dead link": ("docs/link.md", b"see [x](missing-page.md)\n"),
+            # The real failure: a page teaching a tool a release removed.
+            "removed MCP tool": ("docs/tool.md",
+                                 b"set the proxy at `session_start`\n"),
             "bare launcher in a code block": (
                 "docs/bare.md", b"```bash\naihawk ui --openrouter-key x\n```\n"),
             "a way in the README does not teach": (
@@ -358,6 +435,13 @@ def selftest():
                                      b"it began as a job-application bot\n"),
             "prose verb": ("docs/verb.md",
                            b"what can AIHawk do for research\n"),
+            # The three cases the first draft wrongly accused: a tool that
+            # exists, a PARAMETER shaped like one, and a name that is not our
+            # tool but another server's.
+            "a tool that exists": ("docs/ok-tool.md",
+                                   b"call `browser_open` then `browser_click`\n"),
+            "a parameter shaped like a tool": ("docs/param.md",
+                                               b"pass a `session_id` to it\n"),
             "the README's install lines, verbatim": (
                 "docs/same.md",
                 b"```powershell\n"

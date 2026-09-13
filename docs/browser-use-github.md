@@ -9,7 +9,7 @@ nav_order: 31
 
 If you came here looking for the repository, it is
 **[github.com/browser-use/browser-use](https://github.com/browser-use/browser-use)** -
-MIT licensed, Python, 114,000 stars when read on 2026-09-10, described by its
+MIT licensed, Python, 114,000 stars when read on 2026-09-13, described by its
 own authors as "Agents that use the browser." Go there; that is the primary
 source and this page does not try to replace it.
 

@@ -77,10 +77,11 @@ end of it.
 ## What a browser MCP server costs you either way
 
 Whichever you register, the tool descriptions ride in the model's context on
-every turn. For calibration, measured on our own server by reading its source
-on 2026-09-10: **24 tools, 14,064 characters of description, about 3,500 tokens
-per turn.** Register two browser servers side by side and you are paying that
-twice, on every turn, plus giving the model overlapping verbs to choose between.
+every turn, and so does each one's argument schema. For calibration, measured on
+our own server's registry on 2026-09-13: **16 tools, 9,145 characters of
+description, 3,192 tokens per turn.** Register two browser servers side by side
+and you are paying that twice, on every turn, plus giving the model overlapping
+verbs to choose between.
 
 That is the argument against "install both and see": pick the one that matches
 the question you have this week, and keep the other unregistered until it is
@@ -114,7 +115,7 @@ and [the MCP server](mcp-server.md) for this project's own configuration.
 
 - [ChromeDevTools/chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp), retrieved 2026-09-10: stars, licence, browser support, capabilities, and the three caveats quoted above.
 - [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp), retrieved 2026-09-10: stars, licence, browser options and the accessibility-tree design.
-- This project's own MCP server source, read 2026-09-10, for the tool-count and description-size figures.
+- This project's own MCP server source, read 2026-09-13, for the tool-count and description-size figures.
 
 ---
 

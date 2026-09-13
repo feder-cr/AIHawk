@@ -8,7 +8,7 @@ nav_order: 26
 # Choosing an MCP server for browser automation
 
 **Start with Microsoft's playwright-mcp.** It is the reference implementation,
-Apache-2.0, 36.9k stars when read on 2026-09-10, maintained by the team that
+Apache-2.0, 36.9k stars when read on 2026-09-13, maintained by the team that
 maintains Playwright, and it covers the ordinary case well. If you have no
 specific complaint, installing anything else first is a mistake.
 
@@ -37,12 +37,13 @@ The single most common first-hour failure in this category is two clients
 fighting over one profile, which surfaces as
 [browser is already in use](playwright-mcp-browser-already-in-use.md).
 
-Servers differ in whether concurrency is a flag or a model. playwright-mcp makes
+Servers differ in whether concurrency is a flag or a shape. playwright-mcp makes
 it a flag: `--isolated`, or a distinct `--user-data-dir` per client.
-[AIHawk](https://github.com/feder-cr/AIHawk) makes it a model: named sessions
-and named browsers, so opening a browser that already exists focuses it rather
-than colliding. Neither is free. A flag is simpler until you need two of
-something; a model is more to learn on day one.
+[AIHawk](https://github.com/feder-cr/AIHawk) makes it a shape: one server is one
+identity for its whole life, with one helper browser beside it that shares
+nothing, so there is no pool for two clients to collide inside. Neither is free.
+A flag is simpler until you need two of something; a fixed shape means a second
+identity is a second registered server rather than an argument.
 
 **Winner:** depends on whether you will ever run two.
 
@@ -73,11 +74,14 @@ tools is not more capable than one with twenty; it is harder for a model to
 choose within, and every tool description costs context on every turn.
 
 To put a number on the cost rather than assert it, here is ours, read from our
-own source on 2026-09-10: **24 tools, 14,064 characters of description, about
-3,500 tokens on every turn.** A server advertising a hundred tools of similar
-description length is asking for roughly four times that, on every turn, for
-the whole session. Ask any server you are evaluating for the same two figures
-before believing that more tools is more capability.
+own registry on 2026-09-13: **16 tools, 9,145 characters of description, and
+3,192 tokens on every turn** once the JSON schema for each tool's arguments
+is counted with it, which it always is. Descriptions alone are 2,123 of those
+tokens; the schemas are the other third, and they are the half nobody counts.
+A server advertising a hundred tools of similar size is asking for roughly
+six times that, on every turn, for the whole session. Ask any server you are
+evaluating for the same figure before believing that more tools is more
+capability.
 
 What to look for instead: can the model **read** state without scripting, does
 it have a **coordinate** path for what selectors cannot reach, and is there a
@@ -90,8 +94,8 @@ reasoning on that, and it applies to servers other than ours.
 ## The one-pass decision
 
 - **No specific complaint:** playwright-mcp.
-- **Two clients, or several browsers at once:** a server with a session model,
-  or playwright-mcp with `--isolated` per client.
+- **Two clients, or several browsers at once:** playwright-mcp with `--isolated`
+  per client, or a server with no shared pool to collide inside.
 - **You need Firefox or WebKit specifically:** playwright-mcp covers all four
   engines with `--browser`.
 - **The site recognises the browser:** the engine axis, and only there does
