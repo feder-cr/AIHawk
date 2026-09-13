@@ -1,7 +1,10 @@
 """Content gates for this repository's published surface.
 
-Five checks over docs/, articles/, assets/ and the README, each born from a
-real incident rather than a hypothetical:
+Checks over docs/, articles/, assets/ and the README, each born from a real
+incident rather than a hypothetical. How many there are is deliberately not
+written here: this file said "five" while running six, and a hand-written count
+inside the file that exists to catch stale numbers is the joke telling itself.
+Count the numbered entries.
 
   1. Banned-topic scan. Pages on retired topics must not come back; a stale
      branch once squash-merged five of them straight onto main. Historical
@@ -24,6 +27,15 @@ real incident rather than a hypothetical:
      the README does not (`pip install aihawk`). On 2026-09-06 the route went
      uv, pip, uv in one day, and each flip touched the README plus twenty-odd
      wiki pages by hand.
+  6. MCP-tool scan. Every `browser_*` or `session_*` tool a page teaches must
+     be declared in the server. 0.39.0 and 0.41.0 between them removed nine
+     tools, and four published pages went on teaching them - one told the
+     reader to set the proxy at a tool that no longer exists.
+  7. Tool-surface size. A page that publishes how big this server's tool
+     surface is must publish the live figure. On 2026-09-13 eleven pages
+     quoted a character count that was stale AND had been measured the wrong
+     way, and nothing could go red about it: a number copied into prose has
+     no link back to what it measured. This check is that link.
 
 Run: python scripts/check_content.py            (from the repo root)
      python scripts/check_content.py --selftest (prove the gate on known-bad)
@@ -238,6 +250,111 @@ def mcp_tools(server_path):
     return set(TOOL_DEF_RE.findall(server_path.read_text(encoding="utf-8")))
 
 
+#: ⛔ A PUBLISHED NUMBER GOES STALE AND NOTHING SAYS SO, which is the failure
+#: this whole check exists for. On 2026-09-13 eleven live pages quoted "8,639
+#: characters" and "16 tools" for this server's tool surface. Both had to be
+#: corrected by hand, and the only reason anybody looked was that a new page
+#: needed the figure. Two independent errors were sitting there: the count was
+#: stale (a release had lengthened descriptions), and it had been measured the
+#: natural wrong way, by summing docstrings while what the protocol sends is a
+#: name, a description AND a JSON schema per tool.
+#:
+#: The pattern is worth naming because the project keeps meeting it: a measured
+#: number copied into prose has no link back to the thing it measured, so it
+#: cannot go red. A gate is the link.
+#:
+#: What this checks: the TOOL COUNT and the TOTAL DESCRIPTION CHARACTERS, both
+#: recomputed from the server's source with `ast` - no imports, no dependencies,
+#: and verified on 2026-09-13 to agree with the running registry to the
+#: character (16 tools, 9,145). A page may state them or not; if it states them,
+#: they must be right.
+#:
+#: ⛔ What it does NOT see, said plainly so nobody trusts it wider than it is:
+#: the TOKEN figure. Counting tokens needs a tokenizer this gate does not have
+#: and should not grow a dependency for. The token count rides in the same
+#: sentences as the character count, so a stale one is very likely caught by its
+#: neighbour - "very likely" is not "always", and that gap is the honest size of
+#: this gate.
+SURFACE_TOOLS_RE = re.compile(r"\*{0,2}(\d+)\*{0,2}\s+tools\b")
+#: Two shapes, because the corpus writes it two ways and the gate reads what
+#: the corpus writes rather than demanding the corpus write what the gate
+#: reads. The second shape was found by a surviving mutation on
+#: `how-many-mcp-tools-is-too-many.md` - the one page whose whole subject IS
+#: this number publishes it as a table row, which the prose pattern cannot see.
+#: Being blind exactly there would have been the worst possible place.
+SURFACE_CHARS_RE = re.compile(
+    r"([\d,]+)\s+characters of (?:description|docstring)"
+    r"|\|[^|]*\bcharacters\b[^|]*\|\s*\*{0,2}([\d,]+)\*{0,2}\s*\|")
+
+
+def _surface_number(match):
+    """The captured figure, whichever of the two shapes matched."""
+    return match.group(1) or match.group(2)
+
+
+def tool_surface(server_path):
+    """(tool count, total description characters) read from the source.
+
+    `ast` rather than an import: the content gate runs where the server's
+    dependencies may not be installed, and a docstring is a literal in the
+    file either way.
+    """
+    import ast
+
+    tree = ast.parse(server_path.read_text(encoding="utf-8"))
+    count, chars = 0, 0
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        for dec in node.decorator_list:
+            target = dec.func if isinstance(dec, ast.Call) else dec
+            if isinstance(target, ast.Attribute) and target.attr == "tool":
+                count += 1
+                chars += len(ast.get_docstring(node, clean=False) or "")
+                break
+    return count, chars
+
+
+def check_surface(rel, text, count, chars):
+    """Findings for one page that publishes this server's tool-surface size.
+
+    ⛔ THE CHARACTER COUNT IS THE ANCHOR, and the tool count is only checked
+    beside it. The first draft checked every "N tools" in the corpus and
+    accused FOUR healthy lines out of four: "around 15-25 tools from one server
+    is workable" (a general guideline), "we shipped 24 tools and now ship 16"
+    (true, and about the past), and twice "29 tools" about somebody else's
+    product. That is how a gate goes red for the wrong reason and then gets
+    switched off - the failure this file already records once.
+
+    A tool count appears in prose for a dozen honest reasons. "N characters of
+    description" appears for exactly one: describing THIS server, because
+    nobody publishes a competitor's docstring byte count. So the character
+    figure decides whether a paragraph is making the claim at all, and the
+    tool count is verified only where it sits beside one. Nothing is lost by
+    the narrowing: adding or removing a tool moves the character total too, so
+    the anchor sees every change the tool count would have seen.
+
+    Paragraph-scoped rather than line-scoped because the two numbers routinely
+    land on different lines of the same sentence after wrapping.
+    """
+    out = []
+    for para in re.split(r"\n\s*\n", text):
+        flat = " ".join(para.split())
+        m_chars = list(SURFACE_CHARS_RE.finditer(flat))
+        if not m_chars:
+            continue
+        for m in m_chars:
+            got = _surface_number(m)
+            if int(got.replace(",", "")) != chars:
+                out.append("%s: says %s characters of description, the server "
+                           "declares %s" % (rel, got, format(chars, ",")))
+        for m in SURFACE_TOOLS_RE.finditer(flat):
+            if int(m.group(1)) != count:
+                out.append("%s: says %s tools beside a description-size claim, "
+                           "the server declares %d" % (rel, m.group(1), count))
+    return out
+
+
 def content_files(root):
     files = []
     for base in ("docs", "articles"):
@@ -254,6 +371,7 @@ def check_tree(root):
 
     server = root / "src" / "aihawk" / "mcp" / "server.py"
     tools = mcp_tools(server) if server.exists() else None
+    surface = tool_surface(server) if server.exists() else None
 
     docs_names = {f.stem for f in (root / "docs").glob("*.md")} | {"Home"}
     readme_text = (root / "README.md").read_text(encoding="utf-8") \
@@ -310,6 +428,9 @@ def check_tree(root):
                         and target not in docs_names:
                     findings.append("%s: dead link -> %s.md" % (rel, target))
 
+        if surface is not None:
+            findings.extend(check_surface(rel, text, surface[0], surface[1]))
+
         if launcher is not None:
             findings.extend(check_way_in(rel, text, launcher, block, readme_text))
 
@@ -350,9 +471,12 @@ def selftest():
             b"def ui(model):\n    pass\n")
         # Il server, per il controllo sui tool MCP: due dichiarati e basta.
         (root / "src" / "aihawk" / "mcp").mkdir(parents=True)
+        # The docstrings have a KNOWN length, because the seventh check
+        # compares published numbers against this measurement: 2 tools, 8
+        # characters.
         (root / "src" / "aihawk" / "mcp" / "server.py").write_bytes(
-            b"@mcp.tool()\nasync def browser_open(url):\n    pass\n"
-            b"@mcp.tool()\ndef browser_click(selector):\n    pass\n")
+            b'@mcp.tool()\nasync def browser_open(url):\n    """One."""\n'
+            b'@mcp.tool()\ndef browser_click(selector):\n    """Two."""\n')
         # The README is the source the fifth check reads: one block, one
         # launcher, the same shape as the real page.
         (root / "README.md").write_bytes(
@@ -406,6 +530,17 @@ def selftest():
                 "docs/cfg.md",
                 b'```json\n{"command": "python", '
                 b'"args": ["aihawk"]}\n```\n'),
+            # The seventh check: a published number that no longer matches the
+            # live measurement. The real failure of 2026-09-13, where eleven
+            # pages carried a stale figure and nothing could notice.
+            "stale description size, in prose": (
+                "docs/size.md", b"ours is 8,639 characters of description\n"),
+            "stale description size, in a table": (
+                "docs/tbl.md",
+                b"| | |\n|---|---|\n| Description characters | 8,639 |\n"),
+            "stale tool count beside a size claim": (
+                "docs/both.md",
+                b"**24 tools**, 8 characters of description, resent every turn\n"),
         }
         for label, (rel, content) in bad.items():
             p = root / rel
@@ -442,6 +577,17 @@ def selftest():
                                    b"call `browser_open` then `browser_click`\n"),
             "a parameter shaped like a tool": ("docs/param.md",
                                                b"pass a `session_id` to it\n"),
+            # The two the first draft of the seventh check wrongly accused: a
+            # tool count that is not a claim about our surface, and one that
+            # talks about the past.
+            "a tool count that is a general guideline": (
+                "docs/guide.md",
+                b"around 15-25 tools from one server is workable\n"),
+            "a tool count about the past, with no size claim": (
+                "docs/past.md", b"we shipped 24 tools and now ship 2\n"),
+            "the right figures": (
+                "docs/right.md",
+                b"**2 tools**, 8 characters of description, every turn\n"),
             "the README's install lines, verbatim": (
                 "docs/same.md",
                 b"```powershell\n"
