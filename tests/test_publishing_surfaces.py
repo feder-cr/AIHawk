@@ -8,12 +8,18 @@ Two files in this repository are read by somebody else's machine, not by ours:
      README.md. A version in server.json that is not the version on the index
      is refused by the registry; a missing token is refused too, with
      "Registry validation failed for package".
-  2. `mcpb/` is the source of the MCP bundle that Smithery distributes for
-     local execution. Its manifest carries a version, and its pyproject pins
-     the published package exactly, so a bundle at 0.43.0 installs aihawk
-     0.43.0 and nothing else.
+  2. `manifest.json` at the root makes the repository itself the MCP bundle
+     (MCPB manifest 0.4, server.type "uv"): `scripts/pack_bundle.py` zips
+     the tracked tree minus `.mcpbignore`, and a host runs the server from
+     the archive with `uv run --directory <bundle> python -m aihawk`, which
+     installs the package from the bundle's own `pyproject.toml`. Until
+     2026-09-13 the bundle was a separate `mcpb/` folder whose pyproject
+     pinned the published package - a pointer to PyPI, spec-valid but not
+     the layout the spec describes, and `type: python` with nothing bundled,
+     which the spec forbids. Now the manifest carries a copy of the version
+     and the archive carries the source.
 
-That is four copies of one number (pyproject, server.json, manifest, the pin)
+That is three copies of one number (pyproject, server.json, the manifest)
 and one token that must match a name. Each pair was written by hand on
 2026-09-12 and they agreed; nothing made them agree. The registry job in
 publish.yml runs on the tag, which is after the bump, and would only find out
@@ -54,8 +60,9 @@ def _load():
         "version": pyproject["project"]["version"],
         "readme": (ROOT / "README.md").read_text(encoding="utf-8"),
         "server": json.loads((ROOT / "server.json").read_text(encoding="utf-8")),
-        "manifest": json.loads((ROOT / "mcpb" / "manifest.json").read_text(encoding="utf-8")),
-        "bundle_pyproject": tomllib.loads((ROOT / "mcpb" / "pyproject.toml").read_text(encoding="utf-8")),
+        "requires_python": pyproject["project"]["requires-python"],
+        "manifest": json.loads((ROOT / "manifest.json").read_text(encoding="utf-8")),
+        "mcpbignore": (ROOT / ".mcpbignore").read_text(encoding="utf-8"),
         "plugins": {rel: json.loads((ROOT / rel).read_text(encoding="utf-8")) for rel in PLUGIN_FILES},
     }
 
@@ -109,8 +116,6 @@ def plugin_findings(package_name, manifest, plugins):
     if claude.get("version") != gemini.get("version"):
         out.append("the Claude plugin is at %r and the Gemini extension at %r; one config, one version"
                    % (claude.get("version"), gemini.get("version")))
-    if not manifest.get("privacy_policies") or "#privacy-policy" not in manifest["privacy_policies"][0]:
-        out.append("the bundle manifest does not point at the README's Privacy Policy section")
     return out
 
 
@@ -141,33 +146,69 @@ def registry_findings(package_name, version, readme, server):
     return out
 
 
-def bundle_findings(package_name, version, manifest, bundle_pyproject):
-    """Why the bundle would ship the wrong package, or nothing."""
+#: What a host runs from the unpacked bundle. Measured 2026-09-13 on a fresh
+#: copy of the tracked tree: `uv run` installs the project from the bundle's
+#: pyproject (50 packages, 3.6 s) and `python -m aihawk` is the server;
+#: `src/aihawk/__main__.py` run as a FILE fails on its relative import, which
+#: is why the args say `python -m` and not the entry point's path.
+BUNDLE_LAUNCH = {"command": "uv", "args": ["run", "--directory", "${__dirname}", "python", "-m", "aihawk"]}
+
+#: Paths the bundle must not carry, each named in .mcpbignore. The archive
+#: check in scripts/pack_bundle.py is the second wall; this is the first.
+MUST_IGNORE = (".git/", ".github/", ".env", "tests/", "docs/", "articles/", "scripts/",
+               "assets/*", "!assets/aihawk-icon-400.png", "plugin.json", "mcp.json",
+               "gemini-extension.json", "server.json")
+
+
+def bundle_findings(package_name, version, requires_python, manifest, mcpbignore):
+    """Why the bundle would not be the one the MCPB spec describes, or nothing.
+
+    The spec (MANIFEST.md, "UV Runtime (v0.4+)") for a Python server whose
+    dependencies cannot be bundled portably: manifest 0.4, server.type "uv", a
+    pyproject.toml with the dependencies, no server/lib or server/venv; and
+    the CLI's schema (mcpb-manifest-v0.4.schema.json) adds that `server`
+    needs `type`, `entry_point` AND `mcp_config`, and that the root admits no
+    field it does not list.
+    """
     out = []
+    if manifest.get("manifest_version") != "0.4":
+        out.append("manifest_version is %r; server.type uv exists from 0.4" % manifest.get("manifest_version"))
     if manifest.get("version") != version:
         out.append("manifest is %r, pyproject is %r" % (manifest.get("version"), version))
     if manifest.get("name") != package_name:
         out.append("manifest name is %r, the project is %r" % (manifest.get("name"), package_name))
+    for key in ("name", "version", "description", "author", "server"):
+        if key not in manifest:
+            out.append("manifest lacks %r, which the schema requires" % key)
+    if not (manifest.get("author") or {}).get("name"):
+        out.append("author.name is missing")
     if "tools" in manifest:
         # smithery-ai/cli#787: a manifest that declares tools is refused by
         # Smithery's registry with a 400, because MCPB tool entries carry no
         # inputSchema and the CLI forwards them as MCP tools that require one.
+        # The field is optional in the spec, so leaving it out costs nothing.
         out.append("manifest declares tools, which Smithery refuses")
     server = manifest.get("server") or {}
-    # "python", not "uv": Smithery's CLI recognises python, node and binary
-    # only (measured 2026-09-12: a uv-type manifest is refused with "Could not
-    # determine bundle runtime"). The entry point copes with either host.
-    if server.get("type") != "python":
-        out.append("server type is %r, Smithery accepts python" % server.get("type"))
+    if server.get("type") != "uv":
+        out.append("server type is %r, the spec's type for a Python server with compiled "
+                   "dependencies is uv (Smithery's python variant is DERIVED by pack_bundle.py)"
+                   % server.get("type"))
     entry = server.get("entry_point")
-    if not entry or not (ROOT / "mcpb" / entry).is_file():
-        out.append("entry_point %r is not a file in mcpb/" % entry)
-    deps = (bundle_pyproject.get("project") or {}).get("dependencies") or []
-    want = "%s==%s" % (package_name, version)
-    if deps != [want]:
-        out.append("bundle dependencies are %r, expected [%r]" % (deps, want))
-    if (bundle_pyproject.get("project") or {}).get("version") != version:
-        out.append("bundle pyproject is %r, pyproject is %r" % (bundle_pyproject["project"].get("version"), version))
+    if not entry or not (ROOT / entry).is_file():
+        out.append("entry_point %r is not a file in the repository" % entry)
+    if server.get("mcp_config") != BUNDLE_LAUNCH:
+        out.append("mcp_config is %r, the host must run %r" % (server.get("mcp_config"), BUNDLE_LAUNCH))
+    icon = manifest.get("icon")
+    if not icon or icon.startswith("http") or not (ROOT / icon).is_file():
+        out.append("icon %r is not a local file in the repository (Claude Desktop reads local icons only)" % icon)
+    runtime = ((manifest.get("compatibility") or {}).get("runtimes") or {}).get("python")
+    if runtime != requires_python:
+        out.append("compatibility.runtimes.python is %r, pyproject requires %r" % (runtime, requires_python))
+    if not manifest.get("privacy_policies") or "#privacy-policy" not in manifest["privacy_policies"][0]:
+        out.append("the manifest does not point at the README's Privacy Policy section")
+    for pattern in MUST_IGNORE:
+        if pattern not in mcpbignore.splitlines():
+            out.append(".mcpbignore does not name %r" % pattern)
     return out
 
 
@@ -176,9 +217,10 @@ def test_the_registry_entry_describes_the_package_that_ships():
     assert registry_findings(d["package_name"], d["version"], d["readme"], d["server"]) == []
 
 
-def test_the_bundle_installs_the_version_that_ships():
+def test_the_bundle_is_the_one_the_spec_describes():
     d = _load()
-    assert bundle_findings(d["package_name"], d["version"], d["manifest"], d["bundle_pyproject"]) == []
+    assert bundle_findings(d["package_name"], d["version"], d["requires_python"],
+                           d["manifest"], d["mcpbignore"]) == []
 
 
 def test_the_plugin_manifests_launch_the_package_that_ships():
@@ -212,17 +254,40 @@ def test_the_checks_refuse_known_bad_input():
     assert glued != d["readme"]
     assert registry_findings(d["package_name"], d["version"], glued, d["server"])
 
+    def bundle(m=None, ignore=None):
+        return bundle_findings(d["package_name"], d["version"], d["requires_python"],
+                               m if m is not None else d["manifest"],
+                               ignore if ignore is not None else d["mcpbignore"])
+
     m = copy.deepcopy(d["manifest"]); m["version"] = "0.0.1"
-    assert bundle_findings(d["package_name"], d["version"], m, d["bundle_pyproject"])
+    assert bundle(m)
+
+    m = copy.deepcopy(d["manifest"]); m["manifest_version"] = "0.3"
+    assert bundle(m)
 
     m = copy.deepcopy(d["manifest"]); m["tools"] = [{"name": "browser_click", "description": "x"}]
-    assert bundle_findings(d["package_name"], d["version"], m, d["bundle_pyproject"])
+    assert bundle(m)
+
+    m = copy.deepcopy(d["manifest"]); m["server"]["type"] = "python"
+    assert bundle(m)
 
     m = copy.deepcopy(d["manifest"]); m["server"]["entry_point"] = "src/missing.py"
-    assert bundle_findings(d["package_name"], d["version"], m, d["bundle_pyproject"])
+    assert bundle(m)
 
-    p = copy.deepcopy(d["bundle_pyproject"]); p["project"]["dependencies"] = ["aihawk>=0.1"]
-    assert bundle_findings(d["package_name"], d["version"], d["manifest"], p)
+    m = copy.deepcopy(d["manifest"]); m["server"]["mcp_config"]["args"] = ["run", "--directory", "${__dirname}", "src/aihawk/__main__.py"]
+    assert bundle(m)
+
+    m = copy.deepcopy(d["manifest"]); m["icon"] = "https://example.com/icon.png"
+    assert bundle(m)
+
+    m = copy.deepcopy(d["manifest"]); m["compatibility"]["runtimes"]["python"] = ">=3.8"
+    assert bundle(m)
+
+    m = copy.deepcopy(d["manifest"]); del m["author"]["name"]
+    assert bundle(m)
+
+    assert bundle(ignore=d["mcpbignore"].replace(".env\n", ""))
+    assert bundle(ignore=d["mcpbignore"].replace("tests/\n", ""))
 
     assert plugin_findings(d["package_name"], d["manifest"], d["plugins"]) == []
 
@@ -254,4 +319,4 @@ def test_the_checks_refuse_known_bad_input():
     assert plugin_findings(d["package_name"], d["manifest"], g)
 
     m = copy.deepcopy(d["manifest"]); m.pop("privacy_policies")
-    assert plugin_findings(d["package_name"], m, d["plugins"])
+    assert bundle(m)

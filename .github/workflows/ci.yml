@@ -142,6 +142,35 @@ jobs:
           /tmp/clean/bin/python -m aihawk --help > /dev/null
           unzip -l dist/*.whl | grep -q "aihawk/mcp/server.py"
 
+  # The repository is also the MCP bundle: manifest.json at the root, MCPB 0.4,
+  # server.type uv, the package under src/. This packs it with the official CLI
+  # on every change and refuses an archive that carries anything beyond the
+  # server (.mcpbignore is the first wall, scripts/pack_bundle.py the second),
+  # then runs the packed bundle the way a host does: from a fresh directory,
+  # with the manifest's own mcp_config command, which installs the package from
+  # the bundle's pyproject. Measured 2026-09-13 before it was written here.
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: astral-sh/setup-uv@v5
+      - name: the bundle packs, holds only the server, and runs
+        run: |
+          set -euo pipefail
+          npx -y @anthropic-ai/mcpb validate .
+          python scripts/pack_bundle.py --output /tmp/bundle
+          python scripts/pack_bundle.py --smithery --output /tmp/bundle
+          mkdir /tmp/unpacked
+          python -c "import zipfile,glob; zipfile.ZipFile(glob.glob('/tmp/bundle/aihawk-*[0-9].mcpb')[0]).extractall('/tmp/unpacked')"
+          uv run --directory /tmp/unpacked python -m aihawk --help > /dev/null
+
   # 2026-09-04: aihawk 0.4.0 went to the index, then main gained two more
   # changes while pyproject still said 0.4.0. A release from there would have
   # published NOTHING and reported success, because publish.yml treats a version
