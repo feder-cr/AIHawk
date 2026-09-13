@@ -150,6 +150,14 @@ the last macOS build was `firefox-20`.
 is cached once and shared. The server process itself is per-client - each
 client starts its own - so a page open in one is not visible in the other.
 
+**What else should I register alongside it?** That is a question about your
+whole tool budget rather than about this server, because every registered
+server spends context on every turn:
+[MCP servers for Claude Code](best-mcp-servers-for-claude-code.md) goes
+through what is worth the slot, and
+[how many MCP tools is too many](how-many-mcp-tools-is-too-many.md) has the
+arithmetic measured on this one.
+
 ## Sources
 
 All retrieved 2026-09-03.

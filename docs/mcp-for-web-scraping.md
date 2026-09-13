@@ -19,6 +19,11 @@ of description plus each tool's argument schema, counted with a tokenizer on
 floor. Multiply by
 turns, then by pages, and phase 2 below stops being a style preference.
 
+If the data is already in the HTML the server sends, the browser was never the
+question and neither was the protocol:
+[MCP against a plain API and against RAG](model-context-protocol-vs-api-vs-rag.md)
+is the comparison to read before this page's pattern, not after it.
+
 Which does not make MCP useless here. It makes it useful in a specific place,
 and the pattern below is what people converge on after they have paid for the
 naive version once.

@@ -66,7 +66,9 @@ in an editor that already has a file server and a search server and you are
 spending a meaningful slice of the context window on tool descriptions before
 your question arrives.
 
-Two habits keep this from biting:
+Two habits keep this from biting, and
+[MCP servers for Claude Code](best-mcp-servers-for-claude-code.md) applies the
+same budget to the other assistant most people have open:
 
 **Enable capabilities you use, not all of them.** `--caps` is additive on
 Microsoft's server. Vision, pdf and devtools off unless a page forces it.

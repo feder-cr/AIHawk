@@ -15,6 +15,11 @@ specific complaint, installing anything else first is a mistake.
 This page is for people with a specific complaint. Below are the four axes that
 actually separate these servers, and which one changes hands on each.
 
+Browser servers are one category among several, and the axes below are specific
+to this one: [how to choose among MCP servers](best-mcp-servers.md) is the map
+across categories, and [MCP servers on GitHub](mcp-servers-on-github.md) is how
+to judge one you found in a listing rather than in a comparison.
+
 ## Axis 1: how the model sees the page
 
 **Accessibility tree** or **pixels**. playwright-mcp defaults to the tree: the

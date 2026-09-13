@@ -165,6 +165,11 @@ registration from a broken server is to skip the client:
 [a thirty-line MCP client](writing-an-mcp-client-in-python.md) lists them with
 no model in the way.
 
+This server exposes only tools, which is a choice rather than the only option:
+the protocol also has resources and prompts, and
+[who controls each](mcp-tools-resources-and-prompts.md) is why a browser fits
+the first and not the other two.
+
 **Every tool below also takes `browser`, optional, and it never appears in the
 tables because the answer is the same for all of them.** Leave it out and you
 get `main`, which is what a client that never mentions it has always got and
