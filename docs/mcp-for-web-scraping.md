@@ -12,10 +12,11 @@ how to scrape a site and bad at doing the scraping.** Every step is a round trip
 through a model. That is a few seconds and a few thousand tokens per page. A
 plain script does the same page in a fraction of a second for nothing.
 
-The floor under that estimate is measurable and it is ours: our server's tool
-descriptions alone are **14,064 characters, about 3,500 tokens, resent on every
-turn** (24 tools, read from `src/aihawk/mcp/server.py` on 2026-09-10). Page
-content and the model's own reasoning stack on top of that floor. Multiply by
+The floor under that estimate is measurable and it is ours: our server's 16
+tool definitions are **3,192 tokens resent on every turn** (9,145 characters
+of description plus each tool's argument schema, counted with a tokenizer on
+2026-09-13). Page content and the model's own reasoning stack on top of that
+floor. Multiply by
 turns, then by pages, and phase 2 below stops being a style preference.
 
 Which does not make MCP useless here. It makes it useful in a specific place,

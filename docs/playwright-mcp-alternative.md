@@ -8,10 +8,15 @@ nav_order: 28
 # Playwright MCP alternatives
 
 Microsoft's [playwright-mcp](https://github.com/microsoft/playwright-mcp) is
-Apache-2.0, 36.9k stars when read on 2026-09-10, and maintained by the Playwright
+Apache-2.0, 36.9k stars when read on 2026-09-13, and maintained by the Playwright
 team. **If you cannot name what it fails to do for you, there is no reason to
 replace it.** This page is organised around the four complaints that are real,
 because three of them have a fix that is not a different server.
+
+**This page is about swapping one MCP server for another.** If your question is
+whether to use MCP at all rather than a library, a function call or a plain
+script, that is a different question with a different answer:
+[MCP alternatives](model-context-protocol-alternatives.md).
 
 ## Complaint 1: two clients cannot share it
 
@@ -25,9 +30,10 @@ a distinct `--user-data-dir` per client. Both are documented options.
 
 **When a switch is warranted:** if your client only lets you register a bare
 command with no arguments, you may not be able to pass either flag, and a server
-whose concurrency is a model rather than a flag saves you the fight. Servers
-with named sessions - [AIHawk](https://github.com/feder-cr/AIHawk) among them -
-treat two browsers as two named things rather than a collision.
+that has no shared profile to fight over saves you the fight.
+[AIHawk](https://github.com/feder-cr/AIHawk) is one: a server is one identity
+for its whole life, so two registered servers are two browsers by construction
+rather than two clients racing for one directory.
 
 ## Complaint 2: it costs too much context
 
@@ -85,8 +91,9 @@ Address complaint 3 only. Younger and smaller than Microsoft's, so check push
 dates.
 
 **AIHawk** (ours, MIT). A Firefox patched at the C++ source, identity derived
-from a seed so a failing run replays exactly, named sessions and browsers, and
-the agent interface in the same package. Addresses complaints 1 and 3. It does
+from a seed so a failing run replays exactly, one identity per server with a
+helper browser that shares nothing with it, and the agent interface in the same
+package. Addresses complaints 1 and 3. It does
 not make the model better, does not solve captchas, and covers Windows and Linux
 only.
 

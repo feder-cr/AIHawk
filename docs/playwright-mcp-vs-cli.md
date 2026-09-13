@@ -26,7 +26,7 @@ assistant connects to it and gets tools: open a tab, snapshot the page, click,
 type, press a key. The model calls those one at a time and looks at what came
 back before deciding the next call. Microsoft ships it at
 [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp),
-Apache-2.0, 36.9k stars when read on 2026-09-10, and it exposes the page to the
+Apache-2.0, 36.9k stars when read on 2026-09-13, and it exposes the page to the
 model as an accessibility tree rather than a screenshot, so the model reads
 structure instead of pixels.
 

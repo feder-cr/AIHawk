@@ -21,7 +21,8 @@ login step to get wrong, and any interactive check happened while a person was
 present. This is the right answer for most cases and it is the one people skip.
 
 Microsoft's server takes `--storage-state` for exactly this shape. This project
-takes a persistent `profile_dir` per session.
+takes a persistent profile instead, as `STEALTHFOX_PROFILE_DIR` in the config
+block or as `profile` on `browser_open`.
 
 **Persist a profile.** The agent has its own browser directory that survives
 between runs. First run logs in, later runs do not. Cheaper to set up than a

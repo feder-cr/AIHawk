@@ -140,7 +140,7 @@ between what the browser says it is and where it appears to be.
 | `STEALTHFOX_PROFILE_DIR` | A directory for a persistent profile, so logins survive across runs. |
 | `STEALTHFOX_BINARY` | Path to an engine binary you already have. It must be the build the packaged seal pins, or startup refuses. |
 | `STEALTHFOX_HEADLESS` | `0` to run headed; headless by default. |
-| `STEALTHFOX_MCP_TRANSPORT` | `http` to serve over streamable HTTP instead of stdio. Default is stdio, which is what MCP clients expect. |
+| `STEALTHFOX_MCP_TRANSPORT` | `http` to serve over streamable HTTP instead of stdio. Default is stdio, which is what MCP clients expect. What else changes when you flip it, including the one thing that changes silently: [local or remote](local-vs-remote-mcp-server.md). |
 | `STEALTHFOX_MCP_HOST` | Bind address for the HTTP transport. Default `127.0.0.1`. |
 | `STEALTHFOX_MCP_PORT` | Port for the HTTP transport. Default `8765`, which is also the AIHawk interface's default: change one of the two if you run both. |
 | `AIHAWK_HOME` | Where saved sessions are kept. Defaults to `%APPDATA%/aihawk` on Windows, `~/Library/Application Support/aihawk` on macOS and `$XDG_DATA_HOME/aihawk` on Linux. Set it to put them on another disk. |
@@ -159,6 +159,11 @@ a browser gets when nobody says anything.
 Tool names mirror the Microsoft Playwright MCP, so prompts written for it work
 here too, with one deliberate departure: **there are no tab tools.** Three
 groups: the two browsers, reading the page, and acting on it.
+
+If the tools do not appear in your client, the fastest way to tell a broken
+registration from a broken server is to skip the client:
+[a thirty-line MCP client](writing-an-mcp-client-in-python.md) lists them with
+no model in the way.
 
 **Every tool below also takes `browser`, optional, and it never appears in the
 tables because the answer is the same for all of them.** Leave it out and you
