@@ -4,9 +4,9 @@
 # test in the suite refuses a release where the three disagree.
 [project]
 name = "aihawk-mcpb"
-version = "0.44.0"
+version = "0.45.0"
 description = "MCP bundle that runs the published aihawk package"
 requires-python = ">=3.11"
 dependencies = [
-    "aihawk==0.44.0",
+    "aihawk==0.45.0",
 ]
