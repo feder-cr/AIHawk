@@ -13,6 +13,11 @@ dropdowns, keys, screenshots, a live view of the window, and a JavaScript
 reader, on a Firefox whose fingerprint is set inside the engine rather than
 bolted onto the page.
 
+If you are still deciding whether you want a server at all rather than a
+library call, the price is the thing to weigh and it is a recurring one:
+[MCP against a plain API](model-context-protocol-vs-api-vs-rag.md) has this
+server's per-turn bill measured.
+
 The engine is [`invisible-playwright`](https://github.com/feder-cr/invisible_playwright),
 a Firefox patched at the C++ source. The server ships inside the `aihawk`
 package and is what `aihawk` runs with no subcommand: `uvx aihawk` is what a

@@ -1,16 +1,20 @@
 ---
-title: "MCP vs an API, and MCP vs RAG: three different layers"
-description: "MCP is not a competitor to either. It is a standard way to expose capabilities to a model, usually on top of an API, and it solves a different problem from retrieval."
+title: "MCP vs an API: the decision, and what the wrapper costs"
+description: "MCP is not a competitor to an API: it is a model-facing layer on top of one. What it buys, the per-turn bill measured on our own server, and when to skip it."
 parent: "Alternatives and Comparisons"
 nav_order: 36
 ---
 
-# MCP vs an API, and MCP vs RAG: three different layers
+# MCP vs an API
 
-Both comparisons get asked constantly and both are category errors, in
-different directions. **MCP usually sits on top of an API rather than replacing
-one, and it does something RAG does not do at all.** Worth ten minutes because
-picking the wrong layer is expensive to undo.
+**MCP is not an alternative to an API. It is usually a thin layer on top of the
+API you already have, aimed at a model instead of at a developer.** So the real
+question is never which to use; it is whether the layer is worth its price, and
+the price is a number almost nobody publishes.
+
+This page answers that first, with ours measured. RAG comes after, because it
+is the other comparison people pair with this one and it is a category error in
+a different direction: RAG does something MCP does not do at all.
 
 ## MCP vs an API
 
@@ -33,8 +37,40 @@ What MCP adds on top of the API, and why the wrapper is not pointless:
 - **A place for oversight.** Approval prompts, permission settings and activity
   logs sit at this layer rather than in each API client.
 
-**When you do not need it:** if your own code is calling your own API, MCP adds
-nothing. The layer earns its keep when a model is choosing.
+### What the wrapper costs, measured
+
+Every comparison of these two skips the price, so here is ours. **A tool is not
+free to declare: its name, its description and the JSON schema for its
+arguments are sent to the model on every turn**, for the life of every session.
+Not once at registration. Every turn.
+
+Enumerated from this project's own browser server on 2026-09-13 and counted
+with a tokenizer rather than a characters-per-token rule of thumb: **16 tools,
+9,145 characters of description, 3,192 tokens on every single turn.** A
+forty-turn session spends around 128,000 tokens restating what the tools are,
+before a page has been read.
+
+Call the same API from your own code and that number is zero. Call it through
+provider-native function calling, where you send the schemas yourself, and you
+pay the same per-turn bill but keep control of exactly which ones and when.
+[How many MCP tools is too many](how-many-mcp-tools-is-too-many.md) is that
+arithmetic in full.
+
+### The decision, in two questions
+
+**Does a model need to choose whether to call this?** If your own code decides,
+you want the API and nothing else. A protocol whose product is discoverability
+is pure overhead when nothing is discovering.
+
+**Does somebody else's assistant need to find it?** This is the one MCP answers
+and function calling does not. An MCP server can be registered by a client you
+did not write, in an application you have never seen. If both ends are yours,
+you are paying a per-turn bill for a registry with one entry in it, and
+[MCP alternatives](model-context-protocol-alternatives.md) works through what
+to use instead.
+
+Two yeses and the wrapper is worth writing. One yes and it is usually a
+function call with extra steps.
 
 ## MCP vs RAG
 
@@ -66,7 +102,8 @@ find something and then do something about it, which is the common real case.
 ## The one-line versions
 
 - MCP vs an API: not competitors. MCP is usually a model-facing layer over an
-  API.
+  API, and it bills you per turn for the discovery it adds - 3,192 tokens on
+  ours, every turn, forever.
 - MCP vs RAG: not competitors. RAG retrieves at scale; MCP acts, and attaches
   known context.
 - If nothing in your system is a model choosing what to do next, you probably
