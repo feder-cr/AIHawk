@@ -7,13 +7,13 @@
     "url": "https://github.com/feder-cr/AIHawk",
     "source": "github"
   },
-  "version": "0.43.0",
+  "version": "0.44.0",
   "packages": [
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "aihawk",
-      "version": "0.43.0",
+      "version": "0.44.0",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"
