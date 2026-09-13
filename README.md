@@ -166,6 +166,28 @@ This automates a browser under your control. Read the terms of the sites you
 point it at, respect their rate limits, and do not submit anything a human has
 not read.
 
+## Privacy Policy
+
+AIHawk runs on your machine and has no server of its own. What leaves your
+computer, and to whom:
+
+- **The sites you visit** see the browser, as they would any Firefox.
+- **Your model provider.** The web UI sends the conversation and what the agent
+  reads on the page to OpenRouter under your key. Over MCP, the client you
+  plugged it into does the same with whichever model it uses.
+- **GitHub.** The engine is downloaded from a GitHub release by
+  `uvx invisible-playwright fetch`, and a GeoIP database is when a proxy is
+  set. Each browser launch also fetches a one-line counter file from a GitHub
+  release, which is how launches are counted: the request carries no
+  identifier and nothing of yours, and GitHub sees what any HTTPS request
+  shows, your IP address.
+
+Nothing else is collected and nothing is sent to the author. Sessions,
+profiles and screenshots are stored locally, under `AIHAWK_HOME` if set and
+otherwise in the application-data directory of your system, and are yours to
+delete; nothing is retained anywhere else. Questions go to the
+[issues](https://github.com/feder-cr/AIHawk/issues).
+
 ## License
 
 [MIT](https://github.com/feder-cr/AIHawk/blob/main/LICENSE). Everything

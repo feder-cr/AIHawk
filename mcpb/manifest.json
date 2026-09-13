@@ -2,7 +2,7 @@
   "manifest_version": "0.4",
   "name": "aihawk",
   "display_name": "AIHawk",
-  "version": "0.44.0",
+  "version": "0.45.0",
   "description": "AI browser agent: browses, clicks, types, and reads real web pages from plain-English instructions.",
   "long_description": "AIHawk gives an MCP client a real browser to drive. The tools navigate, click, type, read and screenshot pages the way a person would, on a patched Firefox engine.\n\nThe engine is downloaded once, outside this bundle, with `uvx invisible-playwright fetch`. Until that has run, every browser tool reports that the engine is missing.",
   "author": {
@@ -16,6 +16,8 @@
   "homepage": "https://github.com/feder-cr/AIHawk",
   "documentation": "https://github.com/feder-cr/AIHawk/wiki",
   "support": "https://github.com/feder-cr/AIHawk/issues",
+  "icon": "https://raw.githubusercontent.com/feder-cr/AIHawk/main/assets/aihawk-icon-400.png",
+  "privacy_policies": ["https://github.com/feder-cr/AIHawk#privacy-policy"],
   "server": {
     "type": "python",
     "entry_point": "src/server.py",

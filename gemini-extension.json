@@ -1,0 +1,11 @@
+{
+  "name": "aihawk",
+  "version": "1.0.0",
+  "description": "AI browser agent: browses, clicks, types, and reads real web pages from plain-English instructions.",
+  "mcpServers": {
+    "aihawk": {
+      "command": "uvx",
+      "args": ["aihawk"]
+    }
+  }
+}
