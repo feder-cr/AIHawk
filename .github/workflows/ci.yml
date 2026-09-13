@@ -163,12 +163,14 @@ jobs:
       # uv from astral's installer, not from astral-sh/setup-uv: this
       # repository's Actions policy allows actions by feder-cr, by GitHub, or
       # pypa/gh-action-pypi-publish, and the first run of this job died at
-      # startup on exactly that. The line is the README's Linux line.
+      # startup on exactly that. The PATH line and not the README's `source
+      # $HOME/.local/bin/env`: on a runner ~/.local/bin is already on the PATH,
+      # so the installer writes no env file and the source fails (second run).
       - name: the bundle packs, holds only the server, and runs
         run: |
           set -euo pipefail
           curl -LsSf https://astral.sh/uv/install.sh | sh
-          source "$HOME/.local/bin/env"
+          export PATH="$HOME/.local/bin:$PATH"
           npx -y @anthropic-ai/mcpb validate .
           python scripts/pack_bundle.py --output /tmp/bundle
           python scripts/pack_bundle.py --smithery --output /tmp/bundle
