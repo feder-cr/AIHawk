@@ -140,7 +140,6 @@ const onEvent = (e) => {
        for the same reason an unknown tool still renders its arguments. */
     default:      flush(false, r); orphan('said', m.text, r);
   }
-  settleOnce();
 };
 
 /* The way back, and it is the ONE control on screen while a reader is scrolled
@@ -160,10 +159,21 @@ new IntersectionObserver(([e]) => { $('jump').hidden = e.isIntersecting;
    away.
 
    An animation cannot arrive at a target that moves. Landing at once always
-   can, and from there the stylesheet keeps the view at the bottom by itself -
-   `#anchor` is the one thing in the log with `overflow-anchor:auto` - so the
-   button stops being a jump and becomes a follow. There is also no motion left
-   to reduce, which is why the reduced-motion reading that used to be here is
-   gone rather than kept. */
-$('jump').onclick = () => { log.scrollTop = log.scrollHeight; seen(); };
+   can. There is also no motion left to reduce, which is why the reduced-motion
+   reading that used to be here is gone rather than kept.
+
+   ⛔ AND THE SENTENCE THAT STOOD HERE WAS MEASURED FALSE: "from there the
+   stylesheet keeps the view at the bottom by itself". It does not. `#anchor` is
+   the only child with `overflow-anchor:auto`, and the browser will only choose
+   an anchor that is ON SCREEN - so the stylesheet holds a bottom that something
+   else has already reached, and holds nothing otherwise. Measured: with the
+   scroller one pixel from the top, 374 px of rows arrived and it moved by zero.
+   What makes the button a follow is `put`, which asks the observer whether the
+   reader is at the bottom and chases it when they are. */
+$('jump').onclick = () => { toBottom(); seen(); };
+
+/* The transcript growing is what puts the view back at the bottom, and a
+   resize observation is the one signal delivered AFTER layout. `grew` is in
+   `02-transcript.js` with the measurement that put it there. */
+new ResizeObserver(grew).observe(thread);
 

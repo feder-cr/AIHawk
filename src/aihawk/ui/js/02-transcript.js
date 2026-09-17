@@ -60,11 +60,68 @@ function newTurn(){
   const hint = $('hint'); if(hint) hint.remove();
   n = 0; turn = el('section','turn'); thread.appendChild(turn); return turn;
 }
+/* The one thing that knows where the bottom is. Two callers ask for it - a row
+   arriving while the reader is following, and the way back being pressed - and
+   before this they were two different expressions in two files. */
+function toBottom(){ log.scrollTop = log.scrollHeight; }
+
+/* ⛔ THE TRANSCRIPT CHANGED SIZE, WHICH IS THE ONLY MOMENT THE BOTTOM IS
+   KNOWABLE. Wired to a ResizeObserver on the thread in `03-which-session.js`.
+
+   Scheduling the scroll instead - on a frame, after appending - was tried and
+   measured, and it is wrong for a reason no choice of target can fix: the
+   callback runs against the layout of the frame it is in, and that layout can
+   still be the one from before the rows arrived. On a reopened conversation,
+   inside that callback, the DOM already held all 65 rows while the scroller
+   still reported a height of 808 - its own window - so it scrolled to 808,
+   which clamps to zero, and the conversation opened at the TOP with 2084 px
+   below, three times out of three. `scrollIntoView` on the sentinel reads the
+   same layout and lands in the same place. Checking whether the scroll arrived
+   does not help either, because the check reads that layout too and concludes
+   it did.
+
+   A resize observation is delivered AFTER layout, so the height it reports is
+   the one the rows make. It also covers what an append-time hook never could:
+   a picture that finishes loading, a font that swaps, a row expanded, the
+   window resized. One trigger for every way the transcript can grow. */
+function grew(){ if($('jump').hidden) toBottom(); }
+
+/* ⛔ WHETHER THE READER IS FOLLOWING IS ASKED OF THE OBSERVER, AND IT IS THE
+   ONLY THING THAT KNOWS. `#jump` is hidden exactly when `#anchor` is on screen,
+   which is exactly when the reader is at the bottom, and that is already
+   computed continuously in `03-which-session.js`. This function used to read it
+   for the counter and nothing else, while the SCROLLING was decided by a
+   one-shot latch that fired 150 ms after the first event and never again.
+
+   Measured on this page before the change: the view followed for 24 rows and
+   then fell behind by exactly the height added, 623 px per 20 rows, forever.
+   It had not stopped following - it had never followed. For those 24 rows the
+   transcript was shorter than the window, so there was nothing to scroll and
+   the latch had fired against an empty page; by the time content passed the
+   fold, `#anchor` was below it, and the stylesheet cannot choose an anchor it
+   cannot see. Nudging the scroller by one pixel does not wake it either: the
+   anchor has to be ON SCREEN, which is what made "the sentinel pins the view"
+   read as a mechanism when it is only an assist for a bottom something else
+   has to reach first.
+
+   The answer is the OBSERVER'S and not geometry read here, and that is the
+   load-bearing part: an IntersectionObserver delivers asynchronously, so
+   `hidden` describes the moment before this row whichever side of the append it
+   is read on - which is the question being asked. It is written above the
+   append so that a reader does not have to know that to trust the line.
+
+   ⛔ MOVING IT BELOW THE APPEND WAS RUN AS A KNOWN-BAD AND SURVIVED, correctly:
+   the two orderings are the same behaviour. Said here because a comment
+   claiming the placement is load-bearing would send the next reader looking for
+   a defect that is not there. What IS load-bearing is asking the observer at
+   all: recomputing the geometry on this line would answer about the row that
+   has just landed instead of about the reader. */
 function put(node, replay){ if(!turn) newTurn(); if(replay) node.dataset.replay = '1';
+                            const following = $('jump').hidden;
                             turn.appendChild(node);
                             /* Counted only while the way back is on screen,
                                which is exactly when it is worth counting. */
-                            if(!$('jump').hidden){ behind++; paintJump(); } }
+                            if(!following){ behind++; paintJump(); } }
 
 /* ⛔ WHILE A READER IS SCROLLED UP, NOTHING ON SCREEN SAYS THE AGENT IS ALIVE.
    Every signal of life is drawn at the BOTTOM of the transcript - the clock on
@@ -296,11 +353,19 @@ function waited(){
   pend = null;
 }
 
-/* Only the first settle. After that the CSS sentinel pins the view, and a reader
-   who has scrolled up is never yanked because nothing here fires again. */
-function settleOnce(){
-  if(pinned) return;
-  clearTimeout(settle);
-  settle = setTimeout(() => { pinned = true; anchor.scrollIntoView({block:'end'}); }, 150);
-}
+/* ⛔ `settleOnce` STOOD HERE AND IT IS GONE, NOT REPAIRED. It scrolled once,
+   150 ms after the first event, and latched `pinned` so that nothing would ever
+   scroll again - the reasoning being that the stylesheet would hold the bottom
+   from then on and a reader who had scrolled up would never be yanked.
+
+   The second half of that was right and is kept, by asking the observer instead
+   of a latch. The first half was not: the one scroll it allowed happened while
+   the transcript was still shorter than the window, where there is nothing to
+   scroll, and a timer cannot be at the moment content first passes the fold
+   because that moment is not 150 ms after anything.
+
+   What replaces it is not another scroll somewhere else: it is that `put` -
+   the one function every row goes through - asks whether the reader is
+   following and acts on the answer. A latch that can only be set is not a
+   question anybody can ask twice. */
 

@@ -176,6 +176,6 @@ const LEAD = /^(I will |I'll |I am |I'm |Let me |Now I will |Now I'll )/i;
 
 const thread = $('thread'), anchor = $('anchor'), log = $('log');
 let turn = null, live = null, hold = null, n = 0, t0 = 0, timer = 0;
-let busyNow = false, queued = null, pinned = false, settle = 0, quiet = 0;
+let busyNow = false, queued = null, quiet = 0;
 let behind = 0, build = '';
 

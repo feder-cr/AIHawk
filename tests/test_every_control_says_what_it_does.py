@@ -294,16 +294,27 @@ def test_jump_to_latest_lands_at_the_bottom_and_says_how_much_is_behind():
     again, same thing, one step behind forever. The same press with the run
     finished landed 20px from the bottom and the button went away.
 
-    So it lands at once, and the stylesheet keeps the view at the bottom from
-    there. And it carries the count, because while a reader is scrolled up
-    every signal that the agent is alive is drawn at the BOTTOM of the
-    transcript, which is where they are not: measured on a real run, 59 steps
-    while the owner watched the first 14.
+    So it lands at once. And it carries the count, because while a reader is
+    scrolled up every signal that the agent is alive is drawn at the BOTTOM of
+    the transcript, which is where they are not: measured on a real run, 59
+    steps while the owner watched the first 14.
+
+    ⛔ THIS SAID "and the stylesheet keeps the view at the bottom from there",
+    and that was measured false: `#anchor` is the only child the browser may
+    anchor to and it will not choose one that is off screen, so the stylesheet
+    holds a bottom something else has reached and holds nothing otherwise. What
+    keeps the view there is `put`, which asks the observer whether the reader is
+    following. See `test_the_transcript_follows_the_agent.py`.
 
     Known-bad, three: ask for a smooth scroll again; scroll to something other
     than the full height; leave the count standing after the press.
     """
-    src = (whole("function paintJump()", chr(10) + "}") + chr(10)
+    # `toBottom` joined the slice when the press stopped spelling the scroll out
+    # for itself: one function now knows where the bottom is, because a row
+    # arriving while the reader is following needs the same answer. Every
+    # assertion below is unchanged - what moved is where the line lives.
+    src = (whole("function toBottom()", "}") + chr(10)
+           + whole("function paintJump()", chr(10) + "}") + chr(10)
            + whole("function seen()", "}" + chr(10))
            + whole("$('jump').onclick =", ";" + chr(10)))
     harness = [

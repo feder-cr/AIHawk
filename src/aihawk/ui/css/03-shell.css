@@ -206,10 +206,16 @@
    own declared width rather than from a number written down here. */
 
 
-/* Bottom-pinning with no scroll handler and no epsilon: the sentinel is the only
-   anchor the browser may keep, so content inserted before it pushes the view
-   down, and a reader who has scrolled up is left alone because an anchor off
-   screen is not chosen. */
+/* The sentinel is the only anchor the browser may keep, so while the reader IS
+   at the bottom, content inserted before it pushes the view down without a
+   scroll handler and without an epsilon.
+
+   ⛔ IT DOES NOT PIN THE BOTTOM, AND IT SAID IT DID. An anchor off screen is
+   not chosen - which is what leaves a reader who has scrolled up alone, and is
+   also why this can never BRING the view to the bottom. Measured: one pixel
+   from the top, 374 px of rows arrived and the scroller moved by zero. Reaching
+   the bottom is `put`'s job in `02-transcript.js`; this keeps it there between
+   frames. */
 #log > *{ overflow-anchor:none }
 #anchor{ height:1px; overflow-anchor:auto }
 
