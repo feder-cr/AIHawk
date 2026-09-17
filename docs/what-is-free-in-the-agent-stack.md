@@ -78,7 +78,11 @@ If you want to try this with no bill at all beyond a model:
   [choosing an MCP server](best-mcp-server-for-browser-automation.md) covers the
   field.
 - The browser on your own machine rather than a rented one. No per-hour meter,
-  and your home address is usually treated better than a cloud one anyway.
+  and your home address is usually treated better than a cloud one anyway. The
+  cost that replaces the meter is disk and memory, measured in
+  [what a self-hosted AI agent costs to run](self-hosted-ai-agent.md): 613 MB
+  installed, about 900 MB resident, and no GPU unless you also bring the model
+  home.
 - A local model for the easy half of the work.
   [AI browser agent with a local LLM](ai-browser-agent-local-llm.md) has what
   changes, and it is not free of cost either: it is free of bills and expensive

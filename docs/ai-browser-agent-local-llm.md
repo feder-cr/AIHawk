@@ -71,6 +71,12 @@ one or two calls, and local inference on ordinary hardware is commonly slower pe
 than a well-provisioned hosted API, so the wait compounds turn over turn more than it
 would against a fast one.
 
+Size the machine for the model, not for the browser. The browser side of this is
+small and measured:
+[what a self-hosted AI agent costs to run](self-hosted-ai-agent.md) puts it at
+613 MB of disk and about 900 MB of memory, which is a rounding error next to the
+weights you are about to load.
+
 ## Where small local models lose the thread
 
 Be honest about the failure mode before it costs an afternoon of debugging the wrong

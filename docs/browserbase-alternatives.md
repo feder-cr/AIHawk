@@ -64,7 +64,9 @@ comparison most people searching this query actually want: open code, Apache
 license, self-host by default, cloud optional - the inverse of Browserbase's
 shape. Second, if your reason for leaving is price at scale, self-hosting
 moves the spend from browser-hours to your own compute and the engineering
-time to run it; that trade has a break-even, not a winner. Third, every entry
+time to run it; that trade has a break-even, not a winner, and
+[what a self-hosted AI agent costs to run](self-hosted-ai-agent.md) puts one
+side of it in megabytes rather than adjectives. Third, every entry
 in the table, Browserbase included, runs Chromium or speaks its protocol, so
 switching vendors changes your operations and your bill, not what a website
 sees when it inspects the browser. The category-wide explainer covers that

@@ -174,7 +174,12 @@ Firefox patched at the C++ level rather than a hosted Chromium, runs it on
 your machine, and there is no per-hour or per-credit bill because there is no
 vendor in the loop. Model tokens are the only metered cost. The trade is
 real in both directions: you get no fleet, no managed scaling and no session
-cloud, and it is Windows and Linux only. For what that local route looks like
+cloud, and it is Windows and Linux only. The bill that replaces the per-hour one
+is disk and memory on your own machine, and it is smaller than the figures this
+category usually quotes:
+[what a self-hosted AI agent actually costs to run](self-hosted-ai-agent.md)
+measures it at 613 MB installed and about 900 MB resident, with the model bill
+kept separate. For what that local route looks like
 against the rest of the agent field, see
 [open-source AI browser agents](ai-browser-agent-open-source.md).
 
