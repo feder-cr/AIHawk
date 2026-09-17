@@ -80,7 +80,7 @@ const log = { _top: 0, scrollHeight: 0, clientHeight: 800,
               get scrollTop(){ return this._top; },
               set scrollTop(v){ scrolls++;
                 this._top = Math.max(0, Math.min(v, this.scrollHeight - this.clientHeight)); },
-              get sotto(){ return this.scrollHeight - this._top - this.clientHeight; } };
+              get below(){ return this.scrollHeight - this._top - this.clientHeight; } };
 const $ = id => id === 'jump' ? jump : null;
 let behind = 0;
 let turn = { kids: [], appendChild(n){ this.kids.push(n); } };
@@ -106,7 +106,7 @@ function readerScrollsTo(top){
   log.scrollTop = top;
   jump.hidden = (log.scrollHeight - log.scrollTop - log.clientHeight) <= 0;
 }
-function state(){ return {top: log.scrollTop, sotto: log.sotto,
+function state(){ return {top: log.scrollTop, below: log.below,
                           jump: jump.hidden ? '' : jump.textContent,
                           behind: behind, scrolls: scrolls}; }
 """
@@ -125,9 +125,9 @@ def test_the_view_follows_while_the_reader_is_at_the_bottom():
     every row that lands."""
     got = run("for(let k=0;k<60;k++) arrive();"
               "console.log(JSON.stringify(state()));")
-    assert got["sotto"] <= 0, (
+    assert got["below"] <= 0, (
         "the view fell %d px behind the bottom while the reader was following"
-        % got["sotto"])
+        % got["below"])
     assert got["behind"] == 0, (
         "rows were counted as unread while the reader was watching them: %d" % got["behind"])
 
@@ -140,7 +140,7 @@ def test_a_whole_transcript_landing_at_once_ends_at_the_bottom():
     runs while `scrollHeight` is still the window's own height, so it scrolls to
     a place that clamps to zero - which is exactly what the browser did."""
     got = run("scrolls = 0; burst(60); console.log(JSON.stringify(state()));")
-    assert got["sotto"] <= 0, "the replay did not end at the bottom: %r" % got
+    assert got["below"] <= 0, "the replay did not end at the bottom: %r" % got
     assert got["scrolls"] == 1, (
         "sixty rows laid out once cost %d scrolls" % got["scrolls"])
 
@@ -153,15 +153,15 @@ def test_a_reader_who_scrolled_up_is_left_alone_and_told_what_arrived():
     """
     got = run("for(let k=0;k<60;k++) arrive();"
               "readerScrollsTo(log.scrollHeight - log.clientHeight - 400);"
-              "const prima = state();"
+              "const before = state();"
               "for(let k=0;k<10;k++) arrive();"
-              "console.log(JSON.stringify({prima: prima, dopo: state()}));")
-    assert got["prima"]["sotto"] > 100, (
-        "the reader never actually scrolled up, so this arm proves nothing: %r" % got["prima"])
-    assert got["dopo"]["top"] == got["prima"]["top"], (
-        "the reader was dragged from %d to %d" % (got["prima"]["top"], got["dopo"]["top"]))
-    assert got["dopo"]["behind"] == 10, (
-        "the way back does not say what arrived: %r" % got["dopo"])
+              "console.log(JSON.stringify({before: before, after: state()}));")
+    assert got["before"]["below"] > 100, (
+        "the reader never actually scrolled up, so this arm proves nothing: %r" % got["before"])
+    assert got["after"]["top"] == got["before"]["top"], (
+        "the reader was dragged from %d to %d" % (got["before"]["top"], got["after"]["top"]))
+    assert got["after"]["behind"] == 10, (
+        "the way back does not say what arrived: %r" % got["after"])
 
 
 def test_pressing_the_way_back_resumes_following_and_it_can_be_left_again():
@@ -175,20 +175,20 @@ def test_pressing_the_way_back_resumes_following_and_it_can_be_left_again():
               "for(let k=0;k<5;k++) arrive();"
               "toBottom(); seen(); readerScrollsTo(log.scrollHeight - log.clientHeight);"
               "for(let k=0;k<5;k++) arrive();"
-              "const seguendo = state();"
+              "const following = state();"
               "readerScrollsTo(log.scrollHeight - log.clientHeight - 300);"
-              "const risalito = state();"
+              "const wentUp = state();"
               "for(let k=0;k<8;k++) arrive();"
-              "console.log(JSON.stringify({seguendo: seguendo, risalito: risalito,"
-              " finale: state()}));")
-    assert got["seguendo"]["sotto"] <= 0, (
-        "after the way back was pressed the view did not resume following: %r" % got["seguendo"])
-    assert got["seguendo"]["behind"] == 0, "the counter was not cleared: %r" % got["seguendo"]
-    assert got["finale"]["top"] == got["risalito"]["top"], (
+              "console.log(JSON.stringify({following: following, wentUp: wentUp,"
+              " ending: state()}));")
+    assert got["following"]["below"] <= 0, (
+        "after the way back was pressed the view did not resume following: %r" % got["following"])
+    assert got["following"]["behind"] == 0, "the counter was not cleared: %r" % got["following"]
+    assert got["ending"]["top"] == got["wentUp"]["top"], (
         "the SECOND scroll up was not respected: %d -> %d"
-        % (got["risalito"]["top"], got["finale"]["top"]))
-    assert got["finale"]["behind"] == 8, (
-        "the counter did not restart from the second scroll up: %r" % got["finale"])
+        % (got["wentUp"]["top"], got["ending"]["top"]))
+    assert got["ending"]["behind"] == 8, (
+        "the counter did not restart from the second scroll up: %r" % got["ending"])
 
 
 def test_the_scroll_is_triggered_after_layout_and_by_nothing_else():
