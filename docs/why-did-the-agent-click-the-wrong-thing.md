@@ -51,7 +51,18 @@ Here the agent is not wrong so much as blind, and the answer is the next rung of
 the ladder: coordinates from the snapshot, or the picture when the snapshot does
 not list the thing at all.
 [Text, HTML, snapshot or screenshot](what-should-the-agent-read.md) has when each
-one is the right ask.
+one is the right ask, and
+[clicking by selector or by coordinates](clicking-by-selector-or-by-coordinates.md)
+has the trade between the first two rungs with the timings.
+
+Two of the cases on that list have been measured since, and both are worth
+recognising by sight. An element inside an **iframe** is absent from every read
+and the selector spends a full fifteen seconds failing:
+[an agent and an iframe](an-agent-and-an-iframe.md). An element inside a **shadow
+root** is equally absent from the reads, and yet a click by selector reaches it,
+even a closed one:
+[shadow DOM and an AI agent](shadow-dom-and-an-ai-agent.md). Same symptom, opposite
+remedy, which is why they are worth telling apart.
 
 ## 4. It clicked the right element and the page did nothing
 

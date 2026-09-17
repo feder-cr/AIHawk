@@ -144,6 +144,14 @@ block, which then greets the next run too. If a transcript shows both, fix the
 browser side first: it is upstream, and model behavior on a hostile page is not
 evidence about the model. Then rerun before judging anything else.
 
+Two instruments help before you get that far. The live view shows the window the
+run actually had, pointer and tab strip included, which settles several of these
+in one frame:
+[watching the agent work](watching-the-agent-work.md). And if the split you are
+chasing is that it works while you watch and fails when you do not, that is its
+own six-cause list:
+[the task works headed and fails headless](the-task-only-fails-in-headless.md).
+
 ## Short answers to the questions that lead here
 
 **How do I know if my agent failed because of the site or the model?** Replay

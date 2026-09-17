@@ -153,6 +153,14 @@ arithmetic and the recovery change enough to need their own treatment:
 the typing bill, the column that makes a rerun safe, and why the first row runs
 alone.
 
+Three control types have their own measured pages now:
+[native selects and the ones that only look like selects](native-selects-and-fake-ones.md),
+where one takes a single call and the other takes two clicks;
+[uploading a file with an AI agent](uploading-a-file-with-an-ai-agent.md), which
+this tool surface cannot do at all although the snapshot lists the input; and
+[using the keyboard instead of the mouse](keyboard-instead-of-the-mouse.md), which
+is both faster per action and the only route on some controls.
+
 ## Short answers to the questions that lead here
 
 **Can an AI agent fill out web forms reliably?** On clean forms with typed inputs

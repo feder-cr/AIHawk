@@ -20,6 +20,9 @@ If the numbers are laid out as a table or a list, they are in the HTML and you
 are done. Ask for the markup rather than the text, because the structure is the
 part you want: cells stay cells, and a row does not collapse into a sentence.
 
+[Reading a table with an AI agent](reading-a-table-with-an-ai-agent.md) is that
+route in detail, including spanning headers and the rows that are not rows.
+
 `browser_read_html` is 1.3 times the cost of the plain text and about a
 ninetieth of a screenshot, which is
 [measured on its own page](what-should-the-agent-read.md). For tabular data it is

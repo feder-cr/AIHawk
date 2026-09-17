@@ -107,6 +107,11 @@ the single task people most want to hand over and most should not,
 [cancelling a subscription with an AI agent](ai-agent-cancel-a-subscription.md)
 works through where the human click belongs.
 
+And if the reason you are here is that you were about to put a password into the
+task itself, the four places it ends up are in
+[secrets in an agent task](secrets-in-an-agent-task.md), along with the profile
+setup that makes the question go away.
+
 ## Does the agent's vendor already protect me from this?
 
 Partly, and it depends which agent you run. Large-vendor assistants

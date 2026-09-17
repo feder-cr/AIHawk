@@ -118,6 +118,15 @@ Extractions rarely fail loudly. These are the quiet versions to expect:
   `src` is rarely the full-size file:
   [collecting every image on a page with its caption](collect-images-and-captions-with-an-ai-agent.md)
   is that job specifically.
+- **The same item arriving several times.** Scrolling hands back an overlapping
+  window, so near-duplicates accumulate and an exact-match cleanup removes almost
+  none of them:
+  [deduplicating what an AI agent collects](deduplicating-what-an-agent-collects.md)
+  is why you pick a key before the run.
+
+The five checks that catch all of the above in about a minute, ordered by cost,
+are in
+[validating an AI agent's output](validating-an-agents-output.md).
 - **Columns drifting between pages.** Page one yields `title,price`; page four,
   where a title contains a comma or a price is missing, yields quoted fields or
   an improvised extra column. Each page is a fresh decision, and fresh

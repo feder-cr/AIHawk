@@ -141,6 +141,11 @@ own price point:
   send only the exceptions to the agent. The blended per-page cost stays close to
   the scraper's while the failure mode stops being silent staleness.
 
+The decision procedure behind those three, as four questions asked in order, is in
+[agent or script: deciding once instead of every time](agent-or-script-deciding-once.md);
+the cases where the answer is neither tool are in
+[when not to use an AI browser agent](when-not-to-use-an-ai-agent.md).
+
 ## The part neither tool fixes
 
 Both approaches run into sites that push back, and blocking does not care which

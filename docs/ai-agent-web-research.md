@@ -132,6 +132,10 @@ covers the three cases where a plain fetch quietly summarises something other
 than the page, and the one line to require in the output so you can tell how much
 of a long thread was actually read.
 
+And for the discovery half, when the source has its own search and filters,
+[driving a site's own search and filters](searching-and-filtering-with-an-ai-agent.md)
+is usually the difference between four pages and four hundred.
+
 ## Short answers to the questions that lead here
 
 **What is the best AI agent for web research?** Wrong first question; the

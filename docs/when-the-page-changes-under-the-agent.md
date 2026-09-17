@@ -51,7 +51,10 @@ only when no selector describes the target, and a picture only when the snapshot
 does not list the thing at all. It is not about precision; it is about which kind
 of failure you get.
 [Why did the AI agent click the wrong thing](why-did-the-agent-click-the-wrong-thing.md)
-is the same asymmetry seen from the symptom.
+is the same asymmetry seen from the symptom, and
+[clicking by selector or by coordinates](clicking-by-selector-or-by-coordinates.md)
+has it with the timings attached, including the case where the selector cannot
+work at all and coordinates are the only route.
 
 ## The one instruction that fixes most of it
 

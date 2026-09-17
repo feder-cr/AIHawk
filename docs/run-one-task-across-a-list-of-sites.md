@@ -124,6 +124,15 @@ The related trap, where the same page shows different prices depending on where
 the request comes from, is
 [seeing a page from another country](see-a-page-from-another-country.md).
 
+The two steps that turn a pile of rows into a comparable table have their own
+pages:
+[normalising values across sites](normalising-values-across-sites.md) for the
+raw-beside-normalised rule, and
+[deduplicating what an AI agent collects](deduplicating-what-an-agent-collects.md)
+for picking a key before the run rather than cleaning up after it. What to record
+per row while it happens is
+[what an agent run should log](what-a-run-should-log.md).
+
 ## Short answers to the questions that lead here
 
 **Should I open a new browser for each site?** Only if state must not leak. A

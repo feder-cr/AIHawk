@@ -57,6 +57,11 @@ of controls rather than the amount of content. On a form-heavy page it is
 substantial and on an article it is nearly empty, which is exactly right and is
 not what "2.1x the text" suggested.
 
+That relationship has since been measured across four pages differing only in how
+many controls they carry, and it comes out at about a hundred bytes per
+interactive element:
+[what a page snapshot costs, per control](what-a-page-snapshot-costs.md).
+
 ## The decision, in one rule
 
 **Ask for the cheapest representation that contains the answer, and go up only

@@ -72,6 +72,19 @@ read at the same moment rather than two minutes apart. Give each browser its own
 exit and it becomes the honest way to run the comparison in
 [seeing a page as it appears in another country](see-a-page-from-another-country.md).
 
+## It is not cheap
+
+Measured on the same machine: the server alone is 77 MB across two processes, one
+browser takes it to 704 MB across ten, and the second takes it to **1,261 MB
+across eighteen**. The second browser is **556 MB and eight more processes**, a
+79% increase on the first.
+
+So it fits comfortably on a 4 GB machine and is most of a 2 GB one before the
+pages have anything heavy on them. Close it when the comparison is done rather
+than leaving it open for the rest of the conversation.
+[What a second browser costs](what-a-second-browser-costs.md) has the breakdown
+and the method for measuring it on yours.
+
 ## What it does not separate
 
 Worth being precise, because "a second browser" sounds like more isolation than

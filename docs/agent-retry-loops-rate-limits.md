@@ -155,6 +155,12 @@ it, and a clean exit lives under it.
 The browser's job is to make each request real; keeping the requests few and
 well-spaced is yours.
 
+On a single call the retrying is bounded and visible: a click re-checks the page
+fifteen to twenty times a second and reports the count when it gives up.
+[How long the agent waits before it gives up](how-long-before-the-agent-gives-up.md)
+has those ceilings, and the reason a call that burned its whole budget should not
+simply be repeated.
+
 ## Short answers to the questions that lead here
 
 **Will a stealth browser stop my agent from being rate limited?** No. Rate limits
