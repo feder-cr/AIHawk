@@ -77,7 +77,11 @@ the architecture: the extraction produces text, and the spreadsheet imports.
 So the working pipeline has two short stages. First, extraction to CSV. For a
 one-off, the agent is the right tool and
 [the CSV page](how-to-extract-data-to-csv-with-an-ai-agent.md) covers the
-prompt patterns, the cost curve and the failure modes. For the RECURRING
+prompt patterns, the cost curve and the failure modes. When the source is an
+internal screen rather than a public listing,
+[getting data out of a dashboard with no export button](dashboard-with-no-export-button.md)
+has the four routes in order, including why the chart is the one place the
+obvious move is the wrong one. For the RECURRING
 version this page is about, the extraction is better off as a script on the
 same engine, because the selectors are stable and a model re-deciding them
 every morning is cost without judgment:

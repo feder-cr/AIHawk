@@ -126,6 +126,12 @@ becomes recurring extraction, that is
 and when a source pushes back on being read at all,
 [the blocked checklist](why-does-my-ai-agent-get-blocked.md) is the map.
 
+For the single deep read at the end of that funnel,
+[summarising a long page or thread with an AI agent](summarise-a-long-page-with-an-ai-agent.md)
+covers the three cases where a plain fetch quietly summarises something other
+than the page, and the one line to require in the output so you can tell how much
+of a long thread was actually read.
+
 ## Short answers to the questions that lead here
 
 **What is the best AI agent for web research?** Wrong first question; the

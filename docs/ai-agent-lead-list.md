@@ -92,6 +92,11 @@ A paraphrased fact that turns out wrong in an actual email is worse than no
 fact at all. Re-open each contact URL once more before you send anything,
 since a page can change between the run and the message.
 
+The structural version of that discipline is a source URL and a read-or-inferred
+flag beside every field, which turns spot-checking from a sample into a lookup:
+[filling a CRM record from a company's website](fill-a-crm-record-with-an-ai-agent.md)
+sets out the fields a company site reliably carries and the three it does not.
+
 ## From rows to a spreadsheet
 
 Once the list exists as CSV, landing it in a spreadsheet is a separate,

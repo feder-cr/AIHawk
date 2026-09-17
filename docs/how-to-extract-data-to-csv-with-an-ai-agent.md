@@ -37,6 +37,9 @@ Four choices in there do most of the work:
   and prose in the middle of a redirected file is a broken file.
 - **Bound the scope.** "The first two pages" is a budget. "Every page" on a
   50-page catalog is a long, expensive walk that may not finish in one run.
+  A budget is one of four kinds of ending and the weakest on its own:
+  [giving an AI browser agent a stopping condition](giving-an-ai-agent-a-stopping-condition.md)
+  has the other three.
 - **Point at the region when the page is busy.** On a page with sidebars and
   banners, "the product list in the main column" saves the agent from reading,
   and you from paying for, everything else.
@@ -102,10 +105,19 @@ then let it help you write the script that does the repeated runs.
 
 Extractions rarely fail loudly. These are the quiet versions to expect:
 
-- **Truncation on long lists.** An over-full page arrives clipped at 8,000
-  characters, and the model extracts what it received, confidently: output
-  that looks complete and is short. Defense: keep reads narrow ("read the
+- **Truncation on long lists.** An over-full page arrives clipped, and the model
+  extracts what it received, confidently: output that looks complete and is
+  short. Measured through the MCP server on a long page, a default text read
+  returned 6,000 of 35,490 characters and said so in its own last line, which is
+  the good version of this failure;
+  [text, HTML, snapshot or screenshot](what-should-the-agent-read.md) has that
+  measurement and the `max_chars` escape. Defense: keep reads narrow ("read the
   product list, not the page"), and check counts, below.
+- **Images whose captions come from six different places.** When the rows are
+  pictures rather than text, the caption is rarely in the alt attribute and the
+  `src` is rarely the full-size file:
+  [collecting every image on a page with its caption](collect-images-and-captions-with-an-ai-agent.md)
+  is that job specifically.
 - **Columns drifting between pages.** Page one yields `title,price`; page four,
   where a title contains a comma or a price is missing, yields quoted fields or
   an improvised extra column. Each page is a fresh decision, and fresh

@@ -119,6 +119,14 @@ in the loop will end it for you. Stating a cap, "the first three pages,"
 "stop after ten minutes," turns an open-ended risk into a bounded one with a
 clean stopping point you did not have to sit and watch for.
 
+A cap is only one of four kinds of ending, and on its own it is the weakest:
+[giving an AI browser agent a stopping condition](giving-an-ai-agent-a-stopping-condition.md)
+sorts out which ones the model can enforce for itself and which have to be held
+from outside it. And if the cap you want is a time budget, the per-action costs
+that make it up are measured in
+[how long an AI browser agent takes per step](how-long-an-ai-agent-takes-per-step.md):
+typing dominates, at about 270 ms a character.
+
 [AI agents for web research](ai-agent-web-research.md) bounds a walk the
 same way, one page range at a time, for exactly this reason.
 

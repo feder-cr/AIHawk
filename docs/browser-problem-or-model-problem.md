@@ -68,6 +68,13 @@ These appear with any model, and with no model:
 - **It works by hand in your normal browser, but not through AIHawk, on the
   same network.** That narrows it to the agent's exit or identity rather than
   the site being down. The blocked page's checklist is the map.
+- **The action happened and hit the wrong element.** This is its own family and
+  it is mostly neither the browser nor the model: the page moved between the look
+  and the act.
+  [Why did the AI agent click the wrong thing](why-did-the-agent-click-the-wrong-thing.md)
+  has the six causes in the order worth checking, and
+  [when the page changes under the AI agent](when-the-page-changes-under-the-agent.md)
+  covers the first and commonest of them.
 - **It worked for many pages, then stopped.** Volume or retries, not
   intelligence. Check the transcript for a retry burst;
   [retry loops and rate limits](agent-retry-loops-rate-limits.md) is that

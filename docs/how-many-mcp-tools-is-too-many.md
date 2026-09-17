@@ -80,6 +80,12 @@ reasoning on that, and
 the case where the thing you were about to make a tool should have been a
 resource or a prompt instead.
 
+And the standing cost this page counts is only half the bill. The other half is
+what each tool RETURNS, where the spread between the cheapest and the most
+expensive way of reading one page was measured at eighty-nine to one:
+[text, HTML, snapshot or screenshot](what-should-the-agent-read.md) has both
+measurements, including the one that reverses on a long page.
+
 ## Short answers to the questions that lead here
 
 **Is there a hard limit on MCP tools?** Not in the protocol. Clients impose

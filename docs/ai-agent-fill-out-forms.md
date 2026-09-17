@@ -147,6 +147,12 @@ In order, because the early ones are cheaper:
    failures involve the agent hammering retries, see
    [retry loops and rate limits](agent-retry-loops-rate-limits.md).
 
+And when the job is not one form but one form per row of a spreadsheet, the
+arithmetic and the recovery change enough to need their own treatment:
+[one form submission per spreadsheet row](one-form-per-spreadsheet-row.md) covers
+the typing bill, the column that makes a rerun safe, and why the first row runs
+alone.
+
 ## Short answers to the questions that lead here
 
 **Can an AI agent fill out web forms reliably?** On clean forms with typed inputs

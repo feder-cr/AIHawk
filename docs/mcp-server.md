@@ -366,7 +366,19 @@ too: a task reported as impossible is worth more than one completed in a way
 that gets you blocked.
 
 **Why each tool returns what it does**, with the measurements behind it:
-[the tool design page](mcp-tool-design.md).
+[the tool design page](mcp-tool-design.md). **What each way of reading a page
+actually costs**, measured on a small page and again on a long one where the
+ordering reverses:
+[text, HTML, snapshot or screenshot](what-should-the-agent-read.md).
+
+## The second browser
+
+Every tool above takes a `browser` argument, and the session holds two: `main`
+and `support`. They are two identities rather than two windows, they share one
+exit unless you give the second its own proxy, and a command that names neither
+goes to `main` even when the focus is elsewhere.
+[Two browsers in one session](two-browsers-in-one-session.md) has the measured
+behaviour and the cases the second one is for.
 
 ## More than one client on the same browser
 

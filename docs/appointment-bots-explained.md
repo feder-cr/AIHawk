@@ -36,6 +36,13 @@ human makes the booking. This page does not go one step further than that.
 There are no auto-booking instructions here, and the rest of the page is the
 explanation of why.
 
+Two neighbouring tasks sit inside that same boundary, because both read and
+neither acts:
+[checking order and delivery status with an AI agent](check-an-order-status-with-an-ai-agent.md),
+where the value is in the account pages rather than the carrier's, and
+[collecting event and course listings with an AI agent](collect-event-listings-with-an-ai-agent.md),
+which stops at recording what is offered and never registers for any of it.
+
 Conflict of interest, declared where it belongs: you are reading the wiki of a
 browser-automation tool. An agent can be pointed at either half of this
 subject, which is exactly why the boundary is written down rather than left to

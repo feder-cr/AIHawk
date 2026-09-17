@@ -61,6 +61,11 @@ Bound the list the way you would any extraction: three or four sellers read
 reliably in one session, twenty is a longer, costlier run whose clean-output
 mechanics belong to
 [extracting data to a CSV with an AI agent](how-to-extract-data-to-csv-with-an-ai-agent.md).
+Past a handful of sellers the run stops being one task and becomes a list, with
+its own failure arithmetic:
+[running one AI agent task across a list of sites](run-one-task-across-a-list-of-sites.md)
+covers the partial-result discipline that decides whether twenty sellers produce
+twenty rows or a mystery.
 
 ## What to ask for as output
 
@@ -100,6 +105,13 @@ through a proxy in the country you need, or accept that a home connection
 gives you the price your own market sees; some region prices only surface at
 checkout once a local billing address is entered, and no instruction gets
 around that.
+
+The exit is only one of four things a site reads before deciding which price to
+show you, and the one that most often defeats a careful setup is a country
+preference already stored in the profile:
+[seeing a page as it appears in another country](see-a-page-from-another-country.md)
+has the other three and the confirmation step that keeps a market comparison
+honest.
 
 ## Agent or scraper: which wins here
 

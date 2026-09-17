@@ -64,6 +64,13 @@ So the honest offering splits in two, and both halves are useful:
   a session the agent drove to the right place. That split of labor is also
   the standing advice from [the forms page](ai-agent-fill-out-forms.md) about
   consequential clicks, applied in reverse.
+- **The third option, when the fields are all you needed.** An invoice that
+  opens in the browser's own viewer is readable as text rather than as a
+  picture, which is cheaper and exact.
+  [Reading a PDF that opens inside the browser](read-a-pdf-in-the-browser-with-an-ai-agent.md)
+  measures that, including the limit that decides whether it works for you: the
+  viewer renders lazily, so a single read of a long document returns the
+  beginning and nothing says the rest is missing.
 
 Skyvern, for contrast, sells the full courier service and claims more besides:
 its materials say it "supports multiple authentication flows including

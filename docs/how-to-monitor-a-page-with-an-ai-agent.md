@@ -130,6 +130,12 @@ means the memory of the monitor is yours to keep. Two files do it:
   The exit code of `diff` is the sentinel: zero means quiet, non-zero means
   something moved. No model can misread a byte comparison.
 
+  Keep the image alongside the text when the point of the monitor is to be able
+  to show somebody later what the page said.
+  [Dated screenshots of a page as evidence](dated-screenshots-as-evidence.md)
+  covers what has to be recorded next to the picture for the record to be worth
+  anything, and why the text is the part that makes it searchable.
+
 - **The dated archive.** Keep every line with its timestamp. When the diff
   fires and the question becomes "does this change MATTER", that is the
   judgment half - open `uvx aihawk ui` (or your assistant with this browser

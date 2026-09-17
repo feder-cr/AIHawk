@@ -73,6 +73,12 @@ exactly where scripted suites are blind:
   users will not either.
 - **The path you never test by hand.** Flows behind three clicks of setup
   decay unexercised. An agent walks them for cents while you review a diff.
+- **Links that a crawler reports as fine.** Links built by JavaScript, targets
+  behind the session, and pages that answer 200 with a not-found message are the
+  three cases a link checker cannot see.
+  [Finding the dead links on a site with an AI agent](find-dead-links-with-an-ai-agent.md)
+  is narrow about that, and opens by telling you to use a plain checker for
+  everything else.
 
 ## What your suite catches that the agent never will
 

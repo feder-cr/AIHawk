@@ -99,6 +99,14 @@ doing it deliberately, the way you would hand a new employee access.
 - **Revoke the session after a run.** Log out, or clear the profile
   directory, so a stale session is not sitting around for the next task.
 
+Those are the habits. The defences that actually hold when a habit slips are the
+ones enforced outside the prompt, and they sort into three layers:
+[keeping an AI browser agent out of destructive actions](keeping-an-ai-agent-out-of-destructive-actions.md)
+sets them out, including the quiet one that is not deleting anything at all. For
+the single task people most want to hand over and most should not,
+[cancelling a subscription with an AI agent](ai-agent-cancel-a-subscription.md)
+works through where the human click belongs.
+
 ## Does the agent's vendor already protect me from this?
 
 Partly, and it depends which agent you run. Large-vendor assistants
