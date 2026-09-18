@@ -459,30 +459,94 @@ DIAGNOSE_JS = """(sel) => {
 }"""
 
 
-async def click(session, selector: str) -> str:
-    """Click an element, and say what stopped it when nothing happens.
+#: What to do about each thing the diagnosis can find. The sentences live here
+#: rather than inside the tools because the answer depends on what the PAGE
+#: says, never on which tool was asking.
+#:
+#: ⛔ AND `matches: 0` IS THE ONE THAT WAS MISSING A MOVE. Measured on a real
+#: run: the model wrote `.inbox-dataentry a, .inbox a, [class*="mail-item"] a`,
+#: waited the full fifteen seconds for nothing, then spent four more
+#: `browser_evaluate` calls hunting through the DOM by hand before it thought of
+#: taking a fresh snapshot - which worked first time.
+#:
+#: It could not have read those class names anywhere. `browser_snapshot` builds
+#: its `selector` from id, name, href, data-testid or aria-label and never from
+#: class, and `browser_read_html` drops the class attribute outright. So a
+#: class-based selector is ALWAYS one the caller wrote, and the product knew
+#: that and did not say it at the only moment it mattered.
+NEXT_MOVE = {
+    "bad_selector": "that is not valid CSS, so nothing was searched for. "
+                    "browser_snapshot hands out a `selector` for each element; "
+                    "pass that string verbatim.",
+    "matches": "nothing on the page matches that selector. If you wrote it "
+               "yourself, take a fresh browser_snapshot and use the `selector` "
+               "it gives verbatim - they are built from id, name, href, "
+               "data-testid or aria-label, never from class, so a class-based "
+               "selector will not come from this page's snapshot. If it came "
+               "from a snapshot, the page has changed since: snapshot again.",
+    "covered_by": "something else is on top of it. Deal with that thing first - "
+                  "a banner to dismiss, a dialog to close - which is a "
+                  "different action from trying this one again.",
+    "display_none": "it is in the page but not displayed. Whatever reveals it "
+                    "has not happened yet.",
+    "visibility_hidden": "it is laid out but invisible, so it cannot be used.",
+    "disabled": "it is disabled. Something has to enable it first.",
+    "pointer_events_none": "it does not take pointer events at all, which is "
+                           "usually deliberate: the page is refusing it for now.",
+    "off_screen": "it is outside the window and could not be brought in.",
+}
 
-    Playwright reports a failed click as "not actionable in 15s after N
-    attempts", which tells a caller that something is wrong and nothing about
-    what. Measured across eighteen real sites, four clicks failed and every one
-    of them failed that way: a logo, a footer link, a shipping button. Fifteen
+
+def next_move(why: dict) -> str:
+    """The one sentence a caller can act on, for what the page reported.
+
+    ⛔ ONE PLACE, BECAUSE THREE TOOLS TAKE A SELECTOR AND ONLY ONE OF THEM COULD
+    EXPLAIN A FAILURE. `click` asked the page why and said so; `type` and
+    `select_option` handed back Playwright's bare timeout, which names the
+    selector and nothing else. The same failure got a useful answer or a useless
+    one depending on which tool the caller happened to use.
+    """
+    if why.get("bad_selector"):
+        return NEXT_MOVE["bad_selector"]
+    if not why.get("matches"):
+        return NEXT_MOVE["matches"]
+    for name in ("covered_by", "display_none", "visibility_hidden", "disabled",
+                 "pointer_events_none", "off_screen"):
+        if why.get(name):
+            return NEXT_MOVE[name]
+    return ("the page reports nothing wrong with it, so whatever stopped the "
+            "action was momentary. Look at the page before trying again.")
+
+
+async def _on_selector(session, selector: str, what: str, act):
+    """Run an action aimed at a selector, and when it fails say why and what
+    follows from it.
+
+    Playwright reports a failure as "not actionable in 15s after N attempts",
+    which tells a caller that something is wrong and nothing about what.
+    Measured across eighteen real sites, four clicks failed and every one of
+    them failed that way: a logo, a footer link, a shipping button. Fifteen
     seconds spent to learn nothing.
-
-    So a failure asks the page why. The answer a caller can act on is
-    `covered_by`: if a cookie banner is sitting over the button, the next move
-    is to dismiss the banner, and that is a different action from retrying.
     """
     try:
-        await session.page().click(selector, timeout=15_000)
+        return await act()
     except Exception as exc:
         try:
             why = await session.page().evaluate(DIAGNOSE_JS, selector)
         except Exception:
             why = None
-        if why:
-            raise RuntimeError(f"{exc}\n\nwhy the click did not land: {json.dumps(why)}") from exc
-        raise
-    return f"clicked {selector}"
+        if not why:
+            raise
+        raise RuntimeError(
+            "%s\n\nwhy the %s did not land: %s\nwhat to do: %s"
+            % (exc, what, json.dumps(why), next_move(why))) from exc
+
+
+async def click(session, selector: str) -> str:
+    """Click an element, and say what stopped it when nothing happens."""
+    return await _on_selector(
+        session, selector, "click",
+        lambda: session.page().click(selector, timeout=15_000)) or f"clicked {selector}"
 
 
 async def click_at(session, x: float, y: float, hold_seconds: float = 0.0) -> bytes:
@@ -508,7 +572,8 @@ async def click_at(session, x: float, y: float, hold_seconds: float = 0.0) -> by
 
 
 async def type_text(session, selector: str, text: str) -> str:
-    await session.page().fill(selector, text, timeout=15_000)
+    await _on_selector(session, selector, "typing",
+                       lambda: session.page().fill(selector, text, timeout=15_000))
     return f"typed into {selector}"
 
 
@@ -536,7 +601,13 @@ async def select_option(session, selector: str, value: str) -> str:
         chosen = await page.select_option(selector, value=value, timeout=15_000)
         if chosen:
             return f"selected {selector} by value: {chosen}"
-    chosen = await page.select_option(selector, label=value, timeout=15_000)
+    # ⛔ THE SECOND ATTEMPT GOES THROUGH THE SAME EXPLANATION AS THE OTHER TWO
+    # SELECTOR TOOLS. Its failure used to be Playwright's bare timeout, so a
+    # `<select>` that was not there and a `<select>` that was covered arrived as
+    # the same sentence - the one thing a caller cannot act on.
+    chosen = await _on_selector(
+        session, selector, "select",
+        lambda: page.select_option(selector, label=value, timeout=15_000))
     if not chosen:
         # Playwright answers with an empty list rather than raising when nothing
         # matched, so a caller reading only the exception would believe it had
