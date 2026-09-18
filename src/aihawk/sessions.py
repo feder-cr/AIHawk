@@ -5,6 +5,7 @@ stopped having a session concept at all. See the class docstring below.
 """
 from __future__ import annotations
 
+import asyncio
 import time
 from typing import Any, Dict, List, Mapping, Optional
 
@@ -70,6 +71,18 @@ class Sessions:
         # never `Link` itself, which has its own tests, and never a real
         # subprocess, which `tests/mcp_server/test_stdio_e2e.py` proves.
         self._open_link = open_link or self._spawn_link
+        #: ⛔ ONE CONVERSATION IS MADE AT A TIME, AND THE COST OF THAT IS THE
+        #: POINT. Making one is the slow thing here - a process starts and
+        #: shakes hands - and it was done OUTSIDE any guard, so every request
+        #: that arrived while one was being made started another. See `get`.
+        #:
+        #: One lock and not one per id: the fast path, a conversation already
+        #: open, never touches it, so what this serialises is the making of two
+        #: conversations at the same instant. That is rare - a page opening, a
+        #: session being created - and it is already expensive, while a
+        #: dictionary of locks is a second registry that has to be kept in
+        #: agreement with `_live` and emptied by somebody.
+        self._making = asyncio.Lock()
 
     async def _spawn_link(self, session_id: str) -> Link:
         return await Link(dict(self._opts, session_id=session_id),
@@ -111,6 +124,21 @@ class Sessions:
         found = self._live.get(at)
         if found is not None:
             return found
+        async with self._making:
+            # ⛔ ASKED AGAIN, INSIDE. Whoever held the lock may have been making
+            # exactly this conversation, and the answer that mattered was taken
+            # before waiting for them. Without this second look the guard only
+            # moves the race, it does not close it.
+            found = self._live.get(at)
+            if found is not None:
+                return found
+            return await self._make(at)
+
+    async def _make(self, at: str) -> ChatService:
+        """Build the conversation with this id and register it. The caller
+        holds `_making`, and that is not a detail: everything slow happens
+        here, and `_live` is written at the end of it.
+        """
         link = await self._open_link(at)
         service = ChatService(link, self._make_brain(),
                               model_label=self.model_label, session_id=at)
@@ -118,17 +146,34 @@ class Sessions:
         self._live[at] = service
         return service
 
+    def _free_id(self) -> str:
+        """An id no conversation has. Read under `_making`, because a
+        conversation being MADE is in neither place this looks."""
+        at = "s%d" % int(time.time() * 1000)
+        while at in self._live or chats.load_chat(at) is not None:
+            at += "x"
+        return at
+
     async def new(self) -> ChatService:
         """A conversation nobody has used yet, with an id of its own.
 
         The id is the clock, not a counter: a counter has to be stored somewhere
         to survive a restart, and the place it would be stored is the thing that
         breaks. It is never shown - the name is - so it only has to be unique.
+
+        ⛔ THE ID IS CHOSEN AND CLAIMED WITHOUT LETTING GO, and that is the whole
+        of this method. It used to pick an id, find it free, and then `await
+        get(at)`: two callers in the same MILLISECOND computed the same id, both
+        found it free - a conversation being made is in neither `_live` nor on
+        disk - and the second was handed the first one's conversation. Measured:
+        two `new()` at once returned the same object, so somebody who asked for
+        a new conversation got somebody else's, with its transcript.
+
+        Holding `_making` across both halves is what makes "free" mean
+        something, because the previous caller registers before releasing.
         """
-        at = "s%d" % int(time.time() * 1000)
-        while at in self._live or chats.load_chat(at) is not None:
-            at += "x"
-        return await self.get(at)
+        async with self._making:
+            return await self._make(self._free_id())
 
     def listing(self) -> List[dict]:
         """Every conversation, saved or only live, newest first.
@@ -222,15 +267,24 @@ class Sessions:
         both halves. The caller asked for it to be gone; if it is gone, the
         answer is yes.
         """
-        service = self._live.get(session_id)
-        if service is not None and service.busy:
-            return False
-        if service is not None:
-            # Closes silently: `Link.close` already swallows what closing can
-            # throw, because a connection being torn down on purpose is not a
-            # failure to report back.
-            await service.link.close()
-        self._live.pop(session_id, None)
-        store.erase(session_id)
-        chats.erase_chat(session_id)
-        return True
+        # ⛔ UNDER THE SAME LOCK AS THE MAKING, AND OUT OF THE REGISTRY BEFORE
+        # THE CLOSING. Two windows, both the shape of §EM: this closed the
+        # connection and only THEN dropped the service, so anything asking for
+        # that conversation in between was handed a service whose link was
+        # already shut; and it did not wait for a creation in flight, so a
+        # conversation being made would register itself into `_live` after its
+        # files had been erased - alive, unreachable by name, and holding a
+        # process nobody would close.
+        async with self._making:
+            service = self._live.get(session_id)
+            if service is not None and service.busy:
+                return False
+            self._live.pop(session_id, None)
+            if service is not None:
+                # Closes silently: `Link.close` already swallows what closing
+                # can throw, because a connection being torn down on purpose is
+                # not a failure to report back.
+                await service.link.close()
+            store.erase(session_id)
+            chats.erase_chat(session_id)
+            return True
