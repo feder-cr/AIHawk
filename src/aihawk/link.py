@@ -58,8 +58,15 @@ class Link:
         self._session: Optional[ClientSession] = None
         # Annotated, because an attribute left to be inferred from `None` makes
         # every later use of it read as an error on a type that cannot have one.
-        self._ctx: Any = None
-        self._sess_ctx: Optional[ClientSession] = None
+        #
+        # ⛔ THE CONTEXTS ARE NOT HELD HERE ANY MORE, AND THAT IS THE POINT.
+        # They used to be - `self._ctx` and `self._sess_ctx` - so that `close`
+        # could exit them from a different task than the one that entered them,
+        # which is what an anyio cancel scope forbids. They live inside `_hold`
+        # now, where the task that enters them is the task that leaves them.
+        self._owner: Optional[asyncio.Task] = None
+        self._stop: asyncio.Event = asyncio.Event()
+        self._ready: Any = None
         self._tools: Optional[list] = None
         #: What the server says about itself at `initialize`. It is the one
         #: place the two-browser contract is written - what `support` is for,
@@ -71,29 +78,94 @@ class Link:
         # a transport problem, it is two hands on the same mouse.
         self._lock = asyncio.Lock()
 
-    async def open(self) -> "Link":
-        params = StdioServerParameters(
+    def _params(self) -> StdioServerParameters:
+        """How the child is started. Its own method so a test can point the
+        connection at a command that fails, which is the one case `open` has to
+        report rather than swallow."""
+        return StdioServerParameters(
             command=sys.executable,
             args=["-m", "aihawk"],
             env=child_env(self._opts, os.environ, key=self._key),
         )
-        self._ctx = stdio_client(params)
-        read, write = await self._ctx.__aenter__()
-        self._sess_ctx = ClientSession(read, write)
-        self._session = await self._sess_ctx.__aenter__()
-        started = await self._session.initialize()
-        self._instructions = getattr(started, "instructions", None) or ""
-        self._tools = (await self._session.list_tools()).tools
+
+    async def _hold(self) -> None:
+        """Own the connection for the whole of its life, in ONE task.
+
+        ⛔ THIS EXISTS BECAUSE `open` AND `close` USED TO BE TWO HALVES OF A
+        CONTEXT MANAGER, TORN APART. `open` called `__aenter__` on
+        `stdio_client` and on `ClientSession` by hand, and `close` called
+        `__aexit__` on them - from whatever task happened to be closing. Both
+        are anyio context managers, so each owns a cancel scope, and a cancel
+        scope has to be exited in the task that ENTERED it. Exiting it
+        elsewhere delivers the cancellation to the scope enclosing the entering
+        task.
+
+        In this application that was fatal in one reachable case. `cli.serve`
+        opens the default conversation and then runs uvicorn in the same task,
+        so deleting that conversation from the sessions panel closed its link
+        from a request task, the cancellation landed on `server.serve()`, and
+        the interface exited 1. Measured over plain HTTP: deleting any other
+        conversation left it alive; deleting the default killed it.
+
+        ⛔ AND THE OTHERS WERE NOT FINE, THEY WERE QUIET. Their scopes belong
+        to request tasks that have already finished, so the same wrong exit
+        raised a `RuntimeError` that `close` was swallowing under a sentence
+        about teardown failures. EVERY close was wrong; one of them had
+        something alive to damage. Making only the default lazy would have
+        removed the visible half and kept the defect.
+
+        So the contexts are entered and left here, by this task, and nobody
+        else ever holds them. Closing from another task is not guarded
+        against - it is made impossible.
+        """
+        try:
+            async with stdio_client(self._params()) as (read, write):
+                async with ClientSession(read, write) as session:
+                    started = await session.initialize()
+                    self._instructions = getattr(started, "instructions", None) or ""
+                    self._tools = (await session.list_tools()).tools
+                    self._session = session
+                    self._ready.set_result(None)
+                    # Held open until somebody asks for it to end. This is the
+                    # whole reason the task exists: the connection outlives any
+                    # single instruction.
+                    await self._stop.wait()
+        except BaseException as exc:
+            # A failure BEFORE the connection was usable is `open`'s answer to
+            # give; one after it belongs to whoever closes.
+            if not self._ready.done():
+                self._ready.set_exception(exc)
+            raise
+        finally:
+            self._session = None
+
+    async def open(self) -> "Link":
+        self._stop = asyncio.Event()
+        self._ready = asyncio.get_running_loop().create_future()
+        self._owner = asyncio.create_task(self._hold())
+        try:
+            await self._ready
+        except BaseException:
+            # The owner is already unwinding; wait for it so a failed open
+            # leaves nothing running and no exception unretrieved.
+            with swallow("the open already failed; its owner's exit adds nothing"):
+                await self._owner
+            self._owner = None
+            raise
         return self
 
     async def close(self) -> None:
-        for ctx in (self._sess_ctx, self._ctx):
-            if ctx is not None:
-                with swallow("a connection torn down on purpose is not a failure to report"):
-                    await ctx.__aexit__(None, None, None)
-        self._session = None
-        self._sess_ctx = None
-        self._ctx = None
+        """Ask the owner to let go, and wait until it has.
+
+        Idempotent because more than one path holds a link: `close_all` at
+        exit and `forget` on a conversation.
+        """
+        owner, self._owner = self._owner, None
+        if owner is None:
+            return
+        self._stop.set()
+        with swallow("a connection torn down on purpose is not a failure to report"):
+            await owner
 
     @property
     def tools(self):
