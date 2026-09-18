@@ -1,9 +1,7 @@
 """aihawk: drive a stealth browser with an LLM from one command."""
-from importlib.metadata import PackageNotFoundError, version as _version
+# `__version__` describes the CODE that is about to run; the install record is
+# a different fact and keeps a name that says so. Why the two can disagree, and
+# what was advertising the wrong one: `_version.py`.
+from ._version import __install_record_version__, __version__
 
-try:
-    __version__ = _version("aihawk")
-except PackageNotFoundError:  # a checkout on sys.path with nothing installed
-    __version__ = "0+unknown"
-
-__all__ = ["__version__"]
+__all__ = ["__version__", "__install_record_version__"]

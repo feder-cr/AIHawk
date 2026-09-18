@@ -1,16 +1,18 @@
 """aihawk.mcp: a stealth Firefox browser exposed over MCP, shipped inside aihawk."""
-from importlib.metadata import PackageNotFoundError, version as _version
-
-# Derived, never typed. This line said "0.1.0" through four releases - 0.2.0,
-# 0.3.0, 0.4.0 and into 0.5.0 - because a hand-written literal is a second place
-# the version lives, and the second place is the one nobody remembers to move.
-# No test could see it either: every test imports the checkout, where the number
-# is whatever the file says. It took installing the built wheel into an empty
-# environment and asking the package what version it was.
-try:
-    __version__ = _version("aihawk")
-except PackageNotFoundError:  # running from a source tree, not installed
-    __version__ = "0+unknown"
+# Derived, never typed, and derived in ONE place. This line said "0.1.0"
+# through four releases - 0.2.0, 0.3.0, 0.4.0 and into 0.5.0 - because a
+# hand-written literal is a second place the version lives, and the second
+# place is the one nobody remembers to move. No test could see it either: every
+# test imports the checkout, where the number is whatever the file says. It
+# took installing the built wheel into an empty environment and asking the
+# package what version it was.
+#
+# ⛔ THE REMEDY THEN PUT THE LOOKUP HERE *AND* IN THE PARENT, which is the same
+# defect in a politer shape: two places computing one fact, free to disagree the
+# day one of them changes. It now comes from the parent, which is where the
+# question of what this code is belongs. And the answer changed: see
+# `_version.py` for why an install record does not describe an editable tree.
+from .. import __version__
 
 #: The browser a caller means when it names nothing.
 DEFAULT_BROWSER_ID = "main"

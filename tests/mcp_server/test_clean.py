@@ -295,11 +295,34 @@ def test_the_package_version_is_derived_not_typed():
     a second place the version lives and the second place is the one nobody
     moves. No test could see it: every test imports the checkout, where the
     number is whatever the file says. Installing the built wheel into an empty
-    environment and asking the package is what found it."""
-    import inspect
+    environment and asking the package is what found it.
 
-    import aihawk.mcp as pkg
-    src = inspect.getsource(pkg)
-    assert "importlib.metadata" in src, "the version is hand-written again"
+    ⛔ AND THIS ASSERTED A MECHANISM RATHER THAN THE PROPERTY, WHICH IS HOW IT
+    CAME TO HOLD THE NEXT DEFECT IN PLACE. It required the string
+    `importlib.metadata` to appear in the source. That is not "derived, never
+    typed"; it is one particular way of deriving, and it turned out to be the
+    wrong one: metadata describes the INSTALL, and an editable install stops
+    describing the code the moment somebody pulls. Measured: the handshake
+    advertised 0.54.0 from a tree that was fully up to date at 0.68.8. A test
+    that pins a mechanism inherits whatever that mechanism gets wrong, so this
+    one now asserts the property, and asserts it over the whole package instead
+    of one module.
+    """
     import re
-    assert not re.search(r'__version__\s*=\s*"\d+\.\d+', src), "a version literal is back"
+    from pathlib import Path
+
+    import aihawk
+    import aihawk.mcp as pkg
+    from aihawk._version import versions
+
+    typed = [p.name for p in Path(aihawk.__file__).parent.rglob("*.py")
+             if re.search(r'__version__\s*=\s*["\']\d+\.\d+',
+                          p.read_text(encoding="utf-8"))]
+    assert not typed, "a version literal is back in %s" % typed
+
+    # One place computes it and everything else reads that one. Before 0.68.9
+    # this module ran its own `importlib.metadata` lookup beside the parent's:
+    # two computations of a single fact, which is the defect the docstring above
+    # is about, in a politer shape.
+    assert pkg.__version__ is aihawk.__version__
+    assert aihawk.__version__ == versions()[0]

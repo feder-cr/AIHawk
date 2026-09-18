@@ -45,6 +45,42 @@ async def test_the_handshake_says_which_aihawk_this_is():
                 "low-level server falls back to the library's version when "
                 "nobody sets its own." % info.version)
 
+            # ⛔ AND THE ASSERTION ABOVE CANNOT SEE THE SECOND DEFECT, BECAUSE
+            # BOTH OF ITS SIDES READ THE SAME SOURCE. `info.version` and
+            # `aihawk_version` were equal all through the months the handshake
+            # announced an install record fourteen releases behind the code:
+            # equal, and both wrong. An assertion that cannot separate the two
+            # answers of its instrument is checking that a value was echoed.
+            #
+            # So the expected value is computed here WITHOUT the module under
+            # test: the install record, and the version declared by the tree
+            # that record points at. When those disagree - an editable install
+            # whose tree has moved, which is what CI and every developer
+            # machine is - the wire must carry the TREE.
+            import json
+            import tomllib
+            from importlib.metadata import distribution
+            from pathlib import Path
+            from urllib.parse import urlparse
+            from urllib.request import url2pathname
+
+            dist = distribution("aihawk")
+            written = dist.read_text("direct_url.json")
+            recorded = json.loads(written) if written else {}
+            if (recorded.get("dir_info") or {}).get("editable"):
+                tree = Path(url2pathname(urlparse(recorded["url"]).path))
+                declared = tomllib.loads(
+                    (tree / "pyproject.toml").read_text(encoding="utf-8")
+                )["project"]["version"]
+                assert info.version.startswith(declared), (
+                    "the handshake says %r while the code it is running "
+                    "declares %r; the install record says %r and that is what "
+                    "it used to announce" % (info.version, declared,
+                                             dist.version))
+                assert info.version.endswith("+editable"), (
+                    "an editable tree announced itself as the published "
+                    "release %r" % info.version)
+
 
 async def test_a_refused_open_reaches_the_client_as_an_error():
     """⛔ A REFUSAL RETURNED AS A SUCCESSFUL RESULT IS A LIE THE PROTOCOL TELLS.
