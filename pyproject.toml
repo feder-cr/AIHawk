@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aihawk"
-version = "0.68.6"
+version = "0.68.7"
 description = "Anti detect browser and web browsing agent: undetected, no captchas, no blocks"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -41,7 +41,21 @@ dependencies = [
     # url, and both are read off what page.goto() answers. Until 0.13.2 that
     # was hardcoded to None on every navigation, so on an older wheel the tool
     # would tell a model "no HTTP response" for every page it ever visited.
-    "invisible-playwright>=0.16.2",
+    #
+    # ⛔ >=0.22.1 BECAUSE BELOW IT A CLICK IS NOT DELIVERED ONCE, AND THE FLOOR
+    # IS THE ONLY THING THAT SAYS SO. Up to 0.22.0 the driver read the hit
+    # target again AFTER the event and turned what it found into a retry, so
+    # any control that stops being hittable by its own effect was pressed
+    # again: measured, a button that hides itself took 1068 clicks across 30
+    # calls and every call then reported failure, and a toggle was flipped
+    # twice by one call and reported success. That is a modal's close, a
+    # cookie banner's accept, a menu item, a submit that becomes a spinner.
+    #
+    # A floor and not a pin, like every line above it - but this one is the
+    # reason the floor moved at all. Somebody who already had 0.22.0 installed
+    # would otherwise update this package and keep the defect, which is the
+    # shape of every dependency bug that survives its own fix.
+    "invisible-playwright>=0.22.1",
     # HTML parsing for browser_read_html. Chosen over lxml by measurement: on
     # six real pages both found byte-identical sets of interactive elements,
     # so correctness did not separate them, and selectolax then parsed 3-5x
