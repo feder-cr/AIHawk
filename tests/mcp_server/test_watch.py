@@ -232,8 +232,10 @@ BINARY = os.environ.get("STEALTHFOX_BINARY")
 @pytest.mark.skipif(not BINARY, reason="set STEALTHFOX_BINARY to a patched Firefox")
 async def test_the_frame_is_the_window_of_a_real_browser():
     """Against a real engine, in the server's default mode (headless, which on
-    Windows is a cloaked window): JPEG bytes, and TALLER than the content
-    viewport, which is the chrome above it."""
+    Windows is a real window on a hidden desktop and on Linux one on Xvfb):
+    JPEG bytes, and TALLER than the content viewport, which is the chrome
+    above it. The frame comes from the firefox-34 engine onward: the earlier
+    capturer cropped the window from a screen that did not show it."""
     s = StealthSession(binary_path=BINARY, headless=True)
     await s.start()
     try:
