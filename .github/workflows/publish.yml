@@ -321,12 +321,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: pack both bundles from the tagged tree
+      - name: pack both bundles and the three extension archives from the tagged tree
         run: |
           set -euo pipefail
           python scripts/pack_bundle.py --output dist
           python scripts/pack_bundle.py --smithery --output dist
-          ls -l dist/*.mcpb
+          # Gemini CLI installs from the Latest release when it carries an
+          # asset named for the platform; without one it clones the whole
+          # repository. Three identical archives, one per platform name.
+          python scripts/pack_extension.py --output dist
+          ls -l dist/*.mcpb dist/*.zip
       - name: attach them to the release page
         env:
           GH_TOKEN: ${{ github.token }}
@@ -338,7 +342,7 @@ jobs:
             exit 0
           fi
           HAVE="$(gh release view "$TAG" --json assets --jq '.assets[].name')"
-          for f in dist/*.mcpb; do
+          for f in dist/*.mcpb dist/*.zip; do
             if printf '%s\n' "$HAVE" | grep -qx "$(basename "$f")"; then
               echo "::notice::$(basename "$f") is already on $TAG. Left alone."
             else

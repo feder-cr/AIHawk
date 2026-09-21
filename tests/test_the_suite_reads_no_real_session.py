@@ -106,7 +106,7 @@ def test_the_conftest_imports_nothing_the_light_jobs_do_not_have():
     # (2026-09-21), and `find_spec` is how it looks for the core without
     # importing it, which is the whole point of this list.
     allowed = {"__future__", "os", "sys", "tempfile", "pytest", "pathlib",
-               "json", "platform", "importlib.util"}
+               "json", "platform", "importlib.util", "atexit", "shutil"}
     assert set(reached) <= allowed, (
         "conftest.py imports %s, and every test in the repository then needs "
         "it: the two jobs that install pytest alone would fail at fixture "

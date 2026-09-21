@@ -174,3 +174,16 @@ def test_describe_before_anything_started_asks_to_call_again():
     engine = Engine(fetch=_Fetch())
     assert not engine.ready()
     assert "browser_open" in engine.describe()
+
+
+def test_the_first_instant_of_a_download_reads_as_starting_not_as_zero():
+    """Measured from the index on 2026-09-21: the first `browser_open` of a
+    cold cache answered "downloading now: 0 MB so far", because the core says
+    `downloading` before the first byte and before it knows the size. That
+    instant is the download starting, and is said so."""
+    engine = Engine(fetch=_Fetch())
+    engine._status("downloading")
+    engine._progress(0, 0)
+    assert "starting" in engine.describe() and "0 MB" not in engine.describe()
+    engine._progress(0, 240 << 20)
+    assert "0% of 240 MB" in engine.describe()

@@ -40,11 +40,13 @@ file forget. What one test leaves behind is not an input to the next one.
 """
 from __future__ import annotations
 
+import atexit
 import importlib.util
 import json
 import os
 import pathlib
 import platform
+import shutil
 import sys
 import tempfile
 
@@ -53,8 +55,12 @@ import pytest
 #: Set at IMPORT, not in a fixture: conftest is imported before the test modules
 #: are, so this is in place before any module-level line can ask the server a
 #: question. `mkdtemp` and not `tmp_path`, which is a fixture and does not exist
-#: yet at this point.
+#: yet at this point - and removed at exit for the same reason it is made here:
+#: no fixture teardown covers a directory made at import, and by 2026-09-22
+#: this machine held dozens of empty `aihawk-tests-*` and `aihawk-no-engine-*`
+#: directories, one pair per run.
 os.environ["AIHAWK_HOME"] = tempfile.mkdtemp(prefix="aihawk-tests-")
+atexit.register(shutil.rmtree, os.environ["AIHAWK_HOME"], True)
 
 
 def _e2e_is_excluded(argv) -> bool:
@@ -187,6 +193,11 @@ if _e2e_is_excluded(sys.argv):
     _NO_ENGINE_SEAL = _local_seal_beside(_THROWAWAY)
     if _NO_ENGINE_SEAL:
         os.environ["INVISIBLE_SEAL_FILE"] = _NO_ENGINE_SEAL
+        atexit.register(os.remove, _NO_ENGINE_SEAL)
+    # The throwaway cache is removed LAST (atexit runs last-registered first),
+    # after the guard has read it; a run that fetched an engine into it is a
+    # red test before it is a deleted directory.
+    atexit.register(shutil.rmtree, _THROWAWAY, True)
 else:
     _THROWAWAY = _NO_ENGINE_SEAL = None
 

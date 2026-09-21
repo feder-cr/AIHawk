@@ -85,6 +85,8 @@ Task-shaped guides for putting an AI agent to work on real websites.
 - [Running AIHawk's browser from Claude Desktop](running-aihawk-with-claude-desktop.md)
 - [Running AIHawk's browser from Cursor](running-aihawk-with-cursor.md)
 - [Running AIHawk's browser from Cline](running-aihawk-with-cline.md)
+- [Running AIHawk's browser from Codex](running-aihawk-with-codex.md)
+- [Running AIHawk's browser from Gemini CLI](running-aihawk-with-gemini-cli.md)
 - [The MCP server: config blocks, settings, tools](mcp-server.md)
 - [How the tools are shaped, and why](mcp-tool-design.md)
 

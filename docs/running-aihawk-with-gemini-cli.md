@@ -1,0 +1,183 @@
+---
+title: "Running AIHawk's browser from Gemini CLI"
+description: "One command installs the stealth browser in Gemini CLI as an extension, with its MCP server and a setup skill. What happens on first run, which tools Gemini gains, prompts to try first, and what goes wrong."
+parent: "Using the Agent"
+nav_order: 69
+---
+
+
+# Running AIHawk's browser from Gemini CLI
+
+If you already use Gemini CLI, you do not need AIHawk's interface, its CLI, or
+an OpenRouter key. Gemini brings the model; you add the browser to it. The
+browser is the same MCP server AIHawk itself talks to -
+[the MCP server](mcp-server.md) -
+so anything AIHawk's own interface can do, your assistant can do too, and that
+is by construction: the interface holds no privileged access, it calls the same
+tools over the same protocol as any other client.
+
+This page is Gemini CLI specifically. [Claude Code](running-aihawk-with-claude-code.md)
+and [Codex](running-aihawk-with-codex.md) have their own pages, and the clients
+that take a config file instead of a command have theirs:
+[Claude Desktop](running-aihawk-with-claude-desktop.md),
+[Cursor](running-aihawk-with-cursor.md), [Cline](running-aihawk-with-cline.md).
+The config blocks themselves live in the [MCP server page](mcp-server.md), which
+is the one place they are kept current.
+
+## The one line
+
+Two prerequisites, same as everywhere in this project: Python 3.11 or newer on
+Windows (x86_64) or Linux (x86_64, arm64) - macOS is not supported, the last
+engine build for it was `firefox-20` - and [uv](https://docs.astral.sh/uv/),
+because the extension runs the server with `uvx`. Then, once:
+
+```bash
+gemini extensions install https://github.com/feder-cr/AIHawk
+```
+
+Gemini CLI asks you to confirm that the extension comes from a third party,
+then reports it installed and enabled. The extension brings two things: the
+MCP server, started as `uvx aihawk`, so there is nothing to clone or
+pip-install first; and a `setup` skill that knows about the engine download
+below, so Gemini can walk you through it if `browser_open` reports that the
+download failed. Check with `gemini extensions list`: `aihawk` is there, with
+the server `aihawk` under MCP servers and `setup` under agent skills.
+
+The same extension is listed in the
+[Gemini CLI extensions gallery](https://geminicli.com/extensions/), where the
+gallery's own install command is this one. Updates come with
+`gemini extensions update aihawk`.
+
+## First run: the download the server does on its own
+
+Installing the extension does not install the browser. The engine is a patched
+Firefox of roughly a quarter of a gigabyte, and the server downloads it the
+first time it starts, from the moment Gemini connects it - so by the time you
+type a first browsing prompt, it is usually there. If it is not yet,
+`browser_open` does not sit there: it answers with how far the download is and
+asks to be called again in a minute, and Gemini does that on its own.
+
+To get it over with in a terminal where you can watch the progress, or after a
+download that failed:
+
+```bash
+uvx invisible-playwright fetch
+```
+
+It is cached afterwards and shared by every way into the engine, including
+AIHawk's own interface if you later run that too.
+
+## What Gemini actually gains
+
+A set of browser tools from the server `aihawk`. The authoritative list is
+whatever `/mcp` shows in a session for your installed server version; the
+families, with the names AIHawk's own client code knows them by:
+
+- **Navigation**: `browser_navigate`. A browser drives one page; when you
+  need a second, `browser_open` opens the `support` browser beside it rather
+  than a tab, so the two sites never share cookies or a fingerprint.
+- **Reading the page**: `browser_read_text`, `browser_read_html`, and
+  `browser_snapshot` for a structural view of what is interactive.
+- **Acting on the page**: `browser_click` and `browser_click_at`,
+  `browser_type`, `browser_press_key`, and `browser_select_option` for
+  dropdowns, added precisely so a model never has to fake a selection
+  through script.
+- **Seeing it**: `browser_take_screenshot`.
+
+Behind the tools is the point of the exercise: a real patched Firefox that
+drives pages through actual input events, not a headless toolkit. What that
+buys, and what it honestly does not, is the
+[blocked page's](why-does-my-ai-agent-get-blocked.md) subject.
+
+## Three prompts to try first
+
+Start small, so the first success and the first failure are both legible:
+
+> Go to example.com and tell me the main heading on the page.
+
+One navigation, one read. If this works, the server, the engine and the wiring
+all work. Then something with a decision in it:
+
+> Go to [paste the URL of a docs page you actually read] and find the section
+> about installation. Quote the exact command it recommends.
+
+Then something multi-step, the shape most real use takes:
+
+> Open [paste the URL of a public page with a list on it], read the first ten
+> entries, and give them to me as a table with a link column.
+
+If that last shape is your actual goal, the
+[extract-to-CSV page](how-to-extract-data-to-csv-with-an-ai-agent.md) takes it
+the rest of the way. One habit worth forming from the start: ask for one page
+and one outcome per prompt. The assistant sees the page only through tool
+results, and short steps keep its context small and its mistakes cheap.
+
+## Troubleshooting
+
+- **`aihawk` is not in `gemini extensions list`.** The install needs `git`
+  on your machine, because Gemini CLI fetches the extension from GitHub; the
+  command says so when it is missing. If `uvx` is not on your PATH, the
+  extension can be installed and its server still fail to start - install uv
+  and try `uvx aihawk` by hand, which surfaces the real error.
+- **The first browsing prompt answers "the engine is downloading".** That is
+  the server saying what it is doing, not a fault: ask again in a minute, or
+  run the fetch command above in a terminal to watch it finish.
+- **Tools appear but every call fails.** Try the one-line prompt above; if
+  even `example.com` fails, the problem is below the model - the
+  [browser-or-model page](browser-problem-or-model-problem.md) is the
+  systematic version of that diagnosis, and blocks and challenge pages have
+  [their own checklist](why-does-my-ai-agent-get-blocked.md).
+- **You want a proxy, a fixed identity, or a persistent profile.** Those are
+  server-side options, read from the environment Gemini was started in; the
+  [MCP server page](mcp-server.md) documents them. This page deliberately
+  does not duplicate that reference.
+
+## Short answers to the questions that lead here
+
+**How do I add AIHawk's browser to Gemini CLI?**
+`gemini extensions install https://github.com/feder-cr/AIHawk`, once, with uv
+installed. New sessions then have the browser tools in `/mcp`.
+
+**Do I need an OpenRouter key for this?** No. The key is only for AIHawk's own
+interface and CLI, where AIHawk must bring a model. In Gemini CLI, Gemini is
+the model.
+
+**Why does the first browsing request say the engine is downloading?** The
+engine, about a quarter of a gigabyte, is downloaded by the server itself when
+it starts, and `browser_open` reports the progress rather than waiting. Run
+`uvx invisible-playwright fetch` once in a terminal to do it up front instead.
+
+**Is this different from what AIHawk's own UI drives?** No - same server, same
+engine, same tools. The interface is just another MCP client of it, with no
+privileged access.
+
+**Does it work on macOS?** No. The engine ships for Windows and Linux only;
+the last macOS build was `firefox-20`.
+
+## Sources
+
+All retrieved 2026-09-22.
+
+- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), this repository's
+  README (the verbatim install command, the prerequisites and platforms, the
+  engine download), its `gemini-extension.json` (the manifest Gemini reads)
+  and source: `src/aihawk/link.py` and `src/aihawk/web.py` (the interface
+  reaching the browser over MCP as an ordinary client),
+  `src/aihawk/actions_help.py` (the tool names above).
+- [Gemini CLI extensions](https://geminicli.com/docs/extensions/), the
+  install, list and update commands, and the gallery.
+- [The MCP server page](mcp-server.md),
+  the server itself: config blocks for other clients, server-side options, and
+  the current tool list.
+
+**See also:** [running AIHawk with Claude Code](running-aihawk-with-claude-code.md),
+[running AIHawk with Codex](running-aihawk-with-codex.md),
+[how to extract data to CSV with an AI agent](how-to-extract-data-to-csv-with-an-ai-agent.md),
+and [browser problem or model problem?](browser-problem-or-model-problem.md).
+
+---
+
+*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. Gemini CLI takes
+the browser as an extension, one command and no config file, and the server
+says "downloading" instead of making you wait, so the first prompt is never a
+mystery.*

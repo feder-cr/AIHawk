@@ -113,7 +113,10 @@ class Engine:
             return ("the engine has downloaded and is being %s, which takes a "
                     "moment. Call browser_open again shortly; nothing else needs "
                     "doing." % ("verified" if self.state == "verifying" else "extracted"))
-        if self.state == "downloading":
+        if self.state == "downloading" and (self.done or self.total):
+            # Before the first byte the core has said "downloading" and no
+            # size yet: that instant reads as "starting" below, not as
+            # "0 MB so far", which was the first answer a person got.
             if self.total:
                 far = "%d%% of %d MB" % (self.done * 100 // self.total, self.total >> 20)
             else:
