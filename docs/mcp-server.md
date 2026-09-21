@@ -32,8 +32,8 @@ settings, and the tools.
 
 ## Adding it to your client
 
-Claude Code installs it as a plugin, Gemini CLI as an extension, Codex with
-one command, and all three are in AIHawk's README. The rest take a config
+Claude Code and Codex install it as a plugin, Gemini CLI as an extension, and
+all three are in AIHawk's README. The rest take a config
 file, and the file is not the same
 everywhere: **three different top-level keys, and one of them is not even
 JSON.** Find yours below. The block only tells the client how to start the

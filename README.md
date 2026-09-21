@@ -50,7 +50,8 @@ claude plugin install aihawk@feder-cr
 **Codex:**
 
 ```bash
-codex mcp add stealth -- uvx aihawk
+codex plugin marketplace add feder-cr/AIHawk
+codex plugin add aihawk@feder-cr
 ```
 
 **Gemini CLI:**

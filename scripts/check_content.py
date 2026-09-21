@@ -109,7 +109,8 @@ OTHER_WAYS = ("pip install aihawk", "pip install invisible-playwright-mcp",
 #: teaches is a way in the README does not, whichever form it takes.
 CLIENT_WAYS = ("claude mcp add", "claude plugin marketplace add",
                "claude plugin install", "gemini mcp add",
-               "gemini extensions install", "codex mcp add")
+               "gemini extensions install", "codex mcp add",
+               "codex plugin marketplace add", "codex plugin add")
 FENCE = chr(96) * 3
 
 
@@ -630,7 +631,8 @@ def selftest():
             # them: what the eighth part of the fifth check reads.
             b"```bash\nclaude plugin marketplace add feder-cr/AIHawk\n"
             b"claude plugin install aihawk@feder-cr\n```\n\n"
-            b"```bash\ncodex mcp add stealth -- uvx aihawk\n```\n\n"
+            b"```bash\ncodex plugin marketplace add feder-cr/AIHawk\n"
+            b"codex plugin add aihawk@feder-cr\n```\n\n"
             b"```bash\ngemini extensions install https://github.com/feder-cr/AIHawk\n```\n")
 
         bad = {

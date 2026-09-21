@@ -74,6 +74,7 @@ def _load():
         "plugins": {rel: json.loads((ROOT / rel).read_text(encoding="utf-8")) for rel in PLUGIN_FILES},
         "mcp_bytes": {rel: (ROOT / rel).read_bytes() for rel in MCP_FILES},
         "marketplace": json.loads((ROOT / MARKETPLACE).read_text(encoding="utf-8")),
+        "codex_marketplace": json.loads((ROOT / CODEX_MARKETPLACE).read_text(encoding="utf-8")),
     }
 
 
@@ -83,7 +84,15 @@ def _load():
 #: commands and hooks, none of which this plugin has. cursor.directory's scan
 #: read `plugin.json` and `mcp.json` and never the logo that file carried.
 PLUGIN_FILES = (".claude-plugin/plugin.json", "plugin.json", "mcp.json", ".mcp.json",
-                "gemini-extension.json")
+                "gemini-extension.json", ".codex-plugin/plugin.json")
+#: The Codex plugin (`.codex-plugin/plugin.json`) reads its server through
+#: the `mcpServers` POINTER at `./.mcp.json` and its skills through `skills`:
+#: measured 2026-09-21 with codex-cli 0.155.1 from a local marketplace,
+#: `codex mcp list` shows `aihawk  uvx aihawk  enabled`. The opposite of
+#: Claude Code, which ignores the pointer and reads the file by position; one
+#: `.mcp.json`, two loaders, each told in the way it listens.
+CODEX_PLUGIN = ".codex-plugin/plugin.json"
+CODEX_MARKETPLACE = ".agents/plugins/marketplace.json"
 #: The setup skill Anthropic's submission guide recommends for a plugin whose
 #: MCP server needs a one-time step ("Plugins can include a SETUP.md skill to
 #: guide Claude through configuring and connecting any MCP servers bundled in
@@ -159,7 +168,10 @@ def _one_fact_many_files(manifest, plugins):
             if doc.get("keywords") != manifest.get("keywords"):
                 out.append("%s carries different keywords from the bundle manifest, so the "
                            "directories that read them describe the package differently" % rel)
-        shown = doc.get("displayName") if rel.endswith("plugin.json") else None
+        shown = None
+        if rel.endswith("plugin.json"):
+            # Codex keeps the display name under `interface`; Claude Code at the top.
+            shown = doc.get("displayName") or (doc.get("interface") or {}).get("displayName")
         if shown is not None and shown != title:
             out.append("%s shows the package as %r, the bundle manifest as %r"
                        % (rel, shown, title))
@@ -216,12 +228,26 @@ def plugin_findings(package_name, manifest, plugins):
     gemini = plugins.get("gemini-extension.json") or {}
     if not gemini.get("version"):
         out.append("gemini-extension.json has no version, which the gallery requires")
-    if claude.get("version") != gemini.get("version"):
-        out.append("the Claude plugin is at %r and the Gemini extension at %r; one config, one version"
-                   % (claude.get("version"), gemini.get("version")))
+    codex = plugins.get(CODEX_PLUGIN) or {}
+    if not (claude.get("version") == gemini.get("version") == codex.get("version")):
+        out.append("the Claude plugin is at %r, the Gemini extension at %r and the Codex plugin "
+                   "at %r; one config, one version"
+                   % (claude.get("version"), gemini.get("version"), codex.get("version")))
     if claude.get("version") == "1.0.0":
         out.append("plugin version 1.0.0 is the one that shipped with no MCP server; a pinned "
                    "version only updates when it changes, so it must be past 1.0.0")
+    if codex.get("mcpServers") != "./.mcp.json":
+        out.append("the Codex plugin manifest does not point at ./.mcp.json; measured, Codex reads "
+                   "the server through that pointer and nowhere else")
+    if codex.get("skills") != "./skills/":
+        out.append("the Codex plugin manifest does not point at ./skills/, so the setup skill "
+                   "never reaches Codex")
+    for key in ("displayName", "shortDescription", "longDescription", "developerName", "category"):
+        if not (codex.get("interface") or {}).get(key):
+            out.append("the Codex plugin manifest's interface lacks %r" % key)
+    if (codex.get("interface") or {}).get("longDescription") != manifest.get("long_description", "").replace(
+            "an MCP client", "Codex"):
+        out.append("the Codex plugin's long description is not the bundle manifest's, addressed to Codex")
     return out
 
 
@@ -332,7 +358,8 @@ BUNDLE_LAUNCH = {"command": "uv", "args": ["run", "--directory", "${__dirname}",
 #: check in scripts/pack_bundle.py is the second wall; this is the first.
 MUST_IGNORE = (".git/", ".github/", ".env", "tests/", "skills/", "docs/", "articles/", "scripts/",
                "assets/*", "!assets/aihawk-icon-400.png", "plugin.json", "mcp.json",
-               ".mcp.json", "gemini-extension.json", "server.json")
+               ".mcp.json", "gemini-extension.json", "server.json",
+               ".claude-plugin/", ".codex-plugin/", ".agents/")
 
 
 def bundle_findings(package_name, version, requires_python, manifest, mcpbignore):
@@ -404,10 +431,80 @@ def test_the_plugin_manifests_launch_the_package_that_ships():
     assert plugin_findings(d["package_name"], d["manifest"], d["plugins"]) == []
 
 
+def codex_marketplace_findings(package_name, market, claude_market, codex_plugin, readme):
+    """Why `codex plugin marketplace add` plus `codex plugin add` would deliver
+    something other than this plugin, or nothing.
+
+    Same repository, same marketplace name as Claude Code's, so the README's
+    two install lines read `aihawk@feder-cr` for both clients. No version in
+    the entry: measured 2026-09-21 with codex-cli 0.155.1 from a local
+    marketplace, Codex lists and caches the plugin as `1.0.0` whatever the
+    manifest says and whether or not the entry names one, so a version here
+    would be a copy nobody reads."""
+    out = []
+    if market.get("name") != claude_market.get("name"):
+        out.append("the Codex marketplace is named %r, the Claude Code one %r; the README "
+                   "installs `aihawk@<name>` from both" % (market.get("name"), claude_market.get("name")))
+    entries = market.get("plugins") or []
+    if len(entries) != 1:
+        out.append("the Codex marketplace lists %d plugins; this repository is one" % len(entries))
+        return out
+    entry = entries[0]
+    if entry.get("name") != package_name:
+        out.append("the Codex marketplace entry names %r, the project is %r"
+                   % (entry.get("name"), package_name))
+    if entry.get("source") != {"source": "local", "path": "./"}:
+        out.append("the Codex marketplace entry's source is %r; the plugin is the repository root"
+                   % entry.get("source"))
+    if (entry.get("policy") or {}).get("installation") != "AVAILABLE":
+        out.append("the Codex marketplace entry is not installable (policy.installation)")
+    install = "codex plugin add %s@%s" % (package_name, market.get("name"))
+    if install not in readme:
+        out.append("the README does not install `%s`" % install)
+    return out
+
+
 def test_the_marketplace_installs_this_plugin_from_the_root():
     d = _load()
     assert marketplace_findings(d["package_name"], d["manifest"], d["marketplace"],
                                 d["readme"]) == []
+
+
+def test_the_codex_marketplace_installs_this_plugin_from_the_root():
+    d = _load()
+    assert codex_marketplace_findings(d["package_name"], d["codex_marketplace"], d["marketplace"],
+                                      d["plugins"][CODEX_PLUGIN], d["readme"]) == []
+
+
+def test_the_codex_marketplace_check_refuses_known_bad_input():
+    d = _load()
+    args = (d["package_name"], d["codex_marketplace"], d["marketplace"], d["plugins"][CODEX_PLUGIN], d["readme"])
+    assert codex_marketplace_findings(*args) == []
+
+    m = copy.deepcopy(d["codex_marketplace"]); m["name"] = "aihawk"
+    assert codex_marketplace_findings(d["package_name"], m, d["marketplace"], d["plugins"][CODEX_PLUGIN], d["readme"])
+
+    m = copy.deepcopy(d["codex_marketplace"]); m["plugins"][0]["source"] = {"source": "local", "path": "./plugins/aihawk"}
+    assert codex_marketplace_findings(d["package_name"], m, d["marketplace"], d["plugins"][CODEX_PLUGIN], d["readme"])
+
+    m = copy.deepcopy(d["codex_marketplace"]); m["plugins"][0]["policy"]["installation"] = "HIDDEN"
+    assert codex_marketplace_findings(d["package_name"], m, d["marketplace"], d["plugins"][CODEX_PLUGIN], d["readme"])
+
+    stale = d["readme"].replace("codex plugin add aihawk@", "codex plugin add aihawk@elsewhere-")
+    assert stale != d["readme"]
+    assert codex_marketplace_findings(d["package_name"], d["codex_marketplace"], d["marketplace"], d["plugins"][CODEX_PLUGIN], stale)
+
+    p = copy.deepcopy(d["plugins"]); p[CODEX_PLUGIN]["mcpServers"] = {"aihawk": LAUNCH}
+    assert plugin_findings(d["package_name"], d["manifest"], p)
+
+    p = copy.deepcopy(d["plugins"]); del p[CODEX_PLUGIN]["skills"]
+    assert plugin_findings(d["package_name"], d["manifest"], p)
+
+    p = copy.deepcopy(d["plugins"]); p[CODEX_PLUGIN]["version"] = "9.9.9"
+    assert plugin_findings(d["package_name"], d["manifest"], p)
+
+    p = copy.deepcopy(d["plugins"]); p[CODEX_PLUGIN]["interface"]["displayName"] = "Ai Hawk"
+    assert plugin_findings(d["package_name"], d["manifest"], p)
 
 
 def test_the_marketplace_check_refuses_known_bad_input():

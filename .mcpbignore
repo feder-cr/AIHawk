@@ -5,6 +5,8 @@
 .git/
 .github/
 .claude-plugin/
+.codex-plugin/
+.agents/
 .pytest_cache/
 .venv/
 __pycache__/
