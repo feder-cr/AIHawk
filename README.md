@@ -38,7 +38,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 source $HOME/.local/bin/env
 ```
 
-Then tell your assistant it exists.
+Then install it in your assistant.
 
 **Claude Code:**
 
@@ -172,8 +172,8 @@ computer, and to whom:
 - **Your model provider.** The web UI sends the conversation and what the agent
   reads on the page to OpenRouter under your key. Over MCP, the client you
   plugged it into does the same with whichever model it uses.
-- **GitHub.** The engine is downloaded from a GitHub release by
-  `uvx invisible-playwright fetch`, and a GeoIP database is when a proxy is
+- **GitHub.** The engine is downloaded from a GitHub release the first time
+  the server or the interface starts, and a GeoIP database is when a proxy is
   set. Each browser launch also fetches a one-line counter file from a GitHub
   release, which is how launches are counted: the request carries no
   identifier and nothing of yours, and GitHub sees what any HTTPS request
