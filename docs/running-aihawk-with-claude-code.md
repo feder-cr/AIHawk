@@ -41,8 +41,8 @@ second installs `aihawk` from it, at user scope by default, so it is available
 in every project rather than only the directory you happened to be in. The
 plugin brings two things: the MCP server, started as `uvx aihawk`, so there is
 nothing to clone or pip-install first; and a `setup` skill that knows about
-the engine download below, so Claude can walk you through it when a browser
-tool reports that the engine is missing. Start a fresh Claude Code session
+the engine download below, so Claude can walk you through it when
+`browser_open` reports that the download failed. Start a fresh Claude Code session
 afterwards if one was already open, and `/plugin` should list `aihawk` as
 installed, with its server among the connected ones in `/mcp`.
 
@@ -51,15 +51,17 @@ server named `stealth` running `uvx aihawk`, it keeps working under that name:
 the plugin is the same server, plus the skill, under the name `aihawk`. Keep
 one or the other, not both, or every tool shows up twice.
 
-## First run: the download nobody warns you about
+## First run: the download the server does on its own
 
 Installing the server does not install the browser. The engine is a patched
-Firefox of roughly a quarter of a gigabyte, and it downloads on the first
-request that needs a page - which, from inside a chat, looks like your first
-browsing prompt sitting there doing nothing, and on a slow connection can end
-in a timeout message that says nothing about a download.
+Firefox of roughly a quarter of a gigabyte, and the server downloads it the
+first time it starts, from the moment Claude Code connects it - so by the time
+you type a first browsing prompt, it is usually there. If it is not yet,
+`browser_open` does not sit there: it answers with how far the download is and
+asks to be called again in a minute, and Claude does that on its own.
 
-Get it over with first, in a terminal where you can watch the progress:
+To get it over with in a terminal where you can watch the progress, or after a
+download that failed:
 
 ```bash
 uvx invisible-playwright fetch
@@ -123,9 +125,9 @@ results, and short steps keep its context small and its mistakes cheap.
   start a new one. If `uvx` is not on your PATH, the plugin can be installed
   and its server still fail to start - install uv and try `uvx aihawk` by
   hand, which surfaces the real error.
-- **The first browsing prompt hangs or times out.** Almost always the engine
-  download. Run the prefetch command above and retry; afterwards a first page
-  load is seconds, not minutes.
+- **The first browsing prompt answers "the engine is downloading".** That is
+  the server saying what it is doing, not a fault: ask again in a minute, or
+  run the fetch command above in a terminal to watch it finish.
 - **Tools appear but every call fails.** Try the one-line prompt above; if
   even `example.com` fails, the problem is below the model - the
   [browser-or-model page](browser-problem-or-model-problem.md) is the
@@ -147,9 +149,10 @@ sessions then have the browser tools in `/mcp`.
 interface and CLI, where AIHawk must bring a model. In Claude Code, Claude is
 the model.
 
-**Why does the first browsing request take so long?** The engine, about a
-quarter of a gigabyte, downloads on the first request that needs a page. Run
-`uvx invisible-playwright fetch` once in a terminal to do it up front.
+**Why does the first browsing request say the engine is downloading?** The
+engine, about a quarter of a gigabyte, is downloaded by the server itself when
+it starts, and `browser_open` reports the progress rather than waiting. Run
+`uvx invisible-playwright fetch` once in a terminal to do it up front instead.
 
 **Is this different from what AIHawk's own UI drives?** No - same server, same
 engine, same tools. The interface is just another MCP client of it, with no

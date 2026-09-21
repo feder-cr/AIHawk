@@ -37,8 +37,9 @@ one command, and all three are in AIHawk's README. The rest take a config
 file, and the file is not the same
 everywhere: **three different top-level keys, and one of them is not even
 JSON.** Find yours below. The block only tells the client how to start the
-server; installing `uv` and fetching the engine come first, as AIHawk's README
-shows.
+server; installing `uv` comes first, as AIHawk's README shows. The engine, the
+server downloads on its own the first time it starts, and `browser_open`
+reports the progress until it is there.
 
 ### If your client takes a config file
 

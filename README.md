@@ -29,7 +29,6 @@ Windows, in PowerShell:
 ```powershell
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 $env:Path = "$env:USERPROFILE\.local\bin;$env:Path"
-uvx invisible-playwright fetch
 ```
 
 Linux:
@@ -37,7 +36,6 @@ Linux:
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source $HOME/.local/bin/env
-uvx invisible-playwright fetch
 ```
 
 Then tell your assistant it exists.
@@ -71,7 +69,6 @@ Windows, in PowerShell:
 ```powershell
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 $env:Path = "$env:USERPROFILE\.local\bin;$env:Path"
-uvx invisible-playwright fetch
 uvx aihawk ui --openrouter-key sk-or-...
 ```
 
@@ -80,7 +77,6 @@ Linux:
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source $HOME/.local/bin/env
-uvx invisible-playwright fetch
 uvx aihawk ui --openrouter-key sk-or-...
 ```
 

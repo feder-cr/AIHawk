@@ -79,10 +79,11 @@ These appear with any model, and with no model:
   intelligence. Check the transcript for a retry burst;
   [retry loops and rate limits](agent-retry-loops-rate-limits.md) is that
   failure's own page.
-- **The very first instruction ever hangs for minutes.** Probably not a
-  failure at all: the browser engine, roughly a quarter of a gigabyte, downloads
-  on the first request that needs a page. `uvx invisible-playwright fetch` in a
-  terminal gets it over with where you can watch it.
+- **The very first instruction ever answers that the engine is downloading.**
+  Not a failure at all: the browser engine, roughly a quarter of a gigabyte, is
+  fetched by the server when it starts, and `browser_open` reports the progress
+  until it is there. `uvx invisible-playwright fetch` in a terminal gets it over
+  with where you can watch it.
 
 ## Symptoms that point at the model side
 

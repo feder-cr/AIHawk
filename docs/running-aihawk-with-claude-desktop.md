@@ -104,12 +104,12 @@ is a syntax or path problem, not an AIHawk one.
 
 In the order people hit them:
 
-1. **The first real prompt hangs.** The engine is about a quarter of a
-   gigabyte and is not fetched at install or at server start; it arrives on
-   the first tool call that needs a page. On a slow connection that looks
-   like Claude sitting silently on your instruction, and it can end in a
-   timeout message that never mentions a download. Get it over with first, in
-   a terminal where you can watch progress:
+1. **The first real prompt answers that the engine is downloading.** The
+   engine is about a quarter of a gigabyte and the server fetches it on its
+   own from the moment Desktop starts it; a browser asked for before that is
+   done is answered with the download's progress, not opened, and asking again
+   a minute later is all it takes. To get it over with first, in a terminal
+   where you can watch progress:
 
    ```bash
    uvx invisible-playwright fetch
@@ -150,10 +150,11 @@ the server only adds the browser, and its config block contains no secret. The
 OpenRouter key belongs to a different way in, AIHawk's own interface
 (`uvx aihawk ui`), which requires one.
 
-**Why does the first instruction take so long?** The engine downloads on the
-first call that needs a page, about a quarter of a gigabyte, and nothing warns
-you. Prefetch it with `uvx invisible-playwright fetch` and the first
-instruction behaves like every later one.
+**Why does the first instruction say the engine is downloading?** The server
+fetches the engine, about a quarter of a gigabyte, when it starts, and reports
+the progress instead of waiting. Prefetch it with
+`uvx invisible-playwright fetch` and the first instruction behaves like every
+later one.
 
 **Why can I not see the browser?** It runs headless by default; screenshots
 through the `browser_take_screenshot` tool are the intended window. The

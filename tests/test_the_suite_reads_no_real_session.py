@@ -254,6 +254,7 @@ def test_the_brake_module_still_carries_all_three_defences():
     the reserved address from the runner. Both are invisible to a substring
     and both fail here.
     """
+    import aihawk.cli as climod
     import aihawk.sessions as sessions_mod
 
     import _cli_brake
@@ -273,8 +274,11 @@ def test_the_brake_module_still_carries_all_three_defences():
 
     mp = _Recorder()
     rec = _cli_brake.brake(mp)
-    assert mp.calls == [(sessions_mod, "Link", rec)], (
-        "the brake is not put on the name the command reads: %r"
+    # Two seams since 0.69.0: the link, and the engine step `ui` runs BEFORE
+    # the link, which downloads a quarter of a gigabyte if nothing records it
+    # instead. The engine step is named on the module `ui` reads it from.
+    assert mp.calls == [(sessions_mod, "Link", rec), (climod, "engine_on_disk", rec.engine)], (
+        "the brake is not put on the names the command reads: %r"
         % [(getattr(t, "__name__", t), n) for t, n, _ in mp.calls])
 
     seen = {}

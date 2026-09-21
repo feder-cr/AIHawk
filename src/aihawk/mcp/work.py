@@ -83,14 +83,26 @@ WHO_A_BROWSER_IS = ("seed", "proxy", "profile_dir")
 #: What `browser_open` says about a seed it read back from the file.
 REMEMBERED = "the person this session already was"
 
+#: How long `open` gives the engine to say whether it is a cache hit or a
+#: download: the core reads its stamp, sweeps orphans and resolves the release
+#: asset before it reports the first phase, and the last of those is a network
+#: round trip. Past this, the answer is "its download is starting" and the
+#: caller asks again; nothing here waits for a transfer.
+ENGINE_SETTLE_SECONDS = 10.0
+
 
 class Work:
     """The one piece of work this process serves. See the module docstring
     for the lifecycle; every method here is one step of it."""
 
-    def __init__(self, session_id: str, *, factory=StealthSession) -> None:
+    def __init__(self, session_id: str, *, factory=StealthSession, engine=None) -> None:
         self.session_id = session_id
         self._factory = factory
+        #: Where the engine is for this process (`aihawk.engine.Engine`), or
+        #: None for a piece of work that launches nothing and need not ask.
+        #: `open` does not start a browser while it is not on disk: it answers
+        #: with the download's progress instead, so no tool call waits on it.
+        self._engine = engine
         #: The browsers that are open, by role, and what each was launched with.
         self._open: dict[str, StealthSession] = {}
         self._launched: dict[str, dict] = {}
@@ -237,6 +249,24 @@ class Work:
             if main_launched.get("proxy"):
                 settings["proxy"] = main_launched["proxy"]
             exit_note = "this machine's own address, the same as main"
+
+        if self._engine is not None and not self._engine.ready():
+            # ⛔ AFTER THE PLAN, AND NOT A LAUNCH: AN ANSWER. A plan that is
+            # refused is refused whether or not the engine is here, and a
+            # refusal reaches the client as an error; this answer is not one.
+            # Launching here would run a second download inside the tool call
+            # - the minutes-long call that the README's fetch line existed to
+            # avoid, and a race with the one in flight on the same temporary
+            # tree. `start` is a no-op while one is in flight and is what
+            # retries a failed one. The wait is for the engine to SAY what it
+            # is - a cache hit answers in milliseconds and a download announces
+            # itself before its first byte - never for the download, so a warm
+            # cache opens on the first call and a cold one is answered, not
+            # waited on.
+            self._engine.start()
+            await asyncio.to_thread(self._engine.settle, ENGINE_SETTLE_SECONDS)
+            if not self._engine.ready():
+                return self._engine.describe()
 
         async with self._lock:
             # ⛔ The old browser is closed FIRST and unconditionally. Starting

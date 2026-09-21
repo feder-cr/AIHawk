@@ -106,9 +106,10 @@ it is what the product is.
   without an OpenRouter key: an agent is a model with a browser, and tokens
   cost money. Driving the browser by hand without a model is the
   invisible_playwright library's job, not this product's.
-- **The browser is a quarter-gigabyte separate download** that arrives on
-  first use unless you pre-fetch it (`uvx invisible-playwright fetch`),
-  and a slow connection can time out confusingly on the first task.
+- **The browser is a quarter-gigabyte separate download** that the server
+  fetches on its own when it starts, unless you pre-fetch it
+  (`uvx invisible-playwright fetch`); on a slow connection the first task is
+  answered with the download's progress rather than a page.
 - **The model is not included, and results track the model.** A weak
   model drives the good browser badly;
   [browser problem or model problem](browser-problem-or-model-problem.md)

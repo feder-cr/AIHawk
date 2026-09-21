@@ -1,9 +1,11 @@
 ---
 name: setup
-description: One-time setup for the AIHawk browser server - downloads the patched Firefox it drives. Use when a browser tool reports that the engine is missing, or right after installing the plugin.
+description: What the AIHawk browser server needs on this machine - the patched Firefox it drives, which the server downloads on its own the first time it runs. Use when browser_open answers that the engine is downloading or that its download failed, or right after installing the plugin.
 ---
 
-The server runs with `uvx aihawk` and needs its browser engine on this machine once. Run the block for the user's system, then the browser tools work.
+The server runs with `uvx aihawk` and needs its browser engine on this machine once, about a quarter of a gigabyte. It downloads it on its own when it starts; while that is in flight, `browser_open` answers with how far the download is instead of opening a browser, and asking again a minute later is all that is needed.
+
+To do the download ahead of time, or again after it failed, in a terminal where the user can watch it, run the block for the user's system:
 
 Windows, in PowerShell:
 

@@ -100,12 +100,12 @@ two most useful for repeated testing sessions.
 
 ## Common first-run issues
 
-1. **The first page-touching prompt stalls.** The engine is a separate
-   download of about a quarter of a gigabyte, fetched on the first tool call
-   that needs a page, not at install. Inside an editor that reads as the
-   agent hanging on an approved step, and a slow connection can turn it into
-   a timeout that never mentions a download. Prefetch it once, in a terminal
-   where you can watch:
+1. **The first page-touching prompt answers that the engine is downloading.**
+   The engine is a separate download of about a quarter of a gigabyte, which
+   the server fetches on its own from the moment the editor starts it; a
+   browser asked for before it is done is answered with the progress, and the
+   agent asks again a minute later. To prefetch it once, in a terminal where
+   you can watch:
 
    ```bash
    uvx invisible-playwright fetch
@@ -151,10 +151,11 @@ secret and there is nothing to sign up for; your existing Cline model setup
 is untouched. The OpenRouter key belongs to AIHawk's own interface
 (`uvx aihawk ui`), a different way in, and that one requires it.
 
-**Why is the first instruction so slow?** Engine download: about a quarter
-of a gigabyte on the first call that needs a page, silent from the editor's
-side. `uvx invisible-playwright fetch` in a terminal moves that wait to a
-moment you choose.
+**Why does the first instruction say the engine is downloading?** Engine
+download: about a quarter of a gigabyte, started by the server when the editor
+starts it, reported by `browser_open` until it is done.
+`uvx invisible-playwright fetch` in a terminal moves that wait to a moment you
+choose.
 
 **Can I watch it drive?** Headless by default, screenshots as the window.
 Set `STEALTHFOX_HEADLESS=0` in the server entry's `env` to get a real

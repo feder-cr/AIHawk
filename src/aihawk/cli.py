@@ -69,6 +69,66 @@ def browser_options(fn):
     return fn
 
 
+class _EngineLine:
+    """One terminal line that follows the download, redrawn in place.
+
+    On a terminal every whole percent is drawn; anywhere else (a log, a pipe)
+    every tenth, because a carriage return in a file is not a redraw and a
+    thousand of them is a wall of text.
+    """
+
+    def __init__(self, echo, tty: bool) -> None:
+        self._echo = echo
+        self._step = 1 if tty else 10
+        self._drawn = None
+
+    def _draw(self, text: str) -> None:
+        self._echo("\rbrowser  %-40s" % text, nl=False)
+
+    def progress(self, done: int, total: int) -> None:
+        pct = int(done * 100 / total) if total else 0
+        bucket = pct // self._step
+        if bucket == self._drawn:
+            return
+        self._drawn = bucket
+        self._draw("downloading %3d%%  %d MB" % (pct, done // (1 << 20)))
+
+    def status(self, phase: str) -> None:
+        if phase != "downloading":
+            self._draw(phase)
+
+    def done(self) -> None:
+        self._draw("ready")
+        self._echo("")
+
+
+def engine_on_disk(binary, echo=click.echo, fetch=None, tty=None) -> None:
+    """Have the browser on disk before anything is served.
+
+    The servers this interface spawns would download it themselves, one per
+    conversation, and from here that moment used to be invisible: this command
+    printed "server connected" while nothing had been downloaded, and the
+    first message then sat for a minute with nothing moving. So the download
+    happens in front of the person, on one line that follows it, before the
+    port opens; the spawned servers then find the cache. A given --binary
+    skips it here the way it skips the download everywhere else; the server
+    still checks that binary against the seal when it launches.
+    """
+    from .engine import FETCH_BY_HAND, Engine
+
+    if binary:
+        echo("browser  %s" % binary)
+        return
+    line = _EngineLine(echo, tty=sys.stdout.isatty() if tty is None else tty)
+    engine = Engine(fetch=fetch, listener=line)
+    if engine.run() is None:
+        echo("")
+        raise click.ClickException(
+            "the engine download failed: %s. Run it again, or by hand: %s"
+            % (engine.error, FETCH_BY_HAND))
+    line.done()
+
+
 @click.group(invoke_without_command=True)
 @click.pass_context
 def main(ctx) -> None:
@@ -191,6 +251,9 @@ def ui(openrouter_key, model, host, port, proxy, seed, headed, binary, profile_d
     # asking one thing in a session would answer with another session's work.
     client = make_client(key)
     click.echo("model    %s via %s" % (mdl, BASE_URL))
+    # After the key, so a refusal costs nobody a quarter-gigabyte download;
+    # before the link, so the spawned servers find the engine on disk.
+    engine_on_disk(binary)
 
     opts = {"proxy": proxy, "seed": seed, "headed": headed,
             "binary": binary, "profile_dir": profile_dir}

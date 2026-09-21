@@ -110,11 +110,11 @@ identity seed are the two most useful for repeated testing).
 
 ## Common first-run issues
 
-1. **The first page-touching prompt stalls.** The engine, about a quarter of
-   a gigabyte, is not fetched at install or server start; it downloads on the
-   first tool call that needs a page, and on a slow connection that reads as
-   the agent hanging, sometimes ending in a timeout that never mentions a
-   download. Prefetch it once, in a terminal where you can watch:
+1. **The first page-touching prompt answers that the engine is downloading.**
+   The engine, about a quarter of a gigabyte, is fetched by the server on its
+   own from the moment Cursor starts it; a browser asked for before it is done
+   is answered with the progress, and the agent asks again a minute later. To
+   prefetch it once, in a terminal where you can watch:
 
    ```bash
    uvx invisible-playwright fetch
@@ -162,8 +162,9 @@ web app through a realistic browser, and research that requires acting on
 pages rather than fetching them. For lookups a plain search answers, skip the
 browser.
 
-**Why is the first instruction so slow?** Engine download: a quarter of a
-gigabyte on the first call that needs a page, silent from the editor's side.
+**Why does the first instruction say the engine is downloading?** Engine
+download: a quarter of a gigabyte, started by the server when Cursor starts
+it, reported by `browser_open` until it is done.
 `uvx invisible-playwright fetch` in a terminal moves that cost to a moment you
 choose.
 

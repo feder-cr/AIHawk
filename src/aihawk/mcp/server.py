@@ -54,7 +54,8 @@ from mcp.server.fastmcp import FastMCP, Image
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
-from . import __version__, actions, store
+from . import __version__, actions, plan, store
+from ..engine import Engine
 from ..quiet import swallow
 from .work import DEFAULT_BROWSER_ID, Work
 # Reached by tests as `server.<name>`; the tools themselves no longer
@@ -83,7 +84,13 @@ _SESSION_ID = os.environ.get("AIHAWK_SESSION_ID") or store.DEFAULT_SESSION_ID
 #: and a test installs one of its own here, built with a factory that
 #: launches nothing - one object in place of the four globals this module
 #: used to hold. The lifecycle is documented on the class.
-work = Work(_SESSION_ID)
+#:
+#: The engine is this process's too: downloaded once, from `main()`, in a
+#: daemon thread, unless `STEALTHFOX_BINARY` names one (`plan.engine_here`,
+#: the one reader of that variable). `work.open` asks it before launching and
+#: answers with its progress instead of launching while it is not there.
+engine = Engine(binary_path=plan.engine_here().get("binary_path"))
+work = Work(_SESSION_ID, engine=engine)
 
 
 #: Set by main(). Over stdio the SDK enters the lifespan once per process, so
@@ -114,6 +121,10 @@ async def _lifespan(_server):
         yield {}
     finally:
         if _close_on_lifespan_exit:
+            # The download too: a client that closes the server in its first
+            # minute kills a download in flight, and abandoning it here is
+            # what lets the core's temporary directory unwind.
+            engine.abandon()
             await work.close_all()
 
 
@@ -127,6 +138,7 @@ def _close_sessions_at_exit() -> None:
     and an await on an object from the finished one does not return: ten
     seconds, then the process is allowed to end.
     """
+    engine.abandon()
     with swallow("ten seconds, then the process is allowed to end"):
         asyncio.run(asyncio.wait_for(work.close_all(), 10))
 
@@ -630,6 +642,11 @@ async def browser_evaluate(expression: str, browser: Browser = None) -> str:
 def main() -> None:
     global _close_on_lifespan_exit
     transport = os.environ.get("STEALTHFOX_MCP_TRANSPORT", "stdio").strip().lower()
+    # ⛔ BEFORE THE PROTOCOL, NOT INSIDE THE LIFESPAN. A client starts its
+    # servers when the session opens, minutes before the first page, and those
+    # minutes are the download's for free; the lifespan runs per client over
+    # HTTP, and a download per client is the race `aihawk.engine` describes.
+    engine.start()
     if transport in ("http", "streamable-http"):
         # streamable-http ships with the `mcp` package, which already requires
         # starlette and uvicorn, so serving over HTTP costs no new dependency.

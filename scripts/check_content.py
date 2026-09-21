@@ -19,9 +19,12 @@ Count the numbered entries.
      exists, and image assets must carry no metadata chunks.
   5. The way in is written once. The README's code blocks are the source:
      in every fence that installs uv (one per system), the run from the
-     installer line through the fetch line, PATH line included; the first
-     fetch line names the launcher in front of every command (`uvx` today);
-     and the lines that tell a client the server exists, one per client
+     installer line to the end of the fence, PATH line included, minus the
+     line that runs the product (the interface fence ends with it); the
+     first fenced line that runs `aihawk` names the launcher in front of
+     every command (`uvx` today; until 0.69.0 the fetch line did, and the
+     fetch line left the README when the server began downloading the engine
+     itself); and the lines that tell a client the server exists, one per client
      (`claude plugin install aihawk@feder-cr`, `gemini extensions install
      ...`, `codex mcp add ...`). A page that carries the uv installer carries
      the install lines verbatim, every code block runs `aihawk` (the server,
@@ -144,39 +147,53 @@ def fenced_blocks(text, only_languages=None):
     return blocks
 
 
+def runs(line, cmd):
+    """Where `line` runs `cmd` as a command: (text before it, the word in the
+    launcher slot) for each place. A URL or path segment (`.../aihawk`) is not
+    one, and neither is a plugin id (`aihawk@feder-cr`, which `claude plugin
+    install` takes: a name, not a command run). The launcher word is the last
+    word before the command, stripped of `=` and `/` prefixes, so
+    `ExecStart=/usr/bin/uvx aihawk ui` reads as `uvx`."""
+    found = []
+    pattern = r"(?<![\w./-])" + re.escape(cmd) + r"(?![\w./@-])"
+    for m in re.finditer(pattern, line):
+        before = line[:m.start()]
+        if before.endswith("/"):
+            continue
+        words = before.split()
+        found.append((before, re.split(r"[/=]", words[-1])[-1] if words else ""))
+    return found
+
+
 def way_in(readme_text):
     """(launcher, install lines, client lines) as the README teaches them.
 
     The README keeps one complete fence per system. In each fence that carries
-    the uv installer, the install lines are the run from the installer line
-    through the fetch line: the installer itself asks for a PATH line before
-    `uvx` works in the same shell, and a page that copies the installer
-    without it teaches a command that fails. Collected in order and once
-    across fences. The launcher is the word before the first fetch line.
-    The client lines are every fenced line that starts with one of
-    `CLIENT_WAYS`, stripped, in order and once. (None, None, None) without a
-    fetch line."""
-    install, fetch, launcher, client = [], None, None, []
+    the uv installer, the install lines are the run from the installer line to
+    the end of the fence, minus a line that runs the product: the installer
+    itself asks for a PATH line before `uvx` works in the same shell, and a
+    page that copies the installer without it teaches a command that fails.
+    Collected in order and once across fences. The launcher is the word in
+    front of the first fenced `aihawk` command. The client lines are every
+    fenced line that starts with one of `CLIENT_WAYS`, stripped, in order and
+    once. (None, None, None) when no fence runs the product, which is a README
+    with nothing to derive from."""
+    install, launcher, client = [], None, []
     for block in fenced_blocks(readme_text):
         taking = False
         for line in block:
+            product = runs(line, WAY_IN[0])
+            if product and launcher is None:
+                launcher = product[0][1]
             if INSTALLER in line:
                 taking = True
-            if taking and line.strip() and line.rstrip() not in install:
+            if taking and line.strip() and not product and line.rstrip() not in install:
                 install.append(line.rstrip())
-            if "invisible-playwright fetch" in line:
-                if fetch is None:
-                    before = line.split("invisible-playwright fetch")[0].split()
-                    launcher = before[-1] if before else ""
-                    fetch = line.rstrip()
-                taking = False
             told = line.strip()
             if told.startswith(CLIENT_WAYS) and told not in client:
                 client.append(told)
-    if fetch is None:
+    if launcher is None:
         return None, None, None
-    if fetch not in install:
-        install.append(fetch)
     return launcher, install, client
 
 
@@ -236,13 +253,7 @@ def check_way_in(rel, text, launcher, block, client, readme_text):
         joined = chr(10).join(lines)
         for line in lines:
             for cmd in WAY_IN:
-                # `@` after the word is a plugin id, `aihawk@feder-cr`, which
-                # `claude plugin install` takes: a name, not a command run.
-                pattern = r"(?<![\w./-])" + re.escape(cmd) + r"(?![\w./@-])"
-                for m in re.finditer(pattern, line):
-                    before = line[:m.start()]
-                    if before.endswith("/"):
-                        continue                      # a URL or a path
+                for before, got in runs(line, cmd):
                     if command_key.search(before):
                         # `"command": "aihawk"`: the command IS the launcher slot
                         if launcher:
@@ -255,8 +266,6 @@ def check_way_in(rel, text, launcher, block, client, readme_text):
                             out.append("%s: config block runs `%s` with a command "
                                        "other than `%s`" % (rel, cmd, launcher))
                         continue
-                    words = before.split()
-                    got = re.split(r"[/=]", words[-1])[-1] if words else ""
                     if got != launcher:
                         out.append("%s: code block runs `%s %s`, the README runs "
                                    "`%s %s`" % (rel, got, cmd, launcher, cmd))
@@ -611,12 +620,10 @@ def selftest():
             b"# AIHawk\n\nWindows, in PowerShell:\n\n```powershell\n"
             b'powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"\n'
             b'$env:Path = "$env:USERPROFILE\\.local\\bin;$env:Path"\n'
-            b"uvx invisible-playwright fetch\n"
             b"uvx aihawk ui --openrouter-key sk-or-...\n"
             b"```\n\nLinux:\n\n```bash\n"
             b"curl -LsSf https://astral.sh/uv/install.sh | sh\n"
             b"source $HOME/.local/bin/env\n"
-            b"uvx invisible-playwright fetch\n"
             b"uvx aihawk ui --openrouter-key sk-or-...\n"
             b"```\n\n"
             # The client lines, one route per client, as the real page has

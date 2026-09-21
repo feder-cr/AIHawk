@@ -58,10 +58,20 @@ class LinkRecorder:
 
     def __init__(self):
         self.calls: list[dict] = []
+        #: The binary `ui` handed to the engine step, one entry per call: the
+        #: step runs BEFORE the link, so the brake at the link would let a
+        #: real download through. Recorded instead of run, for the same
+        #: reason the link is: a test in the fast selection must not fetch a
+        #: quarter of a gigabyte, and the guard in
+        #: `test_the_suite_reads_no_real_session` would say so hours later.
+        self.engine_calls: list = []
 
     def __call__(self, opts=None, *, key=None):
         self.calls.append({"opts": dict(opts or {}), "key": key})
         raise Stop
+
+    def engine(self, binary) -> None:
+        self.engine_calls.append(binary)
 
     @property
     def call(self) -> dict:
@@ -70,9 +80,11 @@ class LinkRecorder:
 
 
 def brake(monkeypatch) -> LinkRecorder:
-    """Install the brake at the one seam the command actually reaches."""
+    """Install the brake at the one seam the command actually reaches, and
+    the recorder at the engine step that comes before it."""
     rec = LinkRecorder()
     monkeypatch.setattr(sessions_mod, "Link", rec)
+    monkeypatch.setattr(climod, "engine_on_disk", rec.engine)
     return rec
 
 
