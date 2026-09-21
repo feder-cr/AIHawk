@@ -2,7 +2,7 @@
   "manifest_version": "0.4",
   "name": "aihawk",
   "display_name": "AIHawk",
-  "version": "0.69.1",
+  "version": "0.69.2",
   "description": "AI browser agent: browses, clicks, types, and reads real web pages from plain-English instructions.",
   "long_description": "AIHawk gives an MCP client a real browser to drive. The tools navigate, click, type, read and screenshot pages the way a person would, on a patched Firefox engine.\n\nThe engine, about a quarter of a gigabyte, is downloaded once by the server itself the first time it starts, outside this bundle. While that download is in flight, browser_open answers with its progress instead of opening a browser.",
   "author": {
@@ -11,11 +11,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/feder-cr/AIHawk.git"
+    "url": "https://github.com/feder-cr/aihawk_mcp_server.git"
   },
-  "homepage": "https://github.com/feder-cr/AIHawk",
-  "documentation": "https://github.com/feder-cr/AIHawk/wiki",
-  "support": "https://github.com/feder-cr/AIHawk/issues",
+  "homepage": "https://github.com/feder-cr/aihawk_mcp_server",
+  "documentation": "https://github.com/feder-cr/aihawk_mcp_server/wiki",
+  "support": "https://github.com/feder-cr/aihawk_mcp_server/issues",
   "icon": "assets/aihawk-icon-400.png",
   "server": {
     "type": "uv",
@@ -33,5 +33,5 @@
   },
   "keywords": ["browser", "browser-agent", "web-automation", "playwright", "firefox", "computer-use"],
   "license": "MIT",
-  "privacy_policies": ["https://github.com/feder-cr/AIHawk#privacy-policy"]
+  "privacy_policies": ["https://github.com/feder-cr/aihawk_mcp_server#privacy-policy"]
 }

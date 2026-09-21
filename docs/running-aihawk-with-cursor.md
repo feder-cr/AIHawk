@@ -182,7 +182,7 @@ All retrieved 2026-09-03.
   server toggling.
 - [The MCP server page](mcp-server.md), for the config block, tool list, environment variables
   and engine-download behavior.
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README in
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README in
   this repository, for platform support, the real-input-events behavior and
   the shared engine cache.
 
@@ -193,6 +193,6 @@ All retrieved 2026-09-03.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The strongest
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The strongest
 Cursor use the maintainer has seen is the least glamorous: the agent filling
 out your own half-built form, badly, and telling you exactly where it broke.*

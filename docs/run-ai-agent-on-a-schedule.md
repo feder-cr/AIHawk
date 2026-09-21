@@ -146,13 +146,13 @@ invented just for this.
 
 Retrieved 2026-09-05.
 
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), this repo's README and
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), this repo's README and
   `src/aihawk/cli.py`: the `ui` subcommand, its OpenRouter-key requirement, its
   run-until-interrupted server loop, and the `uvx invisible-playwright fetch`
   prefetch command.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. Built for a person
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. Built for a person
 watching a live pane, this interface is the opposite of a cron job; the two routes
 here fill that gap.*

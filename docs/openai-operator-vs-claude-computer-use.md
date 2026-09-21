@@ -16,7 +16,7 @@ of the two architectures, because the architectural fork they represent is
 still the fork every current tool sits on.
 
 Disclosure: this page is on the wiki of
-[AIHawk](https://github.com/feder-cr/AIHawk), an open-source agent that
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source agent that
 appears in the closing section. Claims about OpenAI trace to their pages and
 mainstream reporting; claims about Anthropic trace to their live
 documentation, all retrieved 2026-09-03.
@@ -177,7 +177,7 @@ for the screenshot-loop architecture in open source.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/AIHawk), an
+*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an
 open-source agent that competes with both approaches described here. That is
 exactly why the quotes come from the vendors' own pages: grade our homework
 against their material, not our summary of it.*

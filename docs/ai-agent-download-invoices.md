@@ -181,7 +181,7 @@ All retrieved 2026-09-03.
   authentication flows, quoted attributively.
 - [The MCP server page](mcp-server.md), for the complete tool list this page's "no download
   tool" statement is checked against.
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README and
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README and
   source in this repository, for `--profile-dir`, `--seed`, `--headed` and
   the key-in-environment guidance.
 
@@ -192,6 +192,6 @@ and [getting an AI agent to fill out forms](ai-agent-fill-out-forms.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The "no download
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The "no download
 tool" paragraph is the page: everything else here works because that limit is
 stated instead of papered over.*

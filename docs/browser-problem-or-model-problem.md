@@ -191,7 +191,7 @@ which is a certainty no model-driven run gives you.
 
 All retrieved 2026-09-03, except the loop itself, re-read 2026-09-08.
 
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), this repository's
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), this repository's
   source: `src/aihawk/agent.py` (the shared loop, which runs until the model
   stops calling tools and has no turn ceiling, and the invalid-arguments
   retry), `src/aihawk/web.py` (the task handle, the stop button and the cancel
@@ -207,7 +207,7 @@ All retrieved 2026-09-03, except the loop itself, re-read 2026-09-08.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The model-free
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The model-free
 replay is how the maintainer runs this exact split while debugging; the wrong
 first version of the snippet above is left described because that is how it
 went.*

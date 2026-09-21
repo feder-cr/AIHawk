@@ -26,7 +26,7 @@ below is a thin wrapper over the engine, and the interface (`aihawk ui`) is a
 client of it like any other.
 
 **How to install this, and the two ways to use it, are in
-[AIHawk's README](https://github.com/feder-cr/AIHawk#readme).** This page keeps
+[AIHawk's README](https://github.com/feder-cr/aihawk_mcp_server#readme).** This page keeps
 what the server itself owns: the config block for clients that take a file, the
 settings, and the tools.
 
@@ -400,7 +400,7 @@ STEALTHFOX_MCP_TRANSPORT=http uvx aihawk        # Linux
 $env:STEALTHFOX_MCP_TRANSPORT = "http"; uvx aihawk   # Windows
 ```
 
-To SEE the browser rather than share it, [AIHawk](https://github.com/feder-cr/AIHawk)
+To SEE the browser rather than share it, [AIHawk](https://github.com/feder-cr/aihawk_mcp_server)
 shows the live page beside the conversation.
 
 ## Notes
@@ -412,5 +412,5 @@ shows the live page beside the conversation.
 
 ## License
 
-[MIT](https://github.com/feder-cr/AIHawk/blob/main/LICENSE),
+[MIT](https://github.com/feder-cr/aihawk_mcp_server/blob/main/LICENSE),
 the same as the engine it wraps.

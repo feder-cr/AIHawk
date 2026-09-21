@@ -18,7 +18,7 @@ search that brought you here is usually not "is Skyvern good" - it is - but
 "which half of that sentence is a problem for me, and what answers it".
 
 Disclosure before anything else: this wiki belongs to
-[AIHawk](https://github.com/feder-cr/AIHawk), an open-source agent that
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source agent that
 competes with Skyvern and appears below as one of the alternatives. Every
 claim about Skyvern here traces to its own repository, and where Skyvern is
 the better tool this page says so.
@@ -182,7 +182,7 @@ full decision framework.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/AIHawk),
+*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server),
 which competes with Skyvern. That is why the page opens by crediting
 Skyvern's honesty, closes its survey with where Skyvern wins, and quotes the
 README instead of paraphrasing it.*

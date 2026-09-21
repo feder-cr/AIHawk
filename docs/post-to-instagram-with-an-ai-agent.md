@@ -159,7 +159,7 @@ All retrieved 2026-09-03.
   3.2, quoted verbatim above.
 - [Instagram Terms of Use](https://help.instagram.com/581066165581870),
   cited by reference; not readable by plain fetch this session, as noted.
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its source and
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its source and
   the tool server's source in this repository's family, for the exact tool
   vocabulary and the absence of a file-upload action.
 
@@ -171,6 +171,6 @@ rest of [Using the Agent](guides-using-the-agent.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The paragraph
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The paragraph
 admitting the agent cannot finish this task is the most useful one on the
 page, which is exactly why it is here.*

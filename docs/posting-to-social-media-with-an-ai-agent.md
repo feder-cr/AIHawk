@@ -192,7 +192,7 @@ rest of [Using the Agent](guides-using-the-agent.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The maintainer
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The maintainer
 posts release announcements through the platforms' own tools and reads
 everything before it ships; the agent earns its keep on the surfaces that
 never got an API.*

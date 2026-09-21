@@ -32,7 +32,7 @@ it is running in your browser.
 **A browser your code drives, with an agent in the loop.** No window you sit in
 front of. A program starts a browser, an LLM decides what to do next, and the
 browser does it. browser-use, Skyvern, Stagehand and
-[AIHawk](https://github.com/feder-cr/AIHawk) - this wiki's project - are this
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server) - this wiki's project - are this
 shape. Nobody is logged in unless you arrange it.
 
 The words are almost the same and the risk profile is opposite. If you are
@@ -139,11 +139,11 @@ one.
 - [Top 5 agentic browsers in 2026: capabilities and security risks](https://seraphicsecurity.com/learn/ai-browser/top-5-agentic-browsers-in-2026-capabilities-and-security-risks/), Seraphic Security, retrieved 2026-09-10, for the security framing and the product list.
 - [What is an agentic browser](https://www.sigmabrowser.com/blog/what-is-an-agentic-browser-best-agentic-browsers-in-2026), Sigma, retrieved 2026-09-10, a vendor overview of the consumer shape.
 - [Same-Origin Policy for Agentic Browsers](https://arxiv.org/pdf/2606.14027), arXiv preprint, retrieved 2026-09-10, for the browser-level direction on prompt injection.
-- The [browser-use](https://github.com/browser-use/browser-use), [Skyvern](https://github.com/Skyvern-AI/skyvern) and [AIHawk](https://github.com/feder-cr/AIHawk) repositories for the library shape.
+- The [browser-use](https://github.com/browser-use/browser-use), [Skyvern](https://github.com/Skyvern-AI/skyvern) and [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) repositories for the library shape.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/AIHawk), which
+*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), which
 is one of the tools in the second category. The page is deliberately about the
 category rather than the product, and the section that tells you when you do not
 want an agent is there because it is the honest answer more often than a project

@@ -198,7 +198,7 @@ All retrieved 2026-09-03.
 - [MDN: Client-side form validation](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms/Form_validation),
   for the built-in constraint attributes and how browsers block submission and
   surface messages.
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README in this
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README in this
   repository, for the real-input-events behavior, the calendar-widget example
   prompt, and the responsible-use position quoted above.
 
@@ -208,6 +208,6 @@ rest of [Using the Agent](guides-using-the-agent.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki, written from
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki, written from
 transcripts of its agent doing exactly this. The advice to keep the submit click
 human is not a disclaimer, it is how the maintainer runs it.*

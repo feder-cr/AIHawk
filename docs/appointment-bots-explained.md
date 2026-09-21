@@ -181,6 +181,6 @@ the rest of [Using the Agent](guides-using-the-agent.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The agent is good
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The agent is good
 at watching pages patiently; the maintainer's position is that booking stays a
 human act, in your own name, at the queue's own pace.*

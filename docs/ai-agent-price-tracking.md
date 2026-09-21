@@ -156,13 +156,13 @@ pages a day, a script is cheaper, faster, and the better tool.
 
 Retrieved 2026-09-05.
 
-- [AIHawk README](https://github.com/feder-cr/AIHawk#readme), for the
+- [AIHawk README](https://github.com/feder-cr/aihawk_mcp_server#readme), for the
   `uvx aihawk ui` interface, the `--proxy` option and its effect on timezone,
   locale and egress, and the `--profile-dir` option for keeping a session
   between runs.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The agent reads
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The agent reads
 the number that is actually on the screen; catching a mispriced sale banner
 before checkout is still the reader's job.*

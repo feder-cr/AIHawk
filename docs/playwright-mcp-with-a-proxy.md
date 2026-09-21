@@ -71,7 +71,7 @@ sessions, not inside one.
 
 ## In this project
 
-[AIHawk](https://github.com/feder-cr/AIHawk)'s server takes the proxy in two
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server)'s server takes the proxy in two
 places rather than one. `STEALTHFOX_PROXY` in the config block that registers
 the server is the default exit for everything it opens. `browser_open` also
 takes a `proxy` argument, so the exit is changeable mid-conversation without

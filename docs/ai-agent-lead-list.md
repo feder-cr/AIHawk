@@ -152,12 +152,12 @@ generally on
 
 Retrieved 2026-09-05.
 
-- [AIHawk README](https://github.com/feder-cr/AIHawk#readme), for the
+- [AIHawk README](https://github.com/feder-cr/aihawk_mcp_server#readme), for the
   `uvx aihawk ui` interface and the MCP path for assistants that can already
   run tools.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The agent reads
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The agent reads
 the public page; deciding who to email, and what to promise them, is still
 yours.*

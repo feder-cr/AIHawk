@@ -190,7 +190,7 @@ All retrieved 2026-09-03.
   for the network side of layer 1.
 - [ASN and IP reputation in bot detection](https://github.com/feder-cr/invisible_playwright/wiki/asn-and-ip-reputation-in-bot-detection),
   for layer 2.
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README in this
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README in this
   repository, for the engine, proxy and input-event claims about AIHawk.
 
 **See also:** [the timing signal AI agents give off](ai-agent-timing-signal.md),
@@ -200,6 +200,6 @@ All retrieved 2026-09-03.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. AIHawk's engine exists
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. AIHawk's engine exists
 for layer 1, which is why this page could afford to be blunt about the other three:
 they are yours, whatever agent you run.*

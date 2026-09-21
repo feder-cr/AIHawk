@@ -76,7 +76,7 @@ is a real architectural fork, not a detail.
 
 ### AIHawk - ours, with the browser as the differentiator
 
-[github.com/feder-cr/AIHawk](https://github.com/feder-cr/AIHawk). About 30k
+[github.com/feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server). About 30k
 stars, MIT (distributions before 2 September 2026 remain AGPL-3.0). The stars
 predate the current shape: the project began as a job-application bot and is
 becoming a general web agent, which its own description says plainly.
@@ -179,7 +179,7 @@ framework above the level of any one repo.
   [Agent-S](https://github.com/simular-ai/Agent-S),
   [browserbase/open-operator](https://github.com/browserbase/open-operator),
   [All-Hands-AI/open-operator](https://github.com/All-Hands-AI/open-operator)
-  and [AIHawk](https://github.com/feder-cr/AIHawk) repositories, all retrieved
+  and [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) repositories, all retrieved
   2026-09-03; stars, licenses, descriptions and archive status as shown there
   that day.
 - [OpenAI computer use guide](https://platform.openai.com/docs/guides/tools-computer-use),
@@ -187,6 +187,6 @@ framework above the level of any one repo.
 
 ---
 
-*Maintained alongside [AIHawk](https://github.com/feder-cr/AIHawk), one of the
+*Maintained alongside [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), one of the
 repositories on this list. The star counts that beat ours are printed anyway,
 because a survey that hides the bigger projects is an ad, not a survey.*

@@ -17,7 +17,7 @@ capability without a Google subscription attached to it, the last section of
 this page is the part written for you.
 
 A disclosure before anything else: this page lives on the wiki of
-[AIHawk](https://github.com/feder-cr/AIHawk), an open-source agent in the
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source agent in the
 same category, which appears in that last section with the conflict stated.
 Every date and claim here was checked against Google's pages or press
 coverage of them on 2026-09-03.
@@ -128,7 +128,7 @@ MIT) is the adoption leader and drives Chromium-family browsers;
 vision-first approach on Playwright; [Agent S](https://github.com/simular-ai/Agent-S)
 (~12k, Apache-2.0) operates the whole desktop, which makes it the nearest
 open relative of Mariner's screenshot generality; and
-[AIHawk](https://github.com/feder-cr/AIHawk) (~30k, MIT), our own project,
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server) (~30k, MIT), our own project,
 pairs the agent with a Firefox patched at the source level so that what a
 page inspects looks like a normal desktop browser rather than an
 automation build. Ours is the one claim on this page we cannot make
@@ -184,11 +184,11 @@ replacement that will not need replacing.
 - [9to5Google: Gemini app rolling out Gemini 3 Pro and Gemini Agent](https://9to5google.com/2025/11/18/gemini-3-pro-app/), fetched 2026-09-03: the 18 November 2025 launch, Ultra-only US availability, the Mariner lineage quote, and the confirmation behavior.
 - [9to5Google: Chrome rolling out Gemini 3-powered auto browse](https://9to5google.com/2026/01/28/chrome-gemini-auto-browse/), fetched 2026-09-03: the 28 January 2026 rollout, AI Pro and Ultra tiers, daily action limits, the action log and Take over task.
 - [Google: Introducing the Gemini 2.5 Computer Use model](https://blog.google/innovation-and-ai/models-and-research/google-deepmind/gemini-computer-use-model/), fetched 2026-09-03, and the [Gemini API computer use docs](https://ai.google.dev/gemini-api/docs/computer-use), fetched 2026-09-03: model naming, the action loop, environment support, safety options and the Preview caveat.
-- The [browser-use](https://github.com/browser-use/browser-use), [Skyvern](https://github.com/Skyvern-AI/skyvern), [Agent-S](https://github.com/simular-ai/Agent-S) and [AIHawk](https://github.com/feder-cr/AIHawk) repositories, star counts and licenses read via the GitHub API 2026-09-03.
+- The [browser-use](https://github.com/browser-use/browser-use), [Skyvern](https://github.com/Skyvern-AI/skyvern), [Agent-S](https://github.com/simular-ai/Agent-S) and [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) repositories, star counts and licenses read via the GitHub API 2026-09-03.
 
 ---
 
-*Maintained by the team behind [AIHawk](https://github.com/feder-cr/AIHawk),
+*Maintained by the team behind [AIHawk](https://github.com/feder-cr/aihawk_mcp_server),
 an open-source AI web agent. We benefit when readers conclude that hosted
 agents are impermanent, which is exactly why every date above traces to
 Google's own pages or to coverage of them rather than to our say-so.*

@@ -183,7 +183,7 @@ All retrieved 2026-09-03, except the OpenRouter pricing, retrieved 2026-09-08.
   reference example of a DOM-plus-screenshot observation design.
 - [GLM-5.3-Flash on OpenRouter](https://openrouter.ai/z-ai/glm-5.3-flash), for
   current per-token pricing of AIHawk's default model.
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README in this
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README in this
   repository, for the claims about AIHawk itself.
 
 **See also:** [open-source AI browser agents](ai-browser-agent-open-source.md),
@@ -192,6 +192,6 @@ All retrieved 2026-09-03, except the OpenRouter pricing, retrieved 2026-09-08.
 
 ---
 
-*Maintained alongside [AIHawk](https://github.com/feder-cr/AIHawk), an open-source
+*Maintained alongside [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source
 web agent with a real patched Firefox underneath. The loop described above is the
 one it runs, which is how its failure modes ended up documented this specifically.*

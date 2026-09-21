@@ -80,7 +80,7 @@ so hold it constant when you compare them.
 
 ## In this project
 
-[AIHawk](https://github.com/feder-cr/AIHawk) is model-agnostic by design. Used
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server) is model-agnostic by design. Used
 as an MCP server, the model is whatever your assistant runs, and the choice is
 not ours to make. Used through its own interface, it reaches models through
 OpenRouter with your key, so you can change the model without changing anything

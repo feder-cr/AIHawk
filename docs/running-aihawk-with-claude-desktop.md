@@ -179,7 +179,7 @@ All retrieved 2026-09-03.
 - [Connect to local MCP servers (modelcontextprotocol.io)](https://modelcontextprotocol.io/quickstart/user),
   for Desktop's Edit Config flow, the restart requirement, per-action
   approvals, the connectors UI and the MCP log locations.
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README in
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README in
   this repository, for the platform support boundary and the shared engine
   cache.
 
@@ -190,5 +190,5 @@ the rest of [Using the Agent](guides-using-the-agent.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The config block
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The config block
 lives on one page and is linked from here rather than copied, because a config duplicated across two pages is a config that will one day be wrong in one of the two places.*

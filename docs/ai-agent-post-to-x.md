@@ -164,7 +164,7 @@ All retrieved 2026-09-03.
 - [X automation rules](https://help.x.com/en/rules-and-policies/x-automation),
   cited by reference; it returned 403 to plain fetches this session, so no
   text from it is quoted.
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README
   and source in this repository, for `--profile-dir`, real input events,
   the absence of a file-upload tool, and the human-review rule.
 
@@ -176,6 +176,6 @@ All retrieved 2026-09-03.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The page that
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The page that
 tells you to pay X fifteen cents a day instead of running our agent is the
 page you can trust about the cases where the agent is the right call.*

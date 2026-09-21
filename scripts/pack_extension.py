@@ -2,7 +2,7 @@
 one that carries what it must not.
 
 Installed from the git URL, the extension is a clone of the whole repository:
-measured 2026-09-21, `gemini extensions install https://github.com/feder-cr/AIHawk`
+measured 2026-09-21, `gemini extensions install https://github.com/feder-cr/aihawk_mcp_server`
 put docs, articles, tests and src on the person's disk to deliver two files,
 `gemini-extension.json` and the setup skill. Gemini CLI installs from a
 GitHub release instead when the Latest release carries an asset it can pick:

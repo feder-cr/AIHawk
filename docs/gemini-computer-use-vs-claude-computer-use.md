@@ -18,7 +18,7 @@ environment and the model supplies the next action. Two vendors, one
 architecture, real differences in the details.
 
 Disclosure: this page sits on the wiki of
-[AIHawk](https://github.com/feder-cr/AIHawk), an open-source agent in the
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source agent in the
 same category. It appears in exactly one labeled aside near the end and
 nowhere else. Everything about the two vendors traces to their live
 documentation, quoted or paraphrased with dates.
@@ -138,7 +138,7 @@ walking away, neither vendor's design agrees with your plan.
 | Consumer sibling | Gemini Agent; auto browse in Chrome | Claude in Chrome extension |
 
 **An aside from the maintainers, labeled as such:** our project,
-[AIHawk](https://github.com/feder-cr/AIHawk), is not a third column of
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), is not a third column of
 this table - it is an already-assembled agent rather than an API building
 block, it drives its own source-patched Firefox, and it can sit under
 either vendor's models via OpenRouter or an MCP assistant. If you were
@@ -206,7 +206,7 @@ the pre-assembled open versions of this loop.
 
 ---
 
-*Refereed by the maintainers of [AIHawk](https://github.com/feder-cr/AIHawk),
+*Refereed by the maintainers of [AIHawk](https://github.com/feder-cr/aihawk_mcp_server),
 an open-source agent that competes with both tools compared here. Our one
 paragraph is labeled; the rest is the vendors' own documentation, cited so
 you can check our whistle-blowing against the rulebook.*

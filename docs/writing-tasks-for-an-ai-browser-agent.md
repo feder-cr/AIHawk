@@ -159,13 +159,13 @@ chose.
 
 All retrieved 2026-09-05.
 
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), this repository's
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), this repository's
   README, for the Hacker News and flight-fare example prompts, both read in
   the working tree 2026-09-05.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. Every
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. Every
 before/after pair above follows the same shape the project's own README
 uses in its worked example: name the page, name the finish line, name the
 shape of the answer.*

@@ -9,7 +9,7 @@ AIHawk is an open-source AI browser agent: a web browsing agent with a real brow
 around it - what an AI web agent is, how the tools in this space compare,
 what to do when an agent gets blocked, and how to put an agent to work.
 
-The [README](https://github.com/feder-cr/AIHawk#readme) is the fastest way to
+The [README](https://github.com/feder-cr/aihawk_mcp_server#readme) is the fastest way to
 run AIHawk. The pages here are for the questions that come before and after:
 which tool fits, why something failed, and what is actually happening
 underneath. Every page on this wiki is one link away from this one.

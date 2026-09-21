@@ -16,7 +16,7 @@ the famous name in the space is an infrastructure company, and what you
 actually need is an agent, at which point the infrastructure bill is optional.
 
 This page answers both, with the disclosure up front: it lives on the wiki of
-[AIHawk](https://github.com/feder-cr/AIHawk), an open-source local agent that
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source local agent that
 appears in the second half. Every claim about Browserbase and the other
 vendors below was read from their own sites, pricing pages and repositories
 on 2026-09-03.
@@ -176,7 +176,7 @@ vendor's own page on that date and will drift.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/AIHawk),
+*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server),
 which competes with exactly one half of this page. That is why the other
 half opens with what Browserbase gets right and sends you to Steel, not to
 us.*

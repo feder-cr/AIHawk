@@ -168,7 +168,7 @@ layers.
 
 - AIHawk's own source: the system prompt in `src/aihawk/agent.py` instructs the model
   to inspect pages before acting and to prefer one clear action at a time, and the
-  [README](https://github.com/feder-cr/AIHawk#readme) documents the input behaviour
+  [README](https://github.com/feder-cr/aihawk_mcp_server#readme) documents the input behaviour
   (pointer moves, keys pressed, JavaScript form-fill refused). Both read 2026-09-03.
 - The engine wiki's
   [testing method](https://github.com/feder-cr/invisible_playwright/wiki/how-to-test-bot-detection),
@@ -185,7 +185,7 @@ the rhythm of a screenshot-driven agent specifically.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/AIHawk), an AI agent
+*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an AI agent
 on a Firefox patched at the C++ level. The engine makes the browser real; the rhythm
 comes from the loop, and this page is what I check first when a session of my own
 gets challenged after the third click.*

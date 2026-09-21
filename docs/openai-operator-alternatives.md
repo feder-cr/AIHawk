@@ -16,7 +16,7 @@ in early August 2026, and Atlas, OpenAI's standalone AI browser, shut down on
 product". It means the whole category, and the category has real options.
 
 One disclosure before the list: this page lives on the wiki of
-[AIHawk](https://github.com/feder-cr/AIHawk), which appears below as one of
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), which appears below as one of
 those options. Every claim about another tool here traces to that tool's own
 site, repository, or documentation, retrieved on 2026-09-03, and where another
 tool covers more than ours does, the page says so.
@@ -61,7 +61,7 @@ pages on 2026-09-03 and will drift.
 | [browser-use](https://github.com/browser-use/browser-use) | Yes, MIT (~112k stars) | Your key, or their cloud and models | Chromium-family browser via automation protocol | Your machine or their cloud |
 | [Skyvern](https://github.com/Skyvern-AI/skyvern) | Yes, AGPL-3.0 (~23k stars) | Your key, or their cloud | Playwright-driven browser, vision-LLM based | Your machine or their cloud |
 | [Agent S3](https://github.com/simular-ai/Agent-S) | Yes, Apache-2.0 (~12k stars) | Your key | The whole desktop GUI, not only a browser | Your machine |
-| [AIHawk](https://github.com/feder-cr/AIHawk) | Yes, MIT (~30k stars) | Your OpenRouter key, or your MCP assistant's model | Its own Firefox, patched at the C++ level | Your machine |
+| [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) | Yes, MIT (~30k stars) | Your OpenRouter key, or your MCP assistant's model | Its own Firefox, patched at the C++ level | Your machine |
 
 ## The vendor routes that remain
 
@@ -179,12 +179,12 @@ for the two big-vendor architectures side by side.
 - [TechCrunch on the Atlas shutdown](https://techcrunch.com/2026/07/09/openai-is-shutting-down-atlas-but-its-ai-browser-ambitions-are-still-growing/) and [Bloomberg on the ChatGPT Work launch](https://www.bloomberg.com/news/articles/2026-07-09/openai-unveils-chatgpt-work-agent-to-field-tasks-for-hours), surfaced via search 2026-09-03.
 - [OpenAI computer use guide](https://platform.openai.com/docs/guides/tools-computer-use), surfaced via search 2026-09-03.
 - [Anthropic: computer use tool documentation](https://platform.claude.com/docs/en/agents-and-tools/tool-use/computer-use-tool), retrieved 2026-09-03; Claude in Chrome general availability per coverage surfaced via search the same day.
-- The [browser-use](https://github.com/browser-use/browser-use), [Skyvern](https://github.com/Skyvern-AI/skyvern), [Agent-S](https://github.com/simular-ai/Agent-S) and [AIHawk](https://github.com/feder-cr/AIHawk) repositories, retrieved 2026-09-03.
+- The [browser-use](https://github.com/browser-use/browser-use), [Skyvern](https://github.com/Skyvern-AI/skyvern), [Agent-S](https://github.com/simular-ai/Agent-S) and [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) repositories, retrieved 2026-09-03.
 - [SiliconANGLE on browser-use's $17M seed](https://siliconangle.com/2025/03/23/browser-use-raises-17m-help-steer-ai-agents-internet/), surfaced via search 2026-09-03.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/AIHawk), an
+*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an
 open-source AI web agent in exactly this space. The comparison above is the one
 we would want to read ourselves, which is why the disclosure sits at the top
 and every claim about another tool traces to that tool's own material.*

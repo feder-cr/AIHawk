@@ -191,6 +191,6 @@ the rest of [Using the Agent](guides-using-the-agent.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The social series
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The social series
 has a page per platform; this is the platform where the honest page is the one
 that tells you why there is no walkthrough.*

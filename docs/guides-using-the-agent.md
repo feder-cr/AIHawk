@@ -9,7 +9,7 @@ nav_order: 5
 Task-shaped guides: a concrete thing you want done, and how an AI agent with a
 real browser actually does it. Worked examples, with the real transcripts and
 the files they produced, live in the repository's
-[articles/](https://github.com/feder-cr/AIHawk/tree/main/articles)
+[articles/](https://github.com/feder-cr/aihawk_mcp_server/tree/main/articles)
 folder; the pages here are the reading companion - what works, what breaks,
 and what to expect before you spend model tokens finding out.
 

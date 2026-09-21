@@ -56,7 +56,7 @@ import urllib.request
 import pytest
 
 PACKAGE = "aihawk"
-REPOSITORY = "feder-cr/AIHawk"
+REPOSITORY = "feder-cr/aihawk_mcp_server"
 
 pytestmark = pytest.mark.skipif(
     os.environ.get("AIHAWK_CHECK_RELEASES") != "1",

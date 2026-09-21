@@ -4,16 +4,16 @@
   "title": "AIHawk",
   "description": "AI browser agent: browses, clicks, types, and reads real web pages from plain-English instructions.",
   "repository": {
-    "url": "https://github.com/feder-cr/AIHawk",
+    "url": "https://github.com/feder-cr/aihawk_mcp_server",
     "source": "github"
   },
-  "version": "0.69.1",
+  "version": "0.69.2",
   "packages": [
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "aihawk",
-      "version": "0.69.1",
+      "version": "0.69.2",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"

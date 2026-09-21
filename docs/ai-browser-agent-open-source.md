@@ -196,7 +196,7 @@ repository page on that date.
 - [nanobrowser/nanobrowser](https://github.com/nanobrowser/nanobrowser)
 - [browseros-ai/BrowserOS](https://github.com/browseros-ai/BrowserOS)
 - [nottelabs/notte](https://github.com/nottelabs/notte), for the near-miss note.
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README in this
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README in this
   repository.
 
 **See also:** [open-source computer-use agents](computer-use-agent-open-source.md),
@@ -209,7 +209,7 @@ frames the overlapping repos by what Operator specifically did.
 
 ---
 
-*This page is part of the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. AIHawk
+*This page is part of the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. AIHawk
 is the entry above with the patched Firefox underneath; the other five projects were
 described from their own repositories, and where one of them fits your case better,
 the table says so.*

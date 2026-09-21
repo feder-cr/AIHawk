@@ -171,7 +171,7 @@ binding, human reviews and submits. See
 
 All retrieved 2026-09-03.
 
-- The [AIHawk README](https://github.com/feder-cr/AIHawk#readme), for the
+- The [AIHawk README](https://github.com/feder-cr/aihawk_mcp_server#readme), for the
   `uvx aihawk ui` command, the MCP path for assistants, and the profile and
   proxy behavior (updated for aihawk 0.3.0, which removed the `do`
   subcommand).
@@ -194,6 +194,6 @@ back.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The agent
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The agent
 reads the listings; you still take the viewing - and the flat with the
 suspiciously wide-angle photos is still small.*

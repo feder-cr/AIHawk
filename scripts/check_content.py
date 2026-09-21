@@ -629,11 +629,11 @@ def selftest():
             b"```\n\n"
             # The client lines, one route per client, as the real page has
             # them: what the eighth part of the fifth check reads.
-            b"```bash\nclaude plugin marketplace add feder-cr/AIHawk\n"
+            b"```bash\nclaude plugin marketplace add feder-cr/aihawk_mcp_server\n"
             b"claude plugin install aihawk@feder-cr\n```\n\n"
-            b"```bash\ncodex plugin marketplace add feder-cr/AIHawk\n"
+            b"```bash\ncodex plugin marketplace add feder-cr/aihawk_mcp_server\n"
             b"codex plugin add aihawk@feder-cr\n```\n\n"
-            b"```bash\ngemini extensions install https://github.com/feder-cr/AIHawk\n```\n")
+            b"```bash\ngemini extensions install https://github.com/feder-cr/aihawk_mcp_server\n```\n")
 
         bad = {
             "banned topic": ("docs/spam.md",
@@ -782,9 +782,9 @@ def selftest():
             # accused the README of running `install aihawk`.
             "the README's client lines, verbatim": (
                 "docs/plugin.md",
-                b"```bash\nclaude plugin marketplace add feder-cr/AIHawk\n"
+                b"```bash\nclaude plugin marketplace add feder-cr/aihawk_mcp_server\n"
                 b"claude plugin install aihawk@feder-cr\n```\n"
-                b"```bash\ngemini extensions install https://github.com/feder-cr/AIHawk\n```\n"),
+                b"```bash\ngemini extensions install https://github.com/feder-cr/aihawk_mcp_server\n```\n"),
             "a route the README teaches, named bare in prose": (
                 "docs/noun.md",
                 b"one `claude plugin install` command, once, and the tools are there\n"),

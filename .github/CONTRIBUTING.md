@@ -39,7 +39,7 @@ If you are not sure, open the issue here and it will be moved.
 ## Development setup
 
 ```bash
-git clone https://github.com/feder-cr/AIHawk.git
+git clone https://github.com/feder-cr/aihawk_mcp_server.git
 cd AIHawk
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
@@ -80,7 +80,7 @@ picture was the only thing that noticed.
 
 ## Opening an issue
 
-Use one of the [templates](https://github.com/feder-cr/AIHawk/issues/new/choose).
+Use one of the [templates](https://github.com/feder-cr/aihawk_mcp_server/issues/new/choose).
 Before you do, search the open and closed issues.
 
 For a bug, the two things that decide how fast it can be answered are the exact

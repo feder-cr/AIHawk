@@ -60,8 +60,8 @@ A plain text or CSV log next to the moved data turns "trust the agent ran" into 
 
 ## Sources
 
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its source in this repository (`src/aihawk/agent.py`), retrieved 2026-09-05 and the loop re-read 2026-09-08, for what the batching section above rests on: a loop with no turn ceiling, and the whole transcript resent on every turn.
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its source in this repository (`src/aihawk/agent.py`), retrieved 2026-09-05 and the loop re-read 2026-09-08, for what the batching section above rests on: a loop with no turn ceiling, and the whole transcript resent on every turn.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. A success message and a correctly saved row are two different facts, and the read-back-to-confirm step exists because only one of them is worth trusting.*
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. A success message and a correctly saved row are two different facts, and the read-back-to-confirm step exists because only one of them is worth trusting.*

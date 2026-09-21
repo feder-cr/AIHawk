@@ -15,7 +15,7 @@ the axes, a short decision path, and the cluster of detailed comparisons
 around it.
 
 The conflict of interest, up front: this is the wiki of
-[AIHawk](https://github.com/feder-cr/AIHawk), an open-source agent that
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source agent that
 appears below as one of the candidates. Every claim about another tool on this
 page and its siblings traces to that tool's own site, repository or
 documentation, retrieved 2026-09-03, and the pages say so where a competitor
@@ -161,14 +161,14 @@ material, and the disclosure is at the top instead of the bottom.
 
 ## Sources
 
-- The [browser-use](https://github.com/browser-use/browser-use), [Skyvern](https://github.com/Skyvern-AI/skyvern), [Agent-S](https://github.com/simular-ai/Agent-S) and [AIHawk](https://github.com/feder-cr/AIHawk) repositories, retrieved 2026-09-03.
+- The [browser-use](https://github.com/browser-use/browser-use), [Skyvern](https://github.com/Skyvern-AI/skyvern), [Agent-S](https://github.com/simular-ai/Agent-S) and [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) repositories, retrieved 2026-09-03.
 - [Anthropic: computer use tool documentation](https://platform.claude.com/docs/en/agents-and-tools/tool-use/computer-use-tool), retrieved 2026-09-03, and coverage of Claude in Chrome's general availability surfaced via search the same day.
 - [Wikipedia: OpenAI Operator](https://en.wikipedia.org/wiki/OpenAI_Operator), retrieved 2026-09-03, and [OpenAI help: Evolving Atlas into ChatGPT](https://help.openai.com/en/articles/20001371-evolving-atlas-into-chatgpt-for-browser-based-agentic-work), surfaced via search 2026-09-03, for the vendor-churn timeline the first axis leans on.
 - [OpenAI computer use guide](https://platform.openai.com/docs/guides/tools-computer-use), surfaced via search 2026-09-03.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/AIHawk), an
+*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an
 open-source AI web agent with an obvious stake in step 6 of the decision path.
 The guide above is the one we would want handed to us, which is why steps 1
 through 5 point somewhere else.*

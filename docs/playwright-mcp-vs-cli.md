@@ -67,7 +67,7 @@ step five. Speed is not why you would pick it.
 
 ## Where this project sits
 
-[AIHawk](https://github.com/feder-cr/AIHawk) is the MCP shape, not the CLI shape,
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server) is the MCP shape, not the CLI shape,
 with one difference from Microsoft's server that matters only in one situation:
 the browser underneath is a Firefox patched at the C++ source rather than a
 stock automation build. That changes what a defended site sees, and nothing

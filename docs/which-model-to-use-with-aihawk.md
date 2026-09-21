@@ -194,7 +194,7 @@ All retrieved 2026-09-08.
   default, for the context-window comparison only.
 - [OpenRouter: Claude Sonnet 4.5](https://openrouter.ai/anthropic/claude-sonnet-4.5),
   for the frontier comparison pricing and the long-context tier.
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), this repository's
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), this repository's
   source: `src/aihawk/llm.py` (default model, OpenRouter-only base URL, key and
   model resolution), `src/aihawk/agent.py` (the loop, its lack of a turn cap,
   the per-reply token cap, transcript resending, usage meter),
@@ -208,7 +208,7 @@ rest of [Using the Agent](guides-using-the-agent.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The mechanics
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The mechanics
 here - the default, the caps, the resent transcript - are read from the source;
 the prices from OpenRouter on the date shown. Both drift, so trust the criteria
 longer than the numbers.*

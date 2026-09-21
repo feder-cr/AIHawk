@@ -32,7 +32,7 @@ engine build for it was `firefox-20` - and [uv](https://docs.astral.sh/uv/),
 because the plugin runs the server with `uvx`. Then, once:
 
 ```bash
-codex plugin marketplace add feder-cr/AIHawk
+codex plugin marketplace add feder-cr/aihawk_mcp_server
 codex plugin add aihawk@feder-cr
 ```
 
@@ -137,7 +137,7 @@ results, and short steps keep its context small and its mistakes cheap.
 ## Short answers to the questions that lead here
 
 **How do I add AIHawk's browser to Codex?**
-`codex plugin marketplace add feder-cr/AIHawk`, then
+`codex plugin marketplace add feder-cr/aihawk_mcp_server`, then
 `codex plugin add aihawk@feder-cr`, once, with uv installed. New sessions
 then have the browser tools.
 
@@ -165,7 +165,7 @@ your machine, where the browser is.
 
 All retrieved 2026-09-22.
 
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), this repository's
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), this repository's
   README (the verbatim install commands, the prerequisites and platforms, the
   engine download), its `.codex-plugin/` and `.agents/plugins/` (the plugin
   manifest and the marketplace file the first command registers) and source:
@@ -186,7 +186,7 @@ and [browser problem or model problem?](browser-problem-or-model-problem.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. Codex takes the
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. Codex takes the
 browser as a plugin, two commands and no config file, and the server says
 "downloading" instead of making you wait, so the first prompt is never a
 mystery.*

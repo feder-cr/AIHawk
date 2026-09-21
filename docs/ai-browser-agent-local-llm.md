@@ -41,7 +41,7 @@ The attachment mechanics do not change based on where the model lives. The
 shape, even though Claude Code's own model is hosted rather than local:
 
 ```bash
-claude plugin marketplace add feder-cr/AIHawk
+claude plugin marketplace add feder-cr/aihawk_mcp_server
 claude plugin install aihawk@feder-cr
 ```
 
@@ -144,7 +144,7 @@ fault regardless of any model; if not, the model was the variable.
 
 Retrieved 2026-09-05.
 
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), this repository's README,
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), this repository's README,
   `src/aihawk/llm.py` (the hardcoded OpenRouter base URL and default model) and
   `src/aihawk/cli.py` (the `ui` command's key requirement and its own note that
   driving the browser without a model at all is the `invisible_playwright` library's
@@ -152,7 +152,7 @@ Retrieved 2026-09-05.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. This interface has
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. This interface has
 never had a local-model flag to remove; the local route has always run through a
 different client entirely, and that is worth saying plainly before anyone goes
 looking for a setting that isn't there.*

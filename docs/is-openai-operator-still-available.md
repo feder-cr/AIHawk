@@ -20,7 +20,7 @@ because the churn confused a lot of people, and then the practical part: what
 someone who wants that capability today can actually use.
 
 A note on who is telling you this: this page lives on the wiki of
-[AIHawk](https://github.com/feder-cr/AIHawk), an open-source agent in the same
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source agent in the same
 space, which appears once in the alternatives section below with that conflict
 declared.
 
@@ -155,7 +155,7 @@ replacement that will not need replacing.
 
 ---
 
-*Kept current by the maintainers of [AIHawk](https://github.com/feder-cr/AIHawk),
+*Kept current by the maintainers of [AIHawk](https://github.com/feder-cr/aihawk_mcp_server),
 an open-source AI web agent. We have an interest in the answer being "no", so
 every date above traces to OpenAI's own pages or mainstream reporting rather
 than to us.*

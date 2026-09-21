@@ -136,6 +136,6 @@ framework these picks come from.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. AIHawk is one row
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. AIHawk is one row
 in the table above, not the first, and the picks name two other tools before
 they name ours.*

@@ -84,11 +84,11 @@ Attach the browser to your assistant (from the
 [README](../../README.md#1-from-your-assistant-over-mcp)):
 
 ```bash
-claude plugin marketplace add feder-cr/AIHawk
+claude plugin marketplace add feder-cr/aihawk_mcp_server
 claude plugin install aihawk@feder-cr
 ```
 
 Then paste the prompt. The reading companion for this task shape, including
 when a plain diff tool beats an agent and what the failure modes look like,
-is [extracting data to a CSV with an AI agent](https://github.com/feder-cr/AIHawk/wiki/how-to-extract-data-to-csv-with-an-ai-agent)
+is [extracting data to a CSV with an AI agent](https://github.com/feder-cr/aihawk_mcp_server/wiki/how-to-extract-data-to-csv-with-an-ai-agent)
 on the wiki.

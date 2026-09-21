@@ -6,8 +6,8 @@
     "name": "feder-cr",
     "url": "https://github.com/feder-cr"
   },
-  "homepage": "https://github.com/feder-cr/AIHawk/wiki/mcp-server",
-  "repository": "https://github.com/feder-cr/AIHawk",
+  "homepage": "https://github.com/feder-cr/aihawk_mcp_server/wiki/mcp-server",
+  "repository": "https://github.com/feder-cr/aihawk_mcp_server",
   "license": "MIT",
   "keywords": ["browser", "browser-agent", "web-automation", "playwright", "firefox", "computer-use"],
   "skills": "./skills/",
@@ -19,8 +19,8 @@
     "developerName": "feder-cr",
     "category": "Developer Tools",
     "capabilities": [],
-    "websiteURL": "https://github.com/feder-cr/AIHawk",
-    "privacyPolicyURL": "https://github.com/feder-cr/AIHawk#privacy-policy",
+    "websiteURL": "https://github.com/feder-cr/aihawk_mcp_server",
+    "privacyPolicyURL": "https://github.com/feder-cr/aihawk_mcp_server#privacy-policy",
     "logo": "./assets/aihawk-icon-400.png",
     "defaultPrompt": [
       "Go to example.com and tell me the main heading on the page."

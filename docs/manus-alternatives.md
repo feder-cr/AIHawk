@@ -117,7 +117,7 @@ Stars and licenses below were read from each repository on 2026-09-03.
 | [browser-use](https://github.com/browser-use/browser-use) | ~112k | MIT | The browsing layer itself; the component found inside Manus |
 | [Skyvern](https://github.com/Skyvern-AI/skyvern) | ~23k | AGPL-3.0 | Vision-first browser workflows on Playwright, with a managed cloud |
 | [Agent S](https://github.com/simular-ai/Agent-S) | ~12k | Apache-2.0 | Whole-desktop computer use, the widest environment of the open set |
-| [AIHawk](https://github.com/feder-cr/AIHawk) | ~30k | MIT | Ours: an agent bound to its own source-patched Firefox |
+| [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) | ~30k | MIT | Ours: an agent bound to its own source-patched Firefox |
 
 OpenManus is the most literal alternative in the list: it exists because
 Manus's launch was invite-only and the community built an open one. The
@@ -210,12 +210,12 @@ itself is new to you.
 - [Crypto Briefing: Tencent leads effort to unwind Meta's $2B Manus acquisition](https://cryptobriefing.com/tencent-unwind-meta-manus-acquisition/), fetched 2026-09-03: the Tencent and HongShan consortium and the buyback at the original price. [CNBC: Manus to return as independent company](https://www.cnbc.com/2026/08/11/manus-china-meta-acquisition.html) and [Bloomberg: Tencent in talks to take big Manus stake](https://www.bloomberg.com/news/articles/2026-07-10/tencent-in-talks-to-become-largest-holder-of-manus-ft-reports-mrectviz), surfaced via search 2026-09-03.
 - [The Decoder: Chinese AI agent Manus uses Claude Sonnet and open-source technology](https://the-decoder.com/chinese-ai-agent-manus-uses-claude-sonnet-and-open-source-technology/), fetched 2026-09-03: the March 2025 finding and the chief researcher's quotes.
 - [Wikipedia: Manus (AI agent)](https://en.wikipedia.org/wiki/Manus_(AI_agent)), surfaced via search 2026-09-03, for the 6 March 2025 release date.
-- The [OpenManus](https://github.com/FoundationAgents/OpenManus), [browser-use](https://github.com/browser-use/browser-use), [Skyvern](https://github.com/Skyvern-AI/skyvern), [Agent-S](https://github.com/simular-ai/Agent-S) and [AIHawk](https://github.com/feder-cr/AIHawk) repositories, stars and licenses read via the GitHub API 2026-09-03.
+- The [OpenManus](https://github.com/FoundationAgents/OpenManus), [browser-use](https://github.com/browser-use/browser-use), [Skyvern](https://github.com/Skyvern-AI/skyvern), [Agent-S](https://github.com/simular-ai/Agent-S) and [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) repositories, stars and licenses read via the GitHub API 2026-09-03.
 - [9to5Google on Gemini Agent's launch](https://9to5google.com/2025/11/18/gemini-3-pro-app/), fetched 2026-09-03; ChatGPT Work launch date per [Bloomberg](https://www.bloomberg.com/news/articles/2026-07-09/openai-unveils-chatgpt-work-agent-to-field-tasks-for-hours), surfaced via search 2026-09-03.
 
 ---
 
-*Written by the maintainers of [AIHawk](https://github.com/feder-cr/AIHawk),
+*Written by the maintainers of [AIHawk](https://github.com/feder-cr/aihawk_mcp_server),
 one of the open-source rows above. The Manus ownership saga is genuinely
 useful to our argument, which is precisely why every beat of it is cited to
 the reporting rather than told from memory.*

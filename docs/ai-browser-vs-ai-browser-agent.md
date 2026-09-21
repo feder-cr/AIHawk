@@ -19,7 +19,7 @@ actually exists on each side as of September 2026, and gives you the
 test.
 
 Disclosure, as on every comparison here: this wiki belongs to
-[AIHawk](https://github.com/feder-cr/AIHawk), an open-source project on
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source project on
 the agent side of the line. Product statuses below were verified against
 vendors' pages and coverage on 2026-09-03.
 
@@ -184,7 +184,7 @@ agents that sit above both categories.
 
 ---
 
-*From the maintainers of [AIHawk](https://github.com/feder-cr/AIHawk), an
+*From the maintainers of [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an
 open-source AI browser agent - the side of this page's line we live on,
 which is why the browser side above is described entirely in its vendors'
 own verified terms.*

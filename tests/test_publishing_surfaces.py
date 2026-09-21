@@ -118,7 +118,7 @@ SETUP_SKILL = "skills/setup/SKILL.md"
 MCP_FILES = ("mcp.json", ".mcp.json")
 LAUNCH = {"command": "uvx", "args": ["aihawk"]}
 #: The marketplace this repository IS, so `claude plugin marketplace add
-#: feder-cr/AIHawk` needs no catalog kept by anybody else: one entry, whose
+#: feder-cr/aihawk_mcp_server` needs no catalog kept by anybody else: one entry, whose
 #: source is the repository root, because the plugin is the repository. Held
 #: here because it repeats the package name, the description and the author,
 #: and because the README's install line names `<plugin>@<marketplace>`: the

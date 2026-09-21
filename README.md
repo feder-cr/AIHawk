@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/feder-cr/AIHawk/main/assets/aihawk-logo-dark.png">
-  <img alt="AIHawk" src="https://raw.githubusercontent.com/feder-cr/AIHawk/main/assets/aihawk-logo-light.png" width="380">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/feder-cr/aihawk_mcp_server/main/assets/aihawk-logo-dark.png">
+  <img alt="AIHawk" src="https://raw.githubusercontent.com/feder-cr/aihawk_mcp_server/main/assets/aihawk-logo-light.png" width="380">
 </picture>
 
 **AIHawk is an anti detect browser and web browsing agent, open source, with an MCP server for coding agents: undetected, no captchas, no blocks. Tell it what you want in plain language.**
@@ -43,21 +43,21 @@ Then install it in your assistant.
 **Claude Code:**
 
 ```bash
-claude plugin marketplace add feder-cr/AIHawk
+claude plugin marketplace add feder-cr/aihawk_mcp_server
 claude plugin install aihawk@feder-cr
 ```
 
 **Codex:**
 
 ```bash
-codex plugin marketplace add feder-cr/AIHawk
+codex plugin marketplace add feder-cr/aihawk_mcp_server
 codex plugin add aihawk@feder-cr
 ```
 
 **Gemini CLI:**
 
 ```bash
-gemini extensions install https://github.com/feder-cr/AIHawk
+gemini extensions install https://github.com/feder-cr/aihawk_mcp_server
 ```
 
 ### 2. Standalone: the web UI
@@ -137,20 +137,20 @@ both.
 ## The wiki: AI browser-agent guides
 
 The reading room around the agent lives in the
-[wiki](https://github.com/feder-cr/AIHawk/wiki): the
+[wiki](https://github.com/feder-cr/aihawk_mcp_server/wiki): the
 [AI browser-agent landscape: browser-use, Operator-style and
-computer-use agents compared](https://github.com/feder-cr/AIHawk/wiki/guides-alternatives-and-comparisons),
-[what to check when an agent gets blocked](https://github.com/feder-cr/AIHawk/wiki/why-does-my-ai-agent-get-blocked),
-and [what happened to OpenAI Operator](https://github.com/feder-cr/AIHawk/wiki/is-openai-operator-still-available),
+computer-use agents compared](https://github.com/feder-cr/aihawk_mcp_server/wiki/guides-alternatives-and-comparisons),
+[what to check when an agent gets blocked](https://github.com/feder-cr/aihawk_mcp_server/wiki/why-does-my-ai-agent-get-blocked),
+and [what happened to OpenAI Operator](https://github.com/feder-cr/aihawk_mcp_server/wiki/is-openai-operator-still-available),
 among others. Worked examples, transcripts and their outputs live in
-[articles/](https://github.com/feder-cr/AIHawk/tree/main/articles).
+[articles/](https://github.com/feder-cr/aihawk_mcp_server/tree/main/articles).
 
 ## The rest of the family: engine, core
 
 The MCP server from option 1 ships inside this package: `aihawk` with no
 subcommand is the server, `aihawk ui` the interface. Its config blocks for
 clients that take a file, its settings and its tools are on the wiki page
-[The MCP server](https://github.com/feder-cr/AIHawk/wiki/mcp-server).
+[The MCP server](https://github.com/feder-cr/aihawk_mcp_server/wiki/mcp-server).
 
 - **[invisible_playwright](https://github.com/feder-cr/invisible_playwright)**
   The engine, as a Python library, for writing code instead of prompts. The API
@@ -184,11 +184,11 @@ Nothing else is collected and nothing is sent to the author. Sessions,
 profiles and screenshots are stored locally, under `AIHAWK_HOME` if set and
 otherwise in the application-data directory of your system, and are yours to
 delete; nothing is retained anywhere else. Questions go to the
-[issues](https://github.com/feder-cr/AIHawk/issues).
+[issues](https://github.com/feder-cr/aihawk_mcp_server/issues).
 
 ## License
 
-[MIT](https://github.com/feder-cr/AIHawk/blob/main/LICENSE). Everything
+[MIT](https://github.com/feder-cr/aihawk_mcp_server/blob/main/LICENSE). Everything
 distributed before 2 September 2026 was released under AGPL-3.0 and stays under
 it.
 

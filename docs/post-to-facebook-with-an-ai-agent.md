@@ -182,7 +182,7 @@ All retrieved 2026-09-03.
   for the endpoint, permissions and the scheduling window.
 - [Graph API reference: User/feed](https://developers.facebook.com/docs/graph-api/reference/user/feed/),
   for the create operation being unavailable on the personal-profile edge.
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README and
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README and
   source in this repository, for `--profile-dir`, the real-input-events
   behavior, the absence of a file-upload tool, and the human-review rule.
 
@@ -194,6 +194,6 @@ rest of [Using the Agent](guides-using-the-agent.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The rule about
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The rule about
 keeping the final click human is not legal decoration; it is how the
 maintainer uses the agent on accounts that matter to him.*

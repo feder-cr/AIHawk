@@ -11,7 +11,7 @@ DEFAULT_MODEL = "z-ai/glm-5.3-flash"
 #: them every request is anonymous traffic on the key, so the app appears
 #: nowhere however much it is used. They are constants rather than settings
 #: because they name THIS package, not the person running it.
-APP_URL = "https://github.com/feder-cr/AIHawk"
+APP_URL = "https://github.com/feder-cr/aihawk_mcp_server"
 APP_TITLE = "AIHawk"
 
 

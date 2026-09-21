@@ -32,7 +32,7 @@ engine build for it was `firefox-20` - and [uv](https://docs.astral.sh/uv/),
 because the extension runs the server with `uvx`. Then, once:
 
 ```bash
-gemini extensions install https://github.com/feder-cr/AIHawk
+gemini extensions install https://github.com/feder-cr/aihawk_mcp_server
 ```
 
 Gemini CLI asks you to confirm that the extension comes from a third party,
@@ -135,7 +135,7 @@ results, and short steps keep its context small and its mistakes cheap.
 ## Short answers to the questions that lead here
 
 **How do I add AIHawk's browser to Gemini CLI?**
-`gemini extensions install https://github.com/feder-cr/AIHawk`, once, with uv
+`gemini extensions install https://github.com/feder-cr/aihawk_mcp_server`, once, with uv
 installed. New sessions then have the browser tools in `/mcp`.
 
 **Do I need an OpenRouter key for this?** No. The key is only for AIHawk's own
@@ -158,7 +158,7 @@ the last macOS build was `firefox-20`.
 
 All retrieved 2026-09-22.
 
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), this repository's
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), this repository's
   README (the verbatim install command, the prerequisites and platforms, the
   engine download), its `gemini-extension.json` (the manifest Gemini reads)
   and source: `src/aihawk/link.py` and `src/aihawk/web.py` (the interface
@@ -177,7 +177,7 @@ and [browser problem or model problem?](browser-problem-or-model-problem.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. Gemini CLI takes
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. Gemini CLI takes
 the browser as an extension, one command and no config file, and the server
 says "downloading" instead of making you wait, so the first prompt is never a
 mystery.*

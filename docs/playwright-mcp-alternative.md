@@ -31,7 +31,7 @@ a distinct `--user-data-dir` per client. Both are documented options.
 **When a switch is warranted:** if your client only lets you register a bare
 command with no arguments, you may not be able to pass either flag, and a server
 that has no shared profile to fight over saves you the fight.
-[AIHawk](https://github.com/feder-cr/AIHawk) is one: a server is one identity
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server) is one: a server is one identity
 for its whole life, so two registered servers are two browsers by construction
 rather than two clients racing for one directory.
 

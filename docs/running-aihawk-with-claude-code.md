@@ -31,7 +31,7 @@ engine build for it was `firefox-20` - and [uv](https://docs.astral.sh/uv/),
 because the plugin runs the server with `uvx`. Then, once:
 
 ```bash
-claude plugin marketplace add feder-cr/AIHawk
+claude plugin marketplace add feder-cr/aihawk_mcp_server
 claude plugin install aihawk@feder-cr
 ```
 
@@ -141,7 +141,7 @@ results, and short steps keep its context small and its mistakes cheap.
 ## Short answers to the questions that lead here
 
 **How do I add AIHawk's browser to Claude Code?**
-`claude plugin marketplace add feder-cr/AIHawk`, then
+`claude plugin marketplace add feder-cr/aihawk_mcp_server`, then
 `claude plugin install aihawk@feder-cr`, once, with uv installed. New
 sessions then have the browser tools in `/mcp`.
 
@@ -177,7 +177,7 @@ arithmetic measured on this one.
 
 All retrieved 2026-09-03.
 
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), this repository's
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), this repository's
   README (the verbatim install commands, the prerequisites and platforms, the
   engine download and prefetch, "anything the interface can do, your assistant
   can do too"), its `.claude-plugin/` (the plugin manifest and the marketplace
@@ -196,7 +196,7 @@ and [browser problem or model problem?](browser-problem-or-model-problem.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. Claude Code is
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. Claude Code is
 the shortest route into this browser - a plugin, against a config file
 everywhere else - and the README calls the engine fetch "the download nobody
 warns you about", so consider yourself warned.*

@@ -10,7 +10,7 @@ nav_order: 21
 
 RPA records a fixed sequence of clicks on one version of a screen and repeats it exactly, forever, until the screen changes. An AI browser agent reads whatever is on the page and decides what to click, which costs more per run but survives changes that would break a recorded path. Pick by volume and how often the page changes.
 
-This wiki is maintained by the people who build [AIHawk](https://github.com/feder-cr/AIHawk); the goal is a fair split of where each approach wins, not a pitch for one side.
+This wiki is maintained by the people who build [AIHawk](https://github.com/feder-cr/aihawk_mcp_server); the goal is a fair split of where each approach wins, not a pitch for one side.
 
 ## What RPA actually does
 
@@ -74,9 +74,9 @@ This does not decide which agent to run once volume has pointed you at "agent"; 
 
 ## Sources
 
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its source in this repository (`src/aihawk/cli.py`, `src/aihawk/web.py`), retrieved 2026-09-05, for the claim that AIHawk ships no built-in approval console.
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its source in this repository (`src/aihawk/cli.py`, `src/aihawk/web.py`), retrieved 2026-09-05, for the claim that AIHawk ships no built-in approval console.
 - UiPath Studio documentation, https://docs.uipath.com/studio/standalone/latest/user-guide/introduction - the quoted description of Studio, Orchestrator and Robot, and the low-code versus coded build modes. Read 5 September 2026. No pricing or licensing figures are quoted anywhere on this page, because those move and a stale number is worse than none.urrent naming and licensing before publication.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/AIHawk), the agent named above, not the RPA platforms; that is why the governance section concedes a gap in our own category too.*
+*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), the agent named above, not the RPA platforms; that is why the governance section concedes a gap in our own category too.*

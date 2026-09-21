@@ -152,7 +152,7 @@ choices instead.
 
 All retrieved 2026-09-05 unless noted.
 
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), this repository's
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), this repository's
   README, for the `--profile-dir` option and the "Using it responsibly"
   section, read in the working tree 2026-09-05.
 - OWASP GenAI Security Project, "LLM01:2025 Prompt Injection",
@@ -163,6 +163,6 @@ All retrieved 2026-09-05 unless noted.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The mitigations
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The mitigations
 above match the project's own README: read the terms, respect rate limits,
 and do not submit anything a human has not read.*

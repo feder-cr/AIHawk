@@ -217,10 +217,10 @@ All retrieved 2026-09-03.
 - [dgtlmoon/changedetection.io](https://github.com/dgtlmoon/changedetection.io),
   the self-hosted diff-based monitor referenced as the plain-tool baseline,
   including its scheduling and notification features.
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README and
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README and
   source in this repository: the interface entrypoint and the
   open-run-close session behavior in
-  [`src/aihawk/runner.py`](https://github.com/feder-cr/AIHawk/blob/main/src/aihawk/runner.py).
+  [`src/aihawk/runner.py`](https://github.com/feder-cr/aihawk_mcp_server/blob/main/src/aihawk/runner.py).
 - [invisible_playwright](https://github.com/feder-cr/invisible_playwright),
   the engine as a Python library, whose Playwright API the scheduled script
   uses; the script above was executed against books.toscrape.com on
@@ -234,6 +234,6 @@ per-check cost down.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The maintainer runs
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The maintainer runs
 the two-stage version: a free diff watching always, the agent woken only to
 answer "does this matter", which is the only question worth paying it for.*

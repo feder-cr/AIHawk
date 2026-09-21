@@ -73,7 +73,7 @@ fixes. Deleting a lock that a running browser holds corrupts the profile.
 
 ## Why this does not happen the same way here
 
-[AIHawk](https://github.com/feder-cr/AIHawk)'s server went the other way
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server)'s server went the other way
 entirely, and the history is worth the paragraph because it is the same trade
 seen from both ends. Until 0.39.0 a session could hold up to eight browsers
 under names you invented; until 0.41.0 every tool also carried a session

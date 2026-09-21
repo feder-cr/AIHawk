@@ -200,7 +200,7 @@ All retrieved 2026-09-03, except the OpenRouter pricing, retrieved 2026-09-08.
   per-token prices used in the cost arithmetic.
 - [WebArena paper abstract (arXiv:2307.13854)](https://arxiv.org/abs/2307.13854),
   for the 14.41% versus 78.24% end-to-end success figures.
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README in this
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README in this
   repository, for AIHawk's default model and engine claims.
 
 **See also:** [what is an AI web agent?](ai-web-agent-explained.md),
@@ -210,6 +210,6 @@ All retrieved 2026-09-03, except the OpenRouter pricing, retrieved 2026-09-08.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. AIHawk is an agent, so
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. AIHawk is an agent, so
 note what this page did not claim: that agents beat scrapers. Past a few hundred
 uniform pages a day, write the script.*

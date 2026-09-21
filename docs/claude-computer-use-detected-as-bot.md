@@ -178,7 +178,7 @@ full sort.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/AIHawk), an AI agent
+*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an AI agent
 on a Firefox patched at the C++ level. The pattern in this page - clean automation
 layer, guilty machine - is the single most common thing behind "my agent got
 detected", whoever's agent it is.*

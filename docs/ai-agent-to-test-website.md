@@ -165,7 +165,7 @@ All retrieved 2026-09-03.
   and its [wiki](https://github.com/feder-cr/invisible_playwright/wiki), the
   Playwright-API engine and its scripted-automation reference, linked for the
   regression-suite half of the pattern.
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README and
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README and
   source in this repository, for the real-input-events behavior, `--headed`,
   `--seed`, `--profile-dir`, and the agent loop the flakiness section
   describes.
@@ -177,6 +177,6 @@ All retrieved 2026-09-03.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The most useful
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The most useful
 bug report the maintainer ever got from the agent was three words about a
 form nobody had touched in months: "Continue does nothing."*

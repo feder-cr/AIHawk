@@ -16,7 +16,7 @@ the reasonable default, and nothing below changes that.
 
 This page is for people who do have a specific reason. It goes through the
 reasons that are real and verifiable, then the alternatives, one of which is
-ours: this wiki belongs to [AIHawk](https://github.com/feder-cr/AIHawk), so
+ours: this wiki belongs to [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), so
 read the comparison knowing who wrote it. No claim here about browser-use goes
 beyond what its own repository and configuration surface show.
 
@@ -96,7 +96,7 @@ operates the whole desktop, reporting 72.6% on OSWorld. If your automation
 keeps leaving the browser for spreadsheets and dialogs, this is the switch
 that actually addresses it.
 
-**AIHawk** ([repo](https://github.com/feder-cr/AIHawk), ~30k stars, MIT) -
+**AIHawk** ([repo](https://github.com/feder-cr/aihawk_mcp_server), ~30k stars, MIT) -
 ours. The differentiator against browser-use is the browser, not the agent
 loop: AIHawk drives a Firefox patched at the C++ level (the
 invisible_playwright engine), a real browser presenting a normal desktop
@@ -163,11 +163,11 @@ for whether you need an agent at all.
 - [browser-use.com](https://browser-use.com/), retrieved 2026-09-03, for the two commercial products named above.
 - [SiliconANGLE: Browser Use raises $17M](https://siliconangle.com/2025/03/23/browser-use-raises-17m-help-steer-ai-agents-internet/), surfaced via search 2026-09-03.
 - [browser-use getting blocked: what you can and cannot change](browser-use-getting-blocked.md), this wiki's own analysis, which reads `BrowserProfile`'s fields from browser-use's source.
-- The [Skyvern](https://github.com/Skyvern-AI/skyvern), [Agent-S](https://github.com/simular-ai/Agent-S) and [AIHawk](https://github.com/feder-cr/AIHawk) repositories, retrieved 2026-09-03.
+- The [Skyvern](https://github.com/Skyvern-AI/skyvern), [Agent-S](https://github.com/simular-ai/Agent-S) and [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) repositories, retrieved 2026-09-03.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/AIHawk), a
+*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), a
 direct competitor to the tool this page is about. That is why the first
 section praises browser-use, the second tells you how to stay on it, and every
 critical claim points at its own repository.*

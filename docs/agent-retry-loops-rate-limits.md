@@ -212,7 +212,7 @@ another agent framework.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/AIHawk), an AI agent
+*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an AI agent
 on a Firefox patched at the C++ level. The first velocity flag I ever chased was
 raised by our own test harness hammering one endpoint from one address - the browser
 was innocent, the loop was not.*

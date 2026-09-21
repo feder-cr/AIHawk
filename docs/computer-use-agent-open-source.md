@@ -180,6 +180,6 @@ All retrieved 2026-09-03, from each project's own repository.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. AIHawk sits in the
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. AIHawk sits in the
 other category, the browser agents, which is exactly why this page spends its words
 on when pixels beat structure and not the reverse.*

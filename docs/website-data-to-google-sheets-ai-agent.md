@@ -195,7 +195,7 @@ All retrieved 2026-09-03.
   for the other meaning of these search words.
 - [n8n workflow gallery: recursive multi-page scraping into Google Sheets](https://n8n.io/workflows/10173-scrape-multi-page-websites-recursively-with-google-sheets-storage/),
   the template class recommended for recurring mechanical work.
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README and
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README and
   source in this repository, for the no-file-tool, answer-on-stdout
   architecture of the agent loop.
 
@@ -206,7 +206,7 @@ and the rest of [Using the Agent](guides-using-the-agent.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. The maintainer's
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The maintainer's
 own sheets update through the boring path - a scheduled extraction, a served
 CSV, one IMPORTDATA cell - because the boring path is the one still working
 next month.*

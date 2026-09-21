@@ -18,7 +18,7 @@ below is the reasoning, the numbers, and the overlap where the choice gets
 genuinely interesting.
 
 Disclosure first: this wiki belongs to
-[AIHawk](https://github.com/feder-cr/AIHawk), an open-source AI browser
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source AI browser
 agent, so we are a vendor of exactly one side of this comparison. Every
 Firecrawl fact below was read from Firecrawl's own repository, site or
 documentation on 2026-09-03, and the paragraph conceding their side is not
@@ -193,12 +193,12 @@ All retrieved 2026-09-03.
   the Fire-engine exclusion quoted above.
 - [Firecrawl scrape documentation](https://docs.firecrawl.dev/features/scrape):
   the pre-extraction action types.
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), for the agent-side
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), for the agent-side
   claims about our own tool.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. AIHawk is an
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. AIHawk is an
 agent, and this page's first paragraph hands bulk extraction to the other
 category anyway. If we only won half the comparisons, we would rather be
 trusted on that half.*

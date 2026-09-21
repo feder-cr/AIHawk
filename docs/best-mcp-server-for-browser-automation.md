@@ -44,7 +44,7 @@ fighting over one profile, which surfaces as
 
 Servers differ in whether concurrency is a flag or a shape. playwright-mcp makes
 it a flag: `--isolated`, or a distinct `--user-data-dir` per client.
-[AIHawk](https://github.com/feder-cr/AIHawk) makes it a shape: one server is one
+[AIHawk](https://github.com/feder-cr/aihawk_mcp_server) makes it a shape: one server is one
 identity for its whole life, with one helper browser beside it that shares
 nothing, so there is no pool for two clients to collide inside. Neither is free.
 A flag is simpler until you need two of something; a fixed shape means a second

@@ -178,14 +178,14 @@ All retrieved 2026-09-03.
   for the star count, the planner-executor-publisher architecture, the
   search-API approach, and the per-run time and cost figures quoted from its
   README.
-- [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), plus its README and
+- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README and
   source in this repository, for the agent loop, the grounding line in its
   system prompt this page's cost notes describe.
 
 A complete run of this page's worked example, with the agent's counts checked
 against a model-free script on the same pages (they matched, 24 to 24), is in
 the repository:
-[web research, audited](https://github.com/feder-cr/AIHawk/tree/main/articles/web-research-audited).
+[web research, audited](https://github.com/feder-cr/aihawk_mcp_server/tree/main/articles/web-research-audited).
 
 **See also:** [what is an AI web agent?](ai-web-agent-explained.md),
 [AI browser agents vs traditional scraping](ai-browser-agents-vs-traditional-scraping.md),
@@ -195,6 +195,6 @@ the cost half of the equation.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki, which just spent
+*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki, which just spent
 its second section telling you when not to use its own product. That is the
 register the rest of the page earns its claims in.*
