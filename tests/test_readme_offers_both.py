@@ -29,12 +29,16 @@ README = pathlib.Path(__file__).resolve().parents[1] / "README.md"
 #: The literal command for each path. Literal on purpose: this is what a reader
 #: copies, and a paraphrase in the README is not a way in.
 #:
-#: The MCP way is the registration command a reader copies, not the server's
+#: The MCP way is the install command a reader copies, not the server's
 #: name: since 0.11.0 the server is `uvx aihawk` with no subcommand, and
 #: `aihawk` alone is also the start of `aihawk ui`, so the server name could
-#: not tell the two ways apart. The UI way stays bare, without the `uvx `, so
-#: the test measures the offer and not the launcher that starts it.
-MCP_WAY = "claude mcp add"
+#: not tell the two ways apart. It was `claude mcp add` until the README
+#: taught the plugin route: `claude plugin install aihawk@feder-cr`, which
+#: installs the server AND the setup skill, and which Claude Code counts as
+#: an installation of this plugin where a hand-registered server is counted
+#: by nobody. The UI way stays bare, without the `uvx `, so the test measures
+#: the offer and not the launcher that starts it.
+MCP_WAY = "claude plugin install"
 UI_WAY = "aihawk ui"
 
 

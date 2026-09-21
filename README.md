@@ -45,7 +45,8 @@ Then tell your assistant it exists.
 **Claude Code:**
 
 ```bash
-claude mcp add --scope user stealth -- uvx aihawk
+claude plugin marketplace add feder-cr/AIHawk
+claude plugin install aihawk@feder-cr
 ```
 
 **Codex:**
@@ -57,7 +58,7 @@ codex mcp add stealth -- uvx aihawk
 **Gemini CLI:**
 
 ```bash
-gemini mcp add --scope user stealth uvx aihawk
+gemini extensions install https://github.com/feder-cr/AIHawk
 ```
 
 ### 2. Standalone: the web UI

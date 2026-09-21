@@ -1,6 +1,6 @@
 ---
 title: "Running AIHawk's browser from Claude Code"
-description: "One command adds the stealth browser to Claude Code as an MCP server. What happens on first run, which tools Claude gains, prompts to try first, and the two things that go wrong."
+description: "Two commands install the stealth browser in Claude Code as a plugin, with its MCP server and a setup skill. What happens on first run, which tools Claude gains, prompts to try first, and the two things that go wrong."
 parent: "Using the Agent"
 nav_order: 4
 ---
@@ -23,24 +23,33 @@ file instead of a command, and have their own pages:
 the [MCP server page](mcp-server.md),
 which is the one place they are kept current.
 
-## The one line
+## The two lines
 
 Two prerequisites, same as everywhere in this project: Python 3.11 or newer on
 Windows (x86_64) or Linux (x86_64, arm64) - macOS is not supported, the last
 engine build for it was `firefox-20` - and [uv](https://docs.astral.sh/uv/),
-because the command runs the server with `uvx`. Then, once:
+because the plugin runs the server with `uvx`. Then, once:
 
 ```bash
-claude mcp add --scope user stealth -- uvx aihawk
+claude plugin marketplace add feder-cr/AIHawk
+claude plugin install aihawk@feder-cr
 ```
 
-Reading it left to right: `--scope user` registers the server at user scope, so it
-is available in every project rather than only the directory you happened to be
-in; `stealth` is the name it appears under; everything after `--` is the
-command Claude Code will run to start the server, and `uvx` fetches and runs
-the published package, so there is nothing to clone or pip-install first. Start
-a fresh Claude Code session afterwards if one was already open, and `/mcp`
-should list `stealth` among the connected servers.
+The first line registers the AIHawk repository as a plugin marketplace, which
+it is: the repository carries the marketplace file and is the plugin. The
+second installs `aihawk` from it, at user scope by default, so it is available
+in every project rather than only the directory you happened to be in. The
+plugin brings two things: the MCP server, started as `uvx aihawk`, so there is
+nothing to clone or pip-install first; and a `setup` skill that knows about
+the engine download below, so Claude can walk you through it when a browser
+tool reports that the engine is missing. Start a fresh Claude Code session
+afterwards if one was already open, and `/plugin` should list `aihawk` as
+installed, with its server among the connected ones in `/mcp`.
+
+If you registered the server by hand before the plugin existed, as an MCP
+server named `stealth` running `uvx aihawk`, it keeps working under that name:
+the plugin is the same server, plus the skill, under the name `aihawk`. Keep
+one or the other, not both, or every tool shows up twice.
 
 ## First run: the download nobody warns you about
 
@@ -61,7 +70,8 @@ AIHawk's own interface if you later run that too.
 
 ## What Claude actually gains
 
-A set of browser tools, prefixed with the server name you chose. The
+A set of browser tools, prefixed with the server's name: `aihawk` from the
+plugin, or whatever you chose when registering by hand. The
 authoritative list is whatever `/mcp` shows for your installed server version;
 the families, with the names AIHawk's own client code knows them by:
 
@@ -106,11 +116,12 @@ results, and short steps keep its context small and its mistakes cheap.
 
 ## Troubleshooting
 
-- **`stealth` is not listed in `/mcp`.** Run `claude mcp list` in a terminal
-  to see what is registered and at which scope. If the add command was run
-  while a session was open, the running session may not know it yet; start a
-  new one. If `uvx` is not on your PATH, the server can be registered and
-  still fail to start - install uv and try `uvx aihawk` by
+- **The server is not listed in `/mcp`.** Run `claude plugin list` in a
+  terminal to see what is installed - or `claude mcp list`, for a server
+  registered by hand, which also says at which scope. If the install command
+  was run while a session was open, the running session may not know it yet;
+  start a new one. If `uvx` is not on your PATH, the plugin can be installed
+  and its server still fail to start - install uv and try `uvx aihawk` by
   hand, which surfaces the real error.
 - **The first browsing prompt hangs or times out.** Almost always the engine
   download. Run the prefetch command above and retry; afterwards a first page
@@ -128,8 +139,9 @@ results, and short steps keep its context small and its mistakes cheap.
 ## Short answers to the questions that lead here
 
 **How do I add AIHawk's browser to Claude Code?**
-`claude mcp add --scope user stealth -- uvx aihawk`, once, with uv
-installed. New sessions then have the browser tools in `/mcp`.
+`claude plugin marketplace add feder-cr/AIHawk`, then
+`claude plugin install aihawk@feder-cr`, once, with uv installed. New
+sessions then have the browser tools in `/mcp`.
 
 **Do I need an OpenRouter key for this?** No. The key is only for AIHawk's own
 interface and CLI, where AIHawk must bring a model. In Claude Code, Claude is
@@ -163,9 +175,10 @@ arithmetic measured on this one.
 All retrieved 2026-09-03.
 
 - [feder-cr/AIHawk](https://github.com/feder-cr/AIHawk), this repository's
-  README (the verbatim add command, the prerequisites and platforms, the
+  README (the verbatim install commands, the prerequisites and platforms, the
   engine download and prefetch, "anything the interface can do, your assistant
-  can do too") and source: `src/aihawk/link.py` and `src/aihawk/web.py` (the
+  can do too"), its `.claude-plugin/` (the plugin manifest and the marketplace
+  file the first command registers) and source: `src/aihawk/link.py` and `src/aihawk/web.py` (the
   interface reaching the browser over MCP as an ordinary client),
   `src/aihawk/actions_help.py` (the tool names above), and `pyproject.toml`
   (the engine version floor, and the server that ships inside the package since 0.10.0).
@@ -181,6 +194,6 @@ and [browser problem or model problem?](browser-problem-or-model-problem.md).
 ---
 
 *From the [AIHawk](https://github.com/feder-cr/AIHawk) wiki. Claude Code is
-the shortest route into this browser - one command, against a config file
+the shortest route into this browser - a plugin, against a config file
 everywhere else - and the README calls the engine fetch "the download nobody
 warns you about", so consider yourself warned.*

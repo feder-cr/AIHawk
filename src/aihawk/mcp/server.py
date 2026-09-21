@@ -223,10 +223,13 @@ mcp = FastMCP("stealth", instructions=INSTRUCTIONS, lifespan=_lifespan)
 # was driving got the number of a library we merely depend on.
 # The field belongs to the low-level Server and is public there; only the
 # FastMCP wrapper omits it, so setting it here is filling a gap, not reaching
-# into something private. The name stays `stealth` on purpose: it is what the
-# READMEs tell a person to register (`claude mcp add ... stealth -- uvx
-# aihawk`) and it prefixes every tool a client sees (`mcp__stealth__*`), so
-# moving it would rename tools under people who already have them wired.
+# into something private. The name stays `stealth` on purpose: it is the key
+# a person registering the server by hand was told to use (`claude mcp add
+# ... stealth -- uvx aihawk`, the README's line until the plugin route) and
+# it prefixes every tool such a client sees (`mcp__stealth__*`), so moving it
+# would rename tools under people who already have them wired. The plugin's
+# `.mcp.json` keys the same server as `aihawk`; that key is the client's and
+# never passes through here.
 mcp._mcp_server.version = __version__
 
 

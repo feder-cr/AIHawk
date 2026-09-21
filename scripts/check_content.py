@@ -19,14 +19,22 @@ Count the numbered entries.
      exists, and image assets must carry no metadata chunks.
   5. The way in is written once. The README's code blocks are the source:
      in every fence that installs uv (one per system), the run from the
-     installer line through the fetch line, PATH line included; and the first
-     fetch line names the launcher in front of every command (`uvx` today).
-     A page that carries the uv installer carries those lines verbatim,
-     every code block runs `aihawk` (the server, or `aihawk ui`) and the fetch
-     with the README's launcher, and no page teaches a way in that
-     the README does not (`pip install aihawk`). On 2026-09-06 the route went
-     uv, pip, uv in one day, and each flip touched the README plus twenty-odd
-     wiki pages by hand.
+     installer line through the fetch line, PATH line included; the first
+     fetch line names the launcher in front of every command (`uvx` today);
+     and the lines that tell a client the server exists, one per client
+     (`claude plugin install aihawk@feder-cr`, `gemini extensions install
+     ...`, `codex mcp add ...`). A page that carries the uv installer carries
+     the install lines verbatim, every code block runs `aihawk` (the server,
+     or `aihawk ui`) and the fetch with the README's launcher, a page that
+     tells a client the server exists says it with the README's line or names
+     the route bare, and no page teaches a way in that the README does not
+     (`pip install aihawk`; `claude mcp add`, once the README moved to the
+     plugin). On 2026-09-06 the route went uv, pip, uv in one day, and each
+     flip touched the README plus twenty-odd wiki pages by hand; on
+     2026-09-21 Claude Code moved from `claude mcp add` to the plugin and
+     Gemini CLI from `gemini mcp add` to the extension, and five pages went
+     on teaching the old lines with this check green, because it read only
+     the installer lines.
   6. MCP-tool scan. Every `browser_*` or `session_*` tool a page teaches must
      be declared in the server. 0.39.0 and 0.41.0 between them removed nine
      tools, and four published pages went on teaching them - one told the
@@ -91,6 +99,14 @@ WAY_IN = ("aihawk", "invisible-playwright fetch")
 INSTALLER = "astral.sh/uv/install"
 OTHER_WAYS = ("pip install aihawk", "pip install invisible-playwright-mcp",
               "pipx install aihawk", "pipx run aihawk")
+#: How a client is told the server exists: the start of one line per client
+#: in the README, and every form a README of this project has taught. A page
+#: repeats the README's whole line, names the route bare in prose (`claude
+#: plugin install`, as a noun), or says nothing; a route the README no longer
+#: teaches is a way in the README does not, whichever form it takes.
+CLIENT_WAYS = ("claude mcp add", "claude plugin marketplace add",
+               "claude plugin install", "gemini mcp add",
+               "gemini extensions install", "codex mcp add")
 FENCE = chr(96) * 3
 
 
@@ -129,7 +145,7 @@ def fenced_blocks(text, only_languages=None):
 
 
 def way_in(readme_text):
-    """(launcher, install lines) as the README teaches them.
+    """(launcher, install lines, client lines) as the README teaches them.
 
     The README keeps one complete fence per system. In each fence that carries
     the uv installer, the install lines are the run from the installer line
@@ -137,8 +153,10 @@ def way_in(readme_text):
     `uvx` works in the same shell, and a page that copies the installer
     without it teaches a command that fails. Collected in order and once
     across fences. The launcher is the word before the first fetch line.
-    (None, None) without a fetch line."""
-    install, fetch, launcher = [], None, None
+    The client lines are every fenced line that starts with one of
+    `CLIENT_WAYS`, stripped, in order and once. (None, None, None) without a
+    fetch line."""
+    install, fetch, launcher, client = [], None, None, []
     for block in fenced_blocks(readme_text):
         taking = False
         for line in block:
@@ -152,20 +170,61 @@ def way_in(readme_text):
                     launcher = before[-1] if before else ""
                     fetch = line.rstrip()
                 taking = False
+            told = line.strip()
+            if told.startswith(CLIENT_WAYS) and told not in client:
+                client.append(told)
     if fetch is None:
-        return None, None
+        return None, None, None
     if fetch not in install:
         install.append(fetch)
-    return launcher, install
+    return launcher, install, client
 
 
-def check_way_in(rel, text, launcher, block, readme_text):
+def code_spans(text):
+    """Every line of a shell or config fence, and every inline code span, as
+    the strings a reader would copy."""
+    spans = [line for lines in fenced_blocks(text, WAY_IN_LANGUAGES)
+             for line in lines]
+    spans.extend(re.findall(r"`([^`\n]+)`", text))
+    return spans
+
+
+def check_client_lines(rel, text, client):
+    """Findings for one page against the lines that tell a client the server
+    exists, as the README teaches them.
+
+    Three cases per route. The route is not in the README at all: any mention
+    of it, in code or in prose, teaches a way in the README does not. The
+    route is in the README and the page says the whole line: it is the
+    README's line or it is a finding. The route is in the README and the page
+    names it bare, as a noun: fine, that is how prose refers to a command.
+    """
+    out = []
+    for way in CLIENT_WAYS:
+        taught = [line for line in client if line.startswith(way)]
+        if way in text and not taught:
+            out.append("%s: teaches `%s`, a way in that the README does not"
+                       % (rel, way))
+            continue
+        for span in code_spans(text):
+            said = span.strip()
+            if said.startswith(way) and said != way and said not in client:
+                finding = ("%s: teaches `%s`, the README's line is `%s`"
+                           % (rel, said, "` or `".join(taught)))
+                if finding not in out:
+                    out.append(finding)
+    return out
+
+
+def check_way_in(rel, text, launcher, block, client, readme_text):
     """Findings for one page against the README's way in."""
     out = []
     for other in OTHER_WAYS:
         if other in text and other not in readme_text:
             out.append("%s: teaches `%s`, a way in that the README does not"
                        % (rel, other))
+    if rel != "README.md":
+        out.extend(check_client_lines(rel, text, client))
     if INSTALLER in text and rel != "README.md":
         for want in block:
             if want not in text:
@@ -177,7 +236,9 @@ def check_way_in(rel, text, launcher, block, readme_text):
         joined = chr(10).join(lines)
         for line in lines:
             for cmd in WAY_IN:
-                pattern = r"(?<![\w./-])" + re.escape(cmd) + r"(?![\w./-])"
+                # `@` after the word is a plugin id, `aihawk@feder-cr`, which
+                # `claude plugin install` takes: a name, not a command run.
+                pattern = r"(?<![\w./-])" + re.escape(cmd) + r"(?![\w./@-])"
                 for m in re.finditer(pattern, line):
                     before = line[:m.start()]
                     if before.endswith("/"):
@@ -436,7 +497,7 @@ def check_tree(root):
     docs_names = {f.stem for f in (root / "docs").glob("*.md")} | {"Home"}
     readme_text = (root / "README.md").read_text(encoding="utf-8") \
         if (root / "README.md").exists() else ""
-    launcher, block = way_in(readme_text)
+    launcher, block, client = way_in(readme_text)
 
     for f in content_files(root):
         rel = f.relative_to(root).as_posix()
@@ -493,7 +554,8 @@ def check_tree(root):
             findings.extend(check_token_has_a_neighbour(rel, text, surface[0]))
 
         if launcher is not None:
-            findings.extend(check_way_in(rel, text, launcher, block, readme_text))
+            findings.extend(check_way_in(rel, text, launcher, block, client,
+                                         readme_text))
 
     for img in sorted((root / "assets").glob("*.png")) if (root / "assets").exists() else []:
         raw = img.read_bytes()
@@ -556,7 +618,13 @@ def selftest():
             b"source $HOME/.local/bin/env\n"
             b"uvx invisible-playwright fetch\n"
             b"uvx aihawk ui --openrouter-key sk-or-...\n"
-            b"```\n")
+            b"```\n\n"
+            # The client lines, one route per client, as the real page has
+            # them: what the eighth part of the fifth check reads.
+            b"```bash\nclaude plugin marketplace add feder-cr/AIHawk\n"
+            b"claude plugin install aihawk@feder-cr\n```\n\n"
+            b"```bash\ncodex mcp add stealth -- uvx aihawk\n```\n\n"
+            b"```bash\ngemini extensions install https://github.com/feder-cr/AIHawk\n```\n")
 
         bad = {
             "banned topic": ("docs/spam.md",
@@ -596,6 +664,18 @@ def selftest():
                 "docs/cfg.md",
                 b'```json\n{"command": "python", '
                 b'"args": ["aihawk"]}\n```\n'),
+            # The three shapes of the drift measured 2026-09-21, when the
+            # README moved two clients to their install routes and the wiki
+            # did not follow: the line the README dropped, the README's route
+            # with a different line, and the dropped route named in prose.
+            "a client line the README dropped": (
+                "docs/dropped.md",
+                b"```bash\nclaude mcp add --scope user stealth -- uvx aihawk\n```\n"),
+            "the README's route with a line that is not the README's": (
+                "docs/elsewhere.md",
+                b"```bash\nclaude plugin install aihawk@somewhere-else\n```\n"),
+            "a dropped route named bare, in prose": (
+                "docs/named.md", b"one `gemini mcp add` command, once\n"),
             # The seventh check: a published number that no longer matches the
             # live measurement. The real failure of 2026-09-13, where eleven
             # pages carried a stale figure and nothing could notice.
@@ -688,6 +768,17 @@ def selftest():
             "a unit file with a full path to the launcher": (
                 "docs/unit.md",
                 b"```ini\nExecStart=/usr/bin/uvx aihawk ui\n```\n"),
+            # The README's own client lines, verbatim. The word after
+            # `install` is a plugin id, and reading it as the launcher slot
+            # accused the README of running `install aihawk`.
+            "the README's client lines, verbatim": (
+                "docs/plugin.md",
+                b"```bash\nclaude plugin marketplace add feder-cr/AIHawk\n"
+                b"claude plugin install aihawk@feder-cr\n```\n"
+                b"```bash\ngemini extensions install https://github.com/feder-cr/AIHawk\n```\n"),
+            "a route the README teaches, named bare in prose": (
+                "docs/noun.md",
+                b"one `claude plugin install` command, once, and the tools are there\n"),
         }
         for label, (rel, content) in good.items():
             p = root / rel

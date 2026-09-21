@@ -41,10 +41,11 @@ The attachment mechanics do not change based on where the model lives. The
 shape, even though Claude Code's own model is hosted rather than local:
 
 ```bash
-claude mcp add --scope user stealth -- uvx aihawk
+claude plugin marketplace add feder-cr/AIHawk
+claude plugin install aihawk@feder-cr
 ```
 
-One command, once, and the browser's tools show up in that client from then on. A
+Two commands, once, and the browser's tools show up in that client from then on. A
 client built around a local model takes the equivalent command or config screen for
 adding an MCP server; the package on the other end, `aihawk`, the
 tool names it exposes, and the roughly quarter-gigabyte engine it downloads on first

@@ -32,8 +32,9 @@ settings, and the tools.
 
 ## Adding it to your client
 
-Claude Code, Codex and Gemini CLI have a command for it, and the command is in
-AIHawk's README. The rest take a config file, and the file is not the same
+Claude Code installs it as a plugin, Gemini CLI as an extension, Codex with
+one command, and all three are in AIHawk's README. The rest take a config
+file, and the file is not the same
 everywhere: **three different top-level keys, and one of them is not even
 JSON.** Find yours below. The block only tells the client how to start the
 server; installing `uv` and fetching the engine come first, as AIHawk's README
@@ -123,13 +124,17 @@ whatever shape your client uses:
 }
 ```
 
-In Codex's TOML that is a `[mcp_servers.stealth.env]` table; on the command line,
-Claude Code and Codex take `-e KEY=value` and `--env KEY=value`.
+In Codex's TOML that is a `[mcp_servers.stealth.env]` table, and on the command
+line Codex takes `--env KEY=value`. The Claude Code plugin and the Gemini CLI
+extension carry a fixed config block, so their server reads these from the
+environment the client was started in: export the variable, then start the
+client.
 
 ⛔ **"Added" is not "connected".** Every one of these writes a config entry
 without running anything, so a typo, a missing `uv`, or the first-run browser
 download all surface later as a server that will not start. Check before you
-trust it: `claude mcp list`, `codex mcp list`, or your client's MCP panel.
+trust it: `claude plugin list`, `codex mcp list`, `gemini extensions list`, or
+your client's MCP panel.
 
 ## Settings
 

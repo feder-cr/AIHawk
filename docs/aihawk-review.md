@@ -40,10 +40,10 @@ wiki documents; that earlier use is not covered here.
 
 There are two ways to run it, and they share one browser:
 
-- **Inside an assistant you already use.** One command
-  (`claude mcp add --scope user stealth -- uvx aihawk`)
-  registers the browser as an MCP server in Claude Code, Claude Desktop or
-  Cursor, and your assistant's model does the thinking.
+- **Inside an assistant you already use.** A plugin for Claude Code
+  (`claude plugin install aihawk@feder-cr`, once the repository is added as a
+  marketplace), an extension for Gemini CLI, or a config entry in Claude
+  Desktop or Cursor, and your assistant's model does the thinking.
 - **Standalone.** `uvx aihawk ui` serves a local page with chat on the
   left and the live browser on the right. It takes an
   [OpenRouter](https://openrouter.ai) key, defaults to `z-ai/glm-5.3-flash`,

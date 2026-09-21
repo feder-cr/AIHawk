@@ -84,7 +84,8 @@ Attach the browser to your assistant (from the
 [README](../../README.md#1-from-your-assistant-over-mcp)):
 
 ```bash
-claude mcp add -s user stealth -- uvx aihawk
+claude plugin marketplace add feder-cr/AIHawk
+claude plugin install aihawk@feder-cr
 ```
 
 Then paste the prompt. The reading companion for this task shape, including

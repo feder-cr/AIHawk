@@ -73,6 +73,7 @@ def _load():
         "mcpbignore": (ROOT / ".mcpbignore").read_text(encoding="utf-8"),
         "plugins": {rel: json.loads((ROOT / rel).read_text(encoding="utf-8")) for rel in PLUGIN_FILES},
         "mcp_bytes": {rel: (ROOT / rel).read_bytes() for rel in MCP_FILES},
+        "marketplace": json.loads((ROOT / MARKETPLACE).read_text(encoding="utf-8")),
     }
 
 
@@ -107,6 +108,16 @@ SETUP_SKILL = "skills/setup/SKILL.md"
 #: manifest that works, and only running the thing said so.
 MCP_FILES = ("mcp.json", ".mcp.json")
 LAUNCH = {"command": "uvx", "args": ["aihawk"]}
+#: The marketplace this repository IS, so `claude plugin marketplace add
+#: feder-cr/AIHawk` needs no catalog kept by anybody else: one entry, whose
+#: source is the repository root, because the plugin is the repository. Held
+#: here because it repeats the package name, the description and the author,
+#: and because the README's install line names `<plugin>@<marketplace>`: the
+#: marketplace's name is declared in that file and nowhere else, and the
+#: README is held to it, so a rename there is a red README until the line a
+#: reader copies follows. (The wiki is held to the README's line in turn, by
+#: scripts/check_content.py.)
+MARKETPLACE = ".claude-plugin/marketplace.json"
 
 
 def _one_fact_many_files(manifest, plugins):
@@ -211,6 +222,46 @@ def plugin_findings(package_name, manifest, plugins):
     if claude.get("version") == "1.0.0":
         out.append("plugin version 1.0.0 is the one that shipped with no MCP server; a pinned "
                    "version only updates when it changes, so it must be past 1.0.0")
+    return out
+
+
+def marketplace_findings(package_name, manifest, market, readme):
+    """Why `claude plugin marketplace add` plus `claude plugin install` would
+    deliver something other than this plugin, or nothing.
+
+    The marketplace file is read by Claude Code when a person registers the
+    repository, and the entry's `source` is where the plugin is fetched from:
+    anything but the root would install a directory that carries no
+    `.mcp.json`, which is the zero-server plugin all over again by another
+    route. The README is held to the marketplace name because that line is
+    what a reader copies, and `aihawk@<old name>` after a rename fails with a
+    message about a marketplace the reader never heard of."""
+    out = []
+    name = market.get("name") or ""
+    if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", name):
+        out.append("the marketplace name %r is not kebab-case, which Claude Code requires"
+                   % name)
+    if (market.get("owner") or {}).get("name") != (manifest.get("author") or {}).get("name"):
+        out.append("the marketplace credits somebody other than the bundle manifest")
+    entries = market.get("plugins") or []
+    if len(entries) != 1:
+        out.append("the marketplace lists %d plugins; this repository is one" % len(entries))
+        return out
+    entry = entries[0]
+    if entry.get("name") != package_name:
+        out.append("the marketplace entry names %r, the project is %r"
+                   % (entry.get("name"), package_name))
+    if entry.get("source") != "./":
+        out.append("the marketplace entry's source is %r; the plugin is the repository "
+                   "root, and a source anywhere else installs a plugin with no server"
+                   % entry.get("source"))
+    if entry.get("description") != manifest.get("description"):
+        out.append("the marketplace entry describes the package differently from the "
+                   "bundle manifest")
+    install = "claude plugin install %s@%s" % (package_name, name)
+    if install not in readme:
+        out.append("the README does not install `%s`, so the marketplace and the "
+                   "README disagree on where the plugin comes from" % install)
     return out
 
 
@@ -351,6 +402,47 @@ def test_the_bundle_is_the_one_the_spec_describes():
 def test_the_plugin_manifests_launch_the_package_that_ships():
     d = _load()
     assert plugin_findings(d["package_name"], d["manifest"], d["plugins"]) == []
+
+
+def test_the_marketplace_installs_this_plugin_from_the_root():
+    d = _load()
+    assert marketplace_findings(d["package_name"], d["manifest"], d["marketplace"],
+                                d["readme"]) == []
+
+
+def test_the_marketplace_check_refuses_known_bad_input():
+    d = _load()
+    good = marketplace_findings(d["package_name"], d["manifest"], d["marketplace"], d["readme"])
+    assert good == [], good
+
+    # Renamed here and not in the README: the line a reader copies now names
+    # a marketplace that does not exist.
+    m = copy.deepcopy(d["marketplace"]); m["name"] = "aihawk"
+    assert marketplace_findings(d["package_name"], d["manifest"], m, d["readme"])
+
+    m = copy.deepcopy(d["marketplace"]); m["name"] = "Feder CR"
+    assert marketplace_findings(d["package_name"], d["manifest"], m, d["readme"])
+
+    m = copy.deepcopy(d["marketplace"]); m["owner"]["name"] = "somebody"
+    assert marketplace_findings(d["package_name"], d["manifest"], m, d["readme"])
+
+    m = copy.deepcopy(d["marketplace"]); m["plugins"].append(dict(m["plugins"][0]))
+    assert marketplace_findings(d["package_name"], d["manifest"], m, d["readme"])
+
+    m = copy.deepcopy(d["marketplace"]); m["plugins"][0]["name"] = "ai-hawk"
+    assert marketplace_findings(d["package_name"], d["manifest"], m, d["readme"])
+
+    # The one that ships a plugin with no server: a source that is not the root.
+    m = copy.deepcopy(d["marketplace"]); m["plugins"][0]["source"] = "./plugins/aihawk"
+    assert marketplace_findings(d["package_name"], d["manifest"], m, d["readme"])
+
+    m = copy.deepcopy(d["marketplace"]); m["plugins"][0]["description"] = "something else"
+    assert marketplace_findings(d["package_name"], d["manifest"], m, d["readme"])
+
+    # The README installing from a marketplace name this file does not carry.
+    stale = d["readme"].replace("aihawk@" + d["marketplace"]["name"], "aihawk@somewhere-else")
+    assert stale != d["readme"]
+    assert marketplace_findings(d["package_name"], d["manifest"], d["marketplace"], stale)
 
 
 def test_the_setup_skill_is_there_and_does_its_one_job():

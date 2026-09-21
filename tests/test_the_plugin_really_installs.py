@@ -34,13 +34,17 @@ the person's own plugins, marketplaces or settings - checked, not assumed, by
 the last test below.
 
 WHAT IT DOES NOT COVER, said plainly: the marketplace is built from a COPY of
-the files a Claude Code plugin consumes, not from the repository in place,
-because a marketplace entry's source may not escape the marketplace root. The
-copied set is derived from `PLUGIN_SURFACE` below and asserted to exist, so a
-new component directory that nobody adds there would be invisible to this
-test. It also does not start the server: `plugin details` reports the
-configuration, and what happens after a client connects is
-`tests/mcp_server/test_stdio_e2e.py`.
+the files a Claude Code plugin consumes, not from the repository in place, so
+that nothing here can register the real checkout anywhere. The copied set is
+derived from `PLUGIN_SURFACE` below and asserted to exist, so a new component
+directory that nobody adds there would be invisible to this test. The
+marketplace file is the repository's own `.claude-plugin/marketplace.json`
+with ONE field changed, its `name`, so that the cleanup test below can tell
+the throwaway registration from a real one: the layout it describes - the
+plugin at the marketplace root, `source` `./` - is the layout that ships, and
+the layout the README's two lines install from. It also does not start the
+server: `plugin details` reports the configuration, and what happens after a
+client connects is `tests/mcp_server/test_stdio_e2e.py`.
 """
 from __future__ import annotations
 
@@ -86,24 +90,27 @@ def installed():
     try:
         config = tmp / "config"
         config.mkdir()
+        # The marketplace root IS the plugin root, as in the repository.
         market = tmp / "market"
-        plugin = market / "aihawk"
-        plugin.mkdir(parents=True)
+        market.mkdir()
         for name in PLUGIN_SURFACE:
             src = ROOT / name
             assert src.exists(), (
                 "%s is named in PLUGIN_SURFACE and is not in the repository; "
                 "this test would be measuring a plugin we do not ship" % name)
             if src.is_dir():
-                shutil.copytree(src, plugin / name)
+                shutil.copytree(src, market / name)
             else:
-                shutil.copy2(src, plugin / name)
-        (market / ".claude-plugin").mkdir()
+                shutil.copy2(src, market / name)
+        shipped = json.loads((ROOT / ".claude-plugin" / "marketplace.json")
+                             .read_text(encoding="utf-8"))
+        assert shipped["plugins"][0]["source"] == "./", (
+            "the shipped marketplace points somewhere other than the root; "
+            "this test measures the root layout and would be measuring "
+            "something else: %r" % shipped["plugins"][0])
+        under_test = dict(shipped, name="aihawk-under-test")
         (market / ".claude-plugin" / "marketplace.json").write_bytes(
-            json.dumps({"name": "aihawk-under-test",
-                        "owner": {"name": "tests"},
-                        "plugins": [{"name": "aihawk", "source": "./aihawk"}]},
-                       indent=1).encode("utf-8"))
+            json.dumps(under_test, indent=1).encode("utf-8"))
 
         added = _run(["plugin", "marketplace", "add", str(market)], config)
         assert added.returncode == 0, added.stdout + added.stderr

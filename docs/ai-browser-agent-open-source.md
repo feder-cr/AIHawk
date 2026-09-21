@@ -181,7 +181,7 @@ fingerprint. The layer-by-layer breakdown is in
 [why agents get blocked](why-does-my-ai-agent-get-blocked.md).
 
 **Which one should I use with Claude Code?** AIHawk's MCP server is built for exactly
-that, one `claude mcp add` command, and this is its wiki saying so, which is why the
+that, one `claude plugin install`, and this is its wiki saying so, which is why the
 sentence carries a disclosure instead of a superlative.
 
 ## Sources
