@@ -40,7 +40,11 @@ file forget. What one test leaves behind is not an input to the next one.
 """
 from __future__ import annotations
 
+import importlib.util
+import json
 import os
+import pathlib
+import platform
 import sys
 import tempfile
 
@@ -122,12 +126,69 @@ def _e2e_is_excluded(argv) -> bool:
     #: `e2e` never named, so the expression selects by something else and the
     #: engine tests are still in. `-m "not ui"` is the case that taught this.
     return False
+
+
+def _local_seal_beside(cache_dir: str):
+    """A seal with no published assets, derived from the packaged one, written
+    beside the throwaway cache. Returns its path, or None when there is no
+    core to derive it from (the light jobs) or no leg for this host.
+
+    ⛔ THE DEADLINE IS A CAP, NOT A PROHIBITION, AND ON 2026-09-21 IT LET A
+    WHOLE ENGINE THROUGH. Since 0.69.0 every server this suite spawns starts
+    its engine download the moment it starts, from `main()`; the one-second
+    deadline below was meant to make that fail, and on the ubuntu runner a
+    complete `firefox-34_...` tree appeared in the throwaway cache anyway -
+    the archive arrived inside the second. A guard that depends on the
+    network being slow is off on a fast one.
+
+    The core has a word for "there is nothing to download": a LOCAL seal,
+    one with no assets, on which `ensure_binary` refuses before it touches
+    the network or the cache ("a LOCAL seal with no published assets, so
+    there is nothing to download. Pass binary_path=..."). That is the
+    declaration this run needs, in the product's own vocabulary, inherited
+    by every child process through `INVISIBLE_SEAL_FILE`. Tag, version and
+    the Playwright range stay those of the packaged seal, and the top-level
+    build id is the host leg's, so a real binary named by `STEALTHFOX_BINARY`
+    still verifies: the opt-in real-engine tests are gated on that variable
+    and keep working under this seal.
+
+    Derived without importing the core, because the light jobs install
+    pytest and nothing else and this file is imported by every run.
+    """
+    spec = importlib.util.find_spec("invisible_core")
+    if spec is None or not spec.origin:
+        return None
+    packaged = pathlib.Path(spec.origin).with_name("seal.json")
+    if not packaged.is_file():
+        return None
+    data = json.loads(packaged.read_bytes())
+    machine = platform.machine().lower()
+    arch = {"amd64": "x86_64", "x64": "x86_64", "aarch64": "arm64"}.get(machine, machine)
+    build_id = ""
+    for asset in (data.get("assets") or {}).values():
+        if asset.get("platform") == sys.platform and asset.get("arch") == arch:
+            build_id = asset.get("build_id") or ""
+    if not build_id:
+        return None
+    local = {k: v for k, v in data.items() if k != "assets"}
+    local["build_id"] = build_id
+    local["comment"] = ("the packaged seal with its assets removed, written by "
+                        "tests/conftest.py so that no process in this test run can "
+                        "download an engine; a real binary still verifies against it")
+    path = cache_dir + ".seal.json"
+    pathlib.Path(path).write_bytes(json.dumps(local, indent=1).encode("utf-8"))
+    return path
+
+
 if _e2e_is_excluded(sys.argv):
     os.environ["INVISIBLE_PLAYWRIGHT_CACHE_DIR"] = _THROWAWAY = tempfile.mkdtemp(
         prefix="aihawk-no-engine-")
     os.environ["INVISIBLE_DOWNLOAD_DEADLINE"] = "1"
+    _NO_ENGINE_SEAL = _local_seal_beside(_THROWAWAY)
+    if _NO_ENGINE_SEAL:
+        os.environ["INVISIBLE_SEAL_FILE"] = _NO_ENGINE_SEAL
 else:
-    _THROWAWAY = None
+    _THROWAWAY = _NO_ENGINE_SEAL = None
 
 
 @pytest.fixture(autouse=True)

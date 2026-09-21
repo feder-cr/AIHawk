@@ -101,7 +101,12 @@ def test_the_conftest_imports_nothing_the_light_jobs_do_not_have():
     source = (pathlib.Path(__file__).parent / "conftest.py").read_text(encoding="utf-8")
     code = re.sub(r'"""(?:.|\n)*?"""', "", source)
     reached = re.findall(r"^\s*(?:from|import)\s+([A-Za-z_][\w.]*)", code, re.M)
-    allowed = {"__future__", "os", "sys", "tempfile", "pytest", "pathlib"}
+    # Standard library only, plus pytest: `json`, `platform` and
+    # `importlib.util` arrived with the local seal the conftest derives
+    # (2026-09-21), and `find_spec` is how it looks for the core without
+    # importing it, which is the whole point of this list.
+    allowed = {"__future__", "os", "sys", "tempfile", "pytest", "pathlib",
+               "json", "platform", "importlib.util"}
     assert set(reached) <= allowed, (
         "conftest.py imports %s, and every test in the repository then needs "
         "it: the two jobs that install pytest alone would fail at fixture "
@@ -124,11 +129,25 @@ def test_a_run_that_did_not_ask_for_an_engine_cannot_reach_one():
     marker is the thing the next author forgets too. Same shape as the home
     above and for the same reason: measure the property, not the calls.
 
+    ⛔ AND THE DEADLINE ALONE WAS NOT ENOUGH, MEASURED 2026-09-21. Since
+    0.69.0 every spawned server starts its engine download at `main()`, and on
+    the ubuntu runner a complete engine tree landed in the throwaway cache
+    inside the one-second deadline: a cap on a transfer is not a prohibition
+    when the transfer is fast. The prohibition is the third declaration
+    below, a LOCAL seal - the core's own word for "nothing to download" - on
+    which `ensure_binary` refuses before the network. Proven here by asking,
+    not by reading the environment.
+
     Known-bad: delete the `INVISIBLE_PLAYWRIGHT_CACHE_DIR` block from
     `tests/conftest.py`. The first assertion then goes red on every machine,
     including one whose cache is warm and would otherwise never notice.
+    Delete the seal line from the same block and the refusal below is a
+    download instead.
     """
+    import json
     import pathlib
+    import platform
+    import sys
 
     cache = os.environ.get("INVISIBLE_PLAYWRIGHT_CACHE_DIR")
     assert cache, (
@@ -142,9 +161,30 @@ def test_a_run_that_did_not_ask_for_an_engine_cannot_reach_one():
     assert os.environ.get("INVISIBLE_DOWNLOAD_DEADLINE") == "1", (
         "without the deadline a test that reaches for an engine still gets one, "
         "slowly, which is exactly the failure this exists to stop")
+
+    sealed = os.environ.get("INVISIBLE_SEAL_FILE")
+    assert sealed and sealed.startswith(cache), (
+        "no local seal is in force, so a server spawned by this run downloads "
+        "an engine at start, and a fast network delivers it inside the deadline")
+    local = json.loads(pathlib.Path(sealed).read_bytes())
+    assert not local.get("assets"), "the seal in force still names assets to download"
+    from invisible_core.download import ensure_binary
+    from invisible_core.seal import SealError, load_seal, packaged_seal_path
+    host = load_seal(packaged_seal_path()).asset_for(sys.platform, platform.machine())
+    assert local["build_id"] == host.build_id, (
+        "the local seal's build id is not this host's, so a real binary named by "
+        "STEALTHFOX_BINARY would fail to verify under it")
+    assert local["tag"] == load_seal(packaged_seal_path()).tag
+    try:
+        ensure_binary()
+    except SealError as refused:
+        assert "nothing to download" in str(refused), str(refused)
+    else:
+        raise AssertionError("ensure_binary did not refuse under the local seal")
+
     # And it stayed empty, which is the claim itself rather than a proxy for it.
     # Order-dependent by construction: a test running after this one could still
-    # fetch, and would be caught by the deadline instead.
+    # fetch, and would be refused by the seal instead.
     assert not list(where.iterdir()), (
         "a test in the fast selection fetched an engine into %s" % cache)
 
