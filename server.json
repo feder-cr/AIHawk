@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.feder-cr/aihawk",
-  "title": "AIHawk",
+  "title": "invisible_playwright_mcp",
   "description": "AI browser agent: browses, clicks, types, and reads real web pages from plain-English instructions.",
   "repository": {
     "url": "https://github.com/feder-cr/invisible_playwright_mcp",

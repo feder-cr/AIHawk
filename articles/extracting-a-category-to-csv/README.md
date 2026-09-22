@@ -1,6 +1,6 @@
 # Extracting a category to CSV
 
-A complete run, reproduced as it happened: an AI assistant with AIHawk's
+A complete run, reproduced as it happened: an AI assistant with invisible_playwright_mcp's
 browser attached over MCP reads a 32-book category spread over two pages and
 produces a CSV. The site is `books.toscrape.com`, which exists to be scraped
 and says so in its own banner.

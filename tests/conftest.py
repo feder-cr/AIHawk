@@ -18,7 +18,7 @@ DEFECT BACK IN THROUGH THE DOOR NEXT TO IT. A fixture runs when a test runs; a
 module-level line runs when the file is IMPORTED, which is before any fixture
 exists. `test_asking_who_you_are.py` asks the server one question at import
 time, and that question reads the saved session - so on a machine where
-somebody actually uses AIHawk, collection alone loaded the real one. Measured
+somebody actually uses invisible_playwright_mcp, collection alone loaded the real one. Measured
 on this machine: two tests in `test_addressing.py` went red because the
 developer's live session had its focus on a browser called `b-kw-pharmacist`,
 and the server module carried that, plus eight real URLs, into every test that

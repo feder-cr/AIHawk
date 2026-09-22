@@ -618,7 +618,7 @@ def selftest():
         # The README is the source the fifth check reads: one block, one
         # launcher, the same shape as the real page.
         (root / "README.md").write_bytes(
-            b"# AIHawk\n\nWindows, in PowerShell:\n\n```powershell\n"
+            b"# invisible_playwright_mcp\n\nWindows, in PowerShell:\n\n```powershell\n"
             b'powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"\n'
             b'$env:Path = "$env:USERPROFILE\\.local\\bin;$env:Path"\n'
             b"uvx aihawk ui --openrouter-key sk-or-...\n"
@@ -730,7 +730,7 @@ def selftest():
             "allowed history line": ("docs/ai-browser-agent-open-source.md",
                                      b"it began as a job-application bot\n"),
             "prose verb": ("docs/verb.md",
-                           b"what can AIHawk do for research\n"),
+                           b"what can invisible_playwright_mcp do for research\n"),
             # The three cases the first draft wrongly accused: a tool that
             # exists, a PARAMETER shaped like one, and a name that is not our
             # tool but another server's.

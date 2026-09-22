@@ -1,7 +1,7 @@
 {
   "name": "feder-cr",
   "interface": {
-    "displayName": "AIHawk"
+    "displayName": "invisible_playwright_mcp"
   },
   "plugins": [
     {

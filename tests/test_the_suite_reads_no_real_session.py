@@ -1,4 +1,4 @@
-"""The suite must not be able to see the session the person using AIHawk has.
+"""The suite must not be able to see the session the person using invisible_playwright_mcp has.
 
 ⛔ A VERDICT THAT DEPENDS ON WHAT THE DEVELOPER LEFT OPEN IS NOT A VERDICT.
 `tests/conftest.py` has pointed `AIHAWK_HOME` at a temporary directory since
@@ -50,7 +50,7 @@ def test_importing_a_test_module_cannot_reach_the_real_directory():
     real = _the_real_one()
     assert AT_IMPORT != real, (
         "at import time the tests read %s, which is where the person using "
-        "AIHawk keeps their sessions: collecting the suite loads whatever they "
+        "invisible_playwright_mcp keeps their sessions: collecting the suite loads whatever they "
         "left open, and the run reports on that as much as on the product" % real)
 
 

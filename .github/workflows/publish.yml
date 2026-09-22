@@ -10,7 +10,7 @@ name: publish
 # not list it. Use Account -> Publishing -> Add a pending publisher with:
 #   PyPI Project Name: aihawk
 #   Owner:             feder-cr
-#   Repository name:   AIHawk
+#   Repository name:   invisible_playwright_mcp
 #   Workflow name:     publish.yml
 #   Environment name:  pypi
 # Until that exists the upload fails with `invalid-publisher`, which is the
