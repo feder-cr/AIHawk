@@ -48,9 +48,9 @@ cannot silently skip the way it does in a local run.
 """
 from __future__ import annotations
 
-import importlib.metadata
 import os
 import pathlib
+import re
 import subprocess
 import urllib.error
 import urllib.request
@@ -122,6 +122,27 @@ def _changed_since(tag: str):
     return [line.strip() for line in out.splitlines() if line.strip()]
 
 
+#: `name>=X.Y.Z` at the head of a requirement, which is a version somebody
+#: published. A two-part floor (`mcp>=1.8`) is deliberately not matched: the
+#: index has `1.8.0`, and asking it about `1.8` gets a 404 that means nothing.
+FLOOR = re.compile(r"^([A-Za-z0-9._-]+)\s*>=\s*(\d+\.\d+\.\d+)\s*(?:,|$)")
+
+
+def _declared_floors():
+    """(project, version) for every dependency floor this package declares.
+
+    A project cannot depend on a version that was never on the index, and a
+    floor that vanished from it is a package that can no longer be installed.
+    So every one of these is a version the index must have, read from
+    `pyproject.toml` rather than typed.
+    """
+    p = _pyproject()["project"]
+    deps = list(p.get("dependencies") or [])
+    for extra in (p.get("optional-dependencies") or {}).values():
+        deps += list(extra)
+    return [(m.group(1), m.group(2)) for m in (FLOOR.match(d) for d in deps) if m]
+
+
 def _on_the_index(version: str, project: str = PACKAGE):
     """`True`, `False`, or None when the index would not say.
 
@@ -185,14 +206,32 @@ def test_the_check_can_tell_a_taken_version_from_a_free_one():
     remove - and a brand-new name has nothing published at all, so there was
     nothing to move the case to.
 
-    It now asks about a version that is INSTALLED in the environment running
-    this test. Whatever is installed came from the index, so the index has it;
-    nothing is typed here and nothing needs keeping up to date. The negative
-    case stays ours, because a version far past anything real is free whether
-    or not the project exists.
+    ⛔ THEN IT ASKED ABOUT A VERSION THAT WAS INSTALLED, and that was right
+    about where published versions come from and wrong about where this test
+    runs: the `version` CI job installs `pytest` and nothing else, so the
+    metadata lookup raised `PackageNotFoundError` and the gate went red on its
+    own instrument. One stale assumption replaced by an assumption about the
+    environment.
+
+    It now asks about the DECLARED dependency floors, which need nothing
+    installed and are read from `pyproject.toml`. Every one of them is a version
+    somebody published, the first the index confirms is the one that counts, and
+    no single project's disappearance can turn this gate red by itself. The
+    negative case stays ours, because a version far past anything real is free
+    whether or not the project exists.
     """
-    lives_on_the_index = importlib.metadata.version("mcp")
-    taken = _on_the_index(lives_on_the_index, project="mcp")
+    floors = _declared_floors()
+    assert floors, (
+        "no dependency declares a three-part floor, so the positive case has "
+        "nothing to ask the index about and this check cannot prove itself")
+
+    answers = []
+    for project, version in floors:
+        answers.append(_on_the_index(version, project=project))
+        if answers[-1] is True:
+            break
+    taken = True if any(a is True for a in answers) else (
+        None if all(a is None for a in answers) else False)
     free = _on_the_index("99.99.99")
 
     if taken is None or free is None:
