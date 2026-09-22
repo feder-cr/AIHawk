@@ -11,11 +11,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/feder-cr/aihawk_mcp_server.git"
+    "url": "https://github.com/feder-cr/invisible_playwright_mcp.git"
   },
-  "homepage": "https://github.com/feder-cr/aihawk_mcp_server",
-  "documentation": "https://github.com/feder-cr/aihawk_mcp_server/wiki",
-  "support": "https://github.com/feder-cr/aihawk_mcp_server/issues",
+  "homepage": "https://github.com/feder-cr/invisible_playwright_mcp",
+  "documentation": "https://github.com/feder-cr/invisible_playwright_mcp/wiki",
+  "support": "https://github.com/feder-cr/invisible_playwright_mcp/issues",
   "icon": "assets/aihawk-icon-400.png",
   "server": {
     "type": "uv",
@@ -33,5 +33,5 @@
   },
   "keywords": ["browser", "browser-agent", "web-automation", "playwright", "firefox", "computer-use"],
   "license": "MIT",
-  "privacy_policies": ["https://github.com/feder-cr/aihawk_mcp_server#privacy-policy"]
+  "privacy_policies": ["https://github.com/feder-cr/invisible_playwright_mcp#privacy-policy"]
 }

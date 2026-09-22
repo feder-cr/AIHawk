@@ -4,7 +4,7 @@
   "title": "AIHawk",
   "description": "AI browser agent: browses, clicks, types, and reads real web pages from plain-English instructions.",
   "repository": {
-    "url": "https://github.com/feder-cr/aihawk_mcp_server",
+    "url": "https://github.com/feder-cr/invisible_playwright_mcp",
     "source": "github"
   },
   "version": "0.69.2",

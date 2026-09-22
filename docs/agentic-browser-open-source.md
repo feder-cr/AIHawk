@@ -133,7 +133,7 @@ here after something stopped working.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), which
+*Written while maintaining [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp), which
 appears in layer 3. It is listed where it belongs rather than first, and the
 sentence describing what it does not fix is the same one we would want from
 somebody else's page.*

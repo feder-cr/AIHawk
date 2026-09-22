@@ -6,8 +6,8 @@
     "name": "feder-cr",
     "url": "https://github.com/feder-cr"
   },
-  "homepage": "https://github.com/feder-cr/aihawk_mcp_server/wiki/mcp-server",
-  "repository": "https://github.com/feder-cr/aihawk_mcp_server",
+  "homepage": "https://github.com/feder-cr/invisible_playwright_mcp/wiki/mcp-server",
+  "repository": "https://github.com/feder-cr/invisible_playwright_mcp",
   "license": "MIT",
   "keywords": ["browser", "browser-agent", "web-automation", "playwright", "firefox", "computer-use"]
 }
