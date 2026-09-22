@@ -79,6 +79,15 @@
          true. -->
     <span class="badge" id="model" hidden></span>
     <span class="vr" aria-hidden="true"></span>
+    <!-- ⛔ THE WAY INTO THE PROVIDER CARD, AND IT NAMES THE THING IT OPENS. The
+         model badge beside it says what is running and does nothing when it is
+         pressed; this is the control that changes it, so the two are separate
+         elements rather than one button wearing a label that reads like a
+         status. It is icon-free because the word is the shortest true name for
+         it and the header has room for it. -->
+    <button id="provopen" class="badge" type="button"
+            title="Choose the model provider">Provider</button>
+    <span class="vr" aria-hidden="true"></span>
     <button id="fresh" type="button" title="Clear this conversation">Clear</button></div>
   <div id="log">
     <!-- ⛔ role=log, OR THE WHOLE PRODUCT IS SILENT. Everything the agent

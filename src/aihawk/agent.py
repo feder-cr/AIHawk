@@ -424,8 +424,15 @@ class OpenRouterBrain(Brain):
     implementation removed in 0.4.0. One consumer of one loop is one file.
     """
 
-    def __init__(self, client, model: str) -> None:
+    def __init__(self, client, model: str, *, model_of=None) -> None:
         self._convo = Conversation(client, model)
+        #: ⛔ THE MODEL IS A LIVE CHOICE, NOT A CONSTANT BAKED IN AT BOOT. The
+        #: panel can change it while the process runs, and a brain holding the
+        #: model it was constructed with would keep sending the old one: the
+        #: screen would say one thing and the request would carry another. A
+        #: caller that has nothing to ask passes nothing and gets exactly the
+        #: old behaviour.
+        self._model_of = model_of
 
     def forget(self) -> None:
         """Drop the transcript and start a new one, same client and model.
@@ -480,6 +487,18 @@ class OpenRouterBrain(Brain):
         # the ceiling is gone, and every remaining failure is either the
         # cancellation the stop button raises or something the interface's own
         # handler already reports.
+        if self._model_of is not None:
+            self._convo.model = self._model_of() or self._convo.model
         await self._convo.run(text, link.call, link.tools,
                               instructions=getattr(link, "instructions", ""),
                               say=say, describe=actions_help.summarise)
+
+
+#: ⛔ THE CLASS IS NAMED FOR THE WIRE PROTOCOL, NOT FOR THE COMPANY. It was
+#: `OpenRouterBrain` and it still answers to that name, because the tests, the
+#: docstrings and one caller read it and a rename would be a diff about
+#: vocabulary rather than about behaviour. What it actually is - an
+#: OpenAI-compatible chat loop over whatever client it was handed - is what
+#: OrcaRouter needs too, and the alias says so where the loop lives rather than
+#: leaving the next reader to infer it from the constructor.
+OpenAIBrain = OpenRouterBrain

@@ -62,8 +62,9 @@ gemini extensions install https://github.com/feder-cr/aihawk_mcp_server
 
 ### 2. Standalone: the web UI
 
-We bring the interface, you bring an [OpenRouter](https://openrouter.ai) key.
-Chat on the left, the live browser on the right.
+We bring the interface, you bring a key. Chat on the left, the live browser on
+the right. It runs on [OpenRouter](https://openrouter.ai) by default, and on
+[OrcaRouter](https://www.orcarouter.ai) if you ask for it.
 
 Windows, in PowerShell:
 
@@ -83,6 +84,26 @@ uvx aihawk ui --openrouter-key sk-or-...
 
 Then open **http://127.0.0.1:8765** and type the same thing.
 
+#### OrcaRouter, and the two ways to give it a credential
+
+OrcaRouter is an OpenAI-compatible AI gateway that routes many providers behind
+one endpoint. Press **Provider** in the header, choose OrcaRouter, and either:
+
+- **Paste an API key.** An `sk-orca-...` key from
+  [orcarouter.ai/console](https://www.orcarouter.ai), billed to your account and
+  revocable there. `--orcarouter-key` and the `ORCAROUTER_API_KEY` variable do
+  the same thing at startup.
+- **Press Connect with OrcaRouter.** A browser opens on the consent screen and
+  you approve once; a key is issued for you and stored under
+  `$AIHAWK_HOME/credentials`. There is no client secret and no redirect address
+  to register, because the authorization code is bound to the process that
+  asked for it (OAuth 2.0 with PKCE, S256).
+
+Both end in the same ordinary OrcaRouter key, and the model list comes from that
+account's own catalogue, so the dropdown offers what you can actually call. With
+a key that has not been checked yet, the panel says it is showing the verified
+short list rather than pretending it read your account.
+
 ---
 
 ## What to ask a web browsing agent
@@ -101,7 +122,13 @@ It drives the page the way a person would: the pointer moves, keys are pressed.
 ## Options: proxy, profile, seed
 
 - **`--openrouter-key`** Your key, or the `OPENROUTER_API_KEY` variable.
-- **`--model`** An OpenRouter model id, or `AIHAWK_MODEL`. Defaults to `z-ai/glm-5.3-flash`.
+- **`--orcarouter-key`** An OrcaRouter key, or the `ORCAROUTER_API_KEY`
+  variable. Implies `--provider orcarouter`.
+- **`--provider`** `openrouter` (the default) or `orcarouter`. Without a key for
+  the one you name, the interface starts and the Provider panel is where you
+  either paste one or press Connect.
+- **`--model`** A model id for the provider in use, or `AIHAWK_MODEL`. Defaults
+  to `z-ai/glm-5.3-flash` on OpenRouter, and to `orcarouter/auto` on OrcaRouter.
 - **`--proxy`** Optional. `http://user:pass@proxy.example.com:8080` or
   `socks5://proxy.example.com:1080`. Host and port are both required. The
   timezone, locale and egress follow it.
@@ -121,6 +148,7 @@ directory you run from:
 
 ```
 OPENROUTER_API_KEY=sk-or-...
+ORCAROUTER_API_KEY=sk-orca-...
 STEALTHFOX_BINARY=/path/to/firefox
 ```
 
@@ -130,9 +158,9 @@ Only the directory you are in is read - there is no search upwards, so running
 from a subfolder cannot silently pick up a different key. The startup line names
 the variables it applied and never prints their values.
 
-Passing `--openrouter-key` puts the key in your shell history, and on Linux in
-the process list. `OPENROUTER_API_KEY` in the environment or in a `.env` avoids
-both.
+Passing `--openrouter-key` or `--orcarouter-key` puts the key in your shell
+history, and on Linux in the process list. The variables in the environment or
+in a `.env` avoid both.
 
 ## The wiki: AI browser-agent guides
 
@@ -171,8 +199,9 @@ computer, and to whom:
 
 - **The sites you visit** see the browser, as they would any Firefox.
 - **Your model provider.** The web UI sends the conversation and what the agent
-  reads on the page to OpenRouter under your key. Over MCP, the client you
-  plugged it into does the same with whichever model it uses.
+  reads on the page to OpenRouter under your key, or to OrcaRouter if you chose
+  it, under the key you pasted or the one its sign-in issued. Over MCP, the
+  client you plugged it into does the same with whichever model it uses.
 - **GitHub.** The engine is downloaded from a GitHub release the first time
   the server or the interface starts, and a GeoIP database is when a proxy is
   set. Each browser launch also fetches a one-line counter file from a GitHub

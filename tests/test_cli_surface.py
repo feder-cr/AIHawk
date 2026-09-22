@@ -70,9 +70,19 @@ def clean_provider_env(monkeypatch, tmp_path):
     So the working directory moves to an empty one for the duration. That also
     keeps every test in this file honest about a second thing: none of them may
     depend on being run from inside the repository.
+
+    ⛔ AND THE LIST IS READ FROM THE CODE, NOT COPIED. It named OpenRouter's
+    variable and was written when there was one provider; adding OrcaRouter's
+    two names to the CLI made the same two tests red again on this machine,
+    because a key exported for the OTHER provider was still a key and `ui` was
+    right to use it. A hand-written list of names to scrub is a second
+    declaration of which names count, and it went stale exactly the way the
+    first one did.
     """
-    for name in ("OPENROUTER_API_KEY", "AIHAWK_MODEL", "OPENAI_API_KEY",
-                 "ANTHROPIC_API_KEY"):
+    from aihawk.runner import KEY_VARIABLES
+
+    for name in KEY_VARIABLES + ("AIHAWK_MODEL", "OPENAI_API_KEY",
+                                 "ANTHROPIC_API_KEY"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.chdir(tmp_path)
 

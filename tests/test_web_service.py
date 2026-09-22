@@ -300,7 +300,19 @@ async def test_the_app_exposes_exactly_the_routes_the_page_calls():
                      # the chat is a second way to move the same thing, which is
                      # two things that can disagree about which browser is
                      # current.
-                     "/live/browsers"}
+                     "/live/browsers",
+                     # The provider, added with OrcaRouter: which provider this
+                     # run talks to, the two ways to hold its credential, and the
+                     # model list read from that account's own catalogue.
+                     # ⛔ ONE ROUTE PER QUESTION rather than one endpoint with a
+                     # verb in the body: a sign-in is a LISTENER this process
+                     # holds and has to release, which is not a state the page is
+                     # told about, and a route that both started a login and
+                     # cancelled one would have to guess which was meant.
+                     "/provider/state", "/provider/choose", "/provider/key",
+                     "/provider/models", "/provider/refresh",
+                     "/provider/connect", "/provider/login",
+                     "/provider/cancel", "/provider/reauth"}
 
     called = {m for m in re.findall(r"""fetch\(\s*[`'"]([^`'"?]+)""", PAGE)}
     unserved = sorted(called - paths)
