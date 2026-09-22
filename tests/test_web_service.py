@@ -24,7 +24,7 @@ import pytest
 
 from aihawk.link import text_of
 from aihawk.chat import ChatService
-from aihawk.routes import build_app
+from aihawk.routes import build_app, send
 from aihawk.ui import PAGE
 from _sessions import around
 
@@ -228,6 +228,56 @@ async def test_stop_cancels_a_run_in_flight_and_says_so():
     assert texts == ["Stopped."], f"expected one 'Stopped.', got {kinds}"
     # and the lock is released, or the next instruction would hang forever
     assert not svc._busy.locked()
+
+
+async def test_a_second_start_cannot_replace_the_running_task_handle():
+    """Two tabs can post before either receives the busy event.
+
+    The second request must not replace the handle of the run already using the
+    conversation. Otherwise Stop cancels the waiter and leaves the running
+    browser agent with no handle, so the only control that can end it lies.
+    """
+    brain = HangingBrain()
+    svc = ChatService(FakeLink(), brain)
+
+    svc.start("the run already in flight")
+    await asyncio.wait_for(brain.started.wait(), 2)
+    running = svc._task
+
+    svc.start("a simultaneous request from another tab")
+    replacement = svc._task
+    try:
+        assert replacement is running, (
+            "a second start replaced the running task, so Stop can no longer "
+            "reach the run in flight")
+    finally:
+        for task in {running, replacement}:
+            if task is not None and not task.done():
+                task.cancel()
+        await asyncio.gather(*(task for task in {running, replacement}
+                               if task is not None), return_exceptions=True)
+
+
+async def test_a_busy_conversation_rejects_a_second_http_send():
+    brain = HangingBrain()
+    svc = ChatService(FakeLink(), brain)
+    svc.start("the run already in flight")
+    await asyncio.wait_for(brain.started.wait(), 2)
+
+    class Post:
+        app = build_app(around(svc))
+        query_params = {}
+
+        async def json(self):
+            return {"text": "a simultaneous request from another tab"}
+
+    try:
+        response = await send(Post())
+        assert response.status_code == 409
+        assert json.loads(response.body) == {"error": "conversation is busy"}
+    finally:
+        svc.stop()
+        await asyncio.gather(svc._task, return_exceptions=True)
 
 
 async def test_stop_with_nothing_running_is_false_rather_than_an_error():

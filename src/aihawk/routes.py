@@ -177,7 +177,8 @@ async def send(request: Request) -> JSONResponse:
     text = (body or {}).get("text", "")
     if not text:
         return JSONResponse({"error": "empty"}, status_code=400)
-    (await which(request)).start(text)
+    if not (await which(request)).start(text):
+        return JSONResponse({"error": "conversation is busy"}, status_code=409)
     return JSONResponse({"accepted": True})
 
 
