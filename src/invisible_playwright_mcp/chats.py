@@ -1,6 +1,6 @@
 """Where a CONVERSATION is written down, which is the interface's half.
 
-⛔ THIS LIVED IN `aihawk.mcp.store` UNTIL 2026-09-13, AND NOTHING INSIDE THAT
+⛔ THIS LIVED IN `invisible_playwright_mcp.mcp.store` UNTIL 2026-09-13, AND NOTHING INSIDE THAT
 PACKAGE EVER CALLED IT. Every caller of `save_chat`, `load_chat`,
 `known_chats` and `erase_chat` was `chat.py` or `sessions.py`, which are the
 interface. A module of the MCP server owned the interface's persistence, so
@@ -17,7 +17,7 @@ own file, and the two live in separate directories.
 
 The primitives both halves need - where the data lives, how an id becomes a
 file name, how a file is replaced without a torn read - are in
-`aihawk.storage`, imported by both and duplicated by neither.
+`invisible_playwright_mcp.storage`, imported by both and duplicated by neither.
 
 What is saved is the transcript as the PAGE draws it plus the transcript as the
 MODEL holds it. Saving only the first would give somebody back a conversation

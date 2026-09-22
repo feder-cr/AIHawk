@@ -1,7 +1,7 @@
 """The OpenRouter key must never reach the browser child process.
 
 `runner.child_env` builds the environment handed to the stdio child that runs
-`aihawk.mcp`, which in turn launches Firefox. The key belongs to
+`invisible_playwright_mcp.mcp`, which in turn launches Firefox. The key belongs to
 the parent only: the parent talks to OpenRouter, the child talks to a browser.
 A commit in this repository calls the removal a security fix, and the history
 carries a PR titled "Replace the committed API key", so the guarantee is not
@@ -33,9 +33,9 @@ import sys
 
 import pytest
 
-from aihawk import link as link_mod
-from aihawk import llm as llm_mod
-from aihawk.runner import child_env, forget_key
+from invisible_playwright_mcp import link as link_mod
+from invisible_playwright_mcp import llm as llm_mod
+from invisible_playwright_mcp.runner import child_env, forget_key
 
 #: The checkout, for the one test that starts the server as a real process and
 #: has to tell it where this tree is.
@@ -413,7 +413,7 @@ async def test_the_link_hands_the_child_the_scrubbed_environment(monkeypatch):
     try:
         params = captured["params"]
         assert params.command == sys.executable
-        assert params.args == ["-m", "aihawk"]
+        assert params.args == ["-m", "invisible_playwright_mcp"]
 
         child = params.env
         assert child is not None, "an explicit environment is what carries the options"
@@ -466,8 +466,8 @@ def test_the_parent_client_is_the_one_that_gets_the_key(monkeypatch):
                         lambda key: seen.setdefault("client", {"api_key": key}))
 
     # ⛔ THE BRAKE COMES FROM `_cli_brake`, WHICH IS THE ONLY PLACE THAT KNOWS
-    # WHERE `aihawk ui` STOPS. This test used to carry its own, aimed at
-    # `aihawk.link.Link` - a name the command stopped reading when it began
+    # WHERE `invisible-playwright-mcp ui` STOPS. This test used to carry its own, aimed at
+    # `invisible_playwright_mcp.link.Link` - a name the command stopped reading when it began
     # building a `Sessions` registry, since `sessions.py` binds `Link` at
     # import. The brake reached nothing, the command ran on, and uvicorn
     # served the interface with no end inside this test: every CI matrix job
@@ -547,7 +547,7 @@ def _serving(tmp_path, monkeypatch, contents):
     under test is everything the group does before it.
     """
     from click.testing import CliRunner
-    from aihawk import cli as cli_mod
+    from invisible_playwright_mcp import cli as cli_mod
 
     (tmp_path / ".env").write_bytes(contents.encode("utf-8"))
     monkeypatch.delenv(KEY_NAME, raising=False)
@@ -604,7 +604,7 @@ def test_the_interface_still_gets_the_key_from_the_env_file(
     Known-bad: call `forget_key` unconditionally in `cli.main`.
     """
     from click.testing import CliRunner
-    from aihawk import cli as cli_mod
+    from invisible_playwright_mcp import cli as cli_mod
 
     (tmp_path / ".env").write_bytes(("%s=%s\n" % (KEY_NAME, KEY)).encode("utf-8"))
     monkeypatch.delenv(KEY_NAME, raising=False)
@@ -634,7 +634,7 @@ def test_a_real_server_process_does_not_hold_the_key(tmp_path, environment_resto
     env = child_env({}, dict(os.environ, **{KEY_NAME: KEY}), key=KEY)
     env["PYTHONPATH"] = str(ROOT / "src")
 
-    done = subprocess.run([sys.executable, "-m", "aihawk"], cwd=str(tmp_path),
+    done = subprocess.run([sys.executable, "-m", "invisible_playwright_mcp"], cwd=str(tmp_path),
                           env=env, input=b"", capture_output=True, timeout=120)
     err = done.stderr.decode("utf-8", "replace")
 

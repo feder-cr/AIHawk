@@ -26,7 +26,7 @@ import os
 
 import pytest
 
-from aihawk import cli
+from invisible_playwright_mcp import cli
 
 
 @pytest.fixture(autouse=True)

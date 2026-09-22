@@ -19,8 +19,8 @@ pack_bundle = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(pack_bundle)
 
 CLEAN = ["manifest.json", "pyproject.toml", "README.md", "LICENSE", "assets/icon-400.png",
-         "src/aihawk/__init__.py", "src/aihawk/__main__.py", "src/aihawk/mcp/server.py",
-         "src/aihawk/ui/page.html"]
+         "src/invisible_playwright_mcp/__init__.py", "src/invisible_playwright_mcp/__main__.py", "src/invisible_playwright_mcp/mcp/server.py",
+         "src/invisible_playwright_mcp/ui/page.html"]
 
 
 def test_a_clean_listing_passes():
@@ -36,14 +36,14 @@ def test_the_check_refuses_what_must_not_ship():
         ("assets/laboro.png", "outside"),
         ("server.json", "outside"),
         (".github/workflows/ci.yml", "outside"),
-        ("src/aihawk/.env", "carries"),
-        ("src/aihawk/__pycache__/x.pyc", "carries"),
+        ("src/invisible_playwright_mcp/.env", "carries"),
+        ("src/invisible_playwright_mcp/__pycache__/x.pyc", "carries"),
     ]:
         findings = pack_bundle.archive_findings(CLEAN + [extra])
         assert any(why in f for f in findings), (extra, findings)
 
 
 def test_the_check_refuses_an_archive_missing_the_server():
-    for gone in ("manifest.json", "pyproject.toml", "src/aihawk/__main__.py", "assets/icon-400.png"):
+    for gone in ("manifest.json", "pyproject.toml", "src/invisible_playwright_mcp/__main__.py", "assets/icon-400.png"):
         listing = [n for n in CLEAN if n != gone]
         assert any("missing" in f for f in pack_bundle.archive_findings(listing)), gone

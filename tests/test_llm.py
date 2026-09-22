@@ -1,5 +1,5 @@
 import pytest
-from aihawk.llm import DEFAULT_MODEL, resolve_key, resolve_model
+from invisible_playwright_mcp.llm import DEFAULT_MODEL, resolve_key, resolve_model
 
 
 def test_key_arg_wins_then_env_then_error():

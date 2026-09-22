@@ -1,4 +1,4 @@
-"""aihawk.mcp: a stealth Firefox browser exposed over MCP, shipped inside aihawk."""
+"""invisible_playwright_mcp.mcp: a stealth Firefox browser exposed over MCP, shipped inside invisible_playwright_mcp."""
 # Derived, never typed, and derived in ONE place. This line said "0.1.0"
 # through four releases - 0.2.0, 0.3.0, 0.4.0 and into 0.5.0 - because a
 # hand-written literal is a second place the version lives, and the second

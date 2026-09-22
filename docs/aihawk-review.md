@@ -24,11 +24,11 @@ self-criticism as reliable.
 invisible_playwright_mcp is an open-source AI web agent: you describe a task in plain
 language and it drives a real browser until the task is done. The
 repository sits at about 30,300 stars and 4,600 forks, has existed since
-August 2024, and is MIT licensed. The Python package `aihawk` is on PyPI
+August 2024, and is MIT licensed. The Python package `invisible-playwright-mcp` is on PyPI
 and needs Python 3.11 or newer. This review was written against what the
 index and the repository carried on 3 September 2026: 0.3.0 published,
 0.4.0 on the main branch. The package has shipped many times since, so
-[the PyPI page](https://pypi.org/project/aihawk/) is the current answer
+[the PyPI page](https://pypi.org/project/invisible-playwright-mcp/) is the current answer
 and this paragraph is not; the statements below that name a version say
 which one they describe.
 
@@ -41,14 +41,14 @@ wiki documents; that earlier use is not covered here.
 There are two ways to run it, and they share one browser:
 
 - **Inside an assistant you already use.** A plugin for Claude Code
-  (`claude plugin install aihawk@feder-cr`, once the repository is added as a
+  (`claude plugin install invisible-playwright-mcp@feder-cr`, once the repository is added as a
   marketplace), an extension for Gemini CLI, or a config entry in Claude
   Desktop or Cursor, and your assistant's model does the thinking.
-- **Standalone.** `uvx aihawk ui` serves a local page with chat on the
+- **Standalone.** `uvx invisible-playwright-mcp ui` serves a local page with chat on the
   left and the live browser on the right. It takes an
   [OpenRouter](https://openrouter.ai) key, defaults to `z-ai/glm-5.3-flash`,
   and accepts `--model` for anything OpenRouter serves. Since 0.3.0 this
-  is the only aihawk entrypoint; headless one-shots run through the
+  is the only invisible_playwright_mcp entrypoint; headless one-shots run through the
   assistant path above.
 
 The differentiating bet is the browser itself. Instead of driving a stock
@@ -102,7 +102,7 @@ it is what the product is.
 - **No macOS.** Windows x86_64 and Linux x86_64/arm64 only; the last
   macOS engine build was `firefox-20`, and support ended. A Mac user
   cannot run the standalone product today.
-- **There is no free mode.** Since 0.4.0 `uvx aihawk ui` refuses to start
+- **There is no free mode.** Since 0.4.0 `uvx invisible-playwright-mcp ui` refuses to start
   without an OpenRouter key: an agent is a model with a browser, and tokens
   cost money. Driving the browser by hand without a model is the
   invisible_playwright library's job, not this product's.
@@ -144,7 +144,7 @@ For the searcher asking "is invisible_playwright_mcp safe" in the download-sense
 canonical repository is
 [github.com/feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) and the
 canonical package is
-[`aihawk` on PyPI](https://pypi.org/project/aihawk/). A project with this
+[`invisible_playwright_mcp` on PyPI](https://pypi.org/project/invisible-playwright-mcp/). A project with this
 history has accumulated forks and mirrors on other sites, some carrying
 old code under the old license and the old purpose; none of them are
 maintained here, and anything this wiki says applies only to the
@@ -177,13 +177,13 @@ zero-setup product, or the largest possible community -
 adopters, and the [alternatives hub](guides-alternatives-and-comparisons.md)
 compares the field with the same disclosure this page opens with. And
 whatever this page just told you, it was the project grading its own
-exam: run `uvx aihawk ui` against a real task of yours, which costs an
+exam: run `uvx invisible-playwright-mcp ui` against a real task of yours, which costs an
 afternoon and answers the only question that matters.
 
 ## Short answers to the questions that lead here
 
 **Is invisible_playwright_mcp legit?** The canonical repo is `feder-cr/invisible_playwright_mcp` (about 30k
-stars, MIT) and the package is `aihawk` on PyPI. It is real, maintained,
+stars, MIT) and the package is `invisible-playwright-mcp` on PyPI. It is real, maintained,
 and auditable; mirrors elsewhere are not ours.
 
 **Is invisible_playwright_mcp safe?** The code is open for inspection before you run it,
@@ -212,8 +212,8 @@ the MCP route.
 
 ## Sources
 
-- The [invisible_playwright_mcp repository](https://github.com/feder-cr/invisible_playwright_mcp): README, LICENSE, `pyproject.toml` and `tests/test_key_isolation.py` read in the working tree on 2026-09-03; stars, forks, license and creation date read via the GitHub API the same day; `src/aihawk/llm.py`, for the default model id, re-read 2026-09-08.
-- [`aihawk` on PyPI](https://pypi.org/project/aihawk/), version 0.3.0 metadata checked against the index 2026-09-04.
+- The [invisible_playwright_mcp repository](https://github.com/feder-cr/invisible_playwright_mcp): README, LICENSE, `pyproject.toml` and `tests/test_key_isolation.py` read in the working tree on 2026-09-03; stars, forks, license and creation date read via the GitHub API the same day; `src/invisible_playwright_mcp/llm.py`, for the default model id, re-read 2026-09-08.
+- [`invisible_playwright_mcp` on PyPI](https://pypi.org/project/invisible-playwright-mcp/), version 0.3.0 metadata checked against the index 2026-09-04.
 - The relicense commit ("Relicense under MIT", dated 2026-09-02) in the repository history, and the README's license section stating the AGPL-3.0 boundary for earlier distributions, both read 2026-09-03.
 - For comparative claims about other tools, the pages linked above carry their own dated sources; none are repeated here.
 

@@ -33,7 +33,7 @@ twenty seconds with a name instead of hanging a suite.
 
 NO BROWSER IS STARTED, which is what makes this cheap enough to run by
 default. The chain under test is: HTTP request -> `which` -> `Sessions` ->
-a real `Link` over stdio -> a real `python -m aihawk` child -> `browser_watch`
+a real `Link` over stdio -> a real `python -m invisible_playwright_mcp` child -> `browser_watch`
 -> `acting()` refusing because nothing is open -> `NOT_OPEN` as an
 error result -> back through `image_of` and the substring test -> 204. Every
 link in that sentence is real except the browser, and the browser is the one
@@ -49,12 +49,12 @@ import sys
 import httpx
 import pytest
 
-from aihawk.chat import DEFAULT_CHAT_ID
-from aihawk.sessions import Sessions
-from aihawk.routes import build_app
+from invisible_playwright_mcp.chat import DEFAULT_CHAT_ID
+from invisible_playwright_mcp.sessions import Sessions
+from invisible_playwright_mcp.routes import build_app
 
 #: This checkout's `src/`, so the child process imports the code under test
-#: rather than whatever `aihawk` is installed. `runner.child_env` copies this
+#: rather than whatever `invisible_playwright_mcp` is installed. `runner.child_env` copies this
 #: process's environment, so setting it here is what reaches the child.
 #: Measured on this machine: the installed distribution said 0.11.0 while the
 #: tree said 0.47.0, so without this the child would be a different product.
@@ -124,7 +124,7 @@ async def test_the_other_branch_of_the_same_comparison_is_a_503(live):
     body = got.json()
     assert set(body) == {"error"}, body
     assert body["error"], "a 503 with no reason tells the pane nothing"
-    from aihawk.mcp import NOT_OPEN
+    from invisible_playwright_mcp.mcp import NOT_OPEN
     assert NOT_OPEN % "main" not in body["error"], (
         "this branch is supposed to be the one the not-open sentence does NOT "
         "take: %s" % body["error"])
@@ -146,7 +146,7 @@ async def test_the_workspace_is_answered_by_the_server_and_not_by_the_interface(
     can invent: the route used to smooth an unreadable reply into an empty
     workspace with a 200, and it says 503 with the reason instead. So a 200
     here is a JSON object that came down the pipe from a real `python -m
-    aihawk`, and `focus` being "" is that server saying nothing is open rather
+    invisible_playwright_mcp`, and `focus` being "" is that server saying nothing is open rather
     than a default written on this side.
 
     Known-bad: put the fallback back. This still passes on its first two
@@ -158,7 +158,7 @@ async def test_the_workspace_is_answered_by_the_server_and_not_by_the_interface(
     assert got.status_code == 200, got.text[:300]
     body = got.json()
     assert set(body) == {"browsers", "focus", "build"}, body
-    from aihawk import __version__
+    from invisible_playwright_mcp import __version__
     assert body["build"] == __version__, (
         "the build the page is told is not the one this server is running, so "
         "a tab left open across an upgrade cannot notice: %s" % body)
@@ -168,7 +168,7 @@ async def test_the_workspace_is_answered_by_the_server_and_not_by_the_interface(
         "the server answered a browser it is working in while nothing is "
         "open: %s" % body)
 
-    from aihawk import routes as _routes
+    from invisible_playwright_mcp import routes as _routes
     assert not hasattr(_routes, "NO_BROWSERS"), (
         "the interface has an empty-workspace answer of its own again, so a "
         "200 from this route no longer proves the server said anything")

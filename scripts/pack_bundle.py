@@ -5,7 +5,7 @@ The repository IS the bundle: `manifest.json` at the root (server.type "uv",
 MCPB manifest 0.4), `pyproject.toml` with the dependencies, the package under
 `src/`, the icon. That is the layout the MCPB spec gives for Python servers
 whose dependencies cannot be bundled portably (pydantic, which the MCP SDK
-needs), and it is what `uv run --directory <bundle> python -m aihawk` runs.
+needs), and it is what `uv run --directory <bundle> python -m invisible_playwright_mcp` runs.
 `.mcpbignore` keeps everything else out; this script packs with the official
 CLI and then LISTS the archive against an allowed set, because an ignore file
 is a list of what to drop and a secret is what nobody thought to list.
@@ -22,8 +22,8 @@ Two things are staged before packing, on purpose:
     bundle runtime"), so the variant it gets is the same bundle with the one
     word it can read. The repository keeps the spec's word.
 
-    python scripts/pack_bundle.py                 # dist/aihawk-<version>.mcpb
-    python scripts/pack_bundle.py --smithery      # dist/aihawk-<version>-smithery.mcpb
+    python scripts/pack_bundle.py                 # dist/<manifest name>-<version>.mcpb
+    python scripts/pack_bundle.py --smithery      # dist/<manifest name>-<version>-smithery.mcpb
     python scripts/pack_bundle.py --output /tmp/b # somewhere else
 """
 from __future__ import annotations
@@ -42,7 +42,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 #: The whole of what a bundle may hold, as archive paths or path prefixes.
 ALLOWED = ("manifest.json", "pyproject.toml", "README.md", "LICENSE",
-           "assets/icon-400.png", "src/aihawk/")
+           "assets/icon-400.png", "src/invisible_playwright_mcp/")
 #: Names that must not appear anywhere in an archive path, whatever the prefix.
 FORBIDDEN_PARTS = (".env", ".git", "__pycache__", "tests", "docs", "articles", "skills")
 
@@ -52,7 +52,7 @@ def archive_findings(names):
 
     `names` are the entries of the zip. Every entry must sit under ALLOWED, and
     no entry may carry a forbidden part; both halves, because an allowed prefix
-    with a forbidden name inside it (`src/aihawk/.env`) is the case the first
+    with a forbidden name inside it (`src/invisible_playwright_mcp/.env`) is the case the first
     half cannot see.
     """
     out = []
@@ -65,8 +65,8 @@ def archive_findings(names):
         bad = [p for p in parts if p in FORBIDDEN_PARTS or p.startswith(".env")]
         if bad:
             out.append("%s carries %s" % (name, ", ".join(bad)))
-    for must in ("manifest.json", "pyproject.toml", "src/aihawk/__init__.py",
-                 "src/aihawk/__main__.py", "assets/icon-400.png"):
+    for must in ("manifest.json", "pyproject.toml", "src/invisible_playwright_mcp/__init__.py",
+                 "src/invisible_playwright_mcp/__main__.py", "assets/icon-400.png"):
         if must not in names:
             out.append("%s is missing from the archive" % must)
     return out
@@ -79,7 +79,7 @@ def stage(smithery: bool) -> pathlib.Path:
     # is not, and whatever slips through is caught by the archive check.
     tracked = subprocess.run(["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
                              cwd=ROOT, capture_output=True, check=True).stdout.decode("utf-8").split("\0")
-    staging = pathlib.Path(tempfile.mkdtemp(prefix="aihawk-mcpb-"))
+    staging = pathlib.Path(tempfile.mkdtemp(prefix="invisible_playwright_mcp-mcpb-"))
     for rel in tracked:
         if not rel:
             continue
@@ -118,7 +118,13 @@ def main(argv=None) -> int:
     out_dir = pathlib.Path(args.output)
     out_dir.mkdir(parents=True, exist_ok=True)
     suffix = "-smithery" if args.smithery else ""
-    out = out_dir / ("aihawk-%s%s.mcpb" % (version, suffix))
+    # ⛔ THE ARCHIVE IS NAMED FROM THE MANIFEST IT CARRIES, not from a literal
+    # here. It was a literal, and after the package rename on 2026-09-23 the
+    # file was called one thing while the manifest inside it declared another:
+    # a directory reading both would see two names for one bundle, and nothing
+    # would have gone red, because the literal here and the glob in `ci.yml`
+    # were the same wrong string.
+    out = out_dir / ("%s-%s%s.mcpb" % (manifest["name"], version, suffix))
 
     staging = stage(args.smithery)
     try:

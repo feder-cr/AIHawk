@@ -18,7 +18,7 @@ from __future__ import annotations
 import asyncio
 import re
 
-from aihawk.mcp import actions, server
+from invisible_playwright_mcp.mcp import actions, server
 
 
 def tools() -> dict:

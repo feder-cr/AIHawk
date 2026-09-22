@@ -17,7 +17,7 @@ to run a turn.
 """
 from __future__ import annotations
 
-from aihawk.agent import Conversation
+from invisible_playwright_mcp.agent import Conversation
 
 
 async def run_task(mcp, task: str, *, client, model: str,

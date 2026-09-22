@@ -88,7 +88,7 @@ What runs well today, per portal:
    persistent profile and a visible window:
 
    ```bash
-   uvx aihawk ui --headed --profile-dir ~/.hawk-invoices
+   uvx invisible-playwright-mcp ui --headed --profile-dir ~/.hawk-invoices
    ```
 
    Ask the agent to open the portal's login page, then sign in yourself in
@@ -97,8 +97,8 @@ What runs well today, per portal:
    anything in the prompt travels through the model provider. The profile
    directory keeps the session.
 
-2. **Extract on a rhythm, honestly.** Since aihawk 0.3.0 there is no headless
-   aihawk command to put in cron, and this page will not pretend a scheduler
+2. **Extract on a rhythm, honestly.** Since invisible_playwright_mcp 0.3.0 there is no headless
+   invisible_playwright_mcp command to put in cron, and this page will not pretend a scheduler
    is doing work a person starts. The monthly run is a five-minute ritual:
    open the same session (the profile still holds the login), paste the same
    instruction - "Find the most recent invoice. Reply with CSV only:

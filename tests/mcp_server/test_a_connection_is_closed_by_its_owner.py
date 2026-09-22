@@ -43,7 +43,7 @@ import asyncio
 
 import pytest
 
-from aihawk.link import Link
+from invisible_playwright_mcp.link import Link
 
 from _stdio_helpers import server_params  # noqa: F401  (imported for its path setup)
 

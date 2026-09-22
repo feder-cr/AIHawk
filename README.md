@@ -35,14 +35,14 @@ Then install it in your assistant.
 
 ```bash
 claude plugin marketplace add feder-cr/invisible_playwright_mcp
-claude plugin install aihawk@feder-cr
+claude plugin install invisible-playwright-mcp@feder-cr
 ```
 
 **Codex:**
 
 ```bash
 codex plugin marketplace add feder-cr/invisible_playwright_mcp
-codex plugin add aihawk@feder-cr
+codex plugin add invisible-playwright-mcp@feder-cr
 ```
 
 **Gemini CLI:**
@@ -61,7 +61,7 @@ Windows, in PowerShell:
 ```powershell
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 $env:Path = "$env:USERPROFILE\.local\bin;$env:Path"
-uvx aihawk ui --openrouter-key sk-or-...
+uvx invisible-playwright-mcp ui --openrouter-key sk-or-...
 ```
 
 Linux:
@@ -69,7 +69,7 @@ Linux:
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source $HOME/.local/bin/env
-uvx aihawk ui --openrouter-key sk-or-...
+uvx invisible-playwright-mcp ui --openrouter-key sk-or-...
 ```
 
 Then open **http://127.0.0.1:8765** and type the same thing.
@@ -138,8 +138,8 @@ among others. Worked examples, transcripts and their outputs live in
 
 ## The rest of the family: engine, core
 
-The MCP server from option 1 ships inside this package: `aihawk` with no
-subcommand is the server, `aihawk ui` the interface. Its config blocks for
+The MCP server from option 1 ships inside this package: `invisible_playwright_mcp` with no
+subcommand is the server, `invisible-playwright-mcp ui` the interface. Its config blocks for
 clients that take a file, its settings and its tools are on the wiki page
 [The MCP server](https://github.com/feder-cr/invisible_playwright_mcp/wiki/mcp-server).
 

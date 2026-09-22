@@ -21,6 +21,13 @@
    with the page dead, for the second time in two days and by a different
    mechanism than the first. Computed when called, the order of the lines stops
    being something anybody has to keep right. */
+// The key keeps the name the data is already stored under. Renaming it
+// does not move what is in localStorage, it just stops finding it: the
+// origin is the same 127.0.0.1 before and after, so the old entries are
+// still there, and a reader pointed at a new name reads nothing. Same
+// reason `AIHAWK_HOME` and the session directory kept theirs when the
+// package was renamed on 2026-09-23.
+// Here it holds an UNSENT DRAFT, so losing it loses something somebody typed.
 const qkey = (who) => 'aihawk.queued.' + (who || here);
 /* ⛔ AND IT GOES WHEN THE CONVERSATION GOES. Deleting a conversation erased
    its transcript on the server and its browsers with it, and left the sentence

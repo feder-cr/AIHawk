@@ -72,7 +72,7 @@ def resume_point(marker: str, epoch: str) -> tuple[int, bool]:
 # ⛔ `NO_BROWSERS` STOOD HERE: AN EMPTY WORKSPACE HANDED BACK WHENEVER THE
 # ANSWER COULD NOT BE READ. It was written for a server older than 0.18.0,
 # which answered `browser_list` in prose - and there is no such server to talk
-# to any more: the interface SPAWNS the one it ships with, `python -m aihawk`
+# to any more: the interface SPAWNS the one it ships with, `python -m invisible_playwright_mcp`
 # out of this same package, so the two versions cannot differ. What the
 # constant still did was make a failure look exactly like an empty room. That
 # was survivable while the body carried a `limit` no other path would produce;

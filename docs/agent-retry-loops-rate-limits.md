@@ -192,10 +192,10 @@ immediate identical re-run.
 ## Sources
 
 - invisible_playwright_mcp's own source, read 2026-09-03 and the loop re-read 2026-09-08:
-  `src/aihawk/agent.py` (a loop with no turn ceiling, the per-reply token cap, tool
+  `src/invisible_playwright_mcp/agent.py` (a loop with no turn ceiling, the per-reply token cap, tool
   errors fed back to the model as results, the one-action-at-a-time system prompt),
-  `src/aihawk/web.py` (the task handle, the stop button, and the cancel landing at
-  the next tool call) and `src/aihawk/link.py` (one instruction at a time on one
+  `src/invisible_playwright_mcp/web.py` (the task handle, the stop button, and the cancel landing at
+  the next tool call) and `src/invisible_playwright_mcp/link.py` (one instruction at a time on one
   browser).
 - The engine wiki's
   [rate limiting mechanics](https://github.com/feder-cr/invisible_playwright/wiki/how-to-rate-limit-your-scraper-playwright)

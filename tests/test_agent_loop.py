@@ -1,4 +1,4 @@
-"""The agent loop in aihawk/agent.py, driven by a scripted model.
+"""The agent loop in invisible_playwright_mcp/agent.py, driven by a scripted model.
 
 There is no OpenRouter key on this machine, so the model is replaced by a stub.
 Everything else is real: the objects handed to the loop are the same classes the
@@ -60,14 +60,14 @@ from openai.types.chat.chat_completion_message_function_tool_call import (
     Function,
 )
 
-from aihawk import agent as agent_module
-from aihawk.agent import (
+from invisible_playwright_mcp import agent as agent_module
+from invisible_playwright_mcp.agent import (
     system_message,
     SYSTEM_PROMPT,
     Conversation,
     mcp_tools_to_openai,
 )
-from aihawk.link import answer_of
+from invisible_playwright_mcp.link import answer_of
 from _loop import run_task
 
 
@@ -1099,7 +1099,7 @@ def test_a_reopened_conversation_gets_THIS_build_instructions():
 
     Known-bad: `self._convo.messages = list(messages)`, which is what it did.
     """
-    from aihawk.agent import OpenRouterBrain
+    from invisible_playwright_mcp.agent import OpenRouterBrain
 
     brain = OpenRouterBrain(client=object(), model="m")
     brain.remember([
@@ -1183,7 +1183,7 @@ async def test_the_brain_hands_the_link_instructions_to_the_loop():
 
     Known-bad: drop `instructions=` from the brain's call.
     """
-    from aihawk.agent import OpenRouterBrain
+    from invisible_playwright_mcp.agent import OpenRouterBrain
 
     class LinkWithInstructions:
         instructions = "Two browsers, main and support."
@@ -1287,7 +1287,7 @@ def test_the_instructions_open_by_saying_to_open_the_browser_first():
 
     Known-bad: move the paragraph down, or drop the two names from it.
     """
-    from aihawk.mcp.server import INSTRUCTIONS
+    from invisible_playwright_mcp.mcp.server import INSTRUCTIONS
     first = INSTRUCTIONS.split(chr(10) + chr(10))[0].lower()
     assert "main" in first and "support" in first, (
         "the instructions do not open by naming the two browsers: %r" % first)

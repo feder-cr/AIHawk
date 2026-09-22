@@ -212,9 +212,9 @@ All retrieved 2026-09-03, except the loop's own bounds, re-read 2026-09-08.
 - [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), plus its README and
   source in this repository: the loop, its lack of a turn ceiling, the
   8,000-character tool-result clip and the reply ceiling are in
-  [`src/aihawk/agent.py`](https://github.com/feder-cr/invisible_playwright_mcp/blob/main/src/aihawk/agent.py),
+  [`src/invisible_playwright_mcp/agent.py`](https://github.com/feder-cr/invisible_playwright_mcp/blob/main/src/invisible_playwright_mcp/agent.py),
   and the CLI surface in
-  [`src/aihawk/cli.py`](https://github.com/feder-cr/invisible_playwright_mcp/blob/main/src/aihawk/cli.py).
+  [`src/invisible_playwright_mcp/cli.py`](https://github.com/feder-cr/invisible_playwright_mcp/blob/main/src/invisible_playwright_mcp/cli.py).
 
 A complete worked run of this task shape, with the real transcript, the two
 screenshots the session returned and the 32-row CSV it produced, is in the

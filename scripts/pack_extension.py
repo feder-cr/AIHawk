@@ -14,7 +14,7 @@ with `gemini-extension.json` at its root. An archive is listed against an
 allowed set before it ships, for the same reason the bundle is: an ignore
 file is a list of what to drop, and a secret is what nobody thought to list.
 
-    python scripts/pack_extension.py                # dist/<platform>.aihawk-extension.zip x3
+    python scripts/pack_extension.py                # dist/<platform>.invisible_playwright_mcp-extension.zip x3
     python scripts/pack_extension.py --output /tmp/e
 """
 from __future__ import annotations
@@ -29,7 +29,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 #: The whole of what an extension archive may hold: the manifest Gemini reads,
 #: the skill it lists, and the three files a person expects to find beside any
-#: package. Nothing that runs: the server comes from the index, `uvx aihawk`.
+#: package. Nothing that runs: the server comes from the index, `uvx invisible-playwright-mcp`.
 ALLOWED = ("gemini-extension.json", "skills/", "LICENSE", "README.md",
            "assets/icon-400.png")
 #: Names that must not appear anywhere in an archive path, whatever the prefix.
@@ -39,7 +39,7 @@ PLATFORMS = ("darwin", "linux", "win32")
 
 
 def asset_name(platform: str) -> str:
-    return "%s.aihawk-extension.zip" % platform
+    return "%s.invisible_playwright_mcp-extension.zip" % platform
 
 
 def archive_findings(names):

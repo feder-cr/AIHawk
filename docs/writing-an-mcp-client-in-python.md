@@ -30,7 +30,7 @@ from mcp.client.stdio import stdio_client
 async def main():
     params = StdioServerParameters(
         command=sys.executable,
-        args=["-m", "aihawk"],
+        args=["-m", "invisible_playwright_mcp"],
         env={**os.environ, "PYTHONPATH": "src"},
     )
     async with stdio_client(params) as (read, write):

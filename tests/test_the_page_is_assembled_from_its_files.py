@@ -12,8 +12,8 @@ import re
 import zipfile
 from pathlib import Path
 
-from aihawk import ui
-from aihawk.routes import PAGE
+from invisible_playwright_mcp import ui
+from invisible_playwright_mcp.routes import PAGE
 
 ASSETS = Path(ui.__file__).parent
 
@@ -135,9 +135,9 @@ def test_the_wheel_carries_every_file_the_page_is_made_of():
     if not wheels:
         pytest.skip("no wheel built in this checkout")
     names = set(zipfile.ZipFile(wheels[-1]).namelist())
-    wanted = (["aihawk/ui/page.html"]
-              + ["aihawk/ui/css/%s" % f for f in ui.CSS_FILES]
-              + ["aihawk/ui/js/%s" % f for f in ui.JS_FILES])
+    wanted = (["invisible_playwright_mcp/ui/page.html"]
+              + ["invisible_playwright_mcp/ui/css/%s" % f for f in ui.CSS_FILES]
+              + ["invisible_playwright_mcp/ui/js/%s" % f for f in ui.JS_FILES])
     for needed in wanted:
         assert needed in names, (
             "%s is not in the wheel, so an installed copy serves a page with a "

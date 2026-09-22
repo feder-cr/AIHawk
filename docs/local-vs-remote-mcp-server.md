@@ -116,7 +116,7 @@ what the server does.
 ## Sources
 
 - [The MCP transports overview](https://modelcontextprotocol.io/docs/concepts/transports), retrieved 2026-09-13, for the two standard bindings, the wording on bindings versus semantics, and backward compatibility with earlier revisions.
-- This project's own server: the per-client lifespan behaviour and the 7-to-1 process measurement are recorded beside the code that handles it in `src/aihawk/mcp/server.py`; the 180-second stdin measurement was taken on Linux on 2026-09-06.
+- This project's own server: the per-client lifespan behaviour and the 7-to-1 process measurement are recorded beside the code that handles it in `src/invisible_playwright_mcp/mcp/server.py`; the 180-second stdin measurement was taken on Linux on 2026-09-06.
 
 ---
 

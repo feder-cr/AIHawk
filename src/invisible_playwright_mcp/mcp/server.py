@@ -35,7 +35,7 @@ what lets more than one client attach to the same live browser.
 
 THERE IS NO INTERFACE HERE, and that is the point rather than an omission. This
 package served a two-pane page and a live view until 0.9.0, reaching the browser
-through `registry` because it was in the same process. Both moved to `aihawk`,
+through `registry` because it was in the same process. Both moved to `invisible_playwright_mcp`,
 which now reaches the browser over MCP like anybody else. What that buys is not
 tidiness: it means no client has a privileged path, so the tools below are
 provably sufficient for the flagship interface, because the flagship interface
@@ -72,7 +72,7 @@ from .work import MAX_BROWSERS_PER_SESSION, SUPPORT_BROWSER_ID  # noqa: F401
 #: Whoever spawns this process decides the value. The interface spawns one
 #: server PER CONVERSATION and sets this to that conversation's own id, so two
 #: conversations are two PROCESSES, each with its own saved browser on disk. A
-#: standalone client (`uvx aihawk`, or this module run directly) never sets it
+#: standalone client (`uvx invisible-playwright-mcp`, or this module run directly) never sets it
 #: and lands on the same name every caller landed on before this had a name at
 #: all: `DEFAULT_SESSION_ID`. Two standalone clients on one machine therefore
 #: share a file, which is recorded as an open question in the workbench and
@@ -237,10 +237,10 @@ mcp = FastMCP("stealth", instructions=INSTRUCTIONS, lifespan=_lifespan)
 # FastMCP wrapper omits it, so setting it here is filling a gap, not reaching
 # into something private. The name stays `stealth` on purpose: it is the key
 # a person registering the server by hand was told to use (`claude mcp add
-# ... stealth -- uvx aihawk`, the README's line until the plugin route) and
+# ... stealth -- uvx invisible-playwright-mcp`, the README's line until the plugin route) and
 # it prefixes every tool such a client sees (`mcp__stealth__*`), so moving it
 # would rename tools under people who already have them wired. The plugin's
-# `.mcp.json` keys the same server as `aihawk`; that key is the client's and
+# `.mcp.json` keys the same server as `invisible_playwright_mcp`; that key is the client's and
 # never passes through here.
 mcp._mcp_server.version = __version__
 
@@ -645,13 +645,13 @@ def main() -> None:
     # ⛔ BEFORE THE PROTOCOL, NOT INSIDE THE LIFESPAN. A client starts its
     # servers when the session opens, minutes before the first page, and those
     # minutes are the download's for free; the lifespan runs per client over
-    # HTTP, and a download per client is the race `aihawk.engine` describes.
+    # HTTP, and a download per client is the race `invisible_playwright_mcp.engine` describes.
     engine.start()
     if transport in ("http", "streamable-http"):
         # streamable-http ships with the `mcp` package, which already requires
         # starlette and uvicorn, so serving over HTTP costs no new dependency.
         mcp.settings.host = os.environ.get("STEALTHFOX_MCP_HOST", "127.0.0.1")
-        # ⛔ NOT 8765, WHICH IS THE INTERFACE'S PORT. `aihawk ui` defaults to
+        # ⛔ NOT 8765, WHICH IS THE INTERFACE'S PORT. `invisible-playwright-mcp ui` defaults to
         # 8765 (cli.py), and this default used to be the same number in a
         # module that does not know about that one. Nobody had hit it because
         # nothing sets STEALTHFOX_MCP_TRANSPORT=http on its own, so the two

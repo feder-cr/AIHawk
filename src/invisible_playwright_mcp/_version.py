@@ -67,8 +67,11 @@ from pathlib import Path
 from urllib.parse import urlparse
 from urllib.request import url2pathname
 
-#: What this package is called on the index.
-DISTRIBUTION = "aihawk"
+#: What this package is called on the index, which is the dashed form: the
+#: underscored one is the MODULE. `importlib.metadata` normalises the two to the
+#: same distribution, so both resolve - and that is exactly why the wrong one
+#: would never announce itself.
+DISTRIBUTION = "invisible-playwright-mcp"
 
 #: What a version says when there is nothing at all to read.
 UNKNOWN = "0+unknown"

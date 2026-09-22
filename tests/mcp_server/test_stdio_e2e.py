@@ -2,8 +2,8 @@ import pytest
 from mcp import ClientSession
 from mcp.client.stdio import stdio_client
 
-from aihawk.mcp import store
-from aihawk.mcp import __version__ as aihawk_version
+from invisible_playwright_mcp.mcp import store
+from invisible_playwright_mcp.mcp import __version__ as package_version
 
 from _stdio_helpers import server_params
 
@@ -16,7 +16,7 @@ async def test_stdio_lists_tools():
             assert {"browser_navigate", "browser_take_screenshot"} <= names
 
 
-async def test_the_handshake_says_which_aihawk_this_is():
+async def test_the_handshake_says_which_build_this_is():
     """⛔ THE VERSION ON THE WIRE IS OURS, NOT THE SDK'S.
 
     `initialize` answers with a serverInfo, and a client uses it to say what
@@ -34,12 +34,12 @@ async def test_the_handshake_says_which_aihawk_this_is():
             got = await mcp.initialize()
             info = got.serverInfo
             assert info.name == "stealth", info.name
-            assert info.version == aihawk_version, (
+            assert info.version == package_version, (
                 "the handshake says %r; this package is %r. A client cannot "
-                "tell which build it is driving." % (info.version, aihawk_version))
+                "tell which build it is driving." % (info.version, package_version))
             from importlib.metadata import version as _installed
             sdk = _installed("mcp")
-            assert info.version != sdk or aihawk_version == sdk, (
+            assert info.version != sdk or package_version == sdk, (
                 "the handshake is announcing %s, which is the installed mcp "
                 "SDK's version. That is the defect this test exists for: the "
                 "low-level server falls back to the library's version when "
@@ -47,7 +47,7 @@ async def test_the_handshake_says_which_aihawk_this_is():
 
             # ⛔ AND THE ASSERTION ABOVE CANNOT SEE THE SECOND DEFECT, BECAUSE
             # BOTH OF ITS SIDES READ THE SAME SOURCE. `info.version` and
-            # `aihawk_version` were equal all through the months the handshake
+            # `package_version` were equal all through the months the handshake
             # announced an install record fourteen releases behind the code:
             # equal, and both wrong. An assertion that cannot separate the two
             # answers of its instrument is checking that a value was echoed.
@@ -64,7 +64,7 @@ async def test_the_handshake_says_which_aihawk_this_is():
             from urllib.parse import urlparse
             from urllib.request import url2pathname
 
-            dist = distribution("aihawk")
+            dist = distribution("invisible_playwright_mcp")
             written = dist.read_text("direct_url.json")
             recorded = json.loads(written) if written else {}
             if (recorded.get("dir_info") or {}).get("editable"):

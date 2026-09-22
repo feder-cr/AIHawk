@@ -4,7 +4,7 @@ No browser and no model are involved: `Link` is replaced by a recorder that
 stops the command the moment it would connect, so every test asserts what the
 CLI decided and handed over, not what the browser did.
 
-The theme of this file is the API key. `aihawk` takes an OpenRouter key and
+The theme of this file is the API key. `invisible_playwright_mcp` takes an OpenRouter key and
 nothing else, and a key that reaches the terminal is a key in a scrollback
 buffer, a CI log and a screen recording. FAKE_KEY below carries the marker
 CANARY on purpose so any echo of it, whole or truncated after the prefix, is
@@ -18,11 +18,11 @@ import traceback
 import click
 import pytest
 
-import aihawk.cli as climod
-import aihawk.sessions as sessions_mod
+import invisible_playwright_mcp.cli as climod
+import invisible_playwright_mcp.sessions as sessions_mod
 from _cli_brake import LinkRecorder, brake, run_cli, stopped_at_link  # noqa: F401
-from aihawk.llm import BASE_URL, DEFAULT_MODEL
-from aihawk.runner import child_env
+from invisible_playwright_mcp.llm import BASE_URL, DEFAULT_MODEL
+from invisible_playwright_mcp.runner import child_env
 
 # A key shaped like a real OpenRouter key, with a marker in the middle so that a
 # partial echo ("sk-or-v1-CANARY...") trips the detector too.
@@ -30,7 +30,7 @@ FAKE_KEY = "sk-or-v1-CANARY-9f3b2a7c-do-not-echo"
 KEY_MARKER = "CANARY"
 DECOY_ENV_KEY = "sk-or-v1-CANARY-env-decoy-must-lose"
 
-# Every option `aihawk ui` declares itself. --help is added by click at parse
+# Every option `invisible-playwright-mcp ui` declares itself. --help is added by click at parse
 # time and is not one of ours, so it is checked against the rendered help only.
 DECLARED_OPTIONS = {
     "--openrouter-key",
@@ -336,9 +336,9 @@ def test_ui_help_names_openrouter_and_the_environment_variables():
 
 
 def test_bare_invocation_is_the_server_and_the_help_names_the_interface(monkeypatch):
-    """`aihawk` with no arguments is the MCP server over stdio: that is what a
-    client registers as `uvx aihawk` and what the interface spawns as
-    `python -m aihawk`. The help still says so and still lists `ui`."""
+    """`invisible_playwright_mcp` with no arguments is the MCP server over stdio: that is what a
+    client registers as `uvx invisible-playwright-mcp` and what the interface spawns as
+    `python -m invisible_playwright_mcp`. The help still says so and still lists `ui`."""
     called = []
     monkeypatch.setattr(climod, "_serve", lambda: called.append(True))
 

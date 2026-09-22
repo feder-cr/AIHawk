@@ -21,7 +21,7 @@ test_real_launch.py.
 """
 import re
 
-from aihawk.mcp import actions
+from invisible_playwright_mcp.mcp import actions
 
 
 def _code(js: str) -> str:

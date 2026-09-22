@@ -33,16 +33,16 @@ because the plugin runs the server with `uvx`. Then, once:
 
 ```bash
 codex plugin marketplace add feder-cr/invisible_playwright_mcp
-codex plugin add aihawk@feder-cr
+codex plugin add invisible-playwright-mcp@feder-cr
 ```
 
 The first line registers the invisible_playwright_mcp repository as a plugin marketplace, which
 it is: the repository carries the marketplace file and is the plugin. The
-second installs `aihawk` from it. The plugin brings two things: the MCP server,
-started as `uvx aihawk`, so there is nothing to clone or pip-install first; and
+second installs `invisible-playwright-mcp` from it. The plugin brings two things: the MCP server,
+started as `uvx invisible-playwright-mcp`, so there is nothing to clone or pip-install first; and
 a `setup` skill that knows about the engine download below, so Codex can walk
 you through it if `browser_open` reports that the download failed. Check with
-`codex mcp list`: the server `aihawk` is there, enabled, running `uvx aihawk`.
+`codex mcp list`: the server `invisible_playwright_mcp` is there, enabled, running `uvx invisible-playwright-mcp`.
 Start a fresh Codex session afterwards if one was already open.
 
 Codex's own Plugins Directory does not list invisible_playwright_mcp, and will not: a listing
@@ -70,7 +70,7 @@ invisible_playwright_mcp's own interface if you later run that too.
 
 ## What Codex actually gains
 
-A set of browser tools under the server's name, `aihawk`. The authoritative
+A set of browser tools under the server's name, `invisible_playwright_mcp`. The authoritative
 list is whatever `codex mcp list` and the session show for your installed
 server version; the families, with the names invisible_playwright_mcp's own client code knows
 them by:
@@ -116,11 +116,11 @@ results, and short steps keep its context small and its mistakes cheap.
 
 ## Troubleshooting
 
-- **`aihawk` is not in `codex mcp list`.** Run `codex plugin list` to see
+- **`invisible_playwright_mcp` is not in `codex mcp list`.** Run `codex plugin list` to see
   whether the plugin is installed and enabled, and whether the marketplace
   `feder-cr` is registered. If `uvx` is not on your PATH, the plugin can be
   installed and its server still fail to start - install uv and try
-  `uvx aihawk` by hand, which surfaces the real error.
+  `uvx invisible-playwright-mcp` by hand, which surfaces the real error.
 - **The first browsing prompt answers "the engine is downloading".** That is
   the server saying what it is doing, not a fault: ask again in a minute, or
   run the fetch command above in a terminal to watch it finish.
@@ -138,7 +138,7 @@ results, and short steps keep its context small and its mistakes cheap.
 
 **How do I add invisible_playwright_mcp's browser to Codex?**
 `codex plugin marketplace add feder-cr/invisible_playwright_mcp`, then
-`codex plugin add aihawk@feder-cr`, once, with uv installed. New sessions
+`codex plugin add invisible-playwright-mcp@feder-cr`, once, with uv installed. New sessions
 then have the browser tools.
 
 **Do I need an OpenRouter key for this?** No. The key is only for invisible_playwright_mcp's own
@@ -169,8 +169,8 @@ All retrieved 2026-09-22.
   README (the verbatim install commands, the prerequisites and platforms, the
   engine download), its `.codex-plugin/` and `.agents/plugins/` (the plugin
   manifest and the marketplace file the first command registers) and source:
-  `src/aihawk/link.py` and `src/aihawk/web.py` (the interface reaching the
-  browser over MCP as an ordinary client), `src/aihawk/actions_help.py` (the
+  `src/invisible_playwright_mcp/link.py` and `src/invisible_playwright_mcp/web.py` (the interface reaching the
+  browser over MCP as an ordinary client), `src/invisible_playwright_mcp/actions_help.py` (the
   tool names above).
 - [OpenAI, plugins for ChatGPT and Codex](https://developers.openai.com/plugins),
   the plugin package layout, and its submission page, which is where the

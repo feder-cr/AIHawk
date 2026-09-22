@@ -2,7 +2,7 @@
 
 These tests pin the "OpenRouter only" requirement at three levels:
 
-1. the pure resolvers in ``aihawk.llm`` (key, model) - which environment
+1. the pure resolvers in ``invisible_playwright_mcp.llm`` (key, model) - which environment
    variables they read and which they must never read;
 2. the constructed client object (base URL, api_key) under an environment
    deliberately loaded with OpenAI variables;
@@ -33,8 +33,8 @@ from urllib.parse import urlparse
 
 import pytest
 
-from aihawk import llm
-from aihawk.llm import (
+from invisible_playwright_mcp import llm
+from invisible_playwright_mcp.llm import (
     APP_TITLE,
     APP_URL,
     BASE_URL,

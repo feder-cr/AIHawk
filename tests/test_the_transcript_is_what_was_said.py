@@ -21,9 +21,9 @@ from __future__ import annotations
 
 import json
 
-from aihawk import chats
-from aihawk.agent import OpenRouterBrain, SYSTEM_PROMPT, said_only, system_message
-from aihawk.chat import ChatService
+from invisible_playwright_mcp import chats
+from invisible_playwright_mcp.agent import OpenRouterBrain, SYSTEM_PROMPT, said_only, system_message
+from invisible_playwright_mcp.chat import ChatService
 
 
 class FakeLink:

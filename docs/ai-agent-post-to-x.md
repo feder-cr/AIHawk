@@ -106,7 +106,7 @@ file-upload action, so an image post needs your hands for the attachment
 in a headed session; text and link posts are fully within reach.
 
 ```bash
-uvx aihawk ui --profile-dir ~/.aihawk-x
+uvx invisible-playwright-mcp ui --profile-dir ~/.invisible_playwright_mcp-x
 ```
 
 > Go to x.com. Open the composer, type exactly this post, and stop without

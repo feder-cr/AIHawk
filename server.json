@@ -12,7 +12,7 @@
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
-      "identifier": "aihawk",
+      "identifier": "invisible-playwright-mcp",
       "version": "0.69.2",
       "runtimeHint": "uvx",
       "transport": {

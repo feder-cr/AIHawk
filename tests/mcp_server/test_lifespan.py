@@ -28,7 +28,7 @@ class _FakeSession:
 
 
 async def test_a_client_leaving_does_not_close_its_browser():
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
 
     fake = _FakeSession()
     server.work._open["main"] = fake
@@ -43,7 +43,7 @@ async def test_a_client_leaving_does_not_close_its_browser():
 
 
 async def test_several_clients_coming_and_going_leave_every_session_alone():
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
 
     a, b = _FakeSession(), _FakeSession()
     server.work._open["main"] = a
@@ -63,7 +63,7 @@ async def test_close_all_is_what_actually_shuts_them_down():
     """The cleanup did not disappear, it moved. It runs when the PROCESS ends,
     which on stdio is the same moment a client leaves, so nothing changes for
     the clients that exist today."""
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
 
     fake = _FakeSession()
     server.work._open["main"] = fake
@@ -79,7 +79,7 @@ def _main_with(monkeypatch, transport):
     and answer what it registered with atexit."""
     import atexit
 
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
 
     registered = []
     monkeypatch.setattr(atexit, "register", lambda fn, *a, **k: registered.append(fn))
@@ -102,7 +102,7 @@ def test_over_http_the_exit_hook_is_registered(monkeypatch):
     Known-bad: drop the `atexit.register` line from the HTTP branch of
     `main()`. Green before; red now.
     """
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
 
     registered = _main_with(monkeypatch, "http")
 
@@ -122,7 +122,7 @@ def test_over_stdio_the_lifespan_closes_and_no_hook_is_registered(monkeypatch):
     Known-bad: register the hook unconditionally at import. Green before; red
     now.
     """
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
 
     registered = _main_with(monkeypatch, None)
 

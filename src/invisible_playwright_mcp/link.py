@@ -84,7 +84,7 @@ class Link:
         report rather than swallow."""
         return StdioServerParameters(
             command=sys.executable,
-            args=["-m", "aihawk"],
+            args=["-m", "invisible_playwright_mcp"],
             env=child_env(self._opts, os.environ, key=self._key),
         )
 

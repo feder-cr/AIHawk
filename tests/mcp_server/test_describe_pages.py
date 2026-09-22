@@ -3,7 +3,7 @@ and which page a command drives, for every live page, with a page that will not
 answer contributing what it can."""
 from __future__ import annotations
 
-from aihawk.mcp.session import StealthSession
+from invisible_playwright_mcp.mcp.session import StealthSession
 
 
 class _Page:

@@ -25,10 +25,10 @@ from __future__ import annotations
 
 import os
 
-#: Read from `aihawk.storage`, which is where `home()` lives. It used to be
-#: reached through `aihawk.mcp.store`, which re-exported it - so this test
+#: Read from `invisible_playwright_mcp.storage`, which is where `home()` lives. It used to be
+#: reached through `invisible_playwright_mcp.mcp.store`, which re-exported it - so this test
 #: proved its property through a name that was only forwarding.
-from aihawk import storage
+from invisible_playwright_mcp import storage
 
 #: What a line running at import time sees. Captured HERE, at module level, on
 #: purpose: read inside a test it would show the per-test directory and prove
@@ -61,6 +61,28 @@ def test_and_neither_can_a_test_body():
     assert os.environ.get("AIHAWK_HOME"), "the redirection is not in place"
 
 
+def test_the_real_directory_keeps_the_name_the_data_is_already_under():
+    """⛔ RENAMING THIS DIRECTORY IS DATA LOSS, AND NOTHING ELSE IN THE SUITE
+    CAN SEE IT.
+
+    Every other test runs with `AIHAWK_HOME` pointed at a temporary directory,
+    so the default branch of `storage.home()` is the one piece of the product
+    that the suite never visits - which is why the package rename on
+    2026-09-23 changed this literal to the new name and 781 green tests said
+    nothing. The directory is not a name the code owns: it is where the
+    sessions, profiles and screenshots of everybody who installed the old name
+    ALREADY ARE. Moving the literal does not move them, so the upgrade reads as
+    every login and every saved conversation having vanished, silently.
+
+    Same reason `AIHAWK_HOME` kept its name. This is the half that had no gate.
+    """
+    real = _the_real_one()
+    assert real.name == "aihawk", (
+        "the default session directory is %r. Whatever the package is called, "
+        "the data on disk is under `aihawk`, and pointing the process at an "
+        "empty directory is how an upgrade loses it without saying so." % real.name)
+
+
 def test_the_server_starts_each_test_holding_nothing():
     """The state the server keeps between calls is emptied per test, so what one
     test leaves behind is not an input to the next.
@@ -71,7 +93,7 @@ def test_the_server_starts_each_test_holding_nothing():
     `Work` holds nothing and has restored nothing when a test begins, and any
     test may rely on that.
     """
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
 
     assert server.work.roles() == [], (
         "server.work arrived at this test holding %r" % server.work.roles())
@@ -82,7 +104,7 @@ def test_the_conftest_imports_nothing_the_light_jobs_do_not_have():
     it imports becomes a dependency of every test - including the ones in jobs
     that deliberately install almost nothing.
 
-    Measured on 2026-09-08: the fixture next door imported `aihawk.mcp.server`
+    Measured on 2026-09-08: the fixture next door imported `invisible_playwright_mcp.mcp.server`
     to clear four dicts, and the `version` and `releases` jobs, which run
     `pip install pytest` and nothing else because what they check is a version
     number and a set of release pages, both went red with `ModuleNotFoundError:
@@ -92,7 +114,7 @@ def test_the_conftest_imports_nothing_the_light_jobs_do_not_have():
     The state can only be dirty if something imported the module, so
     `sys.modules.get` answers the question without creating the dependency.
 
-    Known-bad: put `from aihawk.mcp import server` back in the fixture. Costs a
+    Known-bad: put `from invisible_playwright_mcp.mcp import server` back in the fixture. Costs a
     CI round trip to find out otherwise.
     """
     import pathlib
@@ -155,7 +177,7 @@ def test_a_run_that_did_not_ask_for_an_engine_cannot_reach_one():
         "the fast selection can download an engine and nobody will know until "
         "a CI job stops answering")
     where = pathlib.Path(cache)
-    assert where.name.startswith("aihawk-no-engine-"), (
+    assert where.name.startswith("invisible_playwright_mcp-no-engine-"), (
         "the cache points at %r, which is not the throwaway the conftest makes"
         % cache)
     assert os.environ.get("INVISIBLE_DOWNLOAD_DEADLINE") == "1", (
@@ -226,12 +248,12 @@ def test_the_guard_arms_exactly_when_the_engine_tests_are_deselected():
 
 
 def test_only_one_place_knows_where_the_interface_is_stopped():
-    """⛔ A TEST THAT DRIVES `aihawk ui` CAN SERVE FOREVER, AND ON 2026-09-11
+    """⛔ A TEST THAT DRIVES `invisible-playwright-mcp ui` CAN SERVE FOREVER, AND ON 2026-09-11
     one did.
 
     `cli.ui` builds a `Sessions` registry and asks it for a conversation, so
-    the only name worth patching is `aihawk.sessions.Link`. A test that
-    patched `aihawk.link.Link` instead stopped nothing: the command ran on,
+    the only name worth patching is `invisible_playwright_mcp.sessions.Link`. A test that
+    patched `invisible_playwright_mcp.link.Link` instead stopped nothing: the command ran on,
     uvicorn served the interface with no end, and all six CI matrix jobs hung
     to GitHub's six-hour ceiling on four pushes while reporting `in_progress`
     rather than failing. It was green on the developer machine only because
@@ -294,8 +316,8 @@ def test_the_brake_module_still_carries_all_three_defences():
     the reserved address from the runner. Both are invisible to a substring
     and both fail here.
     """
-    import aihawk.cli as climod
-    import aihawk.sessions as sessions_mod
+    import invisible_playwright_mcp.cli as climod
+    import invisible_playwright_mcp.sessions as sessions_mod
 
     import _cli_brake
 

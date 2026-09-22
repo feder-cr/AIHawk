@@ -1,5 +1,5 @@
-from aihawk.agent import mcp_tools_to_openai
-from aihawk.link import answer_of
+from invisible_playwright_mcp.agent import mcp_tools_to_openai
+from invisible_playwright_mcp.link import answer_of
 from _loop import run_task
 
 

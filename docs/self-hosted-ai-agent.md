@@ -106,11 +106,11 @@ else. Driven as an MCP server from a client such as an editor or a desktop
 assistant, the agent makes **no model call at all**: the client's model does the
 thinking and the server only moves the browser. That is checkable in one
 command, and it was checked for this page: with every model key removed from the
-environment, `python -m aihawk` still completes the protocol handshake and
+environment, `python -m invisible_playwright_mcp` still completes the protocol handshake and
 advertises its tools, because nothing in that path needs a model.
 [The MCP server page](mcp-server.md) has the config block each client takes.
 
-Driven instead through the bundled interface, `aihawk ui`, there is one outbound
+Driven instead through the bundled interface, `invisible-playwright-mcp ui`, there is one outbound
 dependency, OpenRouter. The same key-free environment makes that command exit
 with `no OpenRouter key`, which is the behaviour you want: it refuses rather
 than quietly doing less.

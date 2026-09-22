@@ -148,7 +148,7 @@ and restart Desktop. The block and the file path live on that page on purpose.
 **Do I need an API key for this?** No. Your Claude subscription is the model;
 the server only adds the browser, and its config block contains no secret. The
 OpenRouter key belongs to a different way in, invisible_playwright_mcp's own interface
-(`uvx aihawk ui`), which requires one.
+(`uvx invisible-playwright-mcp ui`), which requires one.
 
 **Why does the first instruction say the engine is downloading?** The server
 fetches the engine, about a quarter of a gigabyte, when it starts, and reports

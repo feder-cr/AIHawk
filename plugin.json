@@ -1,6 +1,6 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  "name": "aihawk",
+  "name": "invisible-playwright-mcp",
   "description": "AI browser agent: browses, clicks, types, and reads real web pages from plain-English instructions.",
   "author": {
     "name": "feder-cr",

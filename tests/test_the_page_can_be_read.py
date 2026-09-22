@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import re
 
-from aihawk.ui import PAGE
+from invisible_playwright_mcp.ui import PAGE
 
 #: The palette declares its own ratios in a comment beside each hex. This is
 #: what makes that comment checkable rather than decorative in its own right.

@@ -1,8 +1,8 @@
-"""No test reads or writes the real machine's aihawk directory.
+"""No test reads or writes the real machine's invisible_playwright_mcp directory.
 
 ⛔ MEASURED, BY DOING IT. Sessions became persistent on 2026-09-08, and the
 first run of the tests that exercise them wrote three real files into
-`%APPDATA%\\aihawk\\sessions` on the developer's machine - and then the next
+`%APPDATA%\\invisible_playwright_mcp\\sessions` on the developer's machine - and then the next
 test read them back, so tests began contaminating each other through a
 directory none of them had mentioned. One of them failed with six browsers it
 never opened.
@@ -57,9 +57,9 @@ import pytest
 #: question. `mkdtemp` and not `tmp_path`, which is a fixture and does not exist
 #: yet at this point - and removed at exit for the same reason it is made here:
 #: no fixture teardown covers a directory made at import, and by 2026-09-22
-#: this machine held dozens of empty `aihawk-tests-*` and `aihawk-no-engine-*`
+#: this machine held dozens of empty `invisible_playwright_mcp-tests-*` and `invisible_playwright_mcp-no-engine-*`
 #: directories, one pair per run.
-os.environ["AIHAWK_HOME"] = tempfile.mkdtemp(prefix="aihawk-tests-")
+os.environ["AIHAWK_HOME"] = tempfile.mkdtemp(prefix="invisible_playwright_mcp-tests-")
 atexit.register(shutil.rmtree, os.environ["AIHAWK_HOME"], True)
 
 
@@ -188,7 +188,7 @@ def _local_seal_beside(cache_dir: str):
 
 if _e2e_is_excluded(sys.argv):
     os.environ["INVISIBLE_PLAYWRIGHT_CACHE_DIR"] = _THROWAWAY = tempfile.mkdtemp(
-        prefix="aihawk-no-engine-")
+        prefix="invisible_playwright_mcp-no-engine-")
     os.environ["INVISIBLE_DOWNLOAD_DEADLINE"] = "1"
     _NO_ENGINE_SEAL = _local_seal_beside(_THROWAWAY)
     if _NO_ENGINE_SEAL:
@@ -204,7 +204,7 @@ else:
 
 @pytest.fixture(autouse=True)
 def _aihawk_home_is_disposable(tmp_path, monkeypatch):
-    monkeypatch.setenv("AIHAWK_HOME", str(tmp_path / "aihawk-home"))
+    monkeypatch.setenv("AIHAWK_HOME", str(tmp_path / "invisible_playwright_mcp-home"))
 
 
 @pytest.fixture(autouse=True)
@@ -226,7 +226,7 @@ def _the_server_remembers_nothing_from_the_last_test():
     be dirty if something imported the module, so if it is not there, there is
     nothing to clear.
     """
-    server = sys.modules.get("aihawk.mcp.server")
+    server = sys.modules.get("invisible_playwright_mcp.mcp.server")
     if server is not None and hasattr(server, "Work"):
         # ⛔ ONE OBJECT, WHERE THIS CLEARED FOUR GLOBALS BY NAME. The server
         # holds its whole piece of work - registry, restored flag, pages seen

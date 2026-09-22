@@ -66,7 +66,7 @@ def forget_key(env) -> list:
     the child itself. Measured 2026-09-16 against the published 0.68.2: the
     interface strips the key from the environment it hands over, by name and by
     value, and every one of the twenty-two cases in `test_key_isolation.py`
-    passes. Then the child - which is `python -m aihawk`, the same click group -
+    passes. Then the child - which is `python -m invisible_playwright_mcp`, the same click group -
     reads `.env` from the directory it inherited, finds `OPENROUTER_API_KEY` in
     it, and puts it straight back. The interface said so out loud and nobody was
     reading: `env      .env: OPENROUTER_API_KEY` is printed twice at startup,
@@ -80,7 +80,7 @@ def forget_key(env) -> list:
 
     ⛔ AND IT IS NOT A GUARD ON "WAS I SPAWNED BY THE INTERFACE". The browser
     server has no use for a model key whoever started it, so somebody running
-    `uvx aihawk` in a shell that exports one, or beside a `.env` that holds one,
+    `uvx invisible-playwright-mcp` in a shell that exports one, or beside a `.env` that holds one,
     has exactly the same exposure and was never told. Reading the environment
     covers the file, the export and any alias at once, which a guard on the
     file alone would not.
@@ -133,7 +133,7 @@ def child_env(opts: Mapping[str, Any], base_env: Mapping[str, str],
         # reads; this is which saved file the SERVER itself persists its two
         # browsers to, and the server has no session concept beyond reading
         # this one value once, at import. The interface sets it to spawn one
-        # server per conversation; a client that never sets it - `uvx aihawk`
+        # server per conversation; a client that never sets it - `uvx invisible-playwright-mcp`
         # in Claude Desktop - lands on the one name every caller landed on
         # before this had a name at all.
         env["AIHAWK_SESSION_ID"] = str(opts["session_id"])

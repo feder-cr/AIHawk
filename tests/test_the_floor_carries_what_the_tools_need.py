@@ -16,7 +16,7 @@ reason is carried by something that runs rather than by a comment nobody reads.
 ⛔ AND IT READS THE DECLARATION, NOT WHAT IS INSTALLED. A test that asked the
 interpreter which version is importable would pass on this machine, where the
 wrapper is installed from a checkout, and say nothing at all about what a user
-who runs `pip install aihawk` will get - which is the only thing a floor
+who runs `pip install invisible-playwright-mcp` will get - which is the only thing a floor
 decides.
 """
 from __future__ import annotations

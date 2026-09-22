@@ -16,8 +16,8 @@ uses.
 
 ## The two routes, and the one that is not actually local
 
-`uvx aihawk ui --openrouter-key ...` reaches OpenRouter and nowhere else. That is not
-a default that can be pointed elsewhere with a flag: `src/aihawk/llm.py` hardcodes the
+`uvx invisible-playwright-mcp ui --openrouter-key ...` reaches OpenRouter and nowhere else. That is not
+a default that can be pointed elsewhere with a flag: `src/invisible_playwright_mcp/llm.py` hardcodes the
 OpenRouter base URL, and the `ui` command refuses to start at all without a key. If
 you came here hoping for `--ollama`, it does not exist in the current source.
 
@@ -42,12 +42,12 @@ shape, even though Claude Code's own model is hosted rather than local:
 
 ```bash
 claude plugin marketplace add feder-cr/invisible_playwright_mcp
-claude plugin install aihawk@feder-cr
+claude plugin install invisible-playwright-mcp@feder-cr
 ```
 
 Two commands, once, and the browser's tools show up in that client from then on. A
 client built around a local model takes the equivalent command or config screen for
-adding an MCP server; the package on the other end, `aihawk`, the
+adding an MCP server; the package on the other end, `invisible_playwright_mcp`, the
 tool names it exposes, and the roughly quarter-gigabyte engine it downloads on first
 use are identical regardless of what is asking. The server has no idea whether the
 model calling it runs on your GPU or on someone else's, and that is by design: it
@@ -114,7 +114,7 @@ the whole local approach is the wrong fit.
 
 ## Short answers to the questions that lead here
 
-**Can I use a local model with invisible_playwright_mcp's own interface?** No. `uvx aihawk ui` only
+**Can I use a local model with invisible_playwright_mcp's own interface?** No. `uvx invisible-playwright-mcp ui` only
 ever calls OpenRouter, hardcoded in the source. A local model means attaching this
 browser to a different client over MCP instead.
 
@@ -145,8 +145,8 @@ fault regardless of any model; if not, the model was the variable.
 Retrieved 2026-09-05.
 
 - [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), this repository's README,
-  `src/aihawk/llm.py` (the hardcoded OpenRouter base URL and default model) and
-  `src/aihawk/cli.py` (the `ui` command's key requirement and its own note that
+  `src/invisible_playwright_mcp/llm.py` (the hardcoded OpenRouter base URL and default model) and
+  `src/invisible_playwright_mcp/cli.py` (the `ui` command's key requirement and its own note that
   driving the browser without a model at all is the `invisible_playwright` library's
   job).
 

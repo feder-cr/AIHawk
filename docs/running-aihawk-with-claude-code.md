@@ -32,23 +32,23 @@ because the plugin runs the server with `uvx`. Then, once:
 
 ```bash
 claude plugin marketplace add feder-cr/invisible_playwright_mcp
-claude plugin install aihawk@feder-cr
+claude plugin install invisible-playwright-mcp@feder-cr
 ```
 
 The first line registers the invisible_playwright_mcp repository as a plugin marketplace, which
 it is: the repository carries the marketplace file and is the plugin. The
-second installs `aihawk` from it, at user scope by default, so it is available
+second installs `invisible-playwright-mcp` from it, at user scope by default, so it is available
 in every project rather than only the directory you happened to be in. The
-plugin brings two things: the MCP server, started as `uvx aihawk`, so there is
+plugin brings two things: the MCP server, started as `uvx invisible-playwright-mcp`, so there is
 nothing to clone or pip-install first; and a `setup` skill that knows about
 the engine download below, so Claude can walk you through it when
 `browser_open` reports that the download failed. Start a fresh Claude Code session
-afterwards if one was already open, and `/plugin` should list `aihawk` as
+afterwards if one was already open, and `/plugin` should list `invisible_playwright_mcp` as
 installed, with its server among the connected ones in `/mcp`.
 
 If you registered the server by hand before the plugin existed, as an MCP
-server named `stealth` running `uvx aihawk`, it keeps working under that name:
-the plugin is the same server, plus the skill, under the name `aihawk`. Keep
+server named `stealth` running `uvx invisible-playwright-mcp`, it keeps working under that name:
+the plugin is the same server, plus the skill, under the name `invisible_playwright_mcp`. Keep
 one or the other, not both, or every tool shows up twice.
 
 ## First run: the download the server does on its own
@@ -72,7 +72,7 @@ invisible_playwright_mcp's own interface if you later run that too.
 
 ## What Claude actually gains
 
-A set of browser tools, prefixed with the server's name: `aihawk` from the
+A set of browser tools, prefixed with the server's name: `invisible_playwright_mcp` from the
 plugin, or whatever you chose when registering by hand. The
 authoritative list is whatever `/mcp` shows for your installed server version;
 the families, with the names invisible_playwright_mcp's own client code knows them by:
@@ -123,7 +123,7 @@ results, and short steps keep its context small and its mistakes cheap.
   registered by hand, which also says at which scope. If the install command
   was run while a session was open, the running session may not know it yet;
   start a new one. If `uvx` is not on your PATH, the plugin can be installed
-  and its server still fail to start - install uv and try `uvx aihawk` by
+  and its server still fail to start - install uv and try `uvx invisible-playwright-mcp` by
   hand, which surfaces the real error.
 - **The first browsing prompt answers "the engine is downloading".** That is
   the server saying what it is doing, not a fault: ask again in a minute, or
@@ -142,7 +142,7 @@ results, and short steps keep its context small and its mistakes cheap.
 
 **How do I add invisible_playwright_mcp's browser to Claude Code?**
 `claude plugin marketplace add feder-cr/invisible_playwright_mcp`, then
-`claude plugin install aihawk@feder-cr`, once, with uv installed. New
+`claude plugin install invisible-playwright-mcp@feder-cr`, once, with uv installed. New
 sessions then have the browser tools in `/mcp`.
 
 **Do I need an OpenRouter key for this?** No. The key is only for invisible_playwright_mcp's own
@@ -181,9 +181,9 @@ All retrieved 2026-09-03.
   README (the verbatim install commands, the prerequisites and platforms, the
   engine download and prefetch, "anything the interface can do, your assistant
   can do too"), its `.claude-plugin/` (the plugin manifest and the marketplace
-  file the first command registers) and source: `src/aihawk/link.py` and `src/aihawk/web.py` (the
+  file the first command registers) and source: `src/invisible_playwright_mcp/link.py` and `src/invisible_playwright_mcp/web.py` (the
   interface reaching the browser over MCP as an ordinary client),
-  `src/aihawk/actions_help.py` (the tool names above), and `pyproject.toml`
+  `src/invisible_playwright_mcp/actions_help.py` (the tool names above), and `pyproject.toml`
   (the engine version floor, and the server that ships inside the package since 0.10.0).
 - [The MCP server page](mcp-server.md),
   the server itself: config blocks for other clients, server-side options, and

@@ -25,7 +25,7 @@ import json
 import pathlib
 import re
 
-from aihawk.mcp.work import Work
+from invisible_playwright_mcp.mcp.work import Work
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 

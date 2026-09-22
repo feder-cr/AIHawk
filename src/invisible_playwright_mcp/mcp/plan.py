@@ -208,7 +208,7 @@ def engine_here(env: Optional[Mapping[str, str]] = None) -> dict:
     from a saved session came back without the engine the person had asked for.
 
     Measured 2026-09-09, and it is not only a developer's problem. Somebody
-    running `aihawk ui --binary <their build>` and reopening a session got
+    running `invisible-playwright-mcp ui --binary <their build>` and reopening a session got
     browsers on a DIFFERENT engine than the one they named, silently; on a build
     whose seal has no published assets - anything built locally - they got no
     browser at all, because there was nothing to download and nothing to run.

@@ -100,7 +100,7 @@ them. This is the general agent-timing problem, and it has
    screenshotting a whole desktop, Claude Code, Claude Desktop or Cursor can drive a
    Firefox patched at the C++ level as a set of tools, via
    [the MCP server](mcp-server.md) that ships with invisible_playwright_mcp -
-   a plugin for Claude Code: `claude plugin install aihawk@feder-cr`, once
+   a plugin for Claude Code: `claude plugin install invisible-playwright-mcp@feder-cr`, once
    the repository is added as a marketplace. Disclosure: that server and this wiki have the same maintainer, and it is the route invisible_playwright_mcp's own interface uses. For staying with the screenshot loop instead, the engine wiki shows
    [how to back a computer-use agent with a real browser engine](https://github.com/feder-cr/invisible_playwright/wiki/back-computer-use-agent-real-browser).
 2. **Fix the exit.** A clean, residential-quality address, with the browser's

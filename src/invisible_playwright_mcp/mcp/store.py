@@ -44,7 +44,7 @@ from ..storage import (DEFAULT_SESSION_ID, erase as _erase, file_for,
 #: It belongs here rather than in the registry: the registry keys BROWSERS, and
 #: this names a piece of WORK, which is to say a file in this directory. The
 #: registry never needed it except as a default argument no caller used.
-#: Re-exported: the constant itself lives in `aihawk.storage`, because the
+#: Re-exported: the constant itself lives in `invisible_playwright_mcp.storage`, because the
 #: interface's half needs the same value and a second literal is how the two
 #: halves would quietly start naming different pieces of work.
 _ = DEFAULT_SESSION_ID  # re-exported for callers that import it from here

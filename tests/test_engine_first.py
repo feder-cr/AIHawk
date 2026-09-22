@@ -1,7 +1,7 @@
 """The interface puts the browser on disk before it serves anything, and says
 what it is doing while it does.
 
-`aihawk ui` used to print "server connected" with nothing downloaded: the
+`invisible-playwright-mcp ui` used to print "server connected" with nothing downloaded: the
 engine arrived inside the first message, invisibly, a minute of nothing
 moving (0.7.0 had this, 0.8.0 withdrew it in favour of a fetch by hand, 0.69.0
 brings it back with the server downloading on its own as well). These tests
@@ -15,7 +15,7 @@ from __future__ import annotations
 import click
 import pytest
 
-import aihawk.cli as climod
+import invisible_playwright_mcp.cli as climod
 from _cli_brake import brake, run_cli, stopped_at_link
 
 FAKE_KEY = "sk-or-v1-CANARY-engine-first"

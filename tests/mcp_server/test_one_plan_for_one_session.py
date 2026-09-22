@@ -24,7 +24,7 @@ import json
 
 import pytest
 
-from aihawk.mcp import identity, plan
+from invisible_playwright_mcp.mcp import identity, plan
 
 
 def _seed_of(profile):
@@ -353,7 +353,7 @@ def test_a_bare_session_carries_no_settings_at_all():
     both come from `plan_session` - and this pins the reason, so the next caller
     that reaches for `StealthSession()` finds out here instead of on a runner.
     """
-    from aihawk.mcp.session import StealthSession
+    from invisible_playwright_mcp.mcp.session import StealthSession
 
     assert StealthSession()._kwargs == {}, (
         "a bare session grew a default again; whatever supplies it is now a "

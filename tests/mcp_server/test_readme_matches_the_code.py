@@ -3,7 +3,7 @@
 Written 2026-09-02, after finding that the HTTP transport, the live view and the
 two-pane chat had shipped in 0.4.0 and were named nowhere in the README: not
 broken, just invisible, which is the same thing from the outside. The view and
-the chat left for `aihawk` the same day, so the drift to watch for here is now
+the chat left for `invisible_playwright_mcp` the same day, so the drift to watch for here is now
 the opposite one - a README still offering pages this package stopped serving.
 
 Documentation drift is silent by construction. Nothing fails, nothing is red, and
@@ -17,11 +17,11 @@ import pathlib
 import re
 
 README = pathlib.Path(__file__).resolve().parents[2] / "docs" / "mcp-server.md"
-SRC = pathlib.Path(__file__).resolve().parents[2] / "src" / "aihawk" / "mcp"
+SRC = pathlib.Path(__file__).resolve().parents[2] / "src" / "invisible_playwright_mcp" / "mcp"
 
 
 def test_the_readme_does_not_describe_an_interface_this_package_no_longer_has():
-    """The page and the chat moved to `aihawk` in 0.9.0.
+    """The page and the chat moved to `invisible_playwright_mcp` in 0.9.0.
 
     A README that still offers them is worse than one that never mentioned them:
     it sends a reader to a URL that answers 404 and makes the split look like a
@@ -97,7 +97,7 @@ def test_the_readme_names_every_tool_the_server_registers():
     look the same from where the model sits."""
     import asyncio
 
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
 
     names = {t.name for t in asyncio.run(server.mcp.list_tools())}
     listed = _listed_tools()
@@ -147,7 +147,7 @@ def test_the_engine_floor_covers_the_wait_this_package_relies_on():
         "so hold_seconds in browser_click_at would silently not hold")
 
     # And the code really does depend on it, so this floor is not superstition.
-    source = (root / "src" / "aihawk" / "mcp" / "actions.py").read_text(encoding="utf-8")
+    source = (root / "src" / "invisible_playwright_mcp" / "mcp" / "actions.py").read_text(encoding="utf-8")
     assert "wait_for_timeout" in source, (
         "nothing calls wait_for_timeout any more; if that is deliberate, this "
         "floor can come down and this test should say so")

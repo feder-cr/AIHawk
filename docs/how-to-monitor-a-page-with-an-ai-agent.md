@@ -67,9 +67,9 @@ roughly a minute of wall clock. Daily is comfortable; every five minutes is a
 bill and, as covered below, a signature. The scheduled capture itself, as the
 next section shows, costs no model at all.
 
-## Scheduling it: a script, as of aihawk 0.3.0
+## Scheduling it: a script, as of invisible_playwright_mcp 0.3.0
 
-Since 0.3.0 invisible_playwright_mcp itself is interactive-only (`uvx aihawk ui`): there is no
+Since 0.3.0 invisible_playwright_mcp itself is interactive-only (`uvx invisible-playwright-mcp ui`): there is no
 headless subcommand to put in cron anymore. That is less of a loss than it
 sounds, because the scheduled half of monitoring is deliberately mechanical -
 fetch the page, extract one signal, save it - and mechanical work belongs in
@@ -110,7 +110,7 @@ A real crontab line, deliberately not on the hour:
 17 8 * * *  python $HOME/hawk-mon/check_page.py >> $HOME/hawk-mon/$(date +\%F).txt 2>&1
 ```
 
-The interface (`uvx aihawk ui`) has no scheduler; the recurring path is this
+The interface (`uvx invisible-playwright-mcp ui`) has no scheduler; the recurring path is this
 script plus whatever scheduler your system already has.
 
 ## What to store between runs
@@ -138,7 +138,7 @@ means the memory of the monitor is yours to keep. Two files do it:
 
 - **The dated archive.** Keep every line with its timestamp. When the diff
   fires and the question becomes "does this change MATTER", that is the
-  judgment half - open `uvx aihawk ui` (or your assistant with this browser
+  judgment half - open `uvx invisible-playwright-mcp ui` (or your assistant with this browser
   attached) and ask exactly that, with the two saved lines pasted in. The
   agent earns its per-session cost only on the days something actually moved,
   which is the whole economics of the hybrid this page keeps arguing for.
@@ -220,7 +220,7 @@ All retrieved 2026-09-03.
 - [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), plus its README and
   source in this repository: the interface entrypoint and the
   open-run-close session behavior in
-  [`src/aihawk/runner.py`](https://github.com/feder-cr/invisible_playwright_mcp/blob/main/src/aihawk/runner.py).
+  [`src/invisible_playwright_mcp/runner.py`](https://github.com/feder-cr/invisible_playwright_mcp/blob/main/src/invisible_playwright_mcp/runner.py).
 - [invisible_playwright](https://github.com/feder-cr/invisible_playwright),
   the engine as a Python library, whose Playwright API the scheduled script
   uses; the script above was executed against books.toscrape.com on

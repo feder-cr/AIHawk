@@ -98,7 +98,7 @@ class Work:
     def __init__(self, session_id: str, *, factory=StealthSession, engine=None) -> None:
         self.session_id = session_id
         self._factory = factory
-        #: Where the engine is for this process (`aihawk.engine.Engine`), or
+        #: Where the engine is for this process (`invisible_playwright_mcp.engine.Engine`), or
         #: None for a piece of work that launches nothing and need not ask.
         #: `open` does not start a browser while it is not on disk: it answers
         #: with the download's progress instead, so no tool call waits on it.

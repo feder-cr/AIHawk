@@ -33,8 +33,8 @@ import threading
 
 import pytest
 
-from aihawk.mcp import actions
-from aihawk.mcp.actions import _refuse_script_interaction as refuse
+from invisible_playwright_mcp.mcp import actions
+from invisible_playwright_mcp.mcp.actions import _refuse_script_interaction as refuse
 
 # The shapes a model actually writes. Every one of these was either observed in
 # the run above or is the obvious next thing to try after the observed one is
@@ -131,7 +131,7 @@ def test_the_model_is_not_told_the_guard_is_complete():
     """
     import asyncio
 
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
 
     tools = {t.name: t for t in asyncio.run(server.mcp.list_tools())}
     surfaces = [server.INSTRUCTIONS, tools["browser_evaluate"].description or ""]
@@ -170,7 +170,7 @@ def test_the_description_does_not_invite_what_the_code_refuses():
     """
     import asyncio
 
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
 
     tools = {t.name: t for t in asyncio.run(server.mcp.list_tools())}
     text = (tools["browser_evaluate"].description or "")
@@ -191,7 +191,7 @@ def test_every_tool_a_refusal_names_actually_exists():
     import asyncio
     import re
 
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
 
     real = {t.name for t in asyncio.run(server.mcp.list_tools())}
     for expression in ACTING:
@@ -212,7 +212,7 @@ def test_the_server_hands_the_model_the_ladder():
     any one description - what was missing was the only statement of which to
     reach for FIRST, and that is precisely what the model got wrong.
     """
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
 
     text = server.mcp.instructions or ""
     assert text, "the server delivers no instructions, so the ladder is nowhere"
@@ -277,8 +277,8 @@ def test_the_snapshot_reports_what_the_controls_are_set_to():
     """
     import asyncio
 
-    from aihawk.mcp.plan import plan_session
-    from aihawk.mcp.session import StealthSession
+    from invisible_playwright_mcp.mcp.plan import plan_session
+    from invisible_playwright_mcp.mcp.session import StealthSession
 
     srv, url = _serve()
 

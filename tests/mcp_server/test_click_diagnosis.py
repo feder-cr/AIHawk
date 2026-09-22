@@ -12,7 +12,7 @@ from retrying - which is what a caller does with an opaque timeout.
 
 import pytest
 
-from aihawk.mcp import actions
+from invisible_playwright_mcp.mcp import actions
 
 
 class _Session:

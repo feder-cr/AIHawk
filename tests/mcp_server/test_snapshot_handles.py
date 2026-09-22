@@ -19,7 +19,7 @@ import re
 
 import pytest
 
-from aihawk.mcp import actions
+from invisible_playwright_mcp.mcp import actions
 
 CASES = {
     "three identical links": (

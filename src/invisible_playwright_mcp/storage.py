@@ -1,8 +1,8 @@
 """The things both halves of a session need to write themselves down.
 
 A session is kept in two files by two programs: the browsers by the MCP
-server (`aihawk.mcp.store`) and the conversation by the interface
-(`aihawk.chats`). They must agree about WHERE the data lives and about HOW an
+server (`invisible_playwright_mcp.mcp.store`) and the conversation by the interface
+(`invisible_playwright_mcp.chats`). They must agree about WHERE the data lives and about HOW an
 id becomes a file name, or the join between them breaks; and they must both
 replace a file without ever leaving a half-written one behind.
 
@@ -46,6 +46,20 @@ def home() -> Path:
     this on another disk. Otherwise the place each system expects, so a person
     finds it where they would look for it rather than in a dotfile invented
     here.
+
+    ⛔ THE DIRECTORY IS STILL CALLED `aihawk`, AND RENAMING IT IS DATA LOSS.
+    The package, the command and the module were renamed; this was not, because
+    it is not a name the code owns - it is where sessions, profiles and
+    screenshots ALREADY ARE on the disk of everybody who installed the old
+    name. Changing the literal does not move them: it makes the process look
+    somewhere empty, so an upgrade reads as every login, every cookie and every
+    saved conversation having vanished, with nothing printed.
+
+    It is the same reason `AIHAWK_HOME` kept its name one line above, and the
+    rename's own rule list said so about the VARIABLE while missing the
+    DIRECTORY THE VARIABLE POINTS AT. Caught 2026-09-23 by reading the diff of
+    every string literal in `src/`, not by a test: no test can see it, because
+    a test sets `AIHAWK_HOME` and never visits the default at all.
     """
     override = os.environ.get("AIHAWK_HOME")
     if override:

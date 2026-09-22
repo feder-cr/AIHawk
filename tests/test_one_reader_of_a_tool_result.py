@@ -36,7 +36,7 @@ import pathlib
 
 import pytest
 
-SRC = pathlib.Path(__file__).resolve().parents[1] / "src" / "aihawk"
+SRC = pathlib.Path(__file__).resolve().parents[1] / "src" / "invisible_playwright_mcp"
 
 #: The module that is allowed to know the shape of a tool result.
 THE_READER = "link.py"

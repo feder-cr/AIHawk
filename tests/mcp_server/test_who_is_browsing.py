@@ -27,7 +27,7 @@ import json
 
 import pytest
 
-from aihawk.mcp import identity
+from invisible_playwright_mcp.mcp import identity
 
 
 def _write(profile, seed):

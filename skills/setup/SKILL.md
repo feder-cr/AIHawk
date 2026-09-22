@@ -3,7 +3,7 @@ name: setup
 description: What the invisible_playwright_mcp browser server needs on this machine - the patched Firefox it drives, which the server downloads on its own the first time it runs. Use when browser_open answers that the engine is downloading or that its download failed, or right after installing the plugin.
 ---
 
-The server runs with `uvx aihawk` and needs its browser engine on this machine once, about a quarter of a gigabyte. It downloads it on its own when it starts; while that is in flight, `browser_open` answers with how far the download is instead of opening a browser, and asking again a minute later is all that is needed.
+The server runs with `uvx invisible-playwright-mcp` and needs its browser engine on this machine once, about a quarter of a gigabyte. It downloads it on its own when it starts; while that is in flight, `browser_open` answers with how far the download is instead of opening a browser, and asking again a minute later is all that is needed.
 
 To do the download ahead of time, or again after it failed, in a terminal where the user can watch it, run the block for the user's system:
 

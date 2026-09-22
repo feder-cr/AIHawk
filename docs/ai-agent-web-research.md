@@ -87,8 +87,8 @@ scripted, one question per run:
 > the three most common price bands you observe. Ground every number in what
 > the pages show; do not estimate.
 
-(Typed into `uvx aihawk ui`, or handed to your assistant with invisible_playwright_mcp's
-browser attached - research is judgment work, and since aihawk 0.3.0 the
+(Typed into `uvx invisible-playwright-mcp ui`, or handed to your assistant with invisible_playwright_mcp's
+browser attached - research is judgment work, and since invisible_playwright_mcp 0.3.0 the
 judgment paths are those two.)
 
 Prompt habits that separate usable research from confident noise:

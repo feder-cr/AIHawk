@@ -12,8 +12,8 @@ Count the numbered entries.
   2. Dash and invisible-Unicode scan. No em/en dashes, and none of the
      invisible or formatting codepoints that text pipelines can smuggle in
      (zero-width, bidi controls, variation selectors, tag block).
-  3. CLI-surface scan. Every `aihawk <subcommand>` a page teaches must exist
-     in src/aihawk/cli.py. A release once removed a subcommand while 13 wiki
+  3. CLI-surface scan. Every `<command> <subcommand>` a page teaches must exist
+     in src/invisible_playwright_mcp/cli.py. A release once removed a subcommand while 13 wiki
      pages still taught it.
   4. Internal links. Every `](page.md)` in docs/ must point at a page that
      exists, and image assets must carry no metadata chunks.
@@ -21,17 +21,17 @@ Count the numbered entries.
      in every fence that installs uv (one per system), the run from the
      installer line to the end of the fence, PATH line included, minus the
      line that runs the product (the interface fence ends with it); the
-     first fenced line that runs `aihawk` names the launcher in front of
+     first fenced line that runs the command names the launcher in front of
      every command (`uvx` today; until 0.69.0 the fetch line did, and the
      fetch line left the README when the server began downloading the engine
      itself); and the lines that tell a client the server exists, one per client
-     (`claude plugin install aihawk@feder-cr`, `gemini extensions install
+     (`claude plugin install invisible-playwright-mcp@feder-cr`, `gemini extensions install
      ...`, `codex mcp add ...`). A page that carries the uv installer carries
-     the install lines verbatim, every code block runs `aihawk` (the server,
-     or `aihawk ui`) and the fetch with the README's launcher, a page that
+     the install lines verbatim, every code block runs the command (the server,
+     or `invisible-playwright-mcp ui`) and the fetch with the README's launcher, a page that
      tells a client the server exists says it with the README's line or names
      the route bare, and no page teaches a way in that the README does not
-     (`pip install aihawk`; `claude mcp add`, once the README moved to the
+     (`pip install invisible-playwright-mcp`; `claude mcp add`, once the README moved to the
      plugin). On 2026-09-06 the route went uv, pip, uv in one day, and each
      flip touched the README plus twenty-odd wiki pages by hand; on
      2026-09-21 Claude Code moved from `claude mcp add` to the plugin and
@@ -58,9 +58,24 @@ import argparse
 import re
 import struct
 import sys
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+#: The command this package puts on the PATH, read from the one place that
+#: declares it.
+#:
+#: The module and the command are two spellings of one name, and only one of
+#: them is ever typed at a shell. This gate held a copy of the wrong one after
+#: the rename on 2026-09-23, and the result was not a missed check but four
+#: INVENTED ones: with the module's spelling in the pattern, any prose that
+#: mentioned the module inside backticks followed by any word at all read as a
+#: subcommand, so the gate reported `<module> src` and `<module> reviewed` as
+#: commands the CLI does not define. A gate that holds a copy of what it
+#: measures reports on the copy.
+COMMAND = next(iter(tomllib.loads(
+    (ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["scripts"]))
 
 BANNED_TERMS = [
     "job application", "job-application", "job applications",
@@ -87,21 +102,34 @@ PNG_OK = {b"IHDR", b"PLTE", b"IDAT", b"IEND", b"tRNS", b"gAMA", b"cHRM",
           b"sRGB", b"iCCP", b"sBIT", b"bKGD", b"hIST", b"pHYs", b"sPLT",
           b"tIME", b"acTL", b"fcTL", b"fdAT"}
 
-# `aihawk <token>` counts as a command reference only in code-shaped contexts:
-# after `uvx `, inside backticks, or in a quoted argv list.
-CMD_RE = re.compile(r"(?:uvx[ \t]+|[\"'`])aihawk[\"', \t]+([a-z][a-z-]*)")
+# `<command> <token>` counts as a command reference only in code-shaped
+# contexts: after `uvx `, inside backticks, or in a quoted argv list.
+CMD_RE = re.compile(r"(?:uvx[ \t]+|[\"'`])" + re.escape(COMMAND) + r"[\"', \t]+([a-z][a-z-]*)")
 
 
 # The way in is written once, in the README: the install block, and the
 # launcher in front of every command. A page repeats them verbatim or not at
 # all. Born 2026-09-06, when the route went uv, pip, uv in one day and each
 # flip touched the README plus twenty-odd wiki pages by hand.
-# `aihawk` alone is the server, `aihawk ui` the interface: one token covers
-# both, matched as a whole word (never inside aihawk.mcp or a path).
-WAY_IN = ("aihawk", "invisible-playwright fetch")
+# The command alone is the server, `<command> ui` the interface: one token
+# covers both, matched as a whole word (never inside a dotted path).
+#: ⛔ THE FIRST ENTRY IS THE COMMAND, AND WRITING THE MODULE'S SPELLING HERE
+#: TURNED FOUR CHECKS OFF WITHOUT A WORD. `way_in` finds the product line in a
+#: fence by this string; with the module's spelling it matched nothing in a
+#: README that teaches `uvx invisible-playwright-mcp`, so it returned
+#: `(None, None, None)`, every check that reads the launcher or the client lines
+#: was skipped, and the gate printed `clean`. The four mutations in `selftest`
+#: were the only thing that said so. A gate that cannot find the thing it
+#: measures does not fail, it passes.
+WAY_IN = (COMMAND, "invisible-playwright fetch")
 INSTALLER = "astral.sh/uv/install"
-OTHER_WAYS = ("pip install aihawk", "pip install invisible-playwright-mcp",
-              "pipx install aihawk", "pipx run aihawk")
+#: The routes that are not the blessed one. `pip` was tried and withdrawn in a
+#: day, so a page teaching it is a page teaching something we do not support.
+#: There were four before the rename, two of them the old distribution's name
+#: and one the shim's; the shim's name is the package's own now, so the three
+#: below are all there are.
+OTHER_WAYS = tuple("%s %s" % (prefix, COMMAND)
+                   for prefix in ("pip install", "pipx install", "pipx run"))
 #: How a client is told the server exists: the start of one line per client
 #: in the README, and every form a README of this project has taught. A page
 #: repeats the README's whole line, names the route bare in prose (`claude
@@ -115,10 +143,10 @@ FENCE = chr(96) * 3
 
 
 #: The languages in which a page can actually teach the way in: a shell, or a
-#: client's config block. A `python` block cannot - there `aihawk` is a string
+#: client's config block. A `python` block cannot - there `invisible_playwright_mcp` is a string
 #: inside an argument list, not a command - and reading one as shell accuses
-#: healthy code. Happened 2026-09-13 on `args=["-m", "aihawk"]` in a thirty-line
-#: MCP client: the gate reported that the page runs `" aihawk`. A block with no
+#: healthy code. Happened 2026-09-13 on `args=["-m", "invisible_playwright_mcp"]` in a thirty-line
+#: MCP client: the gate reported that the page runs `" invisible_playwright_mcp`. A block with no
 #: declared language stays in, because that is the form shell blocks use most.
 WAY_IN_LANGUAGES = ("", "text", "sh", "bash", "shell", "console",
                     "powershell", "ps1", "json", "toml", "jsonc")
@@ -150,11 +178,11 @@ def fenced_blocks(text, only_languages=None):
 
 def runs(line, cmd):
     """Where `line` runs `cmd` as a command: (text before it, the word in the
-    launcher slot) for each place. A URL or path segment (`.../aihawk`) is not
-    one, and neither is a plugin id (`aihawk@feder-cr`, which `claude plugin
+    launcher slot) for each place. A URL or path segment (`.../invisible_playwright_mcp`) is not
+    one, and neither is a plugin id (`invisible-playwright-mcp@feder-cr`, which `claude plugin
     install` takes: a name, not a command run). The launcher word is the last
     word before the command, stripped of `=` and `/` prefixes, so
-    `ExecStart=/usr/bin/uvx aihawk ui` reads as `uvx`."""
+    `ExecStart=/usr/bin/uvx invisible-playwright-mcp ui` reads as `uvx`."""
     found = []
     pattern = r"(?<![\w./-])" + re.escape(cmd) + r"(?![\w./@-])"
     for m in re.finditer(pattern, line):
@@ -175,7 +203,7 @@ def way_in(readme_text):
     itself asks for a PATH line before `uvx` works in the same shell, and a
     page that copies the installer without it teaches a command that fails.
     Collected in order and once across fences. The launcher is the word in
-    front of the first fenced `aihawk` command. The client lines are every
+    front of the first fenced `invisible_playwright_mcp` command. The client lines are every
     fenced line that starts with one of `CLIENT_WAYS`, stripped, in order and
     once. (None, None, None) when no fence runs the product, which is a README
     with nothing to derive from."""
@@ -256,7 +284,7 @@ def check_way_in(rel, text, launcher, block, client, readme_text):
             for cmd in WAY_IN:
                 for before, got in runs(line, cmd):
                     if command_key.search(before):
-                        # `"command": "aihawk"`: the command IS the launcher slot
+                        # `"command": "invisible_playwright_mcp"`: the command IS the launcher slot
                         if launcher:
                             out.append("%s: config block starts `%s` directly, the "
                                        "README goes through `%s`" % (rel, cmd, launcher))
@@ -290,7 +318,7 @@ def cli_commands(cli_path):
 #: tool and the `session_id` parameter, and FOUR already published pages went
 #: on teaching them - one told the reader to set the proxy "at `session_start`",
 #: that is, to call a tool that no longer exists. The CLI check could not see
-#: it: it looks at `aihawk <subcommand>`, and an MCP tool is not a subcommand.
+#: it: it looks at `invisible_playwright_mcp <subcommand>`, and an MCP tool is not a subcommand.
 #: The first draft accused THREE healthy lines out of seven, which is how a
 #: gate goes red for the wrong reason and then gets switched off. All three
 #: causes were legitimate: a PARAMETER shaped like a tool (`session_id`); the
@@ -497,10 +525,10 @@ def content_files(root):
 
 def check_tree(root):
     findings = []
-    valid = cli_commands(root / "src" / "aihawk" / "cli.py") \
-        if (root / "src" / "aihawk" / "cli.py").exists() else None
+    valid = cli_commands(root / "src" / "invisible_playwright_mcp" / "cli.py") \
+        if (root / "src" / "invisible_playwright_mcp" / "cli.py").exists() else None
 
-    server = root / "src" / "aihawk" / "mcp" / "server.py"
+    server = root / "src" / "invisible_playwright_mcp" / "mcp" / "server.py"
     tools = mcp_tools(server) if server.exists() else None
     surface = tool_surface(server) if server.exists() else None
 
@@ -537,9 +565,9 @@ def check_tree(root):
                 token = m.group(1)
                 if token not in valid:
                     findings.append(
-                        "%s: teaches `aihawk %s`, which cli.py does not "
+                        "%s: teaches `%s %s`, which cli.py does not "
                         "define (valid: %s)"
-                        % (rel, token, ", ".join(sorted(valid))))
+                        % (rel, COMMAND, token, ", ".join(sorted(valid))))
 
         if tools:
             for m in TOOL_RE.finditer(text):
@@ -594,16 +622,16 @@ def selftest():
         (root / "docs").mkdir()
         (root / "articles").mkdir()
         (root / "assets").mkdir()
-        (root / "src" / "aihawk").mkdir(parents=True)
+        (root / "src" / "invisible_playwright_mcp").mkdir(parents=True)
         # Mirrors the real file's shape: multi-line option decorators
         # between the command decorator and the def.
-        (root / "src" / "aihawk" / "cli.py").write_bytes(
+        (root / "src" / "invisible_playwright_mcp" / "cli.py").write_bytes(
             b"@main.command()\n"
             b'@click.option("--model", default=None,\n'
             b'              help="Model id.")\n'
             b"def ui(model):\n    pass\n")
         # Il server, per il controllo sui tool MCP: due dichiarati e basta.
-        (root / "src" / "aihawk" / "mcp").mkdir(parents=True)
+        (root / "src" / "invisible_playwright_mcp" / "mcp").mkdir(parents=True)
         # The docstrings have a KNOWN length, because the seventh check
         # compares published numbers against this measurement: 2 tools, 8
         # characters. One decorator carries a nested call, the shape the
@@ -611,7 +639,7 @@ def selftest():
         # stops at the first `)` sees one tool here, and the "removed MCP
         # tool" mutation below is then caught for the wrong reason or not at
         # all - the surface figures ("2 tools", 8 characters) are what pin it.
-        (root / "src" / "aihawk" / "mcp" / "server.py").write_bytes(
+        (root / "src" / "invisible_playwright_mcp" / "mcp" / "server.py").write_bytes(
             b'@mcp.tool(annotations=_says("Open", destructive=True))\n'
             b'async def browser_open(url):\n    """One."""\n'
             b'@mcp.tool()\ndef browser_click(selector):\n    """Two."""\n')
@@ -621,18 +649,18 @@ def selftest():
             b"# invisible_playwright_mcp\n\nWindows, in PowerShell:\n\n```powershell\n"
             b'powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"\n'
             b'$env:Path = "$env:USERPROFILE\\.local\\bin;$env:Path"\n'
-            b"uvx aihawk ui --openrouter-key sk-or-...\n"
+            b"uvx invisible-playwright-mcp ui --openrouter-key sk-or-...\n"
             b"```\n\nLinux:\n\n```bash\n"
             b"curl -LsSf https://astral.sh/uv/install.sh | sh\n"
             b"source $HOME/.local/bin/env\n"
-            b"uvx aihawk ui --openrouter-key sk-or-...\n"
+            b"uvx invisible-playwright-mcp ui --openrouter-key sk-or-...\n"
             b"```\n\n"
             # The client lines, one route per client, as the real page has
             # them: what the eighth part of the fifth check reads.
             b"```bash\nclaude plugin marketplace add feder-cr/invisible_playwright_mcp\n"
-            b"claude plugin install aihawk@feder-cr\n```\n\n"
+            b"claude plugin install invisible-playwright-mcp@feder-cr\n```\n\n"
             b"```bash\ncodex plugin marketplace add feder-cr/invisible_playwright_mcp\n"
-            b"codex plugin add aihawk@feder-cr\n```\n\n"
+            b"codex plugin add invisible-playwright-mcp@feder-cr\n```\n\n"
             b"```bash\ngemini extensions install https://github.com/feder-cr/invisible_playwright_mcp\n```\n")
 
         bad = {
@@ -642,17 +670,17 @@ def selftest():
             "invisible codepoint": ("docs/zw.md",
                                     "wor\u200bd\n".encode("utf-8")),
             "removed command": ("docs/old.md",
-                                b'run `uvx aihawk do "task"` daily\n'),
+                                b'run `uvx invisible-playwright-mcp do "task"` daily\n'),
             "argv-list command": ("docs/argv.md",
-                                  b'subprocess.run(["uvx", "aihawk", "do"])\n'),
+                                  b'subprocess.run(["uvx", "' + COMMAND.encode() + b'", "do"])\n'),
             "dead link": ("docs/link.md", b"see [x](missing-page.md)\n"),
             # The real failure: a page teaching a tool a release removed.
             "removed MCP tool": ("docs/tool.md",
                                  b"set the proxy at `session_start`\n"),
             "bare launcher in a code block": (
-                "docs/bare.md", b"```bash\naihawk ui --openrouter-key x\n```\n"),
+                "docs/bare.md", b"```bash\n" + COMMAND.encode() + b" ui --openrouter-key x\n```\n"),
             "a way in the README does not teach": (
-                "docs/pip.md", b"run `pip install aihawk` first\n"),
+                "docs/pip.md", b"run `pip install invisible-playwright-mcp` first\n"),
             "installer without the README's block": (
                 "docs/inst.md",
                 b"```bash\ncurl -LsSf https://astral.sh/uv/install.sh | sh   "
@@ -672,17 +700,17 @@ def selftest():
             "config block with another launcher": (
                 "docs/cfg.md",
                 b'```json\n{"command": "python", '
-                b'"args": ["aihawk"]}\n```\n'),
+                b'"args": ["invisible-playwright-mcp"]}\n```\n'),
             # The three shapes of the drift measured 2026-09-21, when the
             # README moved two clients to their install routes and the wiki
             # did not follow: the line the README dropped, the README's route
             # with a different line, and the dropped route named in prose.
             "a client line the README dropped": (
                 "docs/dropped.md",
-                b"```bash\nclaude mcp add --scope user stealth -- uvx aihawk\n```\n"),
+                b"```bash\nclaude mcp add --scope user stealth -- uvx invisible-playwright-mcp\n```\n"),
             "the README's route with a line that is not the README's": (
                 "docs/elsewhere.md",
-                b"```bash\nclaude plugin install aihawk@somewhere-else\n```\n"),
+                b"```bash\nclaude plugin install invisible_playwright_mcp@somewhere-else\n```\n"),
             "a dropped route named bare, in prose": (
                 "docs/named.md", b"one `gemini mcp add` command, once\n"),
             # The seventh check: a published number that no longer matches the
@@ -726,7 +754,7 @@ def selftest():
 
         good = {
             "clean page": ("docs/fine.md",
-                           b"plain page, `uvx aihawk ui`, a - dash\n"),
+                           b"plain page, `uvx invisible-playwright-mcp ui`, a - dash\n"),
             "allowed history line": ("docs/ai-browser-agent-open-source.md",
                                      b"it began as a job-application bot\n"),
             "prose verb": ("docs/verb.md",
@@ -773,17 +801,17 @@ def selftest():
             "config block with the README's launcher": (
                 "docs/okcfg.md",
                 b'```json\n{\n  "command": "uvx",\n'
-                b'  "args": ["aihawk"]\n}\n```\n'),
+                b'  "args": ["invisible-playwright-mcp"]\n}\n```\n'),
             "a unit file with a full path to the launcher": (
                 "docs/unit.md",
-                b"```ini\nExecStart=/usr/bin/uvx aihawk ui\n```\n"),
+                b"```ini\nExecStart=/usr/bin/uvx invisible-playwright-mcp ui\n```\n"),
             # The README's own client lines, verbatim. The word after
             # `install` is a plugin id, and reading it as the launcher slot
-            # accused the README of running `install aihawk`.
+            # accused the README of running `install invisible_playwright_mcp`.
             "the README's client lines, verbatim": (
                 "docs/plugin.md",
                 b"```bash\nclaude plugin marketplace add feder-cr/invisible_playwright_mcp\n"
-                b"claude plugin install aihawk@feder-cr\n```\n"
+                b"claude plugin install invisible-playwright-mcp@feder-cr\n```\n"
                 b"```bash\ngemini extensions install https://github.com/feder-cr/invisible_playwright_mcp\n```\n"),
             "a route the README teaches, named bare in prose": (
                 "docs/noun.md",

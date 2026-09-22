@@ -1,7 +1,7 @@
 """Both halves of a session read and delete their file through one function.
 
 ⛔ WHAT WAS DUPLICATED HERE WAS A RULE, NOT A VALUE, WHICH IS WHY THE FIRST
-PASS MISSED IT. When `aihawk.storage` was carved out, the three things it took
+PASS MISSED IT. When `invisible_playwright_mcp.storage` was carved out, the three things it took
 were the ones that carry a VALUE somebody could get wrong: where the data
 lives, how an id becomes a file name, how a file is replaced without a torn
 read. Reading and deleting were left behind in both halves as four lines each,
@@ -10,7 +10,7 @@ and they looked like plumbing.
 They are not plumbing. `load` answering None for a file that will not parse is
 a DECISION - the alternative is raising on a server's first call because
 something once wrote a broken byte - and it was written twice, in
-`aihawk.mcp.store` and in `aihawk.chats`, with only one of the two explaining
+`invisible_playwright_mcp.mcp.store` and in `invisible_playwright_mcp.chats`, with only one of the two explaining
 itself. Deleting was the same again, and both copies answered a bool that
 neither caller read and whose `False` meant "there was nothing there" and "it
 could not be deleted", which are opposite news.
@@ -25,8 +25,8 @@ from __future__ import annotations
 
 import json
 
-from aihawk import chats, storage
-from aihawk.mcp import store
+from invisible_playwright_mcp import chats, storage
+from invisible_playwright_mcp.mcp import store
 
 
 def test_both_halves_read_through_the_one_reader(tmp_path, monkeypatch):

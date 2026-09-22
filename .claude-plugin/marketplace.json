@@ -7,7 +7,7 @@
   },
   "plugins": [
     {
-      "name": "aihawk",
+      "name": "invisible-playwright-mcp",
       "source": "./",
       "description": "AI browser agent: browses, clicks, types, and reads real web pages from plain-English instructions."
     }

@@ -1,4 +1,4 @@
-"""aihawk CLI: serve the page that drives a stealth browser with an LLM."""
+"""invisible_playwright_mcp CLI: serve the page that drives a stealth browser with an LLM."""
 from __future__ import annotations
 
 import asyncio
@@ -134,9 +134,9 @@ def engine_on_disk(binary, echo=click.echo, fetch=None, tty=None) -> None:
 def main(ctx) -> None:
     """Drive a stealth browser with an LLM.
 
-    Without a subcommand this is the MCP server over stdio: `uvx aihawk` is
-    what an assistant registers, `python -m aihawk` is what the interface
-    spawns. `aihawk ui` is the interface, which brings a model.
+    Without a subcommand this is the MCP server over stdio: `uvx invisible-playwright-mcp` is
+    what an assistant registers, `python -m invisible_playwright_mcp` is what the interface
+    spawns. `invisible-playwright-mcp ui` is the interface, which brings a model.
 
     The model comes from OpenRouter and nowhere else: pass --openrouter-key or
     set OPENROUTER_API_KEY. Without one the interface refuses to start - an
@@ -169,7 +169,7 @@ def main(ctx) -> None:
         #
         # Read from the environment rather than filtered out of the file, so it
         # covers the same key arriving any other way - exported in the shell by
-        # somebody running `uvx aihawk` by hand, or under an alias. The reason
+        # somebody running `uvx invisible-playwright-mcp` by hand, or under an alias. The reason
         # is on `runner.forget_key`.
         #
         # The names are dropped from what gets REPORTED too: saying a file
@@ -188,15 +188,15 @@ def main(ctx) -> None:
 
 
 def _serve() -> None:
-    """The MCP server over stdio: the whole of `aihawk` with no subcommand.
+    """The MCP server over stdio: the whole of `invisible-playwright-mcp` with no subcommand.
 
     stdout is the protocol channel, so nothing is printed there. A person at a
     terminal gets one line on stderr saying what is waiting; a client gets the
     protocol and nothing else.
     """
     if sys.stdin.isatty():
-        click.echo("aihawk: MCP server over stdio, waiting for a client. "
-                   "For the interface: aihawk ui --openrouter-key ...", err=True)
+        click.echo("invisible-playwright-mcp: MCP server over stdio, waiting for a client. "
+                   "For the interface: invisible-playwright-mcp ui --openrouter-key ...", err=True)
     from .mcp.server import main as serve
     serve()
 

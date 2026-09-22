@@ -2,7 +2,7 @@
 
 ⛔ IT GOT ONE PER REQUEST, AND THE DEFECT IS A CHECK-THEN-ACT ACROSS AN AWAIT.
 `Sessions.get` looked in `_live`, found nothing, awaited `_open_link` - which
-spawns `python -m aihawk` and shakes hands with it - and only then wrote the
+spawns `python -m invisible_playwright_mcp` and shakes hands with it - and only then wrote the
 service into `_live`. Every request that arrived inside that window found
 nothing too, and spawned its own.
 
@@ -31,7 +31,7 @@ import asyncio
 
 import pytest
 
-from aihawk.sessions import Sessions
+from invisible_playwright_mcp.sessions import Sessions
 
 
 class _Link:

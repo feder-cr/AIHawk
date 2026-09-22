@@ -32,7 +32,7 @@ import pathlib
 import re
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-CSS = ROOT / "src" / "aihawk" / "ui" / "css"
+CSS = ROOT / "src" / "invisible_playwright_mcp" / "ui" / "css"
 TOKENS = (CSS / "01-tokens.css").read_text(encoding="utf-8")
 
 #: Text needs 4.5:1 and a graphic that carries meaning needs 3:1. Both are

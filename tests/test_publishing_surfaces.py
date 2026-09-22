@@ -11,7 +11,7 @@ Two files in this repository are read by somebody else's machine, not by ours:
   2. `manifest.json` at the root makes the repository itself the MCP bundle
      (MCPB manifest 0.4, server.type "uv"): `scripts/pack_bundle.py` zips
      the tracked tree minus `.mcpbignore`, and a host runs the server from
-     the archive with `uv run --directory <bundle> python -m aihawk`, which
+     the archive with `uv run --directory <bundle> python -m invisible_playwright_mcp`, which
      installs the package from the bundle's own `pyproject.toml`. Until
      2026-09-13 the bundle was a separate `mcpb/` folder whose pyproject
      pinned the published package - a pointer to PyPI, spec-valid but not
@@ -32,7 +32,7 @@ at the end of a release. This test finds out on the pull request.
      standard, which cursor.directory scans for) and `gemini-extension.json`
      (the Gemini CLI gallery, which crawls the `gemini-cli-extension` topic).
      None of them carries the package version - a manifest that just says `uvx
-     aihawk` does not change per release - but every one of them repeats the
+     invisible_playwright_mcp` does not change per release - but every one of them repeats the
      package name, the one-line description and the launch command, and the
      bundle manifest repeats the description too. Those are the copies this
      file makes agree.
@@ -88,7 +88,7 @@ PLUGIN_FILES = (".claude-plugin/plugin.json", "plugin.json", "mcp.json", ".mcp.j
 #: The Codex plugin (`.codex-plugin/plugin.json`) reads its server through
 #: the `mcpServers` POINTER at `./.mcp.json` and its skills through `skills`:
 #: measured 2026-09-21 with codex-cli 0.155.1 from a local marketplace,
-#: `codex mcp list` shows `aihawk  uvx aihawk  enabled`. The opposite of
+#: `codex mcp list` shows `invisible_playwright_mcp  uvx invisible-playwright-mcp  enabled`. The opposite of
 #: Claude Code, which ignores the pointer and reads the file by position; one
 #: `.mcp.json`, two loaders, each told in the way it listens.
 CODEX_PLUGIN = ".codex-plugin/plugin.json"
@@ -104,7 +104,7 @@ SETUP_SKILL = "skills/setup/SKILL.md"
 #: ⛔ TWO NAMES FOR ONE CONFIGURATION, AND NEITHER IS OPTIONAL. Measured
 #: 2026-09-13 by installing the plugin in this machine's Claude Code from a
 #: local marketplace: with `mcp.json` and `"mcpServers": "./mcp.json"` in the
-#: manifest, `claude plugin details aihawk` reports **MCP servers (0)** - the
+#: manifest, `claude plugin details invisible_playwright_mcp` reports **MCP servers (0)** - the
 #: plugin installs, validates, and delivers no tools at all. So does the
 #: inline form. Only a file named `.mcp.json` at the plugin root is read, with
 #: or without the manifest field, and it is read even carrying the Agent
@@ -116,7 +116,7 @@ SETUP_SKILL = "skills/setup/SKILL.md"
 #: passed on the broken arrangement: a manifest that validates is not a
 #: manifest that works, and only running the thing said so.
 MCP_FILES = ("mcp.json", ".mcp.json")
-LAUNCH = {"command": "uvx", "args": ["aihawk"]}
+LAUNCH = {"command": "uvx", "args": ["invisible-playwright-mcp"]}
 #: The marketplace this repository IS, so `claude plugin marketplace add
 #: feder-cr/invisible_playwright_mcp` needs no catalog kept by anybody else: one entry, whose
 #: source is the repository root, because the plugin is the repository. Held
@@ -210,20 +210,20 @@ def plugin_findings(package_name, manifest, plugins):
     agent = plugins.get("plugin.json") or {}
     if agent.get("$schema") != "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json":
         out.append("plugin.json does not declare the Agent Plugins 1.0.0 schema, and a client rejects it")
-    for rel, key in (("mcp.json", "aihawk"), (".mcp.json", "aihawk"), ("gemini-extension.json", "aihawk")):
+    for rel, key in (("mcp.json", "invisible_playwright_mcp"), (".mcp.json", "invisible_playwright_mcp"), ("gemini-extension.json", "invisible_playwright_mcp")):
         servers = (plugins.get(rel) or {}).get("mcpServers") or {}
         entry = servers.get(key) or {}
         if {k: entry.get(k) for k in LAUNCH} != LAUNCH:
-            out.append("%s launches the server with %r, the README launches it with `uvx aihawk`"
+            out.append("%s launches the server with %r, the README launches it with `uvx invisible-playwright-mcp`"
                        % (rel, entry))
     for rel in MCP_FILES:
         mcp = plugins.get(rel) or {}
         if mcp.get("$schema") != "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json":
             out.append("%s does not declare the Agent Plugins 1.0.0 schema" % rel)
-        if ((mcp.get("mcpServers") or {}).get("aihawk") or {}).get("type") != "stdio":
+        if ((mcp.get("mcpServers") or {}).get("invisible_playwright_mcp") or {}).get("type") != "stdio":
             out.append("%s does not say the transport is stdio, which the Agent Plugins schema requires" % rel)
     # The two manifests that carry a version carry the MANIFEST's version, not
-    # the package's: `uvx aihawk` does not change per release. One number in
+    # the package's: `uvx invisible-playwright-mcp` does not change per release. One number in
     # two files, so they are held equal here; bump both when the config changes.
     gemini = plugins.get("gemini-extension.json") or {}
     if not gemini.get("version"):
@@ -260,7 +260,7 @@ def marketplace_findings(package_name, manifest, market, readme):
     anything but the root would install a directory that carries no
     `.mcp.json`, which is the zero-server plugin all over again by another
     route. The README is held to the marketplace name because that line is
-    what a reader copies, and `aihawk@<old name>` after a rename fails with a
+    what a reader copies, and `<plugin>@<old name>` after a rename fails with a
     message about a marketplace the reader never heard of."""
     out = []
     name = market.get("name") or ""
@@ -349,10 +349,10 @@ def registry_findings(package_name, version, readme, server, description=None):
 
 #: What a host runs from the unpacked bundle. Measured 2026-09-13 on a fresh
 #: copy of the tracked tree: `uv run` installs the project from the bundle's
-#: pyproject (50 packages, 3.6 s) and `python -m aihawk` is the server;
-#: `src/aihawk/__main__.py` run as a FILE fails on its relative import, which
+#: pyproject (50 packages, 3.6 s) and `python -m invisible_playwright_mcp` is the server;
+#: `src/invisible_playwright_mcp/__main__.py` run as a FILE fails on its relative import, which
 #: is why the args say `python -m` and not the entry point's path.
-BUNDLE_LAUNCH = {"command": "uv", "args": ["run", "--directory", "${__dirname}", "python", "-m", "aihawk"]}
+BUNDLE_LAUNCH = {"command": "uv", "args": ["run", "--directory", "${__dirname}", "python", "-m", "invisible_playwright_mcp"]}
 
 #: Paths the bundle must not carry, each named in .mcpbignore. The archive
 #: check in scripts/pack_bundle.py is the second wall; this is the first.
@@ -436,7 +436,7 @@ def codex_marketplace_findings(package_name, market, claude_market, codex_plugin
     something other than this plugin, or nothing.
 
     Same repository, same marketplace name as Claude Code's, so the README's
-    two install lines read `aihawk@feder-cr` for both clients. No version in
+    two install lines read `invisible-playwright-mcp@feder-cr` for both clients. No version in
     the entry: measured 2026-09-21 with codex-cli 0.155.1 from a local
     marketplace, Codex lists and caches the plugin as `1.0.0` whatever the
     manifest says and whether or not the entry names one, so a version here
@@ -444,7 +444,7 @@ def codex_marketplace_findings(package_name, market, claude_market, codex_plugin
     out = []
     if market.get("name") != claude_market.get("name"):
         out.append("the Codex marketplace is named %r, the Claude Code one %r; the README "
-                   "installs `aihawk@<name>` from both" % (market.get("name"), claude_market.get("name")))
+                   "installs `<plugin>@<name>` from both" % (market.get("name"), claude_market.get("name")))
     entries = market.get("plugins") or []
     if len(entries) != 1:
         out.append("the Codex marketplace lists %d plugins; this repository is one" % len(entries))
@@ -481,20 +481,21 @@ def test_the_codex_marketplace_check_refuses_known_bad_input():
     args = (d["package_name"], d["codex_marketplace"], d["marketplace"], d["plugins"][CODEX_PLUGIN], d["readme"])
     assert codex_marketplace_findings(*args) == []
 
-    m = copy.deepcopy(d["codex_marketplace"]); m["name"] = "aihawk"
+    m = copy.deepcopy(d["codex_marketplace"]); m["name"] = "invisible_playwright_mcp"
     assert codex_marketplace_findings(d["package_name"], m, d["marketplace"], d["plugins"][CODEX_PLUGIN], d["readme"])
 
-    m = copy.deepcopy(d["codex_marketplace"]); m["plugins"][0]["source"] = {"source": "local", "path": "./plugins/aihawk"}
+    m = copy.deepcopy(d["codex_marketplace"]); m["plugins"][0]["source"] = {"source": "local", "path": "./plugins/invisible_playwright_mcp"}
     assert codex_marketplace_findings(d["package_name"], m, d["marketplace"], d["plugins"][CODEX_PLUGIN], d["readme"])
 
     m = copy.deepcopy(d["codex_marketplace"]); m["plugins"][0]["policy"]["installation"] = "HIDDEN"
     assert codex_marketplace_findings(d["package_name"], m, d["marketplace"], d["plugins"][CODEX_PLUGIN], d["readme"])
 
-    stale = d["readme"].replace("codex plugin add aihawk@", "codex plugin add aihawk@elsewhere-")
+    add = "codex plugin add %s@" % d["package_name"]
+    stale = d["readme"].replace(add, add + "elsewhere-")
     assert stale != d["readme"]
     assert codex_marketplace_findings(d["package_name"], d["codex_marketplace"], d["marketplace"], d["plugins"][CODEX_PLUGIN], stale)
 
-    p = copy.deepcopy(d["plugins"]); p[CODEX_PLUGIN]["mcpServers"] = {"aihawk": LAUNCH}
+    p = copy.deepcopy(d["plugins"]); p[CODEX_PLUGIN]["mcpServers"] = {"invisible_playwright_mcp": LAUNCH}
     assert plugin_findings(d["package_name"], d["manifest"], p)
 
     p = copy.deepcopy(d["plugins"]); del p[CODEX_PLUGIN]["skills"]
@@ -514,7 +515,7 @@ def test_the_marketplace_check_refuses_known_bad_input():
 
     # Renamed here and not in the README: the line a reader copies now names
     # a marketplace that does not exist.
-    m = copy.deepcopy(d["marketplace"]); m["name"] = "aihawk"
+    m = copy.deepcopy(d["marketplace"]); m["name"] = "invisible_playwright_mcp"
     assert marketplace_findings(d["package_name"], d["manifest"], m, d["readme"])
 
     m = copy.deepcopy(d["marketplace"]); m["name"] = "Feder CR"
@@ -530,14 +531,15 @@ def test_the_marketplace_check_refuses_known_bad_input():
     assert marketplace_findings(d["package_name"], d["manifest"], m, d["readme"])
 
     # The one that ships a plugin with no server: a source that is not the root.
-    m = copy.deepcopy(d["marketplace"]); m["plugins"][0]["source"] = "./plugins/aihawk"
+    m = copy.deepcopy(d["marketplace"]); m["plugins"][0]["source"] = "./plugins/invisible_playwright_mcp"
     assert marketplace_findings(d["package_name"], d["manifest"], m, d["readme"])
 
     m = copy.deepcopy(d["marketplace"]); m["plugins"][0]["description"] = "something else"
     assert marketplace_findings(d["package_name"], d["manifest"], m, d["readme"])
 
     # The README installing from a marketplace name this file does not carry.
-    stale = d["readme"].replace("aihawk@" + d["marketplace"]["name"], "aihawk@somewhere-else")
+    mine = "%s@%s" % (d["package_name"], d["marketplace"]["name"])
+    stale = d["readme"].replace(mine, "%s@somewhere-else" % d["package_name"])
     assert stale != d["readme"]
     assert marketplace_findings(d["package_name"], d["manifest"], d["marketplace"], stale)
 
@@ -552,7 +554,7 @@ def test_the_setup_skill_check_refuses_known_bad_input():
     assert setup_skill_findings(text) == []
     assert setup_skill_findings(text.replace("name: setup", "name: install"))
     assert setup_skill_findings(re.sub(r"^description:.*$", "description:", text, flags=re.M))
-    assert setup_skill_findings(text.replace("uvx invisible-playwright fetch", "uvx aihawk"))
+    assert setup_skill_findings(text.replace("uvx invisible-playwright fetch", "uvx invisible-playwright-mcp"))
     assert setup_skill_findings(text.split("---", 2)[2])
 
 
@@ -639,7 +641,7 @@ def test_the_checks_refuse_known_bad_input():
     m = copy.deepcopy(d["manifest"]); m["server"]["entry_point"] = "src/missing.py"
     assert bundle(m)
 
-    m = copy.deepcopy(d["manifest"]); m["server"]["mcp_config"]["args"] = ["run", "--directory", "${__dirname}", "src/aihawk/__main__.py"]
+    m = copy.deepcopy(d["manifest"]); m["server"]["mcp_config"]["args"] = ["run", "--directory", "${__dirname}", "src/invisible_playwright_mcp/__main__.py"]
     assert bundle(m)
 
     m = copy.deepcopy(d["manifest"]); m["icon"] = "https://example.com/icon.png"
@@ -694,16 +696,16 @@ def test_the_checks_refuse_known_bad_input():
     g = copy.deepcopy(d["plugins"]); g[".claude-plugin/plugin.json"]["version"] = "1.0.0"; g["gemini-extension.json"]["version"] = "1.0.0"
     assert plugin_findings(d["package_name"], d["manifest"], g)
 
-    g = copy.deepcopy(d["plugins"]); g["mcp.json"]["mcpServers"]["aihawk"]["command"] = "python"
+    g = copy.deepcopy(d["plugins"]); g["mcp.json"]["mcpServers"]["invisible_playwright_mcp"]["command"] = "python"
     assert plugin_findings(d["package_name"], d["manifest"], g)
 
-    g = copy.deepcopy(d["plugins"]); g["gemini-extension.json"]["mcpServers"]["aihawk"]["args"] = ["aihawk", "ui"]
+    g = copy.deepcopy(d["plugins"]); g["gemini-extension.json"]["mcpServers"]["invisible_playwright_mcp"]["args"] = ["invisible-playwright-mcp", "ui"]
     assert plugin_findings(d["package_name"], d["manifest"], g)
 
-    g = copy.deepcopy(d["plugins"]); g["mcp.json"]["mcpServers"]["aihawk"].pop("type")
+    g = copy.deepcopy(d["plugins"]); g["mcp.json"]["mcpServers"]["invisible_playwright_mcp"].pop("type")
     assert plugin_findings(d["package_name"], d["manifest"], g)
 
-    g = copy.deepcopy(d["plugins"]); g[".claude-plugin/plugin.json"]["mcpServers"] = {"aihawk": LAUNCH}
+    g = copy.deepcopy(d["plugins"]); g[".claude-plugin/plugin.json"]["mcpServers"] = {"invisible_playwright_mcp": LAUNCH}
     assert plugin_findings(d["package_name"], d["manifest"], g)
 
     g = copy.deepcopy(d["plugins"]); g[".claude-plugin/plugin.json"]["mcpServers"] = "./mcp.json"
@@ -712,7 +714,7 @@ def test_the_checks_refuse_known_bad_input():
     g = copy.deepcopy(d["plugins"]); del g[".mcp.json"]
     assert plugin_findings(d["package_name"], d["manifest"], g)
 
-    g = copy.deepcopy(d["plugins"]); g[".mcp.json"]["mcpServers"]["aihawk"]["command"] = "python"
+    g = copy.deepcopy(d["plugins"]); g[".mcp.json"]["mcpServers"]["invisible_playwright_mcp"]["command"] = "python"
     assert plugin_findings(d["package_name"], d["manifest"], g)
 
     g = copy.deepcopy(d["plugins"]); g["gemini-extension.json"]["version"] = "9.9.9"

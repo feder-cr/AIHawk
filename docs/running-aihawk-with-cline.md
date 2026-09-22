@@ -29,7 +29,7 @@ engine to run. This combination works on Windows and Linux today.
 Paste the block from the [MCP server page](mcp-server.md) under `mcpServers` in the file the Configure tab
 opens, and Cline gains the browser as a set of tools. A server entry in that
 file carries a `command` and `args` (here: `uvx` running
-`aihawk`), an optional `env` map, and two Cline-side
+`invisible_playwright_mcp`), an optional `env` map, and two Cline-side
 fields worth knowing from day one: `disabled`, which switches a server off
 without deleting its entry, and `autoApprove`, a list of tool names allowed
 to run without asking you each time.
@@ -149,7 +149,7 @@ chosen tools run unasked; keep it to reading tools while the browser is new.
 **Do I need an API key for the browser?** No. The server's block carries no
 secret and there is nothing to sign up for; your existing Cline model setup
 is untouched. The OpenRouter key belongs to invisible_playwright_mcp's own interface
-(`uvx aihawk ui`), a different way in, and that one requires it.
+(`uvx invisible-playwright-mcp ui`), a different way in, and that one requires it.
 
 **Why does the first instruction say the engine is downloading?** Engine
 download: about a quarter of a gigabyte, started by the server when the editor

@@ -11,7 +11,7 @@ import re
 
 from pathlib import Path
 
-from aihawk.ui import PAGE
+from invisible_playwright_mcp.ui import PAGE
 
 #: ⛔ BOTH COMMENT SYNTAXES. This page explains its own rules in prose
 #: beside the code, so a scan that only strips `/* */` gets accused by the
@@ -82,7 +82,7 @@ def test_every_event_the_server_can_send_is_drawn():
     # 2026-09-10 to 0.52.0 was forty lines of re-exports: the routes and the
     # conversation had moved out of it, and the gate went on reading the
     # door for kinds that were sent two files away. Green the whole time.
-    src = Path(__file__).resolve().parents[1] / "src" / "aihawk"
+    src = Path(__file__).resolve().parents[1] / "src" / "invisible_playwright_mcp"
     server = "".join((src / name).read_bytes().decode("utf-8")
                      for name in ("routes.py", "chat.py", "agent.py"))
     # Comments stripped, because this project has recorded the
@@ -356,7 +356,7 @@ def test_a_password_is_not_written_into_the_transcript():
 
     Known-bad: drop the masking, or the field vocabulary.
     """
-    from aihawk.actions_help import summarise
+    from invisible_playwright_mcp.actions_help import summarise
 
     secret = summarise("browser_type", {"selector": "#passcode-input",
                                         "text": "434262"})
@@ -383,7 +383,7 @@ def test_a_step_says_support_when_the_call_went_to_the_helper():
     Known-bad, two: discard `browser` and the rows are indistinguishable again;
     name `main` too, and the mark that means something is buried.
     """
-    from aihawk.actions_help import summarise
+    from invisible_playwright_mcp.actions_help import summarise
 
     assert summarise("browser_read_text", {"selector": "body",
                                            "browser": "support"}) == "body in support"

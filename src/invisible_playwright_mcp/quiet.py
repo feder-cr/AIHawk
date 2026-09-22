@@ -19,7 +19,7 @@ import logging
 from contextlib import contextmanager
 from typing import Iterator
 
-log = logging.getLogger("aihawk")
+log = logging.getLogger("invisible_playwright_mcp")
 
 
 @contextmanager

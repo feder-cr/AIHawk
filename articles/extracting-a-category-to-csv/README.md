@@ -85,7 +85,7 @@ Attach the browser to your assistant (from the
 
 ```bash
 claude plugin marketplace add feder-cr/invisible_playwright_mcp
-claude plugin install aihawk@feder-cr
+claude plugin install invisible-playwright-mcp@feder-cr
 ```
 
 Then paste the prompt. The reading companion for this task shape, including

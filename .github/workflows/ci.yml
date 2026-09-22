@@ -162,10 +162,10 @@ jobs:
           python -m build --wheel
           python -m venv /tmp/clean
           /tmp/clean/bin/pip install dist/*.whl
-          /tmp/clean/bin/aihawk --help
-          /tmp/clean/bin/python -c "import aihawk.routes, aihawk.agent, aihawk.link, aihawk.cli, aihawk.mcp.server"
-          /tmp/clean/bin/python -m aihawk --help > /dev/null
-          unzip -l dist/*.whl | grep -q "aihawk/mcp/server.py"
+          /tmp/clean/bin/invisible-playwright-mcp --help
+          /tmp/clean/bin/python -c "import invisible_playwright_mcp.routes, invisible_playwright_mcp.agent, invisible_playwright_mcp.link, invisible_playwright_mcp.cli, invisible_playwright_mcp.mcp.server"
+          /tmp/clean/bin/python -m invisible_playwright_mcp --help > /dev/null
+          unzip -l dist/*.whl | grep -q "invisible_playwright_mcp/mcp/server.py"
 
   # The repository is also the MCP bundle: manifest.json at the root, MCPB 0.4,
   # server.type uv, the package under src/. This packs it with the official CLI
@@ -200,7 +200,7 @@ jobs:
           python scripts/pack_bundle.py --output /tmp/bundle
           python scripts/pack_bundle.py --smithery --output /tmp/bundle
           mkdir /tmp/unpacked
-          python -c "import zipfile,glob; zipfile.ZipFile(glob.glob('/tmp/bundle/aihawk-*[0-9].mcpb')[0]).extractall('/tmp/unpacked')"
+          python -c "import zipfile,glob; zipfile.ZipFile(glob.glob('/tmp/bundle/invisible-playwright-mcp-*[0-9].mcpb')[0]).extractall('/tmp/unpacked')"
           # ⛔ NOT `--help`. That is what this step ran until 2026-09-13, and
           # it proves the entry point imports, nothing more: a bundle that
           # could not finish `initialize`, or answered `tools/list` with an
@@ -210,7 +210,7 @@ jobs:
           cp scripts/bundle_speaks_mcp.py /tmp/unpacked/
           uv run --directory /tmp/unpacked python /tmp/unpacked/bundle_speaks_mcp.py /tmp/unpacked
 
-  # 2026-09-04: aihawk 0.4.0 went to the index, then main gained two more
+  # 2026-09-04: invisible_playwright_mcp 0.4.0 went to the index, then main gained two more
   # changes while pyproject still said 0.4.0. A release from there would have
   # published NOTHING and reported success, because publish.yml treats a version
   # already on the index as a deliberate no-op - which is right for a re-pushed

@@ -1,10 +1,10 @@
 """Every third-party module this package imports is one it declares.
 
 ⛔ A DIRECT IMPORT OF A TRANSITIVE DEPENDENCY IS A BET ON SOMEBODY ELSE'S
-PYPROJECT. `src/aihawk/mcp/server.py` says `from pydantic import Field` and
+PYPROJECT. `src/invisible_playwright_mcp/mcp/server.py` says `from pydantic import Field` and
 `pyproject.toml` did not mention pydantic at all: it arrived because `mcp`
 requires it. That works until `mcp` stops requiring it, or moves to a major this
-code cannot use, and then `aihawk` fails at IMPORT for every user who installs
+code cannot use, and then `invisible_playwright_mcp` fails at IMPORT for every user who installs
 it - with a traceback that names pydantic and a cause that is nowhere near it.
 
 Nothing could have caught it either. Every environment that has `mcp` has
@@ -53,7 +53,7 @@ def _ours() -> set:
     modules. A list of local names is a second declaration of what the directory
     already says, and it goes stale the next time somebody adds a helper.
     """
-    out = {"aihawk"}
+    out = {"invisible_playwright_mcp"}
     for folder in (ROOT / "tests", ROOT / "scripts"):
         if folder.is_dir():
             out |= {p.stem for p in folder.rglob("*.py")}

@@ -30,16 +30,16 @@ README = pathlib.Path(__file__).resolve().parents[1] / "README.md"
 #: copies, and a paraphrase in the README is not a way in.
 #:
 #: The MCP way is the install command a reader copies, not the server's
-#: name: since 0.11.0 the server is `uvx aihawk` with no subcommand, and
-#: `aihawk` alone is also the start of `aihawk ui`, so the server name could
+#: name: since 0.11.0 the server is `uvx invisible-playwright-mcp` with no subcommand, and
+#: `invisible_playwright_mcp` alone is also the start of `invisible-playwright-mcp ui`, so the server name could
 #: not tell the two ways apart. It was `claude mcp add` until the README
-#: taught the plugin route: `claude plugin install aihawk@feder-cr`, which
+#: taught the plugin route: `claude plugin install invisible-playwright-mcp@feder-cr`, which
 #: installs the server AND the setup skill, and which Claude Code counts as
 #: an installation of this plugin where a hand-registered server is counted
 #: by nobody. The UI way stays bare, without the `uvx `, so the test measures
 #: the offer and not the launcher that starts it.
 MCP_WAY = "claude plugin install"
-UI_WAY = "aihawk ui"
+UI_WAY = "invisible-playwright-mcp ui"
 
 
 def _headings(text):
@@ -236,7 +236,7 @@ def test_no_tool_name_that_does_not_exist():
     """
     import asyncio
 
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
 
     real = {t.name for t in asyncio.run(server.mcp.list_tools())}
     named = set(re.findall(r"`((?:browser|session)_\w+)`",

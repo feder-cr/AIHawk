@@ -1,11 +1,11 @@
 {
-  "name": "aihawk",
+  "name": "invisible-playwright-mcp",
   "version": "1.0.1",
   "description": "AI browser agent: browses, clicks, types, and reads real web pages from plain-English instructions.",
   "mcpServers": {
-    "aihawk": {
+    "invisible_playwright_mcp": {
       "command": "uvx",
-      "args": ["aihawk"]
+      "args": ["invisible-playwright-mcp"]
     }
   }
 }

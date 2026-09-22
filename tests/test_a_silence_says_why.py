@@ -10,15 +10,15 @@ import logging
 import re
 from pathlib import Path
 
-SRC = Path(__file__).resolve().parents[1] / "src" / "aihawk"
+SRC = Path(__file__).resolve().parents[1] / "src" / "invisible_playwright_mcp"
 
 
 def test_the_silence_lets_the_block_fail_and_says_why_at_debug(caplog):
     """Known-bad, two: re-raise, and every caller's careful reason becomes an
     error; drop the log, and the reason is decoration."""
-    from aihawk.quiet import swallow
+    from invisible_playwright_mcp.quiet import swallow
 
-    with caplog.at_level(logging.DEBUG, logger="aihawk"):
+    with caplog.at_level(logging.DEBUG, logger="invisible_playwright_mcp"):
         with swallow("a write that fails costs the saved file and nothing else"):
             raise OSError("disk full")
         with swallow("nothing failed here"):

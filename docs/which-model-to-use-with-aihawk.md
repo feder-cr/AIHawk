@@ -12,7 +12,7 @@ invisible_playwright_mcp brings the browser and you bring the model, from
 [OpenRouter](https://openrouter.ai) and nowhere else. If you set nothing, you get
 `z-ai/glm-5.3-flash`: that is the default written into the source, and it sits at
 the cheap-and-fast end of the catalog rather than the flagship end. You override it
-with `--model` on `aihawk ui`, or the `AIHAWK_MODEL` environment variable, and
+with `--model` on `invisible-playwright-mcp ui`, or the `AIHAWK_MODEL` environment variable, and
 any model id OpenRouter serves is legal. So the real question is not "which model
 does invisible_playwright_mcp support" - all of them - but which one is worth paying for on this
 kind of work, and that has a less obvious answer than the price sheet suggests.
@@ -156,7 +156,7 @@ criteria above do not.
 
 **Do I need an OpenRouter account?** For invisible_playwright_mcp's own interface, yes - the
 model comes from OpenRouter and nowhere else in the current source, and since
-0.4.0 `aihawk ui` refuses to start without a key. The spend-nothing routes are
+0.4.0 `invisible-playwright-mcp ui` refuses to start without a key. The spend-nothing routes are
 your assistant over MCP (its subscription is the model) and the
 invisible_playwright library (no model at all).
 
@@ -195,11 +195,11 @@ All retrieved 2026-09-08.
 - [OpenRouter: Claude Sonnet 4.5](https://openrouter.ai/anthropic/claude-sonnet-4.5),
   for the frontier comparison pricing and the long-context tier.
 - [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), this repository's
-  source: `src/aihawk/llm.py` (default model, OpenRouter-only base URL, key and
-  model resolution), `src/aihawk/agent.py` (the loop, its lack of a turn cap,
+  source: `src/invisible_playwright_mcp/llm.py` (default model, OpenRouter-only base URL, key and
+  model resolution), `src/invisible_playwright_mcp/agent.py` (the loop, its lack of a turn cap,
   the per-reply token cap, transcript resending, usage meter),
-  `src/aihawk/web.py` (the token meter and the stop button), and
-  `src/aihawk/runner.py` with `tests/test_key_isolation.py` (the key never
+  `src/invisible_playwright_mcp/web.py` (the token meter and the stop button), and
+  `src/invisible_playwright_mcp/runner.py` with `tests/test_key_isolation.py` (the key never
   reaching the browser process).
 
 **See also:** [browser problem or model problem?](browser-problem-or-model-problem.md),

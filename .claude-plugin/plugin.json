@@ -1,6 +1,6 @@
 {
-  "name": "aihawk",
-  "displayName": "invisible_playwright_mcp",
+  "name": "invisible-playwright-mcp",
+  "displayName": "invisible-playwright-mcp",
   "version": "1.0.1",
   "description": "AI browser agent: browses, clicks, types, and reads real web pages from plain-English instructions.",
   "author": {

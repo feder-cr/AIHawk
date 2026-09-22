@@ -27,7 +27,7 @@ import subprocess
 
 import pytest
 
-from aihawk.ui import PAGE
+from invisible_playwright_mcp.ui import PAGE
 
 NODE = shutil.which("node")
 pytestmark = pytest.mark.skipif(not NODE, reason="needs node to EXECUTE the page")
@@ -171,7 +171,7 @@ def test_the_build_is_a_field_and_not_an_event():
 
     Known-bad: send the build as an event kind instead.
     """
-    from aihawk import routes
+    from invisible_playwright_mcp import routes
 
     source = re.sub(r"#.*", "", routes.__doc__ or "")
     del source

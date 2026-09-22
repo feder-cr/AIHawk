@@ -19,9 +19,9 @@ pytestmark = pytest.mark.skipif(
 
 
 async def test_the_loop_reads_a_data_url_heading():
-    from aihawk.agent import Conversation
-    from aihawk.link import Link
-    from aihawk.llm import make_client, resolve_model
+    from invisible_playwright_mcp.agent import Conversation
+    from invisible_playwright_mcp.link import Link
+    from invisible_playwright_mcp.llm import make_client, resolve_model
 
     key = os.environ["OPENROUTER_API_KEY"]
     link = await Link({"binary": os.environ["STEALTHFOX_BINARY"]}, key=key).open()

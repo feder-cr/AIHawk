@@ -5,7 +5,7 @@
   },
   "plugins": [
     {
-      "name": "aihawk",
+      "name": "invisible-playwright-mcp",
       "source": {
         "source": "local",
         "path": "./"

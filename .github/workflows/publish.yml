@@ -1,6 +1,6 @@
 name: publish
 
-# Publish `aihawk` from a tag via PyPI Trusted Publishing (OIDC), with no
+# Publish `invisible-playwright-mcp` from a tag via PyPI Trusted Publishing (OIDC), with no
 # long-lived token anywhere. The trust lives in the `pypi` GitHub Environment,
 # minted per run and valid for minutes. Only the `upload` job names that
 # environment, and it declares `needs: gate`, so a red gate means the only job
@@ -8,7 +8,7 @@ name: publish
 #
 # BEFORE THE FIRST RUN, on PyPI: the name is unregistered, so Your projects will
 # not list it. Use Account -> Publishing -> Add a pending publisher with:
-#   PyPI Project Name: aihawk
+#   PyPI Project Name: invisible-playwright-mcp
 #   Owner:             feder-cr
 #   Repository name:   invisible_playwright_mcp
 #   Workflow name:     publish.yml
@@ -41,10 +41,10 @@ jobs:
         run: |
           VERSION="$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          CODE=$(curl -s -o /dev/null -w '%{http_code}' "https://pypi.org/pypi/aihawk/$VERSION/json")
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' "https://pypi.org/pypi/invisible-playwright-mcp/$VERSION/json")
           case "$CODE" in
             200) echo "present=yes" >> "$GITHUB_OUTPUT"
-                 echo "::notice::aihawk $VERSION is already on the index. No-op, not a failure." ;;
+                 echo "::notice::invisible-playwright-mcp $VERSION is already on the index. No-op, not a failure." ;;
             404) echo "present=no"  >> "$GITHUB_OUTPUT" ;;
             *)   echo "the index answered $CODE for $VERSION, which is neither present nor absent. Refusing rather than guessing." >&2
                  exit 1 ;;
@@ -125,10 +125,10 @@ jobs:
           python -m build --wheel
           python -m venv /tmp/clean
           /tmp/clean/bin/pip install dist/*.whl
-          /tmp/clean/bin/aihawk --help
-          /tmp/clean/bin/python -m aihawk --help > /dev/null
-          /tmp/clean/bin/python -c "import aihawk.mcp.server"
-          unzip -l dist/*.whl | grep -q "aihawk/mcp/server.py"
+          /tmp/clean/bin/invisible-playwright-mcp --help
+          /tmp/clean/bin/python -m invisible_playwright_mcp --help > /dev/null
+          /tmp/clean/bin/python -c "import invisible_playwright_mcp.mcp.server"
+          unzip -l dist/*.whl | grep -q "invisible_playwright_mcp/mcp/server.py"
 
   upload:
     needs: [already-published, gate]
@@ -253,7 +253,7 @@ jobs:
         run: |
           set -euo pipefail
           for i in $(seq 1 40); do
-            BODY="$(curl -s "https://pypi.org/pypi/aihawk/$VERSION/json" || true)"
+            BODY="$(curl -s "https://pypi.org/pypi/invisible-playwright-mcp/$VERSION/json" || true)"
             if printf '%s' "$BODY" | jq -e --arg n "$NAME" '.info.description | contains("mcp-name: " + $n)' > /dev/null 2>&1; then
               echo "index serves $VERSION with the token for $NAME"
               exit 0

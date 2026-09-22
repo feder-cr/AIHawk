@@ -166,7 +166,7 @@ layers.
 
 ## Sources
 
-- invisible_playwright_mcp's own source: the system prompt in `src/aihawk/agent.py` instructs the model
+- invisible_playwright_mcp's own source: the system prompt in `src/invisible_playwright_mcp/agent.py` instructs the model
   to inspect pages before acting and to prefer one clear action at a time, and the
   [README](https://github.com/feder-cr/invisible_playwright_mcp#readme) documents the input behaviour
   (pointer moves, keys pressed, JavaScript form-fill refused). Both read 2026-09-03.

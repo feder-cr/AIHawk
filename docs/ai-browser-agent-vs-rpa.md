@@ -74,7 +74,7 @@ This does not decide which agent to run once volume has pointed you at "agent"; 
 
 ## Sources
 
-- [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), plus its source in this repository (`src/aihawk/cli.py`, `src/aihawk/web.py`), retrieved 2026-09-05, for the claim that invisible_playwright_mcp ships no built-in approval console.
+- [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), plus its source in this repository (`src/invisible_playwright_mcp/cli.py`, `src/invisible_playwright_mcp/web.py`), retrieved 2026-09-05, for the claim that invisible_playwright_mcp ships no built-in approval console.
 - UiPath Studio documentation, https://docs.uipath.com/studio/standalone/latest/user-guide/introduction - the quoted description of Studio, Orchestrator and Robot, and the low-code versus coded build modes. Read 5 September 2026. No pricing or licensing figures are quoted anywhere on this page, because those move and a stale number is worse than none.urrent naming and licensing before publication.
 
 ---

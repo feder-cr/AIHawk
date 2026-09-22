@@ -12,7 +12,7 @@ download. The README's fetch line existed for that reason alone.
 So the download is now a thing THIS PROCESS does, once, from the moment it
 starts, and the two ways in use one object for it:
 
-* `aihawk ui` runs it in the foreground, before the port opens, with a
+* `invisible-playwright-mcp ui` runs it in the foreground, before the port opens, with a
   terminal line that follows it: the person launches the download and
   watches it, which is the way the owner asked for it to be on 2026-09-06
   when the first version of this (0.7.0 / server 0.13.0) was withdrawn.
@@ -185,7 +185,7 @@ class Engine:
                 return False
             self.state = "starting"
             self._settled.clear()
-            self._thread = threading.Thread(target=self.run, name="aihawk-engine",
+            self._thread = threading.Thread(target=self.run, name="invisible_playwright_mcp-engine",
                                             daemon=True)
             self._thread.start()
             return True

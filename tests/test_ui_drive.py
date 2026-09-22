@@ -1,7 +1,7 @@
 """UI-level drive: a real local page, a real MCP server, a real browser.
 
 Every test here serves its own page over http from 127.0.0.1, spawns the
-server the same way `Link` does (`python -m aihawk`, same `child_env`, same
+server the same way `Link` does (`python -m invisible_playwright_mcp`, same `child_env`, same
 `StdioServerParameters`), and then checks what happened INSIDE the page
 rather than what the tool said about itself. A tool
 that answers "clicked #go" while nothing moved is the failure this file exists
@@ -14,7 +14,13 @@ what they actually do to a page.
 
 RUN THEM WITH (they are deselected by default, see `addopts` in pyproject):
 
-    C:/tmp/venv_aihawk/Scripts/python -m pytest -m ui -q C:/src/firefox-stealth/release/aihawk/tests/test_ui_drive.py
+    python -m pytest -m ui -q tests/test_ui_drive.py
+
+from the root of a checkout, in an environment that has the package installed.
+The line named one machine's virtualenv and one machine's clone directory until
+2026-09-23, and the package rename rewrote half of that path into a directory
+that does not exist: a developer's own paths cannot be kept true by anybody
+else, so they are not written here.
 
 Serially, and on a machine with no other browser bench running: they launch ONE
 browser for the whole module and reuse it, which is also why each test starts
@@ -42,9 +48,9 @@ import pytest
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
-from aihawk.agent import mcp_tools_to_openai
-from aihawk.link import answer_of
-from aihawk.runner import child_env
+from invisible_playwright_mcp.agent import mcp_tools_to_openai
+from invisible_playwright_mcp.link import answer_of
+from invisible_playwright_mcp.runner import child_env
 
 # Every test in this file drives a browser. The per-test decorators below say
 # so one by one; this line is the safety net, so a test added later without the
@@ -280,7 +286,7 @@ def site(tmp_path_factory):
     listening" into a page that loads and is not ours, which reads as a
     browser failure.
     """
-    root = tmp_path_factory.mktemp("aihawk_ui_pages")
+    root = tmp_path_factory.mktemp("ui_pages")
     for name, html in PAGES.items():
         # write_bytes, never write_text: on Windows the text mode rewrites
         # every newline, and a page whose bytes changed under the test is not
@@ -289,7 +295,7 @@ def site(tmp_path_factory):
 
     handler = functools.partial(_QuietHandler, directory=str(root))
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
-    thread = threading.Thread(target=server.serve_forever, name="aihawk-ui-http", daemon=True)
+    thread = threading.Thread(target=server.serve_forever, name="invisible_playwright_mcp-ui-http", daemon=True)
     thread.start()
     base = "http://127.0.0.1:%d/" % server.server_address[1]
     try:
@@ -325,7 +331,7 @@ class _McpDriver:
 
     # -- lifecycle
     def start(self, timeout=240.0):
-        self._thread = threading.Thread(target=self._thread_main, name="aihawk-mcp", daemon=True)
+        self._thread = threading.Thread(target=self._thread_main, name="invisible_playwright_mcp-mcp", daemon=True)
         self._thread.start()
         if not self._ready.wait(timeout):
             raise RuntimeError("the MCP server was not ready after %.0fs" % timeout)
@@ -347,7 +353,7 @@ class _McpDriver:
         self._stopped = asyncio.Event()
         params = StdioServerParameters(
             command=sys.executable,
-            args=["-m", "aihawk"],
+            args=["-m", "invisible_playwright_mcp"],
             env=self._env,
         )
         async with stdio_client(params) as (read, write):
@@ -404,7 +410,7 @@ class _McpDriver:
 def _result_text_all(result):
     """Every text part of a result, not just the first.
 
-    Deliberately NOT `aihawk.link.answer_of`: that one returns
+    Deliberately NOT `invisible_playwright_mcp.link.answer_of`: that one returns
     `content[0]` only, which is what the model sees and is a thing under test
     below, not a thing to test with.
     """
@@ -439,7 +445,7 @@ def browser():
     # workbench rule is that browser tests are headless, so it is forced.
     env["STEALTHFOX_HEADLESS"] = "1"
     # ⛔ THE SERVER RUNS AS A SUBPROCESS, AND `pythonpath` IN pyproject.toml
-    # DOES NOT REACH IT. A subprocess resolves `aihawk` through site-packages,
+    # DOES NOT REACH IT. A subprocess resolves `invisible_playwright_mcp` through site-packages,
     # which on this machine is a DIFFERENT, older checkout shared with another
     # session - see `tests/mcp_server/_stdio_helpers.py` for the measurement.
     # Prepended, not appended, so it wins over whatever the editable install
@@ -898,7 +904,7 @@ def test_a_click_at_coordinates_lands_but_reaches_the_model_as_no_content(browse
     """Two facts in one run, because they only matter together.
 
     browser_click_at works: the click lands and the page reacts. What comes
-    back is an Image, and `aihawk.link.answer_of` reads `content[0].text`,
+    back is an Image, and `invisible_playwright_mcp.link.answer_of` reads `content[0].text`,
     which an ImageContent does not have - so the model driving this tool is
     told "[non-text result]" and never sees the screenshot the tool exists to
     return. Same for browser_take_screenshot, which then carries nothing else.

@@ -1,7 +1,7 @@
 """Nothing in the product may exist only for the suite.
 
 ⛔ THIS IS A GATE ON A CLASS, NOT A LIST OF NAMES THAT WERE REMOVED. Seven
-surfaces came out of `src/aihawk` in one audit and every one of them was the
+surfaces came out of `src/invisible_playwright_mcp` in one audit and every one of them was the
 same shape: a function, a constant or a method with no caller in the product,
 kept alive by the tests that had grown up around it.
 
@@ -46,8 +46,8 @@ EXISTS. Two scans, and they answer two different questions.
     `SessionPlan.describe` live, and it is now the thing the scan looks for.
 
 Anything nested inside a function is out of scope for both: it cannot be reached
-from outside in the first place. So is the page - `src/aihawk/ui/js` and
-`src/aihawk/ui/css` are product surface too, and they were scanned the same way
+from outside in the first place. So is the page - `src/invisible_playwright_mcp/ui/js` and
+`src/invisible_playwright_mcp/ui/css` are product surface too, and they were scanned the same way
 by hand: 109 top-level JS bindings, all named by another file or by the markup,
 and 49 CSS classes, all applied. They carry no gate here because the page is one
 concatenated script and its own gates live in
@@ -70,7 +70,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-SRC = Path(__file__).resolve().parent.parent / "src" / "aihawk"
+SRC = Path(__file__).resolve().parent.parent / "src" / "invisible_playwright_mcp"
 
 #: A decorator spelling that hands the object to a registry. See the module
 #: docstring: this is the whole exemption, and it is deliberately not a list of
@@ -240,7 +240,7 @@ def test_every_surface_the_product_offers_is_one_the_product_names():
     suite, as the seven above were moved, counts as deleting it."""
     left = unnamed(_product())
     assert not left, (
-        "%d surface(s) in src/aihawk that nothing in src/aihawk names:\n  %s\n"
+        "%d surface(s) in src/invisible_playwright_mcp that nothing in src/invisible_playwright_mcp names:\n  %s\n"
         "Each is either dead or exists only for the tests. If the suite wants "
         "it, it belongs in the suite." % (len(left), "\n  ".join(left)))
 
@@ -252,7 +252,7 @@ def test_every_method_the_product_defines_is_one_the_product_reaches():
     two: call it, or delete it."""
     left = uncalled(_product())
     assert not left, (
-        "%d method(s) in src/aihawk that nothing reaches on an object:\n  %s\n"
+        "%d method(s) in src/invisible_playwright_mcp that nothing reaches on an object:\n  %s\n"
         "An attribute on an imported MODULE does not count - that is the "
         "module's function, not this method." % (len(left), "\n  ".join(left)))
 

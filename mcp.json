@@ -1,10 +1,10 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
   "mcpServers": {
-    "aihawk": {
+    "invisible_playwright_mcp": {
       "type": "stdio",
       "command": "uvx",
-      "args": ["aihawk"]
+      "args": ["invisible-playwright-mcp"]
     }
   }
 }

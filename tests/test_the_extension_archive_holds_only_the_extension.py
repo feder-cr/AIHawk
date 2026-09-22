@@ -27,20 +27,20 @@ def test_a_clean_listing_passes():
 
 
 def test_the_check_refuses_what_must_not_ship():
-    for extra in ("src/aihawk/__init__.py", "tests/test_engine.py", "docs/mcp-server.md",
+    for extra in ("src/invisible_playwright_mcp/__init__.py", "tests/test_engine.py", "docs/mcp-server.md",
                   ".env", "skills/setup/.env", ".git/config", "manifest.json", "scripts/pack_extension.py"):
         findings = pack_extension.archive_findings(CLEAN + [extra])
         assert findings, "%s was let through" % extra
 
 
 def test_the_check_refuses_an_archive_without_the_manifest_at_the_root():
-    rooted_down = ["aihawk/gemini-extension.json", "aihawk/skills/setup/SKILL.md", "aihawk/LICENSE"]
+    rooted_down = ["invisible_playwright_mcp/gemini-extension.json", "invisible_playwright_mcp/skills/setup/SKILL.md", "invisible_playwright_mcp/LICENSE"]
     assert any("missing" in f for f in pack_extension.archive_findings(rooted_down))
 
 
 def test_the_platform_names_are_the_ones_gemini_matches():
     assert pack_extension.PLATFORMS == ("darwin", "linux", "win32")
-    assert pack_extension.asset_name("linux") == "linux.aihawk-extension.zip"
+    assert pack_extension.asset_name("linux") == "linux.invisible_playwright_mcp-extension.zip"
 
 
 def test_the_packer_builds_three_identical_archives_that_pass_their_own_check(tmp_path):

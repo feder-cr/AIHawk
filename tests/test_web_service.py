@@ -22,10 +22,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from aihawk.link import text_of
-from aihawk.chat import ChatService
-from aihawk.routes import build_app
-from aihawk.ui import PAGE
+from invisible_playwright_mcp.link import text_of
+from invisible_playwright_mcp.chat import ChatService
+from invisible_playwright_mcp.routes import build_app
+from invisible_playwright_mcp.ui import PAGE
 from _sessions import around
 
 
@@ -509,7 +509,7 @@ async def test_nothing_to_look_at_is_the_idle_pane_and_not_an_error():
     the route said before the refusal existed, and any edit to the shared
     sentence that leaves the two copies to drift.
     """
-    from aihawk.mcp import NOT_OPEN
+    from invisible_playwright_mcp.mcp import NOT_OPEN
 
     class AsleepLink(WatchingLink):
         async def call(self, name, arguments=None):
@@ -707,7 +707,7 @@ async def test_the_stage_asks_for_frames_at_a_rate_it_has_measured():
     # for four anyway, because what it must never do is promise more frames
     # than the pipe has, whatever number of screens a later change puts on it.
 
-    from aihawk.mcp.session import StealthSession
+    from invisible_playwright_mcp.mcp.session import StealthSession
 
     assert each[0] >= StealthSession.WATCH_FPS, (
         "one screen is asked for %d frames a second while the engine is told to "

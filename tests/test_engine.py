@@ -9,7 +9,7 @@ from __future__ import annotations
 import threading
 import time
 
-from aihawk.engine import FETCH_BY_HAND, Abandoned, Engine
+from invisible_playwright_mcp.engine import FETCH_BY_HAND, Abandoned, Engine
 
 
 class _Fetch:

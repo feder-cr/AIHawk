@@ -24,8 +24,8 @@ import asyncio
 import contextlib
 import json
 
-from aihawk.chat import ChatService
-from aihawk.routes import build_app
+from invisible_playwright_mcp.chat import ChatService
+from invisible_playwright_mcp.routes import build_app
 from _sessions import around
 
 from test_web_service import FakeLink, HangingBrain, TalkingBrain

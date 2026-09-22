@@ -1,7 +1,7 @@
 """The version a change proposes must not already be on the index, unless
 nothing that ships has moved since it was published.
 
-⛔ MEASURED 2026-09-04, AND NOTHING SAW IT. `aihawk 0.4.0` was published at
+⛔ MEASURED 2026-09-04, AND NOTHING SAW IT. `invisible_playwright_mcp 0.4.0` was published at
 23:47. Over the following hours main gained two more changes - verbs for the
 session tools, and a `.env` plus a raised dependency floor - while `pyproject`
 still said `0.4.0`. So main carried content that was not the content of the
@@ -12,7 +12,7 @@ habit. `publish.yml` asks the index first and treats an already-present version
 as a deliberate no-op:
 
     200) present=yes
-         "aihawk $VERSION is already on the index. No-op, not a failure."
+         "invisible-playwright-mcp $VERSION is already on the index. No-op, not a failure."
 
 That is correct for a re-pushed or backfilled tag, and it cannot tell that case
 apart from somebody forgetting to bump. So the release would have reported
@@ -48,6 +48,7 @@ cannot silently skip the way it does in a local run.
 """
 from __future__ import annotations
 
+import importlib.metadata
 import os
 import pathlib
 import subprocess
@@ -56,7 +57,7 @@ import urllib.request
 
 import pytest
 
-PACKAGE = "aihawk"
+PACKAGE = "invisible-playwright-mcp"
 
 #: A tag far enough back that the package has certainly moved since, which
 #: makes it the live known-bad for the diff half: a check that has only ever
@@ -121,14 +122,18 @@ def _changed_since(tag: str):
     return [line.strip() for line in out.splitlines() if line.strip()]
 
 
-def _on_the_index(version: str):
+def _on_the_index(version: str, project: str = PACKAGE):
     """`True`, `False`, or None when the index would not say.
 
     ⛔ Three outcomes, not two. A network error is neither present nor absent,
     and scoring it as absent turns an unreachable index into a green gate -
     which is the failure this file exists to prevent, wearing a different hat.
+
+    `project` is a parameter for one reason, and it is the known-bad below: the
+    positive case has to ask about something that is certainly published, and
+    this project is not that thing.
     """
-    url = "https://pypi.org/pypi/%s/%s/json" % (PACKAGE, version)
+    url = "https://pypi.org/pypi/%s/%s/json" % (project, version)
     try:
         with urllib.request.urlopen(url, timeout=20) as answer:
             return answer.status == 200
@@ -169,12 +174,25 @@ def test_the_declared_version_is_not_already_published():
 def test_the_check_can_tell_a_taken_version_from_a_free_one():
     """⛔ The known-bad input, run against the live index rather than a mock.
 
-    A check that has only ever said "free" is not a check. `0.1.0` was
-    published and is not coming back, so it is a stable stand-in for the thing
-    this gate must catch, and a version far past anything real stands in for
-    the state it must allow.
+    A check that has only ever said "free" is not a check.
+
+    ⛔ AND THE POSITIVE CASE USED TO BE OUR OWN `0.1.0`, ON THE REASONING THAT
+    IT "was published and is not coming back". A published release is not
+    permanent: on 2026-09-23 the owner deleted this project from the index to
+    free a name for it, every version with it, and the instrument's only
+    positive case went red for a reason that had nothing to do with the
+    instrument. A gate must not prove itself against state its own owner can
+    remove - and a brand-new name has nothing published at all, so there was
+    nothing to move the case to.
+
+    It now asks about a version that is INSTALLED in the environment running
+    this test. Whatever is installed came from the index, so the index has it;
+    nothing is typed here and nothing needs keeping up to date. The negative
+    case stays ours, because a version far past anything real is free whether
+    or not the project exists.
     """
-    taken = _on_the_index("0.1.0")
+    lives_on_the_index = importlib.metadata.version("mcp")
+    taken = _on_the_index(lives_on_the_index, project="mcp")
     free = _on_the_index("99.99.99")
 
     if taken is None or free is None:

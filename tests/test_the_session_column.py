@@ -25,12 +25,12 @@ from __future__ import annotations
 
 import pytest
 
-from aihawk import chats
-from aihawk.mcp import store
-from aihawk.chat import DEFAULT_CHAT_ID, UNNAMED
-from aihawk.routes import build_app
-from aihawk.sessions import Sessions
-from aihawk.ui import PAGE
+from invisible_playwright_mcp import chats
+from invisible_playwright_mcp.mcp import store
+from invisible_playwright_mcp.chat import DEFAULT_CHAT_ID, UNNAMED
+from invisible_playwright_mcp.routes import build_app
+from invisible_playwright_mcp.sessions import Sessions
+from invisible_playwright_mcp.ui import PAGE
 
 
 class FakeLink:
@@ -133,8 +133,8 @@ async def test_a_page_that_names_nothing_is_in_the_conversation_it_always_was():
     import ast
     import inspect
 
-    from aihawk import chat
-    from aihawk.mcp import store
+    from invisible_playwright_mcp import chat
+    from invisible_playwright_mcp.mcp import store
 
     assert DEFAULT_CHAT_ID == store.DEFAULT_SESSION_ID
     declared = [n for n in ast.parse(inspect.getsource(chat)).body
@@ -515,7 +515,7 @@ async def test_every_request_the_page_makes_carries_the_conversation():
     """
     import re
 
-    from aihawk.ui import PAGE
+    from invisible_playwright_mcp.ui import PAGE
 
     script = PAGE[PAGE.index("<script"):]
     # Every fetch of a route that reads `?s=` must go through `at()`. The three
@@ -555,7 +555,7 @@ async def test_a_queued_message_is_not_lost_when_the_page_goes_away():
     """
     import re
 
-    from aihawk.ui import PAGE
+    from invisible_playwright_mcp.ui import PAGE
 
     script = PAGE[PAGE.index("<script"):]
     code = re.sub(r"/\*.*?\*/", "", script, flags=re.S)
@@ -934,7 +934,7 @@ def test_renaming_happens_in_the_row_and_escape_belongs_to_the_edit():
 
     import pytest
 
-    from aihawk.ui import PAGE
+    from invisible_playwright_mcp.ui import PAGE
 
     node = shutil.which("node")
     if not node:
@@ -1012,7 +1012,7 @@ def test_deleting_a_conversation_takes_two_presses_and_no_dialog():
     """
     import re
 
-    from aihawk.ui import PAGE
+    from invisible_playwright_mcp.ui import PAGE
 
     code = re.sub(r"/\*.*?\*/", "", PAGE, flags=re.S)
     assert "confirm(" not in code and "prompt(" not in code, (
@@ -1044,7 +1044,7 @@ def test_the_column_is_not_rebuilt_where_nobody_can_see_it():
     """
     import re
 
-    from aihawk.ui import PAGE
+    from invisible_playwright_mcp.ui import PAGE
 
     code = re.sub(r"/\*.*?\*/", "", PAGE, flags=re.S)
     turn = code[code.index("case 'busy':"):]

@@ -37,16 +37,16 @@ gemini extensions install https://github.com/feder-cr/invisible_playwright_mcp
 
 Gemini CLI asks you to confirm that the extension comes from a third party,
 then reports it installed and enabled. The extension brings two things: the
-MCP server, started as `uvx aihawk`, so there is nothing to clone or
+MCP server, started as `uvx invisible-playwright-mcp`, so there is nothing to clone or
 pip-install first; and a `setup` skill that knows about the engine download
 below, so Gemini can walk you through it if `browser_open` reports that the
-download failed. Check with `gemini extensions list`: `aihawk` is there, with
-the server `aihawk` under MCP servers and `setup` under agent skills.
+download failed. Check with `gemini extensions list`: `invisible_playwright_mcp` is there, with
+the server `invisible_playwright_mcp` under MCP servers and `setup` under agent skills.
 
 The same extension is listed in the
 [Gemini CLI extensions gallery](https://geminicli.com/extensions/), where the
 gallery's own install command is this one. Updates come with
-`gemini extensions update aihawk`.
+`gemini extensions update invisible_playwright_mcp`.
 
 ## First run: the download the server does on its own
 
@@ -69,7 +69,7 @@ invisible_playwright_mcp's own interface if you later run that too.
 
 ## What Gemini actually gains
 
-A set of browser tools from the server `aihawk`. The authoritative list is
+A set of browser tools from the server `invisible_playwright_mcp`. The authoritative list is
 whatever `/mcp` shows in a session for your installed server version; the
 families, with the names invisible_playwright_mcp's own client code knows them by:
 
@@ -114,11 +114,11 @@ results, and short steps keep its context small and its mistakes cheap.
 
 ## Troubleshooting
 
-- **`aihawk` is not in `gemini extensions list`.** The install needs `git`
+- **`invisible_playwright_mcp` is not in `gemini extensions list`.** The install needs `git`
   on your machine, because Gemini CLI fetches the extension from GitHub; the
   command says so when it is missing. If `uvx` is not on your PATH, the
   extension can be installed and its server still fail to start - install uv
-  and try `uvx aihawk` by hand, which surfaces the real error.
+  and try `uvx invisible-playwright-mcp` by hand, which surfaces the real error.
 - **The first browsing prompt answers "the engine is downloading".** That is
   the server saying what it is doing, not a fault: ask again in a minute, or
   run the fetch command above in a terminal to watch it finish.
@@ -161,9 +161,9 @@ All retrieved 2026-09-22.
 - [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), this repository's
   README (the verbatim install command, the prerequisites and platforms, the
   engine download), its `gemini-extension.json` (the manifest Gemini reads)
-  and source: `src/aihawk/link.py` and `src/aihawk/web.py` (the interface
+  and source: `src/invisible_playwright_mcp/link.py` and `src/invisible_playwright_mcp/web.py` (the interface
   reaching the browser over MCP as an ordinary client),
-  `src/aihawk/actions_help.py` (the tool names above).
+  `src/invisible_playwright_mcp/actions_help.py` (the tool names above).
 - [Gemini CLI extensions](https://geminicli.com/docs/extensions/), the
   install, list and update commands, and the gallery.
 - [The MCP server page](mcp-server.md),

@@ -192,9 +192,9 @@ which is a certainty no model-driven run gives you.
 All retrieved 2026-09-03, except the loop itself, re-read 2026-09-08.
 
 - [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), this repository's
-  source: `src/aihawk/agent.py` (the shared loop, which runs until the model
+  source: `src/invisible_playwright_mcp/agent.py` (the shared loop, which runs until the model
   stops calling tools and has no turn ceiling, and the invalid-arguments
-  retry), `src/aihawk/web.py` (the task handle, the stop button and the cancel
+  retry), `src/invisible_playwright_mcp/web.py` (the task handle, the stop button and the cancel
   that lands at the next tool call), and the README (the engine download and
   prefetch command).
 - [invisible_playwright](https://github.com/feder-cr/invisible_playwright),

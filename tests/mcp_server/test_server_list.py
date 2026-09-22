@@ -1,6 +1,6 @@
 
 async def test_server_registers_expected_tools():
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
     tools = await server.mcp.list_tools()
     names = {t.name for t in tools}
     expected = {
@@ -68,7 +68,7 @@ async def test_every_tool_description_is_english_and_ascii():
 
     from invisible_core.english import ITALIAN as italian
 
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
 
     # The word list is IMPORTED from the gate rather than copied. Copying it
     # here had two costs at once: the list would drift from the one that
@@ -92,7 +92,7 @@ async def test_every_tool_description_is_english_and_ascii():
 async def test_every_tool_actually_has_a_description():
     """An undescribed tool is one the model will not choose, or will choose
     wrongly. Cheaper to assert than to debug from the other side."""
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
     thin = {t.name: t.description for t in await server.mcp.list_tools()
             if not (t.description or "").strip()}
     assert not thin, thin

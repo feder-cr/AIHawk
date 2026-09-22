@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import re
 
-from aihawk.mcp import actions, clean
+from invisible_playwright_mcp.mcp import actions, clean
 
 
 def selector_in_the_page() -> str:

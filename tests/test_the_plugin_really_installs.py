@@ -65,6 +65,21 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 #: carrying both still delivers its server.
 PLUGIN_SURFACE = (".claude-plugin", ".mcp.json", "mcp.json", "skills")
 
+#: The plugin as the repository ships it, and the names derived from it.
+#:
+#: ⛔ THE PACKAGE'S NAME IS NEVER TYPED IN THIS FILE. It was, in four places,
+#: and the rename on 2026-09-23 left every one of them asking a real
+#: `claude plugin install` for a plugin the marketplace no longer carried. The
+#: message came back about a missing plugin, which reads like a broken manifest
+#: rather than a stale copy in a test. The shipped manifest is the nearest
+#: single source; `tests/test_publishing_surfaces.py` gates that it agrees with
+#: `pyproject.toml`, which is the name's one house.
+SHIPPED_MARKETPLACE = json.loads(
+    (ROOT / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))
+PLUGIN = SHIPPED_MARKETPLACE["plugins"][0]["name"]
+MARKET_UNDER_TEST = "%s-under-test" % PLUGIN
+COORDINATE = "%s@%s" % (PLUGIN, MARKET_UNDER_TEST)
+
 CLAUDE = shutil.which("claude")
 needs_claude = pytest.mark.skipif(
     CLAUDE is None,
@@ -86,7 +101,7 @@ def installed():
     Yields `(details_text, config_dir)`. Everything is removed afterwards,
     including on failure.
     """
-    tmp = pathlib.Path(tempfile.mkdtemp(prefix="aihawk-plugin-"))
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="invisible_playwright_mcp-plugin-"))
     try:
         config = tmp / "config"
         config.mkdir()
@@ -102,21 +117,20 @@ def installed():
                 shutil.copytree(src, market / name)
             else:
                 shutil.copy2(src, market / name)
-        shipped = json.loads((ROOT / ".claude-plugin" / "marketplace.json")
-                             .read_text(encoding="utf-8"))
+        shipped = SHIPPED_MARKETPLACE
         assert shipped["plugins"][0]["source"] == "./", (
             "the shipped marketplace points somewhere other than the root; "
             "this test measures the root layout and would be measuring "
             "something else: %r" % shipped["plugins"][0])
-        under_test = dict(shipped, name="aihawk-under-test")
+        under_test = dict(shipped, name=MARKET_UNDER_TEST)
         (market / ".claude-plugin" / "marketplace.json").write_bytes(
             json.dumps(under_test, indent=1).encode("utf-8"))
 
         added = _run(["plugin", "marketplace", "add", str(market)], config)
         assert added.returncode == 0, added.stdout + added.stderr
-        got = _run(["plugin", "install", "aihawk@aihawk-under-test", "--yes"], config)
+        got = _run(["plugin", "install", COORDINATE, "--yes"], config)
         assert got.returncode == 0, got.stdout + got.stderr
-        shown = _run(["plugin", "details", "aihawk@aihawk-under-test"], config)
+        shown = _run(["plugin", "details", COORDINATE], config)
         assert shown.returncode == 0, shown.stdout + shown.stderr
         yield shown.stdout, config
     finally:
@@ -155,9 +169,9 @@ def test_installing_touched_nothing_outside_its_own_config(installed):
     real = pathlib.Path.home() / ".claude" / "plugins"
     known = real / "known_marketplaces.json"
     if known.exists():
-        assert "aihawk-under-test" not in known.read_text(encoding="utf-8"), (
+        assert MARKET_UNDER_TEST not in known.read_text(encoding="utf-8"), (
             "the test marketplace was registered in the real configuration")
-    cache = real / "cache" / "aihawk-under-test"
+    cache = real / "cache" / MARKET_UNDER_TEST
     assert not cache.exists(), "the test plugin was cached in the real configuration"
     assert (config / ".claude.json").exists(), (
         "nothing was written to the throwaway config, so CLAUDE_CONFIG_DIR "

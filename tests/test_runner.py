@@ -1,4 +1,4 @@
-from aihawk.runner import child_env
+from invisible_playwright_mcp.runner import child_env
 
 
 def test_child_env_maps_options_and_omits_key():
@@ -30,7 +30,7 @@ def test_child_env_maps_profile_dir():
 def test_child_env_maps_session_id_and_it_is_not_a_stealthfox_name():
     """⛔ THIS IS THE WHOLE MECHANISM BY WHICH TWO CONVERSATIONS BECOME TWO
     PROCESSES, one env var, read once by the child at import
-    (`aihawk.mcp.server._SESSION_ID`). It is not `STEALTHFOX_*` on purpose:
+    (`invisible_playwright_mcp.mcp.server._SESSION_ID`). It is not `STEALTHFOX_*` on purpose:
     those are what the ENGINE reads, and this is which saved file the SERVER
     itself persists its two browsers to - a fact about the interface's own
     bookkeeping, not about stealth.

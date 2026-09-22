@@ -100,7 +100,7 @@ with InvisiblePlaywright(seed=7) as browser:
         print(f'"{title}",{price}')
 ```
 
-Since aihawk 0.3.0 there is no headless aihawk command, and a recurring
+Since invisible_playwright_mcp 0.3.0 there is no headless invisible_playwright_mcp command, and a recurring
 extraction with stable selectors does not want one: it is mechanical work, and
 the same stealth engine invisible_playwright_mcp drives is on PyPI as a plain Python library
 (`pip install invisible-playwright`) with Playwright's API. Executed on

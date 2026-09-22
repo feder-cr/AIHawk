@@ -55,8 +55,24 @@ import urllib.request
 
 import pytest
 
-PACKAGE = "aihawk"
+PACKAGE = "invisible-playwright-mcp"
 REPOSITORY = "feder-cr/invisible_playwright_mcp"
+
+#: What the readers below answer when the index has never heard of the project.
+#:
+#: ⛔ THREE OUTCOMES, NOT TWO, AND THE THIRD ARRIVED AS AN UNHANDLED 404. Both
+#: readers went straight to `json.load`, on the assumption that the project is
+#: on the index - true every day until 2026-09-23, when the owner deleted it to
+#: free a name and the package took a name that had never published anything.
+#: All three tests here then died inside `urllib`, in a job CI runs with
+#: `AIHAWK_CHECK_RELEASES=1`, with a traceback about HTTP rather than a sentence
+#: about releases.
+#:
+#: An empty version list and an absent project are NOT the same news: a project
+#: that serves no usable version is the defect this file exists to report, while
+#: a project that has published nothing has nothing to report on. So the second
+#: skips and says why, and the assertion that catches the first stays.
+NOT_ON_THE_INDEX = None
 
 pytestmark = pytest.mark.skipif(
     os.environ.get("AIHAWK_CHECK_RELEASES") != "1",
@@ -64,9 +80,30 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+def _releases_json():
+    """The index's `releases` map, or NOT_ON_THE_INDEX when there is no project.
+
+    Only a 404 is turned into an answer. Any other failure is left to raise:
+    an unreachable index must not read as a project with no releases.
+    """
+    try:
+        with urllib.request.urlopen(f"https://pypi.org/pypi/{PACKAGE}/json", timeout=30) as resp:
+            return json.load(resp)["releases"]
+    except urllib.error.HTTPError as failed:
+        if failed.code == 404:
+            return NOT_ON_THE_INDEX
+        raise
+
+
+def _skip_if_nothing_published(releases):
+    if releases is NOT_ON_THE_INDEX:
+        pytest.skip("the index has no project named %s, so nothing has been "
+                    "published to check tags or release pages against" % PACKAGE)
+
+
 def _index_versions():
-    with urllib.request.urlopen(f"https://pypi.org/pypi/{PACKAGE}/json", timeout=30) as resp:
-        releases = json.load(resp)["releases"]
+    releases = _releases_json()
+    _skip_if_nothing_published(releases)
     # Yanked versions are skipped: a yank says nobody should install this, and
     # demanding a release page for it asks for the opposite of what the yank said.
     live = [v for v, files in releases.items()
@@ -144,8 +181,9 @@ def _all_index_versions():
     version is a release that DID happen. Comparing tags against the live list
     would report every yank as a failed publish.
     """
-    with urllib.request.urlopen(f"https://pypi.org/pypi/{PACKAGE}/json", timeout=30) as resp:
-        return {v for v, files in json.load(resp)["releases"].items() if files}
+    releases = _releases_json()
+    _skip_if_nothing_published(releases)
+    return {v for v, files in releases.items() if files}
 
 
 def _github(path, headers):
