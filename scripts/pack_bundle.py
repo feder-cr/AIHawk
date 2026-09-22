@@ -42,7 +42,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 #: The whole of what a bundle may hold, as archive paths or path prefixes.
 ALLOWED = ("manifest.json", "pyproject.toml", "README.md", "LICENSE",
-           "assets/aihawk-icon-400.png", "src/aihawk/")
+           "assets/icon-400.png", "src/aihawk/")
 #: Names that must not appear anywhere in an archive path, whatever the prefix.
 FORBIDDEN_PARTS = (".env", ".git", "__pycache__", "tests", "docs", "articles", "skills")
 
@@ -66,7 +66,7 @@ def archive_findings(names):
         if bad:
             out.append("%s carries %s" % (name, ", ".join(bad)))
     for must in ("manifest.json", "pyproject.toml", "src/aihawk/__init__.py",
-                 "src/aihawk/__main__.py", "assets/aihawk-icon-400.png"):
+                 "src/aihawk/__main__.py", "assets/icon-400.png"):
         if must not in names:
             out.append("%s is missing from the archive" % must)
     return out

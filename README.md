@@ -1,20 +1,13 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/feder-cr/invisible_playwright_mcp/main/assets/aihawk-logo-dark.png">
-  <img alt="AIHawk" src="https://raw.githubusercontent.com/feder-cr/invisible_playwright_mcp/main/assets/aihawk-logo-light.png" width="380">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/feder-cr/invisible_playwright_mcp/main/assets/masks-dark.png">
+  <img alt="invisible_playwright_mcp" src="https://raw.githubusercontent.com/feder-cr/invisible_playwright_mcp/main/assets/masks-light.png" width="150">
 </picture>
 
-**AIHawk is an anti detect browser and web browsing agent, open source, with an MCP server for coding agents: undetected, no captchas, no blocks. Tell it what you want in plain language.**
+# invisible_playwright_mcp
 
-<sub>FEATURED IN</sub><br>
-[**Business Insider**](https://www.businessinsider.com/aihawk-applies-jobs-for-you-linkedin-risks-inaccuracies-mistakes-2024-11) ·
-[**TechCrunch**](https://techcrunch.com/2024/10/10/a-reporter-used-ai-to-apply-to-2843-jobs/) ·
-[**Semafor**](https://www.semafor.com/article/09/12/2024/linkedins-have-nots-and-have-bots) ·
-[**Wired**](https://www.wired.it/article/aihawk-come-automatizzare-ricerca-lavoro/) ·
-[**The Verge**](https://www.theverge.com/2024/10/10/24266898/ai-is-enabling-job-seekers-to-think-like-spammers) ·
-[**Vanity Fair**](https://www.vanityfair.it/article/intelligenza-artificiale-candidature-di-lavoro) ·
-[**404 Media**](https://www.404media.co/i-applied-to-2-843-roles-the-rise-of-ai-powered-job-application-bots/)
+**An anti detect browser and web browsing agent, open source, with an MCP server for coding agents: undetected, no captchas, no blocks. Tell it what you want in plain language.**
 
 </div>
 
@@ -166,8 +159,8 @@ not read.
 
 ## Privacy Policy
 
-AIHawk runs on your machine and has no server of its own. What leaves your
-computer, and to whom:
+This browser agent runs on your machine and has no server of its own. What
+leaves your computer, and to whom:
 
 - **The sites you visit** see the browser, as they would any Firefox.
 - **Your model provider.** The web UI sends the conversation and what the agent

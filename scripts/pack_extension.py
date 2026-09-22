@@ -31,7 +31,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 #: the skill it lists, and the three files a person expects to find beside any
 #: package. Nothing that runs: the server comes from the index, `uvx aihawk`.
 ALLOWED = ("gemini-extension.json", "skills/", "LICENSE", "README.md",
-           "assets/aihawk-icon-400.png")
+           "assets/icon-400.png")
 #: Names that must not appear anywhere in an archive path, whatever the prefix.
 FORBIDDEN_PARTS = (".env", ".git", "__pycache__", "tests", "docs", "articles", "src", "scripts")
 #: The platform names Gemini CLI matches assets on (Node's `process.platform`).

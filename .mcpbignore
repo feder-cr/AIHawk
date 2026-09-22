@@ -23,7 +23,7 @@ docs/
 articles/
 scripts/
 assets/*
-!assets/aihawk-icon-400.png
+!assets/icon-400.png
 plugin.json
 mcp.json
 .mcp.json

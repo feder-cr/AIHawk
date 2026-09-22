@@ -1,10 +1,10 @@
 {
   "manifest_version": "0.4",
   "name": "aihawk",
-  "display_name": "AIHawk",
+  "display_name": "invisible_playwright_mcp",
   "version": "0.69.2",
   "description": "AI browser agent: browses, clicks, types, and reads real web pages from plain-English instructions.",
-  "long_description": "AIHawk gives an MCP client a real browser to drive. The tools navigate, click, type, read and screenshot pages the way a person would, on a patched Firefox engine.\n\nThe engine, about a quarter of a gigabyte, is downloaded once by the server itself the first time it starts, outside this bundle. While that download is in flight, browser_open answers with its progress instead of opening a browser.",
+  "long_description": "invisible_playwright_mcp gives an MCP client a real browser to drive. The tools navigate, click, type, read and screenshot pages the way a person would, on a patched Firefox engine.\n\nThe engine, about a quarter of a gigabyte, is downloaded once by the server itself the first time it starts, outside this bundle. While that download is in flight, browser_open answers with its progress instead of opening a browser.",
   "author": {
     "name": "feder-cr",
     "url": "https://github.com/feder-cr"
@@ -16,7 +16,7 @@
   "homepage": "https://github.com/feder-cr/invisible_playwright_mcp",
   "documentation": "https://github.com/feder-cr/invisible_playwright_mcp/wiki",
   "support": "https://github.com/feder-cr/invisible_playwright_mcp/issues",
-  "icon": "assets/aihawk-icon-400.png",
+  "icon": "assets/icon-400.png",
   "server": {
     "type": "uv",
     "entry_point": "src/aihawk/__main__.py",

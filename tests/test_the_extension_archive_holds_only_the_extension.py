@@ -19,7 +19,7 @@ pack_extension = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(pack_extension)
 
 CLEAN = ["gemini-extension.json", "skills/setup/SKILL.md", "LICENSE", "README.md",
-         "assets/aihawk-icon-400.png"]
+         "assets/icon-400.png"]
 
 
 def test_a_clean_listing_passes():

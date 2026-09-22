@@ -18,7 +18,7 @@ spec = importlib.util.spec_from_file_location("pack_bundle", ROOT / "scripts" / 
 pack_bundle = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(pack_bundle)
 
-CLEAN = ["manifest.json", "pyproject.toml", "README.md", "LICENSE", "assets/aihawk-icon-400.png",
+CLEAN = ["manifest.json", "pyproject.toml", "README.md", "LICENSE", "assets/icon-400.png",
          "src/aihawk/__init__.py", "src/aihawk/__main__.py", "src/aihawk/mcp/server.py",
          "src/aihawk/ui/page.html"]
 
@@ -44,6 +44,6 @@ def test_the_check_refuses_what_must_not_ship():
 
 
 def test_the_check_refuses_an_archive_missing_the_server():
-    for gone in ("manifest.json", "pyproject.toml", "src/aihawk/__main__.py", "assets/aihawk-icon-400.png"):
+    for gone in ("manifest.json", "pyproject.toml", "src/aihawk/__main__.py", "assets/icon-400.png"):
         listing = [n for n in CLEAN if n != gone]
         assert any("missing" in f for f in pack_bundle.archive_findings(listing)), gone
