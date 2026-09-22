@@ -62,8 +62,9 @@ gemini extensions install https://github.com/feder-cr/aihawk_mcp_server
 
 ### 2. Standalone: the web UI
 
-We bring the interface, you bring an [OpenRouter](https://openrouter.ai) key.
-Chat on the left, the live browser on the right.
+We bring the interface, you bring an [OpenRouter](https://openrouter.ai) key or
+an [OrcaRouter](https://www.orcarouter.ai) one. Chat on the left, the live
+browser on the right.
 
 Windows, in PowerShell:
 
@@ -83,6 +84,13 @@ uvx aihawk ui --openrouter-key sk-or-...
 
 Then open **http://127.0.0.1:8765** and type the same thing.
 
+**On OrcaRouter instead.** Pass `--orcarouter-key`, or set
+`ORCAROUTER_API_KEY`, and the interface runs on OrcaRouter with the model chosen
+from that account's own catalog. There is a second way in for an account with no
+key yet: `--orcarouter-connect` signs in through the browser, and AIHawk is
+issued a key of its own. Both entries are in the provider panel in the top bar,
+beside the model selector.
+
 ---
 
 ## What to ask a web browsing agent
@@ -101,7 +109,13 @@ It drives the page the way a person would: the pointer moves, keys are pressed.
 ## Options: proxy, profile, seed
 
 - **`--openrouter-key`** Your key, or the `OPENROUTER_API_KEY` variable.
-- **`--model`** An OpenRouter model id, or `AIHAWK_MODEL`. Defaults to `z-ai/glm-5.3-flash`.
+- **`--orcarouter-key`** An OrcaRouter key, or the `ORCAROUTER_API_KEY` variable.
+  Puts the interface on OrcaRouter instead. Keys start with `sk-orca-`.
+- **`--orcarouter-connect`** Sign in to OrcaRouter through the browser instead of
+  pasting a key. AIHawk is issued a key of its own, revocable from your console.
+- **`--model`** A model id on whichever provider is running, or `AIHAWK_MODEL`.
+  Defaults to `z-ai/glm-5.3-flash` on OpenRouter and `orcarouter/auto` on
+  OrcaRouter.
 - **`--proxy`** Optional. `http://user:pass@proxy.example.com:8080` or
   `socks5://proxy.example.com:1080`. Host and port are both required. The
   timezone, locale and egress follow it.

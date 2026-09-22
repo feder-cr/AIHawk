@@ -79,6 +79,16 @@
          true. -->
     <span class="badge" id="model" hidden></span>
     <span class="vr" aria-hidden="true"></span>
+    <button id="provider" type="button" aria-expanded="false"
+            aria-controls="orcapanel" aria-label="OrcaRouter and the model"
+            data-tip="OrcaRouter and the model">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"
+           stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+           stroke-linejoin="round">
+        <path d="M12 3.2l7.6 4.4v8.8L12 20.8 4.4 16.4V7.6z"/>
+        <path d="M12 8.2l3.8 2.2v4.4L12 17l-3.8-2.2v-4.4z"/>
+      </svg></button>
+    <span class="vr" aria-hidden="true"></span>
     <button id="fresh" type="button" title="Clear this conversation">Clear</button></div>
   <div id="log">
     <!-- ⛔ role=log, OR THE WHOLE PRODUCT IS SILENT. Everything the agent
@@ -147,8 +157,7 @@
 <div id="split" role="separator" aria-orientation="vertical" tabindex="0"
      aria-label="Width of the conversation"></div>
 
-<section id="right" data-state="idle" aria-label="The browsers this session holds">
-  <div id="chrome">
+<section id="right" data-state="idle" aria-label="The browsers this session holds">  <div id="chrome">
     <span id="dot"></span>
     <span id="url" class="dim">no page yet</span>
     <!-- ⛔ A GROUP OF TOGGLES, NOT TABS. `role="tablist"` promises panels this
@@ -183,5 +192,73 @@
     <div class="empty"><b>No browser open</b><span>Ask in the chat and one opens here. There is no button for it, on purpose.</span></div>
   </div>
 </section>
+
+<!-- ⛔ THE PROVIDER PANEL, BESIDE THE CONVERSATION RATHER THAN INSIDE IT. It
+     covers the same ground the session column does and is opened the same way,
+     because the two answer the same kind of question - which of several things
+     this interface is working on - and a panel with a second mechanism would be
+     a second thing to learn. `role="dialog"` for the same reason the column
+     carries it: it lies over live content and puts what is behind it out of
+     play, which is what `aria-modal` tells a screen reader and `inert` does for
+     everybody else.
+
+     ⛔ THE TWO WAYS IN ARE TWO SECTIONS, NOT ONE BUTTON THAT SOMETIMES ASKS FOR
+     A KEY AND SOMETIMES OPENS A BROWSER. A user with a key in a password
+     manager and a user with an account and no key want different things, and
+     the failure they hit when it goes wrong is different. Which one is in use
+     is stated under them, from the credential itself rather than from what the
+     page remembers asking for.
+
+     ⛔ THE MODEL IS A `<select>` AND IT IS FILLED FROM THE SERVER'S CATALOG.
+     Nothing here types a model id, and nothing here holds a list of ids: the
+     options come from `/provider/models`, which is the only place that decides
+     what a capability means. -->
+<nav id="orcapanel" role="dialog" aria-modal="true" aria-labelledby="orcatitle" hidden>
+  <div id="orcahead">
+    <span class="label" id="orcatitle">OrcaRouter</span>
+    <button id="orcadone" type="button" aria-label="Close" title="Close">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor"
+           stroke-width="1.6" stroke-linecap="round"><path d="M4.5 4.5l9 9M13.5 4.5l-9 9"/></svg>
+    </button>
+  </div>
+  <p id="orcasay" role="status"></p>
+  <div id="orcabody">
+    <section class="orcablock" aria-labelledby="orcakeytitle">
+      <h2 id="orcakeytitle">Paste an API key</h2>
+      <p class="sm">An <code>sk-orca-...</code> key from your OrcaRouter console.
+         Stored beside your sessions, on this machine.</p>
+      <label class="sr" for="orcakey">OrcaRouter API key</label>
+      <input id="orcakey" type="password" autocomplete="off" spellcheck="false"
+             placeholder="sk-orca-...">
+      <div class="orcarow">
+        <button id="orcasave" type="button">Use this key</button>
+        <button id="orcachear" type="button">Forget it</button>
+      </div>
+    </section>
+    <section class="orcablock" aria-labelledby="orcalogintitle">
+      <h2 id="orcalogintitle">Or sign in</h2>
+      <p class="sm">Authorize in your browser and AIHawk is issued a key of its
+         own. Nothing to copy, and revocable from your console.</p>
+      <div class="orcarow">
+        <button id="orcaconnect" type="button">Connect with OrcaRouter</button>
+        <button id="orcacancel" type="button" hidden>Cancel</button>
+      </div>
+      <label class="sr" for="orcacode">Authorization code</label>
+      <input id="orcacode" type="text" autocomplete="off" spellcheck="false"
+             placeholder="Paste the code if your browser shows one" hidden>
+      <button id="orcasubmit" type="button" hidden>Use this code</button>
+    </section>
+    <section class="orcablock" aria-labelledby="orcamodeltitle">
+      <h2 id="orcamodeltitle">Model</h2>
+      <label class="sr" for="orcapick">Model</label>
+      <select id="orcapick"></select>
+      <p class="sm" id="orcastatus"></p>
+      <div class="orcarow">
+        <button id="orcarefresh" type="button">Refresh the list</button>
+      </div>
+    </section>
+    <p class="sm" id="orcawhere"></p>
+  </div>
+</nav>
 
 <script>//__JS__</script>

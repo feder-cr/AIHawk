@@ -83,8 +83,14 @@ def test_every_event_the_server_can_send_is_drawn():
     # conversation had moved out of it, and the gate went on reading the
     # door for kinds that were sent two files away. Green the whole time.
     src = Path(__file__).resolve().parents[1] / "src" / "aihawk"
+    #: ⛔ THE PROVIDER IS AN EMITTER TOO. A refused key is announced from
+    #: `chat.py`, which is read here already, and the kinds a provider route can
+    #: send are read from `provider.py` and `orcarouter.py` for the same reason
+    #: the other two are: a kind nothing draws lands in the transcript as raw
+    #: JSON, and which file sends it is not the question.
     server = "".join((src / name).read_bytes().decode("utf-8")
-                     for name in ("routes.py", "chat.py", "agent.py"))
+                     for name in ("routes.py", "chat.py", "agent.py",
+                                  "provider.py", "orcarouter.py"))
     # Comments stripped, because this project has recorded the
     # gate-accused-by-a-comment defect more times than any other.
     server = re.sub(r"#[^\n]*", "", server)
@@ -445,10 +451,16 @@ def test_every_question_this_page_asks_goes_through_one_of_two_doors():
         "%d places call fetch; there is one door and everything has to go "
         "through it, or it cannot be told the page is stale or the "
         "conversation gone" % len(re.findall(r"[^.\w]fetch\(", CODE)))
-    assert "fetch(scoped(path) ? at(path) : path, init)" in CODE, (
+    assert "fetch(addressed(path) ? at(path) : path, init)" in CODE, (
         "the door no longer decides by the path which requests name a conversation")
     assert "const scoped = (path) => !path.startsWith('/sessions');" in CODE, (
         "the set-level routes are no longer the ones under /sessions")
+    #: ⛔ AND TWO FAMILIES CARRY NO ID NOW. The provider routes are about this
+    #: interface rather than about one conversation, so they are the second
+    #: family that must not be addressed - `addressed` is where that is stated,
+    #: and it is the same line the door calls, so the two cannot disagree.
+    assert "const addressed = (path) => scoped(path) && !path.startsWith('/provider');" in CODE, (
+        "the provider routes are addressed as though they named a conversation")
     body = CODE[CODE.index("function readStatus(path, r)"):]
     body = body[:body.index(chr(10) + "}")]
     assert "410" in body and "vanish()" in body, (
@@ -769,7 +781,7 @@ def test_a_page_older_than_the_server_says_so_instead_of_going_quiet():
     js = (whole("async function door(") + chr(10)
           + whole("function readStatus(") + chr(10)
           + whole("function outOfDate(") + chr(10)
-          + "let notices = [], vanished = false, outdated = false, status = 200;\nglobalThis.at = p => p;\nglobalThis.scoped = () => true;\nglobalThis.orphan = (kind, t) => notices.push(t);\nglobalThis.vanish = () => { vanished = true; };\nglobalThis.fetch = async () => ({status, ok: status >= 200 && status < 300});\n(async () => {\n  const out = {};\n  status = 200; await door('/live/browsers?s=x'); out.afterOk = notices.length;\n  status = 404; await door('/live/address?s=x');\n  out.afterFirst = notices.length; out.text = notices[0] || '';\n  await door('/live/address?s=x'); out.afterSecond = notices.length;\n  status = 410;\n  try { await door('/chat/send?s=x'); } catch (e) { out.threw = true; }\n  out.vanished = vanished;\n  process.stdout.write(JSON.stringify(out));\n})();")
+          + "let notices = [], vanished = false, outdated = false, status = 200;\nglobalThis.at = p => p;\nglobalThis.scoped = () => true;\nglobalThis.addressed = () => true;\nglobalThis.orphan = (kind, t) => notices.push(t);\nglobalThis.vanish = () => { vanished = true; };\nglobalThis.fetch = async () => ({status, ok: status >= 200 && status < 300});\n(async () => {\n  const out = {};\n  status = 200; await door('/live/browsers?s=x'); out.afterOk = notices.length;\n  status = 404; await door('/live/address?s=x');\n  out.afterFirst = notices.length; out.text = notices[0] || '';\n  await door('/live/address?s=x'); out.afterSecond = notices.length;\n  status = 410;\n  try { await door('/chat/send?s=x'); } catch (e) { out.threw = true; }\n  out.vanished = vanished;\n  process.stdout.write(JSON.stringify(out));\n})();")
     done = subprocess.run([node, "-e", js], capture_output=True, text=True,
                           encoding="utf-8", timeout=30)
     assert done.returncode == 0, done.stderr

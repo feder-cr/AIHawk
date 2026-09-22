@@ -300,7 +300,18 @@ async def test_the_app_exposes_exactly_the_routes_the_page_calls():
                      # the chat is a second way to move the same thing, which is
                      # two things that can disagree about which browser is
                      # current.
-                     "/live/browsers"}
+                     "/live/browsers",
+                     # ⛔ THE PROVIDER PANEL, ADDED WITH ORCAROUTER. Eight
+                     # routes rather than one, because the two authentication
+                     # entries and the catalog are four different questions:
+                     # what is selected, which models it can offer, which key
+                     # is held, and where a sign-in has got to. Every one of
+                     # them is under `/provider` so the page's single door does
+                     # not append a conversation id to a question about the
+                     # whole interface.
+                     "/provider/state", "/provider/choose", "/provider/key",
+                     "/provider/models", "/provider/refresh",
+                     "/provider/connect", "/provider/login", "/provider/cancel"}
 
     called = {m for m in re.findall(r"""fetch\(\s*[`'"]([^`'"?]+)""", PAGE)}
     unserved = sorted(called - paths)

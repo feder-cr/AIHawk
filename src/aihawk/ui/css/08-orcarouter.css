@@ -1,0 +1,93 @@
+/* ⛔ THE PROVIDER PANEL, AND WHY IT IS A PANEL RATHER THAN A DIALOG. It holds
+   two authentication entries, a model selector and a status line, and every one
+   of them is something a person reads before acting - a modal that has to be
+   answered before the page works again would be the wrong shape. It opens over
+   the same ground the session column does, at the same width, so the two read
+   as one mechanism; and like the column it covers rather than pushes, because
+   the conversation behind it must not move under somebody's eyes.
+
+   ⛔ IT IS `--raised` AND NOT `--well`, for the reason recorded beside the
+   column: the recessed rung against the ground is 1.04:1, so the edge that
+   says "this is on top of that" would be invisible and the shadow would be
+   carrying the separation alone. */
+#orcapanel { position:absolute; top:0; bottom:0; right:0;
+             width:var(--drawer);
+             z-index:6; display:flex; flex-direction:column;
+             background:var(--raised); border-left:1px solid var(--line-3);
+             box-shadow:-18px 0 36px -14px var(--shade-3) }
+#orcapanel:not([hidden]){ animation:orcarain 150ms ease-out }
+@keyframes orcarain{ from{ transform:translateX(100%) } }
+
+/* The header lines up with the conversation's, exactly as the column's does:
+   same height, same padding, so the two panels read as one row across the app. */
+#orcahead { flex:none; height:var(--topbar); display:flex; align-items:center;
+            gap:8px; padding:0 var(--s3);
+            border-bottom:1px solid var(--line-1) }
+#orcahead .label{ flex:1 }
+/* The close control is the same pill as every other control on a bar, and it
+   takes the body size rather than a caption size: it is a thing you read and
+   press, not a label. */
+#orcadone { height:var(--h-ctl); width:var(--h-ctl); display:inline-flex;
+            align-items:center; justify-content:center;
+            font-family:var(--sans); cursor:pointer; color:var(--fg-2);
+            background:var(--raised); border:1px solid var(--line-2);
+            border-radius:var(--r-pill) }
+#orcadone:hover{ background:var(--hover); color:var(--fg) }
+#orcadone:active{ background:var(--top) }
+
+/* ⛔ THE PANEL ANSWERS IN THE PANEL. A refusal, a bad key and a failed sign-in
+   are all reported here rather than into the transcript, which - with the panel
+   open - is the thing the panel is covering. Same colours as the column's own
+   status line, so there is one description of what an error looks like. */
+#orcasay { flex:none; margin:0 var(--s2); padding:6px 8px;
+           font-size:var(--t-label); line-height:1.4; color:var(--err);
+           background:var(--err-fill); border-radius:var(--r-sm) }
+#orcasay:empty{ display:none }
+
+#orcabody { flex:1; overflow:auto; padding:var(--s3);
+            display:flex; flex-direction:column; gap:var(--s4) }
+.orcablock{ display:flex; flex-direction:column; gap:var(--s2); margin:0 }
+/* The two entries are headings rather than labels, because a screen reader
+   moving by heading has to be able to reach the second way in without walking
+   the first one. They are the body size and quiet ink, like every other label
+   on a bar. */
+.orcablock h2{ margin:0; font-size:var(--t-ui); font-weight:600; color:var(--fg-2) }
+.orcablock .sm{ margin:0; font-size:var(--t-label); line-height:1.45;
+                color:var(--fg-3) }
+.orcablock code{ font-family:var(--mono); font-size:var(--t-mono) }
+.orcarow{ display:flex; flex-wrap:wrap; gap:var(--s2) }
+
+/* ⛔ EVERY CONTROL HERE IS THE ONE CONTROL THIS PAGE ALREADY HAS, at the one
+   height the bar controls use. A second button style invented for a panel is
+   how a product ends up with two kinds of button that mean the same thing. */
+#orcasave, #orcachear, #orcaconnect, #orcacancel, #orcasubmit, #orcarefresh{
+  height:var(--h-ctl); display:inline-flex; align-items:center;
+  font-family:var(--sans); font-size:var(--t-ui); cursor:pointer;
+  color:var(--fg-2); background:var(--raised); border:1px solid var(--line-2);
+  padding:0 var(--s3); border-radius:var(--r-pill) }
+#orcasave:hover:not(:disabled), #orcachear:hover:not(:disabled),
+#orcaconnect:hover:not(:disabled), #orcacancel:hover:not(:disabled),
+#orcasubmit:hover:not(:disabled), #orcarefresh:hover:not(:disabled){
+  background:var(--hover); color:var(--fg) }
+/* The one control that issues a credential is the one that carries the accent,
+   so the two entries are not two identical buttons with different words. */
+#orcaconnect{ color:var(--on-accent); background:var(--accent);
+              border-color:var(--accent) }
+#orcaconnect:hover:not(:disabled){ background:var(--accent-hi); color:var(--on-accent) }
+#orcachear[data-armed]{ color:var(--err); border-color:var(--err-edge);
+                        background:var(--err-fill) }
+
+#orcakey, #orcacode, #orcapick{
+  height:var(--h-ctl); width:100%; box-sizing:border-box;
+  font-family:var(--mono); font-size:var(--t-mono); color:var(--fg);
+  background:var(--well); border:1px solid var(--line-2);
+  border-radius:var(--r); padding:0 var(--s2) }
+#orcapick{ font-family:var(--sans); font-size:var(--t-ui) }
+#orcakey:focus-visible, #orcacode:focus-visible, #orcapick:focus-visible{
+  outline:2px solid var(--fg-4); outline-offset:1px }
+/* The selector is the one place a long vendor-prefixed id is drawn in full, and
+   it must not be clipped by the panel's own width. */
+#orcapick option{ background:var(--raised); color:var(--fg) }
+#orcawhere{ margin:0; font-size:var(--t-label); line-height:1.45;
+            color:var(--fg-3) }
+#orcawhere a{ color:var(--fg-2) }

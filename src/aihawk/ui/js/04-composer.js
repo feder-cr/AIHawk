@@ -164,10 +164,16 @@ let outdated = false;
    have `?s=` appended. Until 0.52.0 that was two doors, `door` and
    `plainDoor`, and the caller chose: two of the set-level routes went
    through the addressed one anyway, carrying a `?s=` the server ignored.
-   One door, and the rule is one line a reader can check. */
+   One door, and the rule is two lines a reader can check. */
 const scoped = (path) => !path.startsWith('/sessions');
+/* ⛔ TWO FAMILIES CARRY NO ID NOW. `/sessions` is about the SET of
+   conversations; `/provider` is about the model rather than about anything
+   anybody asked, and an id appended to one of those would be ignored by the
+   server and would make the page declare a conversation it is only asking a
+   setting of. */
+const addressed = (path) => scoped(path) && !path.startsWith('/provider');
 async function door(path, init){
-  return readStatus(path, await fetch(scoped(path) ? at(path) : path, init));
+  return readStatus(path, await fetch(addressed(path) ? at(path) : path, init));
 }
 
 function readStatus(path, r){

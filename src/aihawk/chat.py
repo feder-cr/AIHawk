@@ -9,6 +9,7 @@ from .agent import Brain, said_only
 from .link import Link
 from .quiet import swallow
 from . import chats
+from . import orcarouter
 from .storage import DEFAULT_SESSION_ID
 
 
@@ -71,6 +72,13 @@ class ChatService:
         self.model_label = model_label
         self._busy = asyncio.Lock()
         self._task: Optional[asyncio.Task] = None
+        #: The OrcaRouter key this conversation sends, when it is running on
+        #: OrcaRouter at all. None under the default provider, where the key
+        #: belongs to the process rather than to the conversation.
+        self._credential = None
+        #: Where a refused key is recorded, when this conversation is the one
+        #: that found out. Set by the registry beside the credential.
+        self._credentials = None
         #: Which conversation the history belongs to. A reconnecting page says
         #: how far it got with `Last-Event-ID`, and that position only means
         #: something inside one conversation: after a reset, or after the
@@ -91,6 +99,76 @@ class ChatService:
         which is a wrong answer that looks exactly like a right one.
         """
         return self._link
+
+    def set_brain(self, brain: Brain, model_label: str) -> None:
+        """Change the model behind this conversation, mid-flight.
+
+        ⛔ THE MODEL IS A PROPERTY OF THE CONVERSATION, NOT OF THE PROCESS, and
+        that is the whole reason this exists. `Sessions` builds every brain from
+        one factory chosen at startup, which was right while there was one
+        provider: the process held one key, so every conversation had to speak
+        with it. A provider the user selects from a panel can be changed while
+        the page is open, and if the brain were fixed at spawn the panel would
+        be a control that draws a new name and sends the old provider's
+        requests.
+
+        ⛔ AND IT IS REPLACED RATHER THAN MUTATED. A `Conversation` holds the
+        client it was built with and the model id it was built for, both of them
+        in its own attributes; writing over them from here would be a second
+        place that knows how a conversation is put together. A new brain starts
+        from the system message and an empty transcript, which is the honest
+        thing to do: the previous provider's messages are not this one's to
+        continue.
+
+        Refused while a run is in flight, for the same reason `reset` is: the
+        running turn holds the old brain and swapping it mid-answer would drop
+        the answer of a turn somebody is watching.
+        """
+        if self._busy.locked():
+            return False
+        self._brain = brain
+        self.model_label = model_label
+        return True
+
+    def use_credential(self, credential, store=None) -> None:
+        """Say which OrcaRouter key this conversation sends, and where a
+        refusal of it is recorded.
+
+        ⛔ SET BY THE REGISTRY, WHICH IS THE THING THAT KNOWS. A conversation
+        does not choose a credential and cannot obtain one: the registry builds
+        it once from the flag, the environment or the store, and hands the same
+        one to every conversation. What the conversation needs it for is the
+        one moment a request is REFUSED - the sentence a person needs then is
+        about the key rather than the task, and the exact generation that was
+        rejected has to be the one flagged so a sign-in that happened in
+        between cannot be blamed for it.
+
+        The store is passed with it rather than reached for, so this module
+        does not need to know where a key lives - which is the whole point of
+        having one place that does.
+        """
+        self._credential = credential
+        self._credentials = store
+
+    async def _refused(self, exc) -> bool:
+        """Whether the provider refused the key, and if so, say so properly.
+
+        ⛔ ONLY A 401, AND ONLY THE KEY THAT WAS ACTUALLY SENT. A rate limit, a
+        5xx and a dropped connection are all failures this must not report as a
+        dead key. And the flag is set on the GENERATION that was sent, so a
+        sign-in that happened while this request was in the air - which has
+        already moved the generation on - is never the credential a late answer
+        to an old request disables.
+        """
+        if self._credential is None or not orcarouter.is_auth_failure(exc):
+            return False
+        store = self._credentials or orcarouter.Credentials()
+        if store.mark_needs_reauth(self._credential.generation):
+            await self.emit("auth", "reauth")
+        await self.emit("err", "OrcaRouter refused the key this conversation was "
+                        "using, so it has stopped until a new one is supplied. "
+                        "Sign in again from the OrcaRouter panel, or paste a key.")
+        return True
 
     def save(self) -> None:
         """Write this conversation down as it stands.
@@ -266,6 +344,15 @@ class ChatService:
                 await self.emit("note", "Stopped.")
                 raise
             except Exception as exc:
+                # ⛔ A REFUSED KEY IS NOT A BROKEN TASK, AND IT WAS BEING SAID
+                # AS ONE. Everything below this line is the right sentence for
+                # a tool that failed and the wrong one for a credential: it
+                # tells the person their instruction ended early, when what
+                # happened is that the provider would not take the key - and
+                # the one action that fixes it, signing in again, is not
+                # mentioned anywhere on the page.
+                if await self._refused(exc):
+                    raise
                 # ⛔ AND THIS PRINTED A PYTHON CLASS NAME AND THE PROVIDER'S
                 # RAW JSON INTO THE CONVERSATION. It is the one line in the
                 # product a person reads at the exact moment something has gone

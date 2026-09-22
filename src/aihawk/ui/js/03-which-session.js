@@ -75,6 +75,12 @@ const onEvent = (e) => {
          quiet = setTimeout(() => thread.setAttribute('aria-live', 'polite'), 200); }
   switch(m.kind){
     case 'model': $('model').textContent = m.text; $('model').hidden = false; break;
+    /* ⛔ THE KEY WAS REFUSED, AND THE PAGE HAS TO SAY SO WHERE THE KEY IS.
+       This is not an error in the conversation: nothing the person asked is
+       at fault, and the panel is where the key is set. It is drawn there
+       rather than into the transcript, and the badge beside it stops naming a
+       model this interface is no longer able to ask for. */
+    case 'auth': drawProvider(orcaState); showOrca(true); break;
     /* Sent to every listener, so a second tab clears too instead of showing a
        transcript the server has already forgotten. */
     /* ⛔ ONE WORD, TWO REASONS, AND ONLY ONE OF THEM IS A REASON TO

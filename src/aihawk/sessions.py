@@ -71,6 +71,11 @@ class Sessions:
         # never `Link` itself, which has its own tests, and never a real
         # subprocess, which `tests/mcp_server/test_stdio_e2e.py` proves.
         self._open_link = open_link or self._spawn_link
+        #: The OrcaRouter key every conversation sends, and where a refused one
+        #: is recorded. Both are None under the default provider, where the
+        #: credential belongs to the process rather than to a conversation.
+        self._credential = None
+        self._credentials = None
         #: ⛔ ONE CONVERSATION IS MADE AT A TIME, AND THE COST OF THAT IS THE
         #: POINT. Making one is the slow thing here - a process starts and
         #: shakes hands - and it was done OUTSIDE any guard, so every request
@@ -142,9 +147,48 @@ class Sessions:
         link = await self._open_link(at)
         service = ChatService(link, self._make_brain(),
                               model_label=self.model_label, session_id=at)
+        if self._credential is not None:
+            service.use_credential(self._credential, self._credentials)
         service.restore()
         self._live[at] = service
         return service
+
+    def use_credential(self, credential, store=None) -> None:
+        """The key every conversation of this interface sends, and where a
+        refusal is recorded. Handed to the conversations that already exist as
+        well as the ones made later: a sign-in that happens while the page is
+        open must reach the conversation that is about to be asked something,
+        not only the next one somebody opens.
+        """
+        self._credential = credential
+        self._credentials = store
+        for service in self._live.values():
+            service.use_credential(credential, store)
+
+    def rewire(self, make_brain, model_label: str) -> int:
+        """Point every open conversation at a new brain, and answer how many.
+
+        ⛔ THE MODEL IS CHOSEN WHILE THE PAGE IS OPEN, so the registry cannot
+        keep handing out the brain it was constructed with. `_make_brain` is
+        read at the moment a conversation is made, which is right for a
+        process that knows its provider at startup and wrong the moment a
+        provider can be selected from the interface: the panel would draw the
+        new model on every pane while the conversations already open went on
+        sending the old provider's requests, and only a reload would fix it.
+
+        Conversations that are mid-run are left alone - `set_brain` refuses -
+        because a turn in flight holds the brain it started with, and dropping
+        its answer is worse than finishing on the previous model. A conversation
+        on disk but not open is not touched at all: it reads the factory the
+        next time it is asked for, which is the same thing with less work.
+        """
+        self._make_brain = make_brain
+        self.model_label = model_label
+        changed = 0
+        for service in self._live.values():
+            if service.set_brain(make_brain(), model_label):
+                changed += 1
+        return changed
 
     def _free_id(self) -> str:
         """An id no conversation has. Read under `_making`, because a

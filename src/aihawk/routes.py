@@ -9,6 +9,7 @@ them. `build_app` now does the one thing its name says.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import AsyncIterator
 
@@ -414,8 +415,153 @@ async def browsers(request: Request) -> JSONResponse:
 # seconds ago cannot know.
 
 
-def build_app(sessions: Sessions) -> Starlette:
-    """The app: these routes, over this registry of conversations."""
+# --- the provider, and the two ways in ------------------------------------------
+#
+# ⛔ EVERY ROUTE HERE IS UNDER `/provider`, AND THAT IS NOT COSMETIC. The page
+# has one door for requests and it appends `?s=` to every path that does not
+# start with `/sessions`; these are about this interface rather than about one
+# conversation, so they must not carry a conversation id. `build_app` also
+# refuses an id nobody declared, so a provider route under the addressed half
+# would be refused whenever the page's conversation had been deleted - which is
+# exactly when somebody reaches for the sign-in.
+
+async def provider_state(request: Request) -> JSONResponse:
+    """What the panel draws: the provider, the model, and whether a key is held.
+
+    ⛔ THE KEY IS MASKED BY THE OBJECT THAT HOLDS IT. Nothing on this route
+    reads the credential's value, and the only field a browser receives is the
+    one `mask` produced.
+    """
+    return JSONResponse(request.app.state.provider.state())
+
+
+async def provider_choose(request: Request) -> JSONResponse:
+    """Move to a provider, and to a model within it."""
+    body = await request.json()
+    body = body if isinstance(body, dict) else {}
+    try:
+        state = request.app.state.provider.choose(
+            str(body.get("provider") or ""), body.get("model") or None)
+    except Exception as exc:
+        return JSONResponse({"error": _reason(exc)}, status_code=400)
+    return JSONResponse(state)
+
+
+async def provider_key(request: Request) -> JSONResponse:
+    """Store a pasted key, or clear the one that is there.
+
+    ⛔ THE KEY ARRIVES IN A POST BODY AND IS NEVER PUT IN A URL. It is not
+    echoed back, it is not in the answer, and it is not logged: the response is
+    the same masked state the panel draws.
+    """
+    body = await request.json()
+    body = body if isinstance(body, dict) else {}
+    if body.get("clear"):
+        return JSONResponse(request.app.state.provider.clear_key())
+    try:
+        state = request.app.state.provider.save_key(str(body.get("key") or ""))
+    except ValueError as exc:
+        return JSONResponse({"error": _reason(exc)}, status_code=400)
+    return JSONResponse(state)
+
+
+async def provider_models(request: Request) -> JSONResponse:
+    """The models on offer for one job, and where that list came from.
+
+    ⛔ THE CAPABILITY IS THE CALLER'S AND IT IS VALIDATED. A selector is built
+    per job - a conversation, an embedding, an image - and each one filters
+    differently; an unknown name is a request this app cannot answer honestly,
+    so it is refused rather than defaulted to chat.
+    """
+    from . import orcarouter
+
+    wanted = request.query_params.get("capability") or "chat"
+    if wanted not in orcarouter.CAPABILITIES:
+        return JSONResponse({"error": "no such capability: %s" % wanted},
+                            status_code=400)
+    return JSONResponse(request.app.state.provider.models_for(wanted))
+
+
+async def provider_refresh(request: Request) -> JSONResponse:
+    """Read the live catalog again, and answer with what the panel draws."""
+    provider = request.app.state.provider
+    await asyncio.to_thread(provider.refresh_catalog)
+    return JSONResponse(provider.state())
+
+
+async def provider_connect(request: Request) -> JSONResponse:
+    """Begin a sign-in, and answer where to send the browser.
+
+    ⛔ THE URL IS RETURNED RATHER THAN OPENED HERE. This process may have no
+    browser, may be on a machine whose browser is not where the person is, and
+    may be behind an address the callback cannot reach; the page decides, and
+    the CLI decides for itself. The one thing that never happens is the verifier
+    leaving this process - the URL carries the challenge and nothing else.
+    """
+    body = await request.json()
+    body = body if isinstance(body, dict) else {}
+    provider = request.app.state.provider
+    started = await asyncio.to_thread(
+        provider.begin_login, oob=bool(body.get("oob")))
+    return JSONResponse(started)
+
+
+async def provider_login(request: Request) -> JSONResponse:
+    """Collect a code from the loopback listener, or redeem a pasted one."""
+    from . import orcarouter
+
+    body = await request.json()
+    body = body if isinstance(body, dict) else {}
+    provider = request.app.state.provider
+    attempt = str(body.get("attempt") or "")
+    try:
+        if body.get("code"):
+            state = await asyncio.to_thread(
+                provider.finish_login, attempt, str(body["code"]).strip())
+        else:
+            state = await asyncio.to_thread(provider.collect_login, attempt)
+    except orcarouter.PkceError as exc:
+        # ⛔ ONE SENTENCE, AND IT CARRIES NO CREDENTIAL. `PkceError` is built
+        # from a status and a fixed sentence, never from the provider's body,
+        # so what the page draws is a reason rather than a response dump.
+        return JSONResponse({"state": "error", "error": _reason(exc)},
+                            status_code=400)
+    return JSONResponse(state)
+
+
+async def provider_cancel(request: Request) -> JSONResponse:
+    """End a sign-in attempt and release the listener it holds.
+
+    ⛔ THE PAGE CALLS THIS ON EVERY WAY OUT, INCLUDING `pagehide`, WITH
+    `keepalive`. Without it a tab closed mid-sign-in leaves the loopback port
+    open until the process exits, and the next attempt is refused by the port
+    that never closed.
+    """
+    body = await request.json()
+    body = body if isinstance(body, dict) else {}
+    provider = request.app.state.provider
+    return JSONResponse(
+        provider.cancel_login(str(body.get("attempt") or "") or None))
+
+
+def _reason(exc: Exception) -> str:
+    """One line for the panel, without a class name and without a body."""
+    text = " ".join(str(exc).split())
+    return text[:300] or type(exc).__name__
+
+
+def build_app(sessions: Sessions, provider=None) -> Starlette:
+    """The app: these routes, over this registry of conversations.
+
+    ⛔ THE PROVIDER IS OPTIONAL SO THAT EVERY EXISTING CALLER KEEPS WORKING.
+    Six test modules and the interface itself build this app, and only the
+    interface has a provider to hand over; a default here means the routes are
+    present either way, which is what the route-set gate checks.
+    """
+    if provider is None:
+        from .provider import Provider
+
+        provider = Provider(sessions)
     app = Starlette(exception_handlers={SessionGone: vanished}, routes=[
         Route("/", root),
         Route("/sessions", listing),
@@ -428,6 +574,15 @@ def build_app(sessions: Sessions) -> Starlette:
         Route("/chat/events", events),
         Route("/live/frame", frame),
         Route("/live/browsers", browsers),
+        Route("/provider/state", provider_state),
+        Route("/provider/choose", provider_choose, methods=["POST"]),
+        Route("/provider/key", provider_key, methods=["POST"]),
+        Route("/provider/models", provider_models),
+        Route("/provider/refresh", provider_refresh, methods=["POST"]),
+        Route("/provider/connect", provider_connect, methods=["POST"]),
+        Route("/provider/login", provider_login, methods=["POST"]),
+        Route("/provider/cancel", provider_cancel, methods=["POST"]),
     ])
     app.state.sessions = sessions
+    app.state.provider = provider
     return app

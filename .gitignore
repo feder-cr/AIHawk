@@ -165,3 +165,10 @@ job_applications/
 # Your own key, your own CV, your own address. Created from data_folder_example
 # on first run. Was tracked until it leaked an API key.
 data_folder/*.yaml
+
+# Screenshots of the provider panel, taken by scripts/orca_evidence.py against a
+# running interface. Generated output rather than source: it is a picture of one
+# machine's fleet at one moment, it is a megabyte of PNG per run, and the run
+# that produces it is the only thing that can say the picture is current. The
+# script that takes them is tracked; what it draws is not.
+/orca-evidence/

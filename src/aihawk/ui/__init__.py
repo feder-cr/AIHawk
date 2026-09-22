@@ -42,6 +42,7 @@ CSS_FILES = (
     "05-composer.css",     # the box you type in
     "06-browser.css",      # the browser bar and the live picture
     "07-stage.css",        # one screen, or two, or four
+    "08-orcarouter.css",   # the provider panel, and its two ways in
 )
 
 #: The script, in execution order.
@@ -56,6 +57,8 @@ JS_FILES = (
     "08-workspace.js",     # which browsers this session holds
     "09-stage.js",         # the screens and the strip
     "10-splitter.js",      # the separator between the panes
+    "11-orcarouter.js",    # the provider panel: the state, the model list
+    "12-orcarouter-auth.js",  # the provider panel: the two ways in
 )
 
 
