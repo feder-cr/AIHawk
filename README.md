@@ -5,8 +5,6 @@
   <img alt="invisible_playwright_mcp" src="https://raw.githubusercontent.com/feder-cr/invisible_playwright_mcp/main/assets/masks-light.png" width="150">
 </picture>
 
-# invisible_playwright_mcp
-
 **An anti detect browser and web browsing agent, open source, with an MCP server for coding agents: undetected, no captchas, no blocks. Tell it what you want in plain language.**
 
 </div>
