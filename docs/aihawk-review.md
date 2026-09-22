@@ -1,16 +1,16 @@
 ---
-title: "AIHawk, reviewed honestly by its own wiki"
-description: "What AIHawk does well, what it does not do at all, the real risks of running it, and its AGPL-to-MIT license history - written by the people who maintain it, with the conflict stated in the first line."
+title: "invisible_playwright_mcp, reviewed honestly by its own wiki"
+description: "What invisible_playwright_mcp does well, what it does not do at all, the real risks of running it, and its AGPL-to-MIT license history - written by the people who maintain it, with the conflict stated in the first line."
 parent: "Alternatives and Comparisons"
 nav_order: 19
 ---
 
-# AIHawk, reviewed honestly by its own wiki
+# invisible_playwright_mcp, reviewed honestly by its own wiki
 
-This page is the project reviewing itself: it lives on AIHawk's wiki and is
-written by AIHawk's maintainers, so it is the most conflicted review of
-AIHawk you will find. It exists anyway because most of what ranks for
-"AIHawk review" is written by nobody in particular about a repository they
+This page is the project reviewing itself: it lives on invisible_playwright_mcp's wiki and is
+written by invisible_playwright_mcp's maintainers, so it is the most conflicted review of
+invisible_playwright_mcp you will find. It exists anyway because most of what ranks for
+"invisible_playwright_mcp review" is written by nobody in particular about a repository they
 have not read, and because a first-party review can do one thing a
 third-party one cannot: state plainly what the project does not do, and be
 accountable for it. Every factual claim below is checkable against the
@@ -19,9 +19,9 @@ both read on 2026-09-03 with the default model re-read on 2026-09-08, and the
 honest move for a reader is to treat the praise with suspicion and the
 self-criticism as reliable.
 
-## What AIHawk is
+## What invisible_playwright_mcp is
 
-AIHawk is an open-source AI web agent: you describe a task in plain
+invisible_playwright_mcp is an open-source AI web agent: you describe a task in plain
 language and it drives a real browser until the task is done. The
 repository sits at about 30,300 stars and 4,600 forks, has existed since
 August 2024, and is MIT licensed. The Python package `aihawk` is on PyPI
@@ -52,7 +52,7 @@ There are two ways to run it, and they share one browser:
   assistant path above.
 
 The differentiating bet is the browser itself. Instead of driving a stock
-automation build over an automation protocol, AIHawk drives a Firefox
+automation build over an automation protocol, invisible_playwright_mcp drives a Firefox
 patched at the source level so that what a page inspects - the things
 JavaScript can read, the way input arrives - presents as a normal desktop
 machine. The agent also refuses to set form fields from JavaScript even
@@ -131,7 +131,7 @@ it, and do not submit anything a human has not read.
 
 **Prompt injection is a live category.** A hostile page can try to talk
 the model into actions you did not ask for. Big-vendor agents carry
-classifiers for this; AIHawk's standalone loop places that trust in the
+classifiers for this; invisible_playwright_mcp's standalone loop places that trust in the
 model you chose, and caution in the tasks you give it.
 
 **The UI binds to localhost for a reason.** `--host` beyond `127.0.0.1`
@@ -140,7 +140,7 @@ this, and so does this review.
 
 ## Is it legit, and which one is the real one
 
-For the searcher asking "is AIHawk safe" in the download-sense: the
+For the searcher asking "is invisible_playwright_mcp safe" in the download-sense: the
 canonical repository is
 [github.com/feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) and the
 canonical package is
@@ -154,18 +154,18 @@ make - not "trust us", but "check".
 
 ## The license history, plainly
 
-AIHawk is MIT licensed today. The relicense landed on 2 September 2026,
+invisible_playwright_mcp is MIT licensed today. The relicense landed on 2 September 2026,
 and the README states the boundary precisely: everything distributed
 before 2 September 2026 was released under AGPL-3.0 and stays under it.
 In practice: the current code can be used, modified and embedded under
 MIT's permissive terms; old snapshots and forks made from them remain
-AGPL, with its copyleft obligations. If you vendored AIHawk code before
+AGPL, with its copyleft obligations. If you vendored invisible_playwright_mcp code before
 that date, your obligations follow the license it shipped under, not the
 current one.
 
 ## Verdict
 
-Use AIHawk if the browser is your bottleneck: your tasks are real
+Use invisible_playwright_mcp if the browser is your bottleneck: your tasks are real
 browsing on sites that inspect their visitors, you want open code on your
 own machine, and you accept the token bill and the no-macOS line. Its
 engine is the most serious open-source attempt we know of at making the
@@ -182,44 +182,44 @@ afternoon and answers the only question that matters.
 
 ## Short answers to the questions that lead here
 
-**Is AIHawk legit?** The canonical repo is `feder-cr/invisible_playwright_mcp` (about 30k
+**Is invisible_playwright_mcp legit?** The canonical repo is `feder-cr/invisible_playwright_mcp` (about 30k
 stars, MIT) and the package is `aihawk` on PyPI. It is real, maintained,
 and auditable; mirrors elsewhere are not ours.
 
-**Is AIHawk safe?** The code is open for inspection before you run it,
+**Is invisible_playwright_mcp safe?** The code is open for inspection before you run it,
 and the API key is provably isolated from the browser process. The
 operational risks - account restrictions, prompt injection, what you
 log it into - are yours to manage and are listed above.
 
-**Is AIHawk free?** The software is MIT-licensed free software. Model
+**Is invisible_playwright_mcp free?** The software is MIT-licensed free software. Model
 tokens are the running cost, via your OpenRouter key or your assistant's
 subscription.
 
-**Does AIHawk work on macOS?** No. Windows and Linux only; macOS engine
+**Does invisible_playwright_mcp work on macOS?** No. Windows and Linux only; macOS engine
 builds ended at `firefox-20`.
 
-**Does AIHawk solve captchas?** No, and it does not claim to. A
+**Does invisible_playwright_mcp solve captchas?** No, and it does not claim to. A
 challenge stops the run or goes to a human.
 
-**Who maintains AIHawk?** The developer behind the `feder-cr` account,
+**Who maintains invisible_playwright_mcp?** The developer behind the `feder-cr` account,
 who also maintains the patched-Firefox engine and this wiki - which is
 exactly the conflict declared in the first line.
 
-**See also:** [Which model to use with AIHawk](which-model-to-use-with-aihawk.md)
+**See also:** [Which model to use with invisible_playwright_mcp](which-model-to-use-with-aihawk.md)
 for the token-cost side of the decision, and
-[Running AIHawk with Claude Code](running-aihawk-with-claude-code.md) for
+[Running invisible_playwright_mcp with Claude Code](running-aihawk-with-claude-code.md) for
 the MCP route.
 
 ## Sources
 
-- The [AIHawk repository](https://github.com/feder-cr/invisible_playwright_mcp): README, LICENSE, `pyproject.toml` and `tests/test_key_isolation.py` read in the working tree on 2026-09-03; stars, forks, license and creation date read via the GitHub API the same day; `src/aihawk/llm.py`, for the default model id, re-read 2026-09-08.
+- The [invisible_playwright_mcp repository](https://github.com/feder-cr/invisible_playwright_mcp): README, LICENSE, `pyproject.toml` and `tests/test_key_isolation.py` read in the working tree on 2026-09-03; stars, forks, license and creation date read via the GitHub API the same day; `src/aihawk/llm.py`, for the default model id, re-read 2026-09-08.
 - [`aihawk` on PyPI](https://pypi.org/project/aihawk/), version 0.3.0 metadata checked against the index 2026-09-04.
 - The relicense commit ("Relicense under MIT", dated 2026-09-02) in the repository history, and the README's license section stating the AGPL-3.0 boundary for earlier distributions, both read 2026-09-03.
 - For comparative claims about other tools, the pages linked above carry their own dated sources; none are repeated here.
 
 ---
 
-*This is [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp)'s wiki reviewing
-AIHawk. You have every reason to discount the compliments, so we put the
+*This is [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp)'s wiki reviewing
+invisible_playwright_mcp. You have every reason to discount the compliments, so we put the
 limitations in their own section and made every claim point at something
 you can check without trusting us.*

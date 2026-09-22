@@ -69,11 +69,11 @@ next section shows, costs no model at all.
 
 ## Scheduling it: a script, as of aihawk 0.3.0
 
-Since 0.3.0 AIHawk itself is interactive-only (`uvx aihawk ui`): there is no
+Since 0.3.0 invisible_playwright_mcp itself is interactive-only (`uvx aihawk ui`): there is no
 headless subcommand to put in cron anymore. That is less of a loss than it
 sounds, because the scheduled half of monitoring is deliberately mechanical -
 fetch the page, extract one signal, save it - and mechanical work belongs in
-code, not in model turns. The same stealth engine AIHawk drives is on PyPI as
+code, not in model turns. The same stealth engine invisible_playwright_mcp drives is on PyPI as
 a Python library with Playwright's API, so the check is a short script. This
 one runs as shown, against the public scraping sandbox:
 
@@ -188,7 +188,7 @@ yes, by orders of magnitude on cost and latency. It stops being overkill when
 the check requires reading: meaningful-change questions, prose thresholds,
 summarized deltas.
 
-**How do I schedule AIHawk to check a page every day?** Cron (or any
+**How do I schedule invisible_playwright_mcp to check a page every day?** Cron (or any
 scheduler) plus the `check_page.py` script above on the same engine: `seed`
 for a stable identity, `profile_dir` for a persistent profile, and stdout
 redirected somewhere dated. There is no built-in scheduler; a script that
@@ -229,11 +229,11 @@ All retrieved 2026-09-03.
 **See also:** [extracting data to a CSV](how-to-extract-data-to-csv-with-an-ai-agent.md),
 [agent retry loops and rate limits](agent-retry-loops-rate-limits.md),
 [the timing signal AI agents give off](ai-agent-timing-signal.md), and
-[which model to use with AIHawk](which-model-to-use-with-aihawk.md) for keeping
+[which model to use with invisible_playwright_mcp](which-model-to-use-with-aihawk.md) for keeping
 per-check cost down.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The maintainer runs
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The maintainer runs
 the two-stage version: a free diff watching always, the agent woken only to
 answer "does this matter", which is the only question worth paying it for.*

@@ -3,14 +3,14 @@ title: "Home"
 nav_order: 1
 ---
 
-# AIHawk Wiki
+# invisible_playwright_mcp Wiki
 
-AIHawk is an open-source AI browser agent: a web browsing agent with a real browser. You say what you want in plain language, and it browses, clicks, types and reads the actual web to get it done. This wiki is the reading room
+invisible_playwright_mcp is an open-source AI browser agent: a web browsing agent with a real browser. You say what you want in plain language, and it browses, clicks, types and reads the actual web to get it done. This wiki is the reading room
 around it - what an AI web agent is, how the tools in this space compare,
 what to do when an agent gets blocked, and how to put an agent to work.
 
 The [README](https://github.com/feder-cr/invisible_playwright_mcp#readme) is the fastest way to
-run AIHawk. The pages here are for the questions that come before and after:
+run invisible_playwright_mcp. The pages here are for the questions that come before and after:
 which tool fits, why something failed, and what is actually happening
 underneath. Every page on this wiki is one link away from this one.
 
@@ -41,7 +41,7 @@ browser-use, computer-use agents, and how the open-source options differ.
 - [AI browser agent vs RPA: which one fits the job](ai-browser-agent-vs-rpa.md)
 - [AI browser agent vs n8n, Zapier and Make](ai-browser-agent-vs-no-code-automation.md)
 - [Vercel agent-browser alternatives, compared honestly](agent-browser-alternatives.md)
-- [AIHawk, reviewed honestly by its own wiki](aihawk-review.md)
+- [invisible_playwright_mcp, reviewed honestly by its own wiki](aihawk-review.md)
 
 ## [When the Agent Gets Blocked](guides-when-the-agent-gets-blocked.md)
 
@@ -79,20 +79,20 @@ Task-shaped guides for putting an AI agent to work on real websites.
 - [Run an AI browser agent on a schedule](run-ai-agent-on-a-schedule.md)
 - [AI browser agent with a local LLM: what changes](ai-browser-agent-local-llm.md)
 - [Should you log your AI agent into your accounts?](should-you-log-your-ai-agent-into-accounts.md)
-- [Which model to use with AIHawk](which-model-to-use-with-aihawk.md)
+- [Which model to use with invisible_playwright_mcp](which-model-to-use-with-aihawk.md)
 - [Browser problem or model problem?](browser-problem-or-model-problem.md)
-- [Running AIHawk's browser from Claude Code](running-aihawk-with-claude-code.md)
-- [Running AIHawk's browser from Claude Desktop](running-aihawk-with-claude-desktop.md)
-- [Running AIHawk's browser from Cursor](running-aihawk-with-cursor.md)
-- [Running AIHawk's browser from Cline](running-aihawk-with-cline.md)
-- [Running AIHawk's browser from Codex](running-aihawk-with-codex.md)
-- [Running AIHawk's browser from Gemini CLI](running-aihawk-with-gemini-cli.md)
+- [Running invisible_playwright_mcp's browser from Claude Code](running-aihawk-with-claude-code.md)
+- [Running invisible_playwright_mcp's browser from Claude Desktop](running-aihawk-with-claude-desktop.md)
+- [Running invisible_playwright_mcp's browser from Cursor](running-aihawk-with-cursor.md)
+- [Running invisible_playwright_mcp's browser from Cline](running-aihawk-with-cline.md)
+- [Running invisible_playwright_mcp's browser from Codex](running-aihawk-with-codex.md)
+- [Running invisible_playwright_mcp's browser from Gemini CLI](running-aihawk-with-gemini-cli.md)
 - [The MCP server: config blocks, settings, tools](mcp-server.md)
 - [How the tools are shaped, and why](mcp-tool-design.md)
 
 ## The layer underneath
 
-AIHawk drives a Firefox patched at the C++ level so the browser itself looks
+invisible_playwright_mcp drives a Firefox patched at the C++ level so the browser itself looks
 and behaves like a normal desktop browser. That engine has its own
 documentation, maintained with the same care as this wiki: the
 [invisible_playwright wiki](https://github.com/feder-cr/invisible_playwright/wiki)

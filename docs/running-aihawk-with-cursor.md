@@ -1,12 +1,12 @@
 ---
-title: "Running AIHawk's browser from Cursor"
+title: "Running invisible_playwright_mcp's browser from Cursor"
 description: "Adding the stealth browser to Cursor via mcp.json - what a real browser adds to an editor workflow, project vs global config, first prompts, and the first-run issues."
 parent: "Using the Agent"
 nav_order: 9
 ---
 
 
-# Running AIHawk's browser from Cursor
+# Running invisible_playwright_mcp's browser from Cursor
 
 Cursor reads MCP servers from a JSON file, at one of two levels its docs
 define: `.cursor/mcp.json` inside a project, for tools scoped to that project,
@@ -17,7 +17,7 @@ this page links rather than copies. What belongs here is the Cursor-side story:
 what a browser is actually for inside an editor, how Cursor runs the tools,
 what to try first, and the first-run issues.
 
-The platform boundary first: AIHawk's engine ships for Windows (x86_64) and
+The platform boundary first: invisible_playwright_mcp's engine ships for Windows (x86_64) and
 Linux (x86_64, arm64). There is no macOS build, so on a Mac, Cursor will start
 the server and the server will have nothing to run. This combination works on
 Windows and Linux today.
@@ -60,7 +60,7 @@ available in every project, which fits a personal research tool. Project-level
 (`.cursor/mcp.json`) travels with the repository, which fits a team that wants
 "the agent can drive our staging app" to be part of the checkout. The server's
 block contains a command and arguments, no key and no secret - Cursor brings
-the model, and there is nothing to sign up for on the AIHawk side - so
+the model, and there is nothing to sign up for on the invisible_playwright_mcp side - so
 committing it is as safe as config-committing gets; whether your
 team wants editor tooling in the repo is a team question, not a security one.
 
@@ -120,7 +120,7 @@ identity seed are the two most useful for repeated testing).
    uvx invisible-playwright fetch
    ```
 
-   The engine is cached and shared with every other way into AIHawk.
+   The engine is cached and shared with every other way into invisible_playwright_mcp.
 
 2. **The server does not appear in Cursor's MCP list.** Check the JSON, check
    the file is at one of the two documented locations, and check that `uvx`
@@ -142,7 +142,7 @@ identity seed are the two most useful for repeated testing).
 
 ## Short answers to the questions that lead here
 
-**How do I add AIHawk's browser to Cursor?** Paste the block from the
+**How do I add invisible_playwright_mcp's browser to Cursor?** Paste the block from the
 [MCP server page](mcp-server.md) into
 `.cursor/mcp.json` in a project or `~/.cursor/mcp.json` globally, both
 locations per Cursor's own MCP docs. No key, no signup; Cursor's model does
@@ -186,13 +186,13 @@ All retrieved 2026-09-03.
   this repository, for platform support, the real-input-events behavior and
   the shared engine cache.
 
-**See also:** [running AIHawk with Claude Code](running-aihawk-with-claude-code.md),
-[running AIHawk's browser from Claude Desktop](running-aihawk-with-claude-desktop.md),
+**See also:** [running invisible_playwright_mcp with Claude Code](running-aihawk-with-claude-code.md),
+[running invisible_playwright_mcp's browser from Claude Desktop](running-aihawk-with-claude-desktop.md),
 [getting an AI agent to fill out forms](ai-agent-fill-out-forms.md), and
 [extracting data to a CSV](how-to-extract-data-to-csv-with-an-ai-agent.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The strongest
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The strongest
 Cursor use the maintainer has seen is the least glamorous: the agent filling
 out your own half-built form, badly, and telling you exactly where it broke.*

@@ -92,7 +92,7 @@ model bill; your suite is hundreds of assertions before the coffee cools.
 
 The two are not rivals; they are a feeder pattern. The agent explores and
 finds; what it finds worth protecting, you pin down as a scripted test. For
-that half, AIHawk's own engine is a library with Playwright's API -
+that half, invisible_playwright_mcp's own engine is a library with Playwright's API -
 [invisible_playwright](https://github.com/feder-cr/invisible_playwright) -
 and its [wiki](https://github.com/feder-cr/invisible_playwright/wiki) covers
 scripted browser automation in a depth this page does not attempt. Realistic
@@ -170,13 +170,13 @@ All retrieved 2026-09-03.
   `--seed`, `--profile-dir`, and the agent loop the flakiness section
   describes.
 
-**See also:** [running AIHawk's browser from Cursor](running-aihawk-with-cursor.md),
-[running AIHawk's browser from Cline](running-aihawk-with-cline.md),
+**See also:** [running invisible_playwright_mcp's browser from Cursor](running-aihawk-with-cursor.md),
+[running invisible_playwright_mcp's browser from Cline](running-aihawk-with-cline.md),
 [getting an AI agent to fill out forms](ai-agent-fill-out-forms.md), and
 [browser problem or model problem?](browser-problem-or-model-problem.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The most useful
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The most useful
 bug report the maintainer ever got from the agent was three words about a
 form nobody had touched in months: "Continue does nothing."*

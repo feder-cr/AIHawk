@@ -56,7 +56,7 @@ for this shape: solve it in a real browser, save the state, start from there.
 
 ## What this project does not do
 
-**AIHawk does not solve captchas, and does not promise non-detection.** The
+**invisible_playwright_mcp does not solve captchas, and does not promise non-detection.** The
 engine is a Firefox patched at the C++ source, which changes what a page can
 observe about the browser. It does not read a challenge, does not fetch a token,
 and does not repair an address's reputation or an agent's rhythm.
@@ -108,5 +108,5 @@ attributing the failure, and
 ---
 
 *Written by a project that would sell more if it claimed otherwise. The section
-saying what AIHawk does not do is the point of the page, not a disclaimer at the
+saying what invisible_playwright_mcp does not do is the point of the page, not a disclaimer at the
 bottom of it.*

@@ -1,18 +1,18 @@
 ---
-title: "Running AIHawk's browser from Claude Code"
+title: "Running invisible_playwright_mcp's browser from Claude Code"
 description: "Two commands install the stealth browser in Claude Code as a plugin, with its MCP server and a setup skill. What happens on first run, which tools Claude gains, prompts to try first, and the two things that go wrong."
 parent: "Using the Agent"
 nav_order: 4
 ---
 
 
-# Running AIHawk's browser from Claude Code
+# Running invisible_playwright_mcp's browser from Claude Code
 
-If you already use Claude Code, you do not need AIHawk's interface, its CLI, or
+If you already use Claude Code, you do not need invisible_playwright_mcp's interface, its CLI, or
 an OpenRouter key. Claude Code brings the model; you add the browser to it. The
-browser is the same MCP server AIHawk itself talks to -
+browser is the same MCP server invisible_playwright_mcp itself talks to -
 [the MCP server](mcp-server.md) -
-so anything AIHawk's own interface can do, your assistant can do too, and that
+so anything invisible_playwright_mcp's own interface can do, your assistant can do too, and that
 is by construction: the interface holds no privileged access, it calls the same
 tools over the same protocol as any other client.
 
@@ -35,7 +35,7 @@ claude plugin marketplace add feder-cr/invisible_playwright_mcp
 claude plugin install aihawk@feder-cr
 ```
 
-The first line registers the AIHawk repository as a plugin marketplace, which
+The first line registers the invisible_playwright_mcp repository as a plugin marketplace, which
 it is: the repository carries the marketplace file and is the plugin. The
 second installs `aihawk` from it, at user scope by default, so it is available
 in every project rather than only the directory you happened to be in. The
@@ -68,14 +68,14 @@ uvx invisible-playwright fetch
 ```
 
 It is cached afterwards and shared by every way into the engine, including
-AIHawk's own interface if you later run that too.
+invisible_playwright_mcp's own interface if you later run that too.
 
 ## What Claude actually gains
 
 A set of browser tools, prefixed with the server's name: `aihawk` from the
 plugin, or whatever you chose when registering by hand. The
 authoritative list is whatever `/mcp` shows for your installed server version;
-the families, with the names AIHawk's own client code knows them by:
+the families, with the names invisible_playwright_mcp's own client code knows them by:
 
 - **Navigation**: `browser_navigate`. A browser drives one page; when you
   need a second, `browser_open` opens the `support` browser beside it rather
@@ -140,13 +140,13 @@ results, and short steps keep its context small and its mistakes cheap.
 
 ## Short answers to the questions that lead here
 
-**How do I add AIHawk's browser to Claude Code?**
+**How do I add invisible_playwright_mcp's browser to Claude Code?**
 `claude plugin marketplace add feder-cr/invisible_playwright_mcp`, then
 `claude plugin install aihawk@feder-cr`, once, with uv installed. New
 sessions then have the browser tools in `/mcp`.
 
-**Do I need an OpenRouter key for this?** No. The key is only for AIHawk's own
-interface and CLI, where AIHawk must bring a model. In Claude Code, Claude is
+**Do I need an OpenRouter key for this?** No. The key is only for invisible_playwright_mcp's own
+interface and CLI, where invisible_playwright_mcp must bring a model. In Claude Code, Claude is
 the model.
 
 **Why does the first browsing request say the engine is downloading?** The
@@ -154,14 +154,14 @@ engine, about a quarter of a gigabyte, is downloaded by the server itself when
 it starts, and `browser_open` reports the progress rather than waiting. Run
 `uvx invisible-playwright fetch` once in a terminal to do it up front instead.
 
-**Is this different from what AIHawk's own UI drives?** No - same server, same
+**Is this different from what invisible_playwright_mcp's own UI drives?** No - same server, same
 engine, same tools. The interface is just another MCP client of it, with no
 privileged access.
 
 **Does it work on macOS?** No. The engine ships for Windows and Linux only;
 the last macOS build was `firefox-20`.
 
-**Can Claude Code and the AIHawk UI share the setup?** The downloaded engine
+**Can Claude Code and the invisible_playwright_mcp UI share the setup?** The downloaded engine
 is cached once and shared. The server process itself is per-client - each
 client starts its own - so a page open in one is not visible in the other.
 
@@ -189,14 +189,14 @@ All retrieved 2026-09-03.
   the server itself: config blocks for other clients, server-side options, and
   the current tool list.
 
-**See also:** [running AIHawk with Claude Desktop](running-aihawk-with-claude-desktop.md),
-[running AIHawk with Cursor](running-aihawk-with-cursor.md),
+**See also:** [running invisible_playwright_mcp with Claude Desktop](running-aihawk-with-claude-desktop.md),
+[running invisible_playwright_mcp with Cursor](running-aihawk-with-cursor.md),
 [how to extract data to CSV with an AI agent](how-to-extract-data-to-csv-with-an-ai-agent.md),
 and [browser problem or model problem?](browser-problem-or-model-problem.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp) wiki. Claude Code is
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. Claude Code is
 the shortest route into this browser - a plugin, against a config file
 everywhere else - and the README calls the engine fetch "the download nobody
 warns you about", so consider yourself warned.*

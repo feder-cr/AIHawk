@@ -71,7 +71,7 @@ The test that sorts every case: could a person answer this with search
 results alone, without ever touching a page's controls? If yes, pipeline. If
 they would need to click, log in, or turn pages, browser.
 
-## Running browser-grade research on AIHawk
+## Running browser-grade research on invisible_playwright_mcp
 
 Two ways in, matching the two ways into everything here. Through an MCP
 client - [Claude Code](running-aihawk-with-claude-code.md),
@@ -87,7 +87,7 @@ scripted, one question per run:
 > the three most common price bands you observe. Ground every number in what
 > the pages show; do not estimate.
 
-(Typed into `uvx aihawk ui`, or handed to your assistant with AIHawk's
+(Typed into `uvx aihawk ui`, or handed to your assistant with invisible_playwright_mcp's
 browser attached - research is judgment work, and since aihawk 0.3.0 the
 judgment paths are those two.)
 
@@ -150,7 +150,7 @@ minutes and forty cents for twenty-plus sources, are an economics a
 sequential browser cannot match. It cannot log in as you, render
 interaction-gated content, or walk an archive in order. Different machine.
 
-**Can AIHawk do deep research?** It does the browser half well: driven
+**Can invisible_playwright_mcp do deep research?** It does the browser half well: driven
 reading of hard sources, in its own interface or through an MCP client where
 your assistant synthesizes. It does not fan out
 across twenty sources in parallel, and this page does not pretend otherwise.
@@ -190,11 +190,11 @@ the repository:
 **See also:** [what is an AI web agent?](ai-web-agent-explained.md),
 [AI browser agents vs traditional scraping](ai-browser-agents-vs-traditional-scraping.md),
 [extracting data to a CSV](how-to-extract-data-to-csv-with-an-ai-agent.md),
-and [which model to use with AIHawk](which-model-to-use-with-aihawk.md) for
+and [which model to use with invisible_playwright_mcp](which-model-to-use-with-aihawk.md) for
 the cost half of the equation.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp) wiki, which just spent
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki, which just spent
 its second section telling you when not to use its own product. That is the
 register the rest of the page earns its claims in.*

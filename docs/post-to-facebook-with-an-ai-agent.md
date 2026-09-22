@@ -98,7 +98,7 @@ with the account's owner, who is the only person entitled to make it.
 
 ## The walkthrough, as it actually goes
 
-What a session looks like with AIHawk, and what to expect from each step:
+What a session looks like with invisible_playwright_mcp, and what to expect from each step:
 
 **Login persists; do it yourself, once.** Start with a profile directory so
 the session survives restarts - the README describes `--profile-dir` as a
@@ -122,13 +122,13 @@ explicit about both the content and the boundary:
 
 The composer is a custom widget of the kind
 [the forms page](ai-agent-fill-out-forms.md) documents: expect a click to
-open it, a pause, then typing through real key events - AIHawk refuses to
+open it, a pause, then typing through real key events - invisible_playwright_mcp refuses to
 inject text by script, because pages can tell the difference. Then you read
 the draft in the browser and the final click is yours. That division is not
 caution theater; it is the README's own rule for the whole tool: do not
 submit anything a human has not read.
 
-**Know the media boundary.** AIHawk's toolset has no file-upload action, so
+**Know the media boundary.** invisible_playwright_mcp's toolset has no file-upload action, so
 the agent cannot attach a photo: text posts and link posts are within its
 reach, and a photo post needs your hands for the attachment step (run with
 `--headed` and the browser is a normal window you can click in). Link
@@ -194,6 +194,6 @@ rest of [Using the Agent](guides-using-the-agent.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The rule about
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The rule about
 keeping the final click human is not legal decoration; it is how the
 maintainer uses the agent on accounts that matter to him.*

@@ -47,7 +47,7 @@ the same question.
 **mcp-camoufox** exposes Camoufox over MCP with a large tool surface, installed
 through npx. **mcp-stealth-chrome** wraps nodriver together with a TLS-spoofing
 HTTP client. **patchright-mcp-lite** is the opposite design: four tools, one
-job. **AIHawk** is ours, and the server ships inside the same package as the
+job. **invisible_playwright_mcp** is ours, and the server ships inside the same package as the
 interface: [the MCP server](mcp-server.md) has the config block.
 
 Tool count is the axis these wrappers advertise on and it is the least useful
@@ -65,7 +65,7 @@ specific challenge product, and a vision-based solver for another. They may
 work. We have not run them, and a claim in a README is a claim.
 
 We are explicit about this because the same restraint applies to us in the other
-direction: **AIHawk does not solve captchas and does not promise
+direction: **invisible_playwright_mcp does not solve captchas and does not promise
 non-detection.** A patched engine changes what the browser looks like. It does
 not read a challenge for you, it does not repair a datacenter IP's reputation,
 and it does not slow down an agent that is clicking faster than a person could.
@@ -133,6 +133,6 @@ to the others first, which is the cheaper question to answer.
 ---
 
 *Written while maintaining one of the servers listed. The section naming the
-unverified claims applies to us first: the paragraph saying what AIHawk does not
+unverified claims applies to us first: the paragraph saying what invisible_playwright_mcp does not
 do is there so the rest of the page can be read as description rather than
 advertising.*

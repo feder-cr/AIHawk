@@ -97,7 +97,7 @@ it is not "saving money" for most people. It is three specific situations:
 The mechanics mirror the other platforms. Keep the session with
 `--profile-dir` and log in yourself once; ask for the post to be typed and
 for the agent to stop before the Post button; read it; click it yourself.
-AIHawk types through real input events rather than script injection, the
+invisible_playwright_mcp types through real input events rather than script injection, the
 composer is an ordinary rich-text widget by
 [the forms page's](ai-agent-fill-out-forms.md) standards, and the
 human-review rule is the README's own: nothing submits that a person has
@@ -176,6 +176,6 @@ All retrieved 2026-09-03.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The page that
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The page that
 tells you to pay X fifteen cents a day instead of running our agent is the
 page you can trust about the cases where the agent is the right call.*

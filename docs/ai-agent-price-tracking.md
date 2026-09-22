@@ -36,7 +36,7 @@ coupon-only price, a subscription price beside the one-time price. A vague
 between runs.
 
 Naming the one you want, and what to ignore, fixes that. Typed into
-`uvx aihawk ui`, or handed to your assistant with AIHawk's browser attached:
+`uvx aihawk ui`, or handed to your assistant with invisible_playwright_mcp's browser attached:
 
 > Go to `<the product page URL>`. Find the price a first-time buyer pays
 > today: no subscription, no coupon. Ignore any crossed-out or "was" price. If
@@ -98,7 +98,7 @@ Two obstacles, two fixes. Some prices only appear after signing in, and
 `--profile-dir` keeps that session on disk so the agent does not sign in
 again next run.
 
-A region redirect is different: the price is locale-specific, and AIHawk's
+A region redirect is different: the price is locale-specific, and invisible_playwright_mcp's
 `--proxy` option sets an egress point the timezone and locale follow, so a
 check from the wrong country returns the wrong currency or inventory. Run
 through a proxy in the country you need, or accept that a home connection
@@ -156,13 +156,13 @@ pages a day, a script is cheaper, faster, and the better tool.
 
 Retrieved 2026-09-05.
 
-- [AIHawk README](https://github.com/feder-cr/invisible_playwright_mcp#readme), for the
+- [invisible_playwright_mcp README](https://github.com/feder-cr/invisible_playwright_mcp#readme), for the
   `uvx aihawk ui` interface, the `--proxy` option and its effect on timezone,
   locale and egress, and the `--profile-dir` option for keeping a session
   between runs.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The agent reads
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The agent reads
 the number that is actually on the screen; catching a mispriced sale banner
 before checkout is still the reader's job.*

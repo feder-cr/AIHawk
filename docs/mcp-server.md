@@ -26,18 +26,18 @@ below is a thin wrapper over the engine, and the interface (`aihawk ui`) is a
 client of it like any other.
 
 **How to install this, and the two ways to use it, are in
-[AIHawk's README](https://github.com/feder-cr/invisible_playwright_mcp#readme).** This page keeps
+[invisible_playwright_mcp's README](https://github.com/feder-cr/invisible_playwright_mcp#readme).** This page keeps
 what the server itself owns: the config block for clients that take a file, the
 settings, and the tools.
 
 ## Adding it to your client
 
 Claude Code and Codex install it as a plugin, Gemini CLI as an extension, and
-all three are in AIHawk's README. The rest take a config
+all three are in invisible_playwright_mcp's README. The rest take a config
 file, and the file is not the same
 everywhere: **three different top-level keys, and one of them is not even
 JSON.** Find yours below. The block only tells the client how to start the
-server; installing `uv` comes first, as AIHawk's README shows. The engine, the
+server; installing `uv` comes first, as invisible_playwright_mcp's README shows. The engine, the
 server downloads on its own the first time it starts, and `browser_open`
 reports the progress until it is there.
 
@@ -153,7 +153,7 @@ between what the browser says it is and where it appears to be.
 | `STEALTHFOX_HEADLESS` | `0` to run headed; headless by default. Decided by each launch: a saved session never records it, so a browser reopened by a headless server stays hidden even if it was last used headed. |
 | `STEALTHFOX_MCP_TRANSPORT` | `http` to serve over streamable HTTP instead of stdio. Default is stdio, which is what MCP clients expect. What else changes when you flip it, including the one thing that changes silently: [local or remote](local-vs-remote-mcp-server.md). |
 | `STEALTHFOX_MCP_HOST` | Bind address for the HTTP transport. Default `127.0.0.1`. |
-| `STEALTHFOX_MCP_PORT` | Port for the HTTP transport. Default `8766`. It used to be `8765`, the AIHawk interface's own default, so running both meant a bind error with nothing to explain it. |
+| `STEALTHFOX_MCP_PORT` | Port for the HTTP transport. Default `8766`. It used to be `8765`, the invisible_playwright_mcp interface's own default, so running both meant a bind error with nothing to explain it. |
 | `AIHAWK_HOME` | Where saved sessions are kept. Defaults to `%APPDATA%/aihawk` on Windows, `~/Library/Application Support/aihawk` on macOS and `$XDG_DATA_HOME/aihawk` on Linux. Set it to put them on another disk. |
 
 Anything a tool call says wins over these. `browser_open` can pick another
@@ -212,7 +212,7 @@ exactly one - the two browsers below, and nothing else - so there is nothing
 here to list, name, or reach a second one of: no tool takes an id for one, and
 none can ask about one that is not its own. Which piece of work this is comes
 from how the server was STARTED, never from a tool call. `uvx aihawk` and a
-checkout run directly always land on the same one; the AIHawk interface starts
+checkout run directly always land on the same one; the invisible_playwright_mcp interface starts
 a separate server **per conversation** and tells each which one it is the
 moment it starts it, so two conversations are two processes with two saved
 files, never one server juggling several behind your back.
@@ -400,7 +400,7 @@ STEALTHFOX_MCP_TRANSPORT=http uvx aihawk        # Linux
 $env:STEALTHFOX_MCP_TRANSPORT = "http"; uvx aihawk   # Windows
 ```
 
-To SEE the browser rather than share it, [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp)
+To SEE the browser rather than share it, [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp)
 shows the live page beside the conversation.
 
 ## Notes

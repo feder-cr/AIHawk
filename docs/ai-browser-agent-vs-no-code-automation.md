@@ -87,7 +87,7 @@ That keeps the fixed-cost, reliable part on the platform built for it, and
 spends the agent's more expensive reasoning only where a connector
 genuinely does not exist. In practice that call-out is usually an HTTP
 request to whatever endpoint fronts the agent, or an MCP client talking to
-a server the agent exposes; AIHawk runs through
+a server the agent exposes; invisible_playwright_mcp runs through
 `uvx aihawk` for exactly this kind of hookup. n8n's own
 documentation describes the generic route in one line: the HTTP Request
 node "allows you to make HTTP requests to query data from any app or
@@ -96,7 +96,7 @@ they ship. That is the node the agent hangs off.
 
 ## One sentence on where we stand
 
-This wiki maintains [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp), a
+This wiki maintains [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), a
 browser agent, so take the case for the no-connector path above with that
 in mind.
 
@@ -146,6 +146,6 @@ faster than a wiki page does.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp) wiki. AIHawk is a
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. invisible_playwright_mcp is a
 browser agent, and this page's first real section tells you to use a
 no-code platform instead when a connector exists.*

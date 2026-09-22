@@ -1,6 +1,6 @@
 ---
 title: "Open-source AI browser agents"
-description: "The open-source agents that drive a real browser - browser-use, agent-browser, Skyvern, Stagehand, Nanobrowser, BrowserOS, AIHawk - compared by license, engine and how each reads a page."
+description: "The open-source agents that drive a real browser - browser-use, agent-browser, Skyvern, Stagehand, Nanobrowser, BrowserOS, invisible_playwright_mcp - compared by license, engine and how each reads a page."
 parent: "Alternatives and Comparisons"
 nav_order: 7
 ---
@@ -12,7 +12,7 @@ An AI browser agent is a language model wired to a real browser: you state a goa
 plain language, the model looks at the page, decides an action, the browser performs
 it, and the loop repeats until the goal is done or the model gives up. This page maps
 the open-source projects that actually do that today, with one disclosure before
-anything else: AIHawk is one of the entries and this is AIHawk's wiki, so read the
+anything else: invisible_playwright_mcp is one of the entries and this is invisible_playwright_mcp's wiki, so read the
 comparison knowing who wrote it. Every claim about the other projects below was read
 from that project's own repository on 2026-09-03, star counts included. Stars drift
 daily; treat them as order-of-magnitude, not scoreboard.
@@ -99,10 +99,10 @@ Model Context Protocol, and local models are supported through Ollama and LM Stu
 Choose it when you want the agent living inside the browser as a product, not a
 library in your code.
 
-### AIHawk
+### invisible_playwright_mcp
 
 30.3k stars, Python, MIT. This one is ours, so the disclosure from the top of the
-page applies to this paragraph most of all. AIHawk started as a job-application bot,
+page applies to this paragraph most of all. invisible_playwright_mcp started as a job-application bot,
 which is where the star count and the TechCrunch, Business Insider and Wired coverage
 came from, and it is now a general web agent. There are two ways in: add its MCP
 server (`uvx aihawk`) to an assistant that can run tools, such as
@@ -112,7 +112,7 @@ view (the key is required; model-free browser driving is the underlying
 library's job).
 
 The structural difference from every other entry is the browser. Everything above
-drives Chromium, Chrome or a fork of them; AIHawk drives a Firefox patched at the
+drives Chromium, Chrome or a fork of them; invisible_playwright_mcp drives a Firefox patched at the
 C++ level, the invisible_playwright engine, built so that what fingerprinting scripts
 read from it is internally consistent. That matters on pages that push back, and the
 honest boundary matters just as much: the engine addresses the browser fingerprint
@@ -136,7 +136,7 @@ rather than its second or third.
 | Skyvern | 22.9k | Python | AGPL-3.0 (anti-bot parts cloud-only) | Playwright | vision LLM plus page structure |
 | Nanobrowser | 13.7k | TypeScript | Apache-2.0 | your own Chrome or Edge | in-page, multi-agent |
 | BrowserOS | 13.5k | TypeScript, C++ | AGPL-3.0 | its own Chromium fork | agent embedded, MCP tools |
-| AIHawk | 30.3k | Python | MIT | patched Firefox (invisible_playwright) | structured snapshots plus screenshots over MCP |
+| invisible_playwright_mcp | 30.3k | Python | MIT | patched Firefox (invisible_playwright) | structured snapshots plus screenshots over MCP |
 
 A few honest cuts through the table:
 
@@ -151,7 +151,7 @@ A few honest cuts through the table:
 - **The browser as the product:** BrowserOS.
 - **Repeatable workflows with a vision-first reading of the page:** Skyvern, with
   the AGPL and the cloud-only anti-bot carve-out weighed first.
-- **Pages that resist automation, or plugging a browser into Claude Code:** AIHawk,
+- **Pages that resist automation, or plugging a browser into Claude Code:** invisible_playwright_mcp,
   from the people telling you so, with the layer boundaries stated above.
 
 ## Short answers to the questions that lead here
@@ -180,7 +180,7 @@ volume and the pacing, and most agents on this page inherit a stock automation
 fingerprint. The layer-by-layer breakdown is in
 [why agents get blocked](why-does-my-ai-agent-get-blocked.md).
 
-**Which one should I use with Claude Code?** AIHawk's MCP server is built for exactly
+**Which one should I use with Claude Code?** invisible_playwright_mcp's MCP server is built for exactly
 that, one `claude plugin install`, and this is its wiki saying so, which is why the
 sentence carries a disclosure instead of a superlative.
 
@@ -209,7 +209,7 @@ frames the overlapping repos by what Operator specifically did.
 
 ---
 
-*This page is part of the [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp) wiki. AIHawk
+*This page is part of the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. invisible_playwright_mcp
 is the entry above with the patched Firefox underneath; the other five projects were
 described from their own repositories, and where one of them fits your case better,
 the table says so.*

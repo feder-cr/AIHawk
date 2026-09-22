@@ -28,7 +28,7 @@ Three things stack:
 
 - **Retries.** A slow load, a selector that missed, a transient error, and the agent
   tries the step again. One logical action becomes three or five page loads.
-- **Re-planning.** In AIHawk's loop, a failed tool call is not the end of the task:
+- **Re-planning.** In invisible_playwright_mcp's loop, a failed tool call is not the end of the task:
   the error text is fed back to the model as the result, and the model decides what
   to do next. That is what makes it an agent rather than a script, and what it
   usually decides is to look again - re-read the page, reload it, navigate back to
@@ -45,7 +45,7 @@ a rate limiter does.
 
 A fingerprint check and a rate limit answer different questions. The first reads
 properties of the client - the GPU string, the canvas hash, the network handshake -
-and asks "is this a real browser". The engine under AIHawk is built to make that
+and asks "is this a real browser". The engine under invisible_playwright_mcp is built to make that
 answer yes. The second never opens the browser at all: it counts how many requests
 arrived from this address, this account, or this session, in this window, and
 compares the count to a threshold. The most convincing browser ever built increments
@@ -63,7 +63,7 @@ controls what one request looks like, not how many are sent or how fast. When a
 clean fingerprint still gets blocked, volume and address are the usual reasons -
 [the engine wiki has a page on exactly that](https://github.com/feder-cr/invisible_playwright/wiki/why-blocked-with-a-clean-fingerprint).
 
-## What bounds the loop in AIHawk
+## What bounds the loop in invisible_playwright_mcp
 
 Less than you might assume, and it is worth being exact, because this is what
 decides how big a runaway task can get. There is no turn ceiling: the loop takes
@@ -148,7 +148,7 @@ decides how often the agent runs, which is you.
 
 Retrying and re-planning are what make an agent an agent, and they are also what
 turn one instruction into a burst of requests. Bursts are counted, and a counter is
-a different defence from a fingerprint check. AIHawk bounds less of that than you
+a different defence from a fingerprint check. invisible_playwright_mcp bounds less of that than you
 might hope - instructions are serialised, and a person can stop a run - but pacing
 between runs, backoff after failures and a sane request budget live in how you drive
 it, and a clean exit lives under it.
@@ -171,7 +171,7 @@ with detection, not with volume.
 always because the agent sent many more requests, much faster, than you did.
 Retries, re-reads and reloads multiply traffic a person never generates.
 
-**Does AIHawk retry forever?** Nothing in the loop stops it: it keeps taking turns
+**Does invisible_playwright_mcp retry forever?** Nothing in the loop stops it: it keeps taking turns
 for as long as the model keeps calling tools, so a task that decides to keep trying
 will keep trying. What ends it is you, with the stop button the interface shows while
 a run is in flight. And stopping is not a throttle: re-issuing the same instruction
@@ -191,7 +191,7 @@ immediate identical re-run.
 
 ## Sources
 
-- AIHawk's own source, read 2026-09-03 and the loop re-read 2026-09-08:
+- invisible_playwright_mcp's own source, read 2026-09-03 and the loop re-read 2026-09-08:
   `src/aihawk/agent.py` (a loop with no turn ceiling, the per-reply token cap, tool
   errors fed back to the model as results, the one-action-at-a-time system prompt),
   `src/aihawk/web.py` (the task handle, the stop button, and the cancel landing at
@@ -212,7 +212,7 @@ another agent framework.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp), an AI agent
+*Written while maintaining [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), an AI agent
 on a Firefox patched at the C++ level. The first velocity flag I ever chased was
 raised by our own test harness hammering one endpoint from one address - the browser
 was innocent, the loop was not.*

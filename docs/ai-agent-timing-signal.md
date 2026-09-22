@@ -12,7 +12,7 @@ The browser under your agent can be flawless - a real engine, a real fingerprint
 clean driver surface - and the session can still read as automated for a reason that
 has nothing to do with the browser: the rhythm of the loop driving it.
 
-Every AI agent, AIHawk included, runs a think-act cycle. It looks at the page, sends
+Every AI agent, invisible_playwright_mcp included, runs a think-act cycle. It looks at the page, sends
 what it sees to a model, waits for the model to decide, performs the action, and looks
 again. That cycle has a shape, and the shape is measurable from the other side of the
 connection. If your agent gets through the first page load fine and gets challenged a
@@ -50,7 +50,7 @@ it survives every fingerprint fix.
 A fingerprint is a photograph; behaviour is a motion study. Making the photograph
 perfect does nothing to the motion study.
 
-AIHawk runs on a Firefox patched at the C++ level (the
+invisible_playwright_mcp runs on a Firefox patched at the C++ level (the
 [invisible_playwright](https://github.com/feder-cr/invisible_playwright) engine), and
 that engine's job is the photograph: the rendering, the driver surface and the network
 handshake read as a genuine Firefox rather than an automated build. That is real, and
@@ -61,7 +61,7 @@ harness calling it, above the browser, out of the engine's reach. The engine wik
 [testing method](https://github.com/feder-cr/invisible_playwright/wiki/how-to-test-bot-detection)
 lists behaviour among the things no in-page test suite covers, for the same reason.
 
-## What the layer under AIHawk already covers
+## What the layer under invisible_playwright_mcp already covers
 
 Part of the motion problem does live below the loop, and that part is handled there,
 so you should know which part it is before trying to fix it yourself.
@@ -72,10 +72,10 @@ so you should know which part it is before trying to fix it yourself.
   when the click happens. The boundary between pointer realism and fingerprint realism
   is drawn in detail on
   [the engine wiki](https://github.com/feder-cr/invisible_playwright/wiki/ghost-cursor-human-mouse).
-- **Real input, not script shortcuts.** AIHawk drives the page the way a person would:
+- **Real input, not script shortcuts.** invisible_playwright_mcp drives the page the way a person would:
   the pointer moves and keys are pressed, and it refuses to set a form field from
   JavaScript even when that would be quicker, because a page can tell the difference.
-- **Read before act.** AIHawk's system prompt instructs the model to inspect the page
+- **Read before act.** invisible_playwright_mcp's system prompt instructs the model to inspect the page
   before acting on it and to prefer one clear action at a time over long chains. That
   produces read-shaped traffic in front of actions instead of blind action bursts.
 
@@ -85,7 +85,7 @@ individual action looks.
 
 ## What actually helps
 
-Be clear-eyed about what you control. If you run an off-the-shelf agent - AIHawk's
+Be clear-eyed about what you control. If you run an off-the-shelf agent - invisible_playwright_mcp's
 interface, or an assistant driving the browser over MCP - the loop's internal timing
 is not a knob you turn. What you control is everything around the loop, and that is
 where the wins are:
@@ -118,7 +118,7 @@ def dwell(low=0.6, high=2.4):
 
 ## Seeing your own rhythm before a site does
 
-You can read this signal off your own sessions the way a site would. AIHawk's
+You can read this signal off your own sessions the way a site would. invisible_playwright_mcp's
 interface narrates every step as it takes it, so the cadence is on screen while the
 task runs; for anything scripted, log a timestamp at each action and look at the
 spread of the gaps. If the minimum and maximum are close together, or the mean sits
@@ -129,7 +129,7 @@ tail. Measure the stream; do not assume the shape.
 ## Conclusion
 
 The fingerprint and the rhythm are two different signals, read by two different parts
-of a detection system, and the engine under AIHawk addresses the first. It makes the
+of a detection system, and the engine under invisible_playwright_mcp addresses the first. It makes the
 browser real, gives each click a human-shaped path, and puts real key presses behind
 typed text. The cadence between actions is produced above the browser - by the model
 and by how you run it - so it is yours: fewer and larger tasks, no fixed schedules,
@@ -150,7 +150,7 @@ the pause, and actions land dead centre with no reading time in front of them.
 at first load points at the fingerprint or the address. A block after interactions
 points at behaviour, and the agent rhythm is the usual behaviour verdict.
 
-**Can AIHawk add the pacing for me?** The engine humanizes each click's pointer path
+**Can invisible_playwright_mcp add the pacing for me?** The engine humanizes each click's pointer path
 and presses real keys, and the agent reads before acting. The step-to-step cadence
 is decided by the model's loop, so what you control is how many tasks you run,
 against what, on what schedule.
@@ -166,7 +166,7 @@ layers.
 
 ## Sources
 
-- AIHawk's own source: the system prompt in `src/aihawk/agent.py` instructs the model
+- invisible_playwright_mcp's own source: the system prompt in `src/aihawk/agent.py` instructs the model
   to inspect pages before acting and to prefer one clear action at a time, and the
   [README](https://github.com/feder-cr/invisible_playwright_mcp#readme) documents the input behaviour
   (pointer moves, keys pressed, JavaScript form-fill refused). Both read 2026-09-03.
@@ -185,7 +185,7 @@ the rhythm of a screenshot-driven agent specifically.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp), an AI agent
+*Written while maintaining [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), an AI agent
 on a Firefox patched at the C++ level. The engine makes the browser real; the rhythm
 comes from the loop, and this page is what I check first when a session of my own
 gets challenged after the third click.*

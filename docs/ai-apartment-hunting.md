@@ -82,7 +82,7 @@ minutes is a bill and a signature.
 ## The workflow, concretely
 
 Reading listings against criteria is judgment work, so it runs where the
-model is: `uvx aihawk ui`, or your assistant with AIHawk's browser attached.
+model is: `uvx aihawk ui`, or your assistant with invisible_playwright_mcp's browser attached.
 A worked instruction to paste, with the portal URL being whatever
 search-results page you have already set up by hand:
 
@@ -115,7 +115,7 @@ Claude Desktop, the same browser attaches to your assistant instead
 Two practical notes from the field. First, listing portals are heavy,
 banner-laden pages; a stronger model earns its cost here more than on
 simple pages, and
-[which model to use with AIHawk](which-model-to-use-with-aihawk.md) covers
+[which model to use with invisible_playwright_mcp](which-model-to-use-with-aihawk.md) covers
 that trade. Second, keep the geography honest: if you run through a proxy
 for other work, a search "from" the wrong country gets you the wrong
 inventory and prices - plain home connection is the right default for a
@@ -171,7 +171,7 @@ binding, human reviews and submits. See
 
 All retrieved 2026-09-03.
 
-- The [AIHawk README](https://github.com/feder-cr/invisible_playwright_mcp#readme), for the
+- The [invisible_playwright_mcp README](https://github.com/feder-cr/invisible_playwright_mcp#readme), for the
   `uvx aihawk ui` command, the MCP path for assistants, and the profile and
   proxy behavior (updated for aihawk 0.3.0, which removed the `do`
   subcommand).
@@ -187,13 +187,13 @@ agent](how-to-monitor-a-page-with-an-ai-agent.md) for the recurring-check
 mechanics this page leans on, [extracting data to a CSV with an AI
 agent](how-to-extract-data-to-csv-with-an-ai-agent.md) for turning
 sessions into a tracked spreadsheet, [which model to use with
-AIHawk](which-model-to-use-with-aihawk.md) for the model trade-off on
+invisible_playwright_mcp](which-model-to-use-with-aihawk.md) for the model trade-off on
 heavy pages, and [why does my AI agent get
 blocked?](why-does-my-ai-agent-get-blocked.md) for when a portal pushes
 back.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The agent
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The agent
 reads the listings; you still take the viewing - and the flat with the
 suspiciously wide-angle photos is still small.*

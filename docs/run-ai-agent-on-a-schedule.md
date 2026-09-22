@@ -1,6 +1,6 @@
 ---
 title: "Run an AI browser agent on a schedule"
-description: "Why AIHawk's chat interface has no headless mode, the two ways to run a browser agent unattended, what a recurring run costs, and when a script beats an agent."
+description: "Why invisible_playwright_mcp's chat interface has no headless mode, the two ways to run a browser agent unattended, what a recurring run costs, and when a script beats an agent."
 parent: "Using the Agent"
 nav_order: 24
 ---
@@ -8,7 +8,7 @@ nav_order: 24
 
 # Run an AI browser agent on a schedule
 
-AIHawk's own interface has no headless mode: since 0.3.0 it is `uvx aihawk ui`, a chat
+invisible_playwright_mcp's own interface has no headless mode: since 0.3.0 it is `uvx aihawk ui`, a chat
 window for a person watching, not a cron target. A scheduled run means one of two
 routes instead: a non-interactive assistant command that still spends tokens, or the
 invisible_playwright library driving fixed steps with no model at all.
@@ -20,7 +20,7 @@ the right, and it refuses to start without an OpenRouter key. That's a reasonabl
 design for a person typing an instruction and watching the pointer move, and the
 wrong shape for a job starting at three in the morning with nobody at the keyboard.
 
-There is nothing to point cron at either: AIHawk's CLI defines exactly one
+There is nothing to point cron at either: invisible_playwright_mcp's CLI defines exactly one
 subcommand, `ui`, running a server that only stops on Ctrl-C or a kill signal. No
 `--once` flag, no run-and-exit mode. Putting the interface in cron either leaves that
 server running unattended forever, key included, or means wrapping a tool that was
@@ -81,7 +81,7 @@ is most of the decision right there.
 In the interactive interface, a person watching the live pane notices a wrong click
 and nudges the next instruction. On a schedule nobody is looking, so the real
 question is not how to keep the run going, it is how loud the failure is when it
-happens. One bound already exists: AIHawk's loop caps an instruction at 25 model
+happens. One bound already exists: invisible_playwright_mcp's loop caps an instruction at 25 model
 turns and stops with a plain error instead of looping forever.
 
 What it can do instead is fail quietly. A cron job's non-zero exit code is one line
@@ -119,7 +119,7 @@ general shape this whole page has been describing, not a special case of it.
 
 ## Short answers to the questions that lead here
 
-**Can I run AIHawk's own interface on a schedule?** Not as it ships: since 0.3.0 the
+**Can I run invisible_playwright_mcp's own interface on a schedule?** Not as it ships: since 0.3.0 the
 only subcommand is `ui`, a persistent chat server with no one-shot or headless mode.
 
 **What's cheaper for a scheduled task, an agent or a script?** A script, whenever the
@@ -140,7 +140,7 @@ invented just for this.
 
 **See also:** [running the agent on a local model](ai-browser-agent-local-llm.md) if the token bill is what pushed you here, [Monitoring a page for changes with an AI agent](how-to-monitor-a-page-with-an-ai-agent.md),
 [Browser problem or model problem?](browser-problem-or-model-problem.md), and
-[Which model to use with AIHawk](which-model-to-use-with-aihawk.md).
+[Which model to use with invisible_playwright_mcp](which-model-to-use-with-aihawk.md).
 
 ## Sources
 
@@ -153,6 +153,6 @@ Retrieved 2026-09-05.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp) wiki. Built for a person
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. Built for a person
 watching a live pane, this interface is the opposite of a cron job; the two routes
 here fill that gap.*

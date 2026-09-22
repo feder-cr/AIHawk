@@ -1,6 +1,6 @@
 ---
 title: "AI browser agent with a local LLM: what changes"
-description: "AIHawk's interface only calls OpenRouter. How to attach this browser to a client running a local model, and why privacy, not capability, is the real payoff."
+description: "invisible_playwright_mcp's interface only calls OpenRouter. How to attach this browser to a client running a local model, and why privacy, not capability, is the real payoff."
 parent: "Using the Agent"
 nav_order: 25
 ---
@@ -9,7 +9,7 @@ nav_order: 25
 # AI browser agent with a local LLM: what changes
 
 A local model changes exactly one thing about this browser: where the model runs.
-AIHawk's own interface only ever calls OpenRouter, there is no local-model flag. To
+invisible_playwright_mcp's own interface only ever calls OpenRouter, there is no local-model flag. To
 actually drive this browser with a model on your own machine, you attach it to an
 assistant or client that already runs one, over the same MCP connection Claude Code
 uses.
@@ -23,7 +23,7 @@ you came here hoping for `--ollama`, it does not exist in the current source.
 
 The library underneath has the opposite property: `invisible_playwright`, the plain
 Python package this interface talks to over MCP, carries no model at all. Local, in
-the sense that the weights never leave your machine, is not a setting on AIHawk's own
+the sense that the weights never leave your machine, is not a setting on invisible_playwright_mcp's own
 interface. It is a different door: an assistant or client that already runs a model
 locally, most commonly through something like Ollama's own API, attaching this same
 browser to it exactly the way any other MCP client would. Ollama has served tool
@@ -55,7 +55,7 @@ only ever sees tool calls.
 
 ## What browser driving specifically demands from a model
 
-[Which model to use with AIHawk](which-model-to-use-with-aihawk.md) lays out what
+[Which model to use with invisible_playwright_mcp](which-model-to-use-with-aihawk.md) lays out what
 this task actually exercises: well-formed tool calls on every turn, instructions
 followed closely enough to know when a task is actually done, and long, messy context
 made mostly of extracted page text. Every word of that applies to a local model, and
@@ -114,7 +114,7 @@ the whole local approach is the wrong fit.
 
 ## Short answers to the questions that lead here
 
-**Can I use a local model with AIHawk's own interface?** No. `uvx aihawk ui` only
+**Can I use a local model with invisible_playwright_mcp's own interface?** No. `uvx aihawk ui` only
 ever calls OpenRouter, hardcoded in the source. A local model means attaching this
 browser to a different client over MCP instead.
 
@@ -136,9 +136,9 @@ reliably here.
 step with no model against the library: if it reproduces, the browser side is at
 fault regardless of any model; if not, the model was the variable.
 
-**See also:** [running an agent unattended on a schedule](run-ai-agent-on-a-schedule.md) for the other half of the running question, [Which model to use with AIHawk](which-model-to-use-with-aihawk.md),
+**See also:** [running an agent unattended on a schedule](run-ai-agent-on-a-schedule.md) for the other half of the running question, [Which model to use with invisible_playwright_mcp](which-model-to-use-with-aihawk.md),
 [Browser problem or model problem?](browser-problem-or-model-problem.md), and
-[Running AIHawk's browser from Claude Code](running-aihawk-with-claude-code.md).
+[Running invisible_playwright_mcp's browser from Claude Code](running-aihawk-with-claude-code.md).
 
 ## Sources
 
@@ -152,7 +152,7 @@ Retrieved 2026-09-05.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp) wiki. This interface has
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. This interface has
 never had a local-model flag to remove; the local route has always run through a
 different client entirely, and that is worth saying plainly before anyone goes
 looking for a setting that isn't there.*

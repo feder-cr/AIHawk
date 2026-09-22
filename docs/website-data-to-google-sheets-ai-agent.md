@@ -66,7 +66,7 @@ sometimes and not others.
 
 ## The agent route, honestly: CSV out, Sheets imports it
 
-Here is the fact this page exists to state plainly: AIHawk has no Google
+Here is the fact this page exists to state plainly: invisible_playwright_mcp has no Google
 Sheets integration. Nothing in its source talks to a Google API, there is no
 credential to configure, and the agent has no file-writing tool at all. What
 the agent produces is its answer as text in the interface's chat, and what
@@ -102,7 +102,7 @@ with InvisiblePlaywright(seed=7) as browser:
 
 Since aihawk 0.3.0 there is no headless aihawk command, and a recurring
 extraction with stable selectors does not want one: it is mechanical work, and
-the same stealth engine AIHawk drives is on PyPI as a plain Python library
+the same stealth engine invisible_playwright_mcp drives is on PyPI as a plain Python library
 (`pip install invisible-playwright`) with Playwright's API. Executed on
 2026-09-03, `python extract_books.py > books.csv` produced a header plus
 twenty rows, starting `"A Light in the Attic",51.77`. No model and no API key
@@ -156,10 +156,10 @@ this page only ever cared about the landing.
 **Can an AI agent put website data into Google Sheets?** Yes, in two stages:
 the agent extracts to CSV (its answer, redirected to a file), and Sheets
 imports the CSV, by File then Import or with `IMPORTDATA` on a served URL.
-There is no direct AIHawk-to-Sheets connection, and the page above argues that
+There is no direct invisible_playwright_mcp-to-Sheets connection, and the page above argues that
 is the right shape, not a missing feature.
 
-**Does AIHawk have a Google Sheets integration?** No. Its source contains no
+**Does invisible_playwright_mcp have a Google Sheets integration?** No. Its source contains no
 Google API client and the agent has no file-writing tool; the answer text is
 the deliverable. Anything promising one-click web-to-Sheets is doing the same
 CSV hop internally or driving the Sheets UI, which you can do cheaper.
@@ -206,7 +206,7 @@ and the rest of [Using the Agent](guides-using-the-agent.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The maintainer's
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The maintainer's
 own sheets update through the boring path - a scheduled extraction, a served
 CSV, one IMPORTDATA cell - because the boring path is the one still working
 next month.*

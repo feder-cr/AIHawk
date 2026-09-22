@@ -1,18 +1,18 @@
 ---
-title: "Running AIHawk's browser from Gemini CLI"
+title: "Running invisible_playwright_mcp's browser from Gemini CLI"
 description: "One command installs the stealth browser in Gemini CLI as an extension, with its MCP server and a setup skill. What happens on first run, which tools Gemini gains, prompts to try first, and what goes wrong."
 parent: "Using the Agent"
 nav_order: 69
 ---
 
 
-# Running AIHawk's browser from Gemini CLI
+# Running invisible_playwright_mcp's browser from Gemini CLI
 
-If you already use Gemini CLI, you do not need AIHawk's interface, its CLI, or
+If you already use Gemini CLI, you do not need invisible_playwright_mcp's interface, its CLI, or
 an OpenRouter key. Gemini brings the model; you add the browser to it. The
-browser is the same MCP server AIHawk itself talks to -
+browser is the same MCP server invisible_playwright_mcp itself talks to -
 [the MCP server](mcp-server.md) -
-so anything AIHawk's own interface can do, your assistant can do too, and that
+so anything invisible_playwright_mcp's own interface can do, your assistant can do too, and that
 is by construction: the interface holds no privileged access, it calls the same
 tools over the same protocol as any other client.
 
@@ -65,13 +65,13 @@ uvx invisible-playwright fetch
 ```
 
 It is cached afterwards and shared by every way into the engine, including
-AIHawk's own interface if you later run that too.
+invisible_playwright_mcp's own interface if you later run that too.
 
 ## What Gemini actually gains
 
 A set of browser tools from the server `aihawk`. The authoritative list is
 whatever `/mcp` shows in a session for your installed server version; the
-families, with the names AIHawk's own client code knows them by:
+families, with the names invisible_playwright_mcp's own client code knows them by:
 
 - **Navigation**: `browser_navigate`. A browser drives one page; when you
   need a second, `browser_open` opens the `support` browser beside it rather
@@ -134,12 +134,12 @@ results, and short steps keep its context small and its mistakes cheap.
 
 ## Short answers to the questions that lead here
 
-**How do I add AIHawk's browser to Gemini CLI?**
+**How do I add invisible_playwright_mcp's browser to Gemini CLI?**
 `gemini extensions install https://github.com/feder-cr/invisible_playwright_mcp`, once, with uv
 installed. New sessions then have the browser tools in `/mcp`.
 
-**Do I need an OpenRouter key for this?** No. The key is only for AIHawk's own
-interface and CLI, where AIHawk must bring a model. In Gemini CLI, Gemini is
+**Do I need an OpenRouter key for this?** No. The key is only for invisible_playwright_mcp's own
+interface and CLI, where invisible_playwright_mcp must bring a model. In Gemini CLI, Gemini is
 the model.
 
 **Why does the first browsing request say the engine is downloading?** The
@@ -147,7 +147,7 @@ engine, about a quarter of a gigabyte, is downloaded by the server itself when
 it starts, and `browser_open` reports the progress rather than waiting. Run
 `uvx invisible-playwright fetch` once in a terminal to do it up front instead.
 
-**Is this different from what AIHawk's own UI drives?** No - same server, same
+**Is this different from what invisible_playwright_mcp's own UI drives?** No - same server, same
 engine, same tools. The interface is just another MCP client of it, with no
 privileged access.
 
@@ -170,14 +170,14 @@ All retrieved 2026-09-22.
   the server itself: config blocks for other clients, server-side options, and
   the current tool list.
 
-**See also:** [running AIHawk with Claude Code](running-aihawk-with-claude-code.md),
-[running AIHawk with Codex](running-aihawk-with-codex.md),
+**See also:** [running invisible_playwright_mcp with Claude Code](running-aihawk-with-claude-code.md),
+[running invisible_playwright_mcp with Codex](running-aihawk-with-codex.md),
 [how to extract data to CSV with an AI agent](how-to-extract-data-to-csv-with-an-ai-agent.md),
 and [browser problem or model problem?](browser-problem-or-model-problem.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp) wiki. Gemini CLI takes
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. Gemini CLI takes
 the browser as an extension, one command and no config file, and the server
 says "downloading" instead of making you wait, so the first prompt is never a
 mystery.*

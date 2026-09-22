@@ -1,23 +1,23 @@
 ---
-title: "Which model to use with AIHawk"
+title: "Which model to use with invisible_playwright_mcp"
 description: "The default model, what browser-agent work actually demands from an LLM, real OpenRouter prices, and why cost is turns times context rather than a price-sheet number."
 parent: "Using the Agent"
 nav_order: 2
 ---
 
 
-# Which model to use with AIHawk
+# Which model to use with invisible_playwright_mcp
 
-AIHawk brings the browser and you bring the model, from
+invisible_playwright_mcp brings the browser and you bring the model, from
 [OpenRouter](https://openrouter.ai) and nowhere else. If you set nothing, you get
 `z-ai/glm-5.3-flash`: that is the default written into the source, and it sits at
 the cheap-and-fast end of the catalog rather than the flagship end. You override it
 with `--model` on `aihawk ui`, or the `AIHAWK_MODEL` environment variable, and
 any model id OpenRouter serves is legal. So the real question is not "which model
-does AIHawk support" - all of them - but which one is worth paying for on this
+does invisible_playwright_mcp support" - all of them - but which one is worth paying for on this
 kind of work, and that has a less obvious answer than the price sheet suggests.
 
-## How AIHawk actually spends the model
+## How invisible_playwright_mcp actually spends the model
 
 Worth knowing before choosing, because the loop's shape decides the bill. The
 interface runs one fixed loop: the model receives the task and
@@ -151,10 +151,10 @@ criteria above do not.
 
 ## Short answers to the questions that lead here
 
-**What model does AIHawk use by default?** `z-ai/glm-5.3-flash`, via OpenRouter. Set
+**What model does invisible_playwright_mcp use by default?** `z-ai/glm-5.3-flash`, via OpenRouter. Set
 `--model` or `AIHAWK_MODEL` to use anything else OpenRouter serves.
 
-**Do I need an OpenRouter account?** For AIHawk's own interface, yes - the
+**Do I need an OpenRouter account?** For invisible_playwright_mcp's own interface, yes - the
 model comes from OpenRouter and nowhere else in the current source, and since
 0.4.0 `aihawk ui` refuses to start without a key. The spend-nothing routes are
 your assistant over MCP (its subscription is the model) and the
@@ -170,7 +170,7 @@ the whole transcript, so cost grows with turns times context, not with the
 length of your instruction. One early full-page read is paid again on every
 later turn.
 
-**Does AIHawk send my key anywhere besides OpenRouter?** It is used for the
+**Does invisible_playwright_mcp send my key anywhere besides OpenRouter?** It is used for the
 OpenRouter API and stripped from the environment the browser engine starts
 with, by name and by value; the repository carries a test that fails if that
 stops being true.
@@ -208,7 +208,7 @@ rest of [Using the Agent](guides-using-the-agent.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The mechanics
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The mechanics
 here - the default, the caps, the resent transcript - are read from the source;
 the prices from OpenRouter on the date shown. Both drift, so trust the criteria
 longer than the numbers.*

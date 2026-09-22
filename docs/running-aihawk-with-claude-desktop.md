@@ -1,12 +1,12 @@
 ---
-title: "Running AIHawk's browser from Claude Desktop"
+title: "Running invisible_playwright_mcp's browser from Claude Desktop"
 description: "Adding the stealth browser to Claude Desktop via its JSON config - what changes in the app, first prompts to try, what tool calls and approvals look like, and the first-run issues."
 parent: "Using the Agent"
 nav_order: 8
 ---
 
 
-# Running AIHawk's browser from Claude Desktop
+# Running invisible_playwright_mcp's browser from Claude Desktop
 
 Claude Desktop does not take the one-line command that Claude Code does; it
 reads its MCP servers from a JSON settings file. The exact block to paste and
@@ -19,7 +19,7 @@ while Claude works, and the first-run issues that generate most of the
 questions.
 
 One boundary before anything else, because it decides whether to read on:
-Claude Desktop runs on macOS and Windows, and AIHawk's engine ships for Windows
+Claude Desktop runs on macOS and Windows, and invisible_playwright_mcp's engine ships for Windows
 and Linux, with macOS unsupported. The overlap is Windows. On a Mac, Desktop
 will start the server and the server will have no engine build to run; this
 combination is a Windows setup today.
@@ -98,7 +98,7 @@ environment variables, in its README.
 The server list itself lives behind the connectors control at the bottom of
 Desktop's input box; the MCP quickstart walks the exact clicks. If the server
 is missing from that list after a restart, the config did not load, and that
-is a syntax or path problem, not an AIHawk one.
+is a syntax or path problem, not an invisible_playwright_mcp one.
 
 ## Common first-run issues
 
@@ -116,7 +116,7 @@ In the order people hit them:
    ```
 
    The engine is cached afterwards and shared with every other way into
-   AIHawk.
+   invisible_playwright_mcp.
 
 2. **The server never appears.** Almost always the restart (must be a full
    quit, not closing the window) or JSON syntax in the config. Desktop writes
@@ -140,14 +140,14 @@ In the order people hit them:
 
 ## Short answers to the questions that lead here
 
-**How do I add AIHawk's browser to Claude Desktop?** Paste the server block
+**How do I add invisible_playwright_mcp's browser to Claude Desktop?** Paste the server block
 from the [MCP server page](mcp-server.md)
 into Desktop's MCP config (Settings, Developer, Edit Config), then fully quit
 and restart Desktop. The block and the file path live on that page on purpose.
 
 **Do I need an API key for this?** No. Your Claude subscription is the model;
 the server only adds the browser, and its config block contains no secret. The
-OpenRouter key belongs to a different way in, AIHawk's own interface
+OpenRouter key belongs to a different way in, invisible_playwright_mcp's own interface
 (`uvx aihawk ui`), which requires one.
 
 **Why does the first instruction say the engine is downloading?** The server
@@ -183,12 +183,12 @@ All retrieved 2026-09-03.
   this repository, for the platform support boundary and the shared engine
   cache.
 
-**See also:** [running AIHawk with Claude Code](running-aihawk-with-claude-code.md),
-[running AIHawk's browser from Cursor](running-aihawk-with-cursor.md),
+**See also:** [running invisible_playwright_mcp with Claude Code](running-aihawk-with-claude-code.md),
+[running invisible_playwright_mcp's browser from Cursor](running-aihawk-with-cursor.md),
 [browser problem or model problem?](browser-problem-or-model-problem.md), and
 the rest of [Using the Agent](guides-using-the-agent.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The config block
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The config block
 lives on one page and is linked from here rather than copied, because a config duplicated across two pages is a config that will one day be wrong in one of the two places.*
