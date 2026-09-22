@@ -1,0 +1,90 @@
+/* ---------------- the provider card ----------------
+   Which model this conversation runs on, and the two ways to hold the
+   credential. It lies over the conversation the way the sessions column does -
+   a dialog with the panes behind it out of play - because it is opened
+   deliberately, it holds a secret, and it is not something to leave on screen.
+
+   ⛔ ONE CARD WITH TWO ROADS, NOT TWO CARDS. OrcaRouter is one provider with an
+   API key and a sign-in, and the ids stay separate on the wire
+   (`orcarouter`, `orcarouter-oauth`) while the person sees one panel with two
+   labelled ways in. Two provider rows in the list would say the same thing
+   twice about the same company.
+
+   ⛔ NOTHING HERE IS COLOURED BY HAND. Every value is a token from
+   01-tokens.css, which is what makes the contrast floors a property of the
+   ladder rather than of this file. */
+#provider{ position:absolute; inset:0; z-index:15;
+           display:flex; align-items:flex-start; justify-content:center;
+           padding:var(--s6) var(--s4); background:var(--shade-3) }
+#provider .card{ width:min(520px, 100%); max-height:100%; overflow:auto;
+                 background:var(--raised); border:1px solid var(--line-3);
+                 border-radius:var(--r-lg); padding:var(--s4);
+                 display:flex; flex-direction:column; gap:var(--s3);
+                 box-shadow:0 24px 60px var(--shade-3) }
+#provider .prow{ display:flex; align-items:center; gap:var(--s3) }
+#provider .prow h2{ margin:0; font-size:var(--t-h1); font-weight:600 }
+#provider .prow .grow{ flex:1; min-width:0 }
+#provider .close{ height:var(--h-ctl); min-width:var(--h-ctl);
+                  background:var(--hover); color:var(--fg-2);
+                  border:1px solid var(--line-2); border-radius:var(--r-pill);
+                  padding:0 var(--s3); font-size:var(--t-ui) }
+#provider .close:hover{ background:var(--top); color:var(--fg) }
+#provider p.why{ margin:0; color:var(--fg-2); font-size:var(--t-ui) }
+#provider .ways{ display:flex; gap:var(--s2) }
+#provider .ways button{ flex:1; min-height:var(--h-ctl); padding:0 var(--s3);
+                        background:var(--hover); color:var(--fg-2);
+                        border:1px solid var(--line-2); border-radius:var(--r-sm);
+                        font-size:var(--t-ui) }
+#provider .ways button:hover{ background:var(--top); color:var(--fg) }
+#provider .ways button[aria-pressed="true"]{ background:var(--top); color:var(--fg);
+                                             border-color:var(--line-3) }
+#provider .way{ display:flex; flex-direction:column; gap:var(--s2) }
+#provider .way .how{ margin:0; color:var(--fg-3); font-size:var(--t-label) }
+#provider label.lbl{ color:var(--fg-2); font-size:var(--t-label); font-weight:600;
+                     letter-spacing:.07em; text-transform:uppercase }
+#provider input[type="password"]{ width:100%; min-height:var(--h-ctl);
+        padding:0 var(--s2); font:var(--t-ui)/1.4 var(--sans); color:var(--fg);
+        background:var(--well); border:1px solid var(--line-2);
+        border-radius:var(--r-sm) }
+#provider .picker{ position:relative; display:flex; flex-direction:column }
+#provider .trigger{ width:100%; min-height:var(--h-ctl); padding:0 var(--s2);
+        display:flex; align-items:center; gap:var(--s2);
+        font:var(--t-mono)/1.4 var(--mono); color:var(--fg); text-align:left;
+        background:var(--well); border:1px solid var(--line-2);
+        border-radius:var(--r-sm) }
+#provider .trigger:hover{ border-color:var(--line-3) }
+#provider .trigger .grow{ flex:1; min-width:0; overflow:hidden;
+        white-space:nowrap; text-overflow:ellipsis }
+#provider .trigger .caret{ color:var(--fg-3); font-size:var(--t-label) }
+/* ⛔ THE LIST IS OPAQUE AND BORDERED, AND THAT IS A REQUIREMENT RATHER THAN A
+   LOOK. It lies over the text under it; a list drawn with the page showing
+   through is a list whose rows cannot be read, and one with no edge is a list
+   a reader cannot tell from the paragraph it covers. */
+#provider .list{ position:absolute; top:calc(100% + 2px); left:0; right:0;
+        z-index:2; max-height:216px; overflow:auto;
+        display:flex; flex-direction:column; padding:var(--s1);
+        background:var(--raised); border:1px solid var(--line-3);
+        border-radius:var(--r-sm); box-shadow:0 16px 40px var(--shade-3) }
+#provider .opt{ width:100%; min-height:var(--h-ctl); padding:0 var(--s2);
+        font:var(--t-mono)/1.4 var(--mono); color:var(--fg-2);
+        text-align:left; background:transparent; border:0; border-radius:var(--r-sm) }
+#provider .opt:hover, #provider .opt[data-here="1"]{ background:var(--hover); color:var(--fg) }
+#provider .opt[aria-selected="true"]{ background:var(--top); color:var(--fg) }
+#provider .acts{ display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap }
+#provider .acts button{ min-height:var(--h-ctl); padding:0 var(--s4);
+                        background:var(--accent); color:var(--on-accent);
+                        border:1px solid transparent; border-radius:var(--r-pill);
+                        font-size:var(--t-ui); font-weight:600 }
+#provider .acts button.plain{ background:var(--hover); color:var(--fg-2);
+                              border-color:var(--line-2); font-weight:400 }
+#provider .acts button.plain:hover{ background:var(--top); color:var(--fg) }
+#provider .keyline{ display:flex; align-items:center; gap:var(--s2);
+                    color:var(--fg-2); font-size:var(--t-ui) }
+#provider .keyline code{ color:var(--fg); font-size:var(--t-mono) }
+#provider .say{ margin:0; min-height:1.4em; color:var(--fg-2); font-size:var(--t-label) }
+#provider .say[data-bad="1"]{ color:var(--err) }
+#provider .say[data-ok="1"]{ color:var(--ok) }
+#provider .src{ color:var(--fg-3); font-size:var(--t-label) }
+#provider .hint{ margin:0; color:var(--fg-3); font-size:var(--t-label) }
+#provider .hint code{ color:var(--fg-2) }
+#provider #provopen:hover{ background:var(--top); color:var(--fg) }

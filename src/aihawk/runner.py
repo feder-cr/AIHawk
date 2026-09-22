@@ -21,6 +21,18 @@ from typing import Any, Mapping, Optional
 #: same secret to anyone reading the process environment.
 KEY_VARIABLE = "OPENROUTER_API_KEY"
 
+#: ⛔ AND THE OTHER PROVIDER'S NAMES, FOR THE SAME REASON AND WITH THE SAME
+#: COST OF BEING WRONG. A browser server has no use for ANY model key, and the
+#: rule above was written when there was only one. A run with OrcaRouter
+#: selected and `ORCAROUTER_API_KEY` exported would otherwise hand the engine a
+#: credential it never asks for - the exposure `without_key` exists to close,
+#: reached through a second name. `ORCA_KEY` is accepted because that is what
+#: the public provider table calls it and somebody will have exported it.
+ALSO_KEY_VARIABLES = ("ORCAROUTER_API_KEY", "ORCA_KEY")
+
+#: Every name treated as "a model key" by the two callers below.
+KEY_VARIABLES = (KEY_VARIABLE,) + ALSO_KEY_VARIABLES
+
 
 def without_key(base_env: Mapping[str, str], *, key: Optional[str] = None) -> dict:
     """`base_env` with the model key gone: by name, and by every other name
@@ -45,7 +57,7 @@ def without_key(base_env: Mapping[str, str], *, key: Optional[str] = None) -> di
     another name could not be found by reading the environment alone.
     """
     secrets = {value for name, value in base_env.items()
-               if name.upper() == KEY_VARIABLE and value}
+               if name.upper() in KEY_VARIABLES and value}
     if key:
         secrets.add(key)
 
@@ -54,7 +66,7 @@ def without_key(base_env: Mapping[str, str], *, key: Optional[str] = None) -> di
     secrets.discard("")
 
     return {name: value for name, value in base_env.items()
-            if name.upper() != KEY_VARIABLE and value not in secrets}
+            if name.upper() not in KEY_VARIABLES and value not in secrets}
 
 
 def forget_key(env) -> list:

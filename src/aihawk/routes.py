@@ -10,7 +10,7 @@ them. `build_app` now does the one thing its name says.
 from __future__ import annotations
 
 import json
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 
 from starlette.applications import Starlette
 from starlette.requests import Request
@@ -20,6 +20,7 @@ from starlette.routing import Route
 from .chat import ChatService, DEFAULT_CHAT_ID
 from .link import image_of, answer_of
 from . import __version__
+from . import orcarouter, provider
 from .mcp import DEFAULT_BROWSER_ID, NOT_OPEN
 from .sessions import SessionGone, Sessions
 from .ui import PAGE
@@ -414,7 +415,240 @@ async def browsers(request: Request) -> JSONResponse:
 # seconds ago cannot know.
 
 
-def build_app(sessions: Sessions) -> Starlette:
+# --- the provider -----------------------------------------------------------------
+
+def registry(request: Request) -> provider.ProviderState:
+    """The provider state this app was built with.
+
+    One object per app rather than one per request: which provider is chosen,
+    which credential it holds and which model list it was given are facts about
+    this process, not about a request, and a state built per request would
+    forget the sign-in between two clicks.
+    """
+    return request.app.state.provider
+
+
+async def provider_state(request: Request) -> JSONResponse:
+    """What the panel draws: the provider, its credential, and its models.
+
+    ⛔ THE KEY IS NOT IN THIS ANSWER. `Credential.as_state` returns a mask and
+    four facts about the credential; the key itself never crosses this wire,
+    because the page is a browser and a browser is not a place to hold one. The
+    catalogue is fetched by the SERVER for the same reason.
+    """
+    return JSONResponse(registry(request).as_state())
+
+
+async def provider_choose(request: Request) -> JSONResponse:
+    """Point this interface at a provider, and at a model if one is named.
+
+    ⛔ THE MODEL IS REVALIDATED HERE, NOT ASSUMED. A model id that the current
+    provider's list does not offer is refused with the id in the answer rather
+    than stored and left to fail at the first turn, where the reason would be
+    nowhere near the cause.
+    """
+    body = await request.json()
+    state = registry(request)
+    asked = (body or {}).get("model")
+    state.choose((body or {}).get("provider"), asked)
+    refused = bool(asked) and not state.model
+    return JSONResponse({**state.as_state(), "refused": refused, "note":
+                         "That model is not in this provider's list, so it was "
+                         "not selected." if refused else ""})
+
+
+async def provider_key(request: Request) -> JSONResponse:
+    """Adapter one: the key the user pasted.
+
+    Kept only if it is a real string, and stored through the same path the
+    sign-in uses, so there is one credential and one store. `remove` is how the
+    user clears it, which is the only way a credential leaves this process
+    without a replacement - a `401` marks it instead.
+    """
+    body = await request.json()
+    state = registry(request)
+    if (body or {}).get("remove"):
+        provider.forget_credential()
+        state.set_credential(None)
+        return JSONResponse({**state.as_state(),
+                             "note": "The OrcaRouter key was removed."})
+    given = str((body or {}).get("key") or "").strip()
+    if not given:
+        return JSONResponse({"error": "no key"}, status_code=400)
+    state.attempt += 1
+    credential = orcarouter.Credential(given, method=orcarouter.BY_KEY,
+                                       source="entered",
+                                       generation=state.attempt)
+    state.set_credential(credential)
+    provider.save_credential(credential)
+    await refresh_models(state)
+    return JSONResponse({**state.as_state(), "note": "The OrcaRouter key was saved."})
+
+
+async def provider_models(request: Request) -> JSONResponse:
+    """The model list the dropdown draws, filtered by capability.
+
+    ⛔ ONE ENDPOINT, AND THE FILTER IS ARGUED FOR RATHER THAN GUESSED. The
+    catalogue is the only fact source for what a model can do, so a capability
+    the catalogue does not mention is one the model is not offered for. A live
+    answer replaces the seed entirely; a failed one falls back to the seed and
+    says so, so the control never becomes a free-text box.
+    """
+    state = registry(request)
+    capability = request.query_params.get("capability") or "chat"
+    modality = request.query_params.get("modality") or None
+    offered = state.offered(capability, modality)
+    return JSONResponse({
+        "source": state.source,
+        "error": state.catalog_error,
+        "capability": capability,
+        "modality": modality,
+        "selected": state.model,
+        "models": [m.as_state() for m in offered],
+    })
+
+
+async def refresh_models(state: provider.ProviderState) -> None:
+    """Ask the catalogue for this account's models, and take the answer.
+
+    ⛔ THE SEED IS THE FALLBACK AND IT IS LABELLED. A discovery that fails
+    leaves a usable, verified, short list and a source the panel can show,
+    rather than an empty dropdown and a person typing a model id from memory.
+    """
+    credential = state.credential
+    if credential is None or not credential.key:
+        state.set_catalog(orcarouter.seed_models(), orcarouter.SEED_SOURCE,
+                          "no credential")
+        return
+    try:
+        found = await orcarouter.fetch_catalog(credential.key)
+    except Exception as exc:
+        state.set_catalog(orcarouter.seed_models(), orcarouter.SEED_SOURCE,
+                          str(exc)[:200])
+        return
+    state.set_catalog(found, orcarouter.LIVE_SOURCE)
+
+
+async def provider_refresh(request: Request) -> JSONResponse:
+    """Ask for the catalogue again, on the user's command."""
+    state = registry(request)
+    await refresh_models(state)
+    return JSONResponse(state.as_state())
+
+
+async def provider_connect(request: Request) -> JSONResponse:
+    """Adapter two, first half: start a PKCE sign-in and answer with the URL.
+
+    ⛔ THE VERIFIER STAYS HERE. The page is given a URL to open and an attempt
+    number; the verifier, the state and the loopback port never leave this
+    process, and the comparison that guards the code happens on this side.
+    """
+    state = registry(request)
+    state.attempt += 1
+    login = orcarouter.PkceLogin()
+    url = login.start()
+    request.app.state.logins[state.attempt] = login
+    return JSONResponse({"attempt": state.attempt, "url": url,
+                         "callback": login.callback_url})
+
+
+async def provider_login(request: Request) -> JSONResponse:
+    """Adapter two, second half: wait for the code, exchange it, persist it.
+
+    ⛔ THE ATTEMPT NUMBER IS CHECKED BEFORE ANYTHING IS WRITTEN. A code that
+    arrives for an attempt the user has already abandoned - because they
+    cancelled, or started another one - must not become this process's
+    credential: the answer is a refusal that names the attempt, and the live
+    credential is untouched.
+    """
+    body = await request.json()
+    state = registry(request)
+    attempt = int((body or {}).get("attempt") or 0)
+    login = request.app.state.logins.get(attempt)
+    if login is None or attempt != state.attempt:
+        return JSONResponse({"error": "that sign-in is no longer the current one"},
+                            status_code=409)
+    code = str((body or {}).get("code") or "").strip()
+    if code:
+        login.submit(code)
+    try:
+        code = await login.wait(timeout=float((body or {}).get("wait") or 300))
+        credential = await login.exchange(code)
+    except orcarouter.PkceError as exc:
+        login.close()
+        request.app.state.logins.pop(attempt, None)
+        if attempt == state.attempt:
+            state.attempt += 1
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    finally:
+        login.close()
+    request.app.state.logins.pop(attempt, None)
+    if attempt != state.attempt:
+        # ⛔ THE STALE ANSWER IS DISCARDED, NOT WRITTEN. A second sign-in that
+        # started while this one was in the air owns the credential now, and a
+        # late success must not overwrite it - that is how a page ends up
+        # holding an account the user did not choose.
+        return JSONResponse({"error": "a newer sign-in replaced this one"},
+                            status_code=409)
+    state.attempt += 1
+    credential.generation = state.attempt
+    state.set_credential(credential)
+    provider.save_credential(credential)
+    await refresh_models(state)
+    return JSONResponse({**state.as_state(), "note": "Signed in to OrcaRouter."})
+
+
+async def provider_cancel(request: Request) -> JSONResponse:
+    """Release a sign-in attempt: its listener, its code and its slot.
+
+    ⛔ EVERY WAY OUT COMES THROUGH HERE, and the browser can reach it on the way
+    out of the page. A `pagehide` cancels with `keepalive`, which outlives the
+    document being torn down; the body it sends is JSON, and a body that will
+    not parse is read as "cancel the current attempt" rather than answered with
+    a 400 - a page leaving must not be told its request was malformed when the
+    request was exactly the one this route is for.
+    """
+    state = registry(request)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    attempt = int((body or {}).get("attempt") or state.attempt)
+    login = request.app.state.logins.pop(attempt, None)
+    if login is not None:
+        login.close()
+    if attempt == state.attempt:
+        state.attempt += 1
+    return JSONResponse({"cancelled": login is not None, "attempt": state.attempt})
+
+
+async def provider_reauth(request: Request) -> JSONResponse:
+    """A `401` from the relay: mark THIS credential, do not refresh anything.
+
+    ⛔ A DURABLE KEY HAS NO REFRESH GRANT, and this route is the one that
+    refuses to pretend otherwise. What a `401` means is that the user revoked
+    the app or the key, and the honest answer is to mark the exact credential
+    generation that made the rejected request as needing a new sign-in. A late
+    failure from an old generation is ignored rather than applied to whatever
+    is current, because the alternative is a freshly reauthorized credential
+    being marked broken by a request made before it existed.
+    """
+    body = await request.json()
+    state = registry(request)
+    generation = int((body or {}).get("generation") or 0)
+    credential = state.credential
+    if credential is None:
+        return JSONResponse({"marked": False, "reason": "no credential"})
+    if generation and generation != credential.generation:
+        return JSONResponse({"marked": False, "reason": "a stale generation"})
+    credential.needs_reauth = True
+    return JSONResponse({"marked": True, "generation": credential.generation,
+                         "note": "OrcaRouter refused the key, so it needs signing "
+                                 "in again. Nothing was deleted; sign in to "
+                                 "replace it.", **state.as_state()})
+
+
+def build_app(sessions: Sessions, state: Optional[provider.ProviderState] = None) -> Starlette:
     """The app: these routes, over this registry of conversations."""
     app = Starlette(exception_handlers={SessionGone: vanished}, routes=[
         Route("/", root),
@@ -428,6 +662,22 @@ def build_app(sessions: Sessions) -> Starlette:
         Route("/chat/events", events),
         Route("/live/frame", frame),
         Route("/live/browsers", browsers),
+        # The provider, added with OrcaRouter: which model, which credential,
+        # which models the account can actually call.
+        Route("/provider/state", provider_state),
+        Route("/provider/choose", provider_choose, methods=["POST"]),
+        Route("/provider/key", provider_key, methods=["POST"]),
+        Route("/provider/models", provider_models),
+        Route("/provider/refresh", provider_refresh, methods=["POST"]),
+        Route("/provider/connect", provider_connect, methods=["POST"]),
+        Route("/provider/login", provider_login, methods=["POST"]),
+        Route("/provider/cancel", provider_cancel, methods=["POST"]),
+        Route("/provider/reauth", provider_reauth, methods=["POST"]),
     ])
     app.state.sessions = sessions
+    app.state.provider = state or provider.ProviderState()
+    #: The sign-in attempts in flight, by attempt number. Here rather than in
+    #: the provider state because a login is not a fact the page is told about
+    #: - it is a listener this process holds and must release.
+    app.state.logins = {}
     return app

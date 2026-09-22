@@ -43,6 +43,11 @@ answers.json
 .pytest_cache
 virtual
 
+# The OrcaRouter UI evidence, produced by tests/test_orcarouter_ui_evidence.py
+# when it runs against a live interface. Generated, never committed: a
+# screenshot in the tree is a claim about an interface nobody re-ran.
+/orca-evidence/
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt

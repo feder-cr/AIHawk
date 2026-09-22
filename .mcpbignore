@@ -22,6 +22,7 @@ skills/
 docs/
 articles/
 scripts/
+orca-evidence/
 assets/*
 !assets/aihawk-icon-400.png
 plugin.json

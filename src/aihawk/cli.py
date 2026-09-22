@@ -7,7 +7,8 @@ import sys
 
 import click
 
-from .llm import BASE_URL, resolve_key, resolve_model
+from . import orcarouter
+from .llm import BASE_URL, orcarouter_env, resolve_key, resolve_model
 from .runner import forget_key
 
 #: The file read at startup, in the directory the command is run from.
@@ -203,25 +204,39 @@ def _serve() -> None:
 
 @main.command()
 @click.option("--openrouter-key", default=None,
-              help="OpenRouter API key (or env OPENROUTER_API_KEY). Required: "
-                   "the interface does not start without a model.")
+              help="OpenRouter API key (or env OPENROUTER_API_KEY). One of the "
+                   "two providers: the interface does not start without a model.")
+@click.option("--orcarouter-key", default=None,
+              help="OrcaRouter API key (or env ORCAROUTER_API_KEY). The other "
+                   "provider: an sk-orca-... key from the console.")
+@click.option("--provider", default=None,
+              help="Which provider this run uses: openrouter (the default), "
+                   "orcarouter, or orcarouter-oauth.")
+@click.option("--orcarouter-connect", is_flag=True,
+              help="Sign in with an OrcaRouter account (OAuth 2.0 + PKCE) "
+                   "instead of pasting a key.")
 @click.option("--model", default=None, help="Model id (or env AIHAWK_MODEL).")
 @click.option("--host", default="127.0.0.1", show_default=True,
               help="Interface bind address. Leave it on loopback unless you mean it.")
 @click.option("--port", type=int, default=8765, show_default=True)
 @browser_options
-def ui(openrouter_key, model, host, port, proxy, seed, headed, binary, profile_dir):
+def ui(openrouter_key, orcarouter_key, provider, orcarouter_connect, model,
+       host, port, proxy, seed, headed, binary, profile_dir):
     """Serve the two-pane interface: conversation left, live browser right.
 
-    Requires an OpenRouter key: an agent is a model with a browser, and
-    without the model there is nothing honest to serve. Driving the browser
-    by hand, no model and nothing spent, is the invisible_playwright
-    library's job - same engine, Playwright's whole API.
+    Requires a model: an agent is a model with a browser, and without the model
+    there is nothing honest to serve. OpenRouter is the default and needs
+    --openrouter-key or OPENROUTER_API_KEY. OrcaRouter is the other provider
+    and has two ways in - paste an sk-orca-... key with --orcarouter-key, or
+    sign in with --orcarouter-connect and a browser. Driving the browser by
+    hand, no model and nothing spent, is the invisible_playwright library's
+    job - same engine, Playwright's whole API.
     """
     from .agent import OpenRouterBrain
     from .chat import DEFAULT_CHAT_ID
-    from .llm import make_client
-    from .routes import build_app
+    from .llm import make_client, orcarouter_client
+    from .provider import ProviderState, load_credential
+    from .routes import build_app, refresh_models
     from .sessions import Sessions
 
     # ⛔ THE RULE LIVES IN `llm.resolve_key`, AND UNTIL NOW THIS RE-IMPLEMENTED
@@ -236,21 +251,72 @@ def ui(openrouter_key, model, host, port, proxy, seed, headed, binary, profile_d
     # ClickException prints one line and exits 1 where a RuntimeError dumps a
     # traceback, and the sentence names the library for somebody who wanted a
     # browser rather than an agent.
-    try:
-        key = resolve_key(openrouter_key, os.environ)
-    except RuntimeError:
-        raise click.ClickException(
-            "no OpenRouter key. Pass --openrouter-key or set "
-            "OPENROUTER_API_KEY. To drive the browser without a model, use "
-            "the invisible_playwright library directly: same engine, "
-            "Playwright's whole API.")
+    #
+    # ⛔ AND ORCAROUTER IS RESOLVED THROUGH ITS OWN MODULE, never by reading a
+    # second variable name here. Which names count, what order they are read in
+    # and which origin the result is spent against are `aihawk.orcarouter`'s
+    # answers, and a copy of them in the CLI is a copy that can disagree.
+    chosen = (provider or "").strip().lower()
+    orcarouter_env_key = orcarouter_env(os.environ)
+    # ⛔ AN EXPLICIT `--provider openrouter` IS A CHOICE, NOT A DEFAULT. Without
+    # this the flag was read as "nobody said", so a shell that happens to export
+    # ORCAROUTER_API_KEY turned a named OpenRouter run into an OrcaRouter one -
+    # the key that got spent was not the one that was asked for.
+    named_openrouter = chosen == "openrouter"
+    wants_orcarouter = bool(orcarouter_connect or orcarouter_key or
+                            chosen.startswith("orcarouter") or
+                            (not named_openrouter and not openrouter_key and
+                             orcarouter_env_key and
+                             not os.environ.get("OPENROUTER_API_KEY")))
+    if orcarouter_connect:
+        chosen = "orcarouter-oauth"
+    elif wants_orcarouter and not chosen.startswith("orcarouter"):
+        chosen = "orcarouter"
+    if not wants_orcarouter:
+        try:
+            key = resolve_key(openrouter_key, os.environ)
+        except RuntimeError:
+            raise click.ClickException(
+                "no model key. Pass --openrouter-key or set "
+                "OPENROUTER_API_KEY for OpenRouter, or pass --orcarouter-key "
+                "or set ORCAROUTER_API_KEY for OrcaRouter - or sign in with "
+                "--orcarouter-connect. To drive the browser without a model, "
+                "use the invisible_playwright library directly: same engine, "
+                "Playwright's whole API.")
+    else:
+        key = orcarouter_key or orcarouter_env_key
     mdl = resolve_model(model, os.environ)
-    # ONE client, a brain PER CONVERSATION. The client is a connection and the
-    # brain is a transcript: sharing the first is what it is for, and sharing
-    # the second would give every session in the column the same memory, so
-    # asking one thing in a session would answer with another session's work.
-    client = make_client(key)
-    click.echo("model    %s via %s" % (mdl, BASE_URL))
+    state = ProviderState()
+    if wants_orcarouter:
+        # ⛔ A FLAG THAT NAMES A PROVIDER AND A KEY THAT BELONGS TO ANOTHER IS
+        # REFUSED, not quietly spent. Sending an OpenRouter key to OrcaRouter
+        # (or the reverse) is a 401 whose message says nothing about the cause.
+        if orcarouter_key and openrouter_key and orcarouter_key == openrouter_key:
+            raise click.ClickException(
+                "--orcarouter-key and --openrouter-key are the same value; "
+                "they are two different providers.")
+        if key:
+            state.set_credential(orcarouter.Credential(
+                key, method=orcarouter.BY_KEY, source="environment"))
+        else:
+            # ⛔ A CREDENTIAL FROM AN EARLIER RUN IS REUSED, NOT ASKED FOR AGAIN.
+            # There is a cap of ten PKCE-issued keys per user per day, and a
+            # client that signs in on every launch locks its own users out by
+            # lunchtime - so the stored credential is read here, through the one
+            # loader that also knows where it lives.
+            state.set_credential(load_credential(os.environ))
+        state.choose(chosen, model or os.environ.get("AIHAWK_MODEL") or None)
+        # ONE client, a brain PER CONVERSATION, whichever provider it is: the
+        # client is a connection and the brain is a transcript.
+        client = orcarouter_client(key or "no-key-yet")
+        mdl = state.model or orcarouter.DEFAULT_MODEL
+        click.echo("model    %s via %s (%s)"
+                   % (mdl, orcarouter.origins()[1],
+                      "a sign-in, no key yet" if not key else "api key"))
+    else:
+        state.choose("openrouter", mdl)
+        client = make_client(key)
+        click.echo("model    %s via %s" % (mdl, BASE_URL))
     # After the key, so a refusal costs nobody a quarter-gigabyte download;
     # before the link, so the spawned servers find the engine on disk.
     engine_on_disk(binary)
@@ -261,8 +327,10 @@ def ui(openrouter_key, model, host, port, proxy, seed, headed, binary, profile_d
     async def serve() -> None:
         import uvicorn
 
-        sessions = Sessions(opts, key, lambda: OpenRouterBrain(client, mdl),
-                            model_label=mdl)
+        sessions = Sessions(
+            opts, key,
+            lambda: OpenRouterBrain(client, mdl, model_of=lambda: state.model),
+            model_label=state.model_label() or mdl)
         # ⛔ THE DEFAULT CONVERSATION IS STARTED EAGERLY, EVERY OTHER ONE
         # LAZILY. Every conversation spawns its own server now, on first use -
         # `Sessions.get` - and the interface used to open ONE connection at
@@ -273,7 +341,15 @@ def ui(openrouter_key, model, host, port, proxy, seed, headed, binary, profile_d
         default = await sessions.get(DEFAULT_CHAT_ID)
         click.echo("server   connected, %d tools" % len(default.link.tools))
         click.echo("open     http://%s:%d" % (host, port))
-        app = build_app(sessions)
+        if wants_orcarouter and not key:
+            # ⛔ SAID OUT LOUD, BECAUSE THE COMMAND DID NOT DO WHAT IT WAS
+            # ASKED. There is no credential yet, so the panel has to be opened
+            # and the sign-in pressed; a run that starts quietly and fails at
+            # the first message would look like a model that is broken.
+            click.echo("connect  open the panel and press Connect with "
+                       "OrcaRouter, or pass --orcarouter-key")
+        await refresh_models(state)
+        app = build_app(sessions, state)
         server = uvicorn.Server(uvicorn.Config(app, host=host, port=port,
                                                log_level="warning"))
         try:

@@ -42,6 +42,7 @@ CSS_FILES = (
     "05-composer.css",     # the box you type in
     "06-browser.css",      # the browser bar and the live picture
     "07-stage.css",        # one screen, or two, or four
+    "08-provider.css",     # the provider card: the model, the two ways in
 )
 
 #: The script, in execution order.
@@ -56,6 +57,9 @@ JS_FILES = (
     "08-workspace.js",     # which browsers this session holds
     "09-stage.js",         # the screens and the strip
     "10-splitter.js",      # the separator between the panes
+    "11-provider.js",      # the provider card, the two ways in, the credential
+    "12-modellist.js",     # the model listbox: options, cursor, keyboard
+    "13-signin.js",        # the PKCE sign-in: attempt, code, cancel, pagehide
 )
 
 
