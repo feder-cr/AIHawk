@@ -18,6 +18,17 @@ jobs:
         run: python scripts/check_content.py --selftest
       - name: Content gates
         run: python scripts/check_content.py
+      # A README that promises to beat everything is refused here: an absolute,
+      # a circumvention word and a protection word in one sentence. The logic is
+      # `invisible_core.claims` since core 34.29.0, shared with the wrapper, and
+      # it sits in THIS job because `gate` is the context branch protection
+      # requires. A circumvention claim on its own stays allowed and is only
+      # reported. What it reads is the README, which is also what PyPI shows.
+      - name: The README promises nothing it cannot support
+        run: |
+          python -m pip install --upgrade pip "invisible-core>=34.29.0"
+          python -m invisible_core.claims --selftest
+          python -m invisible_core.claims
       - name: Wiki renders end to end
         run: |
           python scripts/build_wiki.py docs /tmp/wiki-out
