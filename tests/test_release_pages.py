@@ -55,18 +55,54 @@ import urllib.request
 
 import pytest
 
-PACKAGE = "invisible-playwright-mcp"
 REPOSITORY = "feder-cr/invisible_playwright_mcp"
+
+#: The distributions this repository has published under, in order, each with the
+#: last version that belongs to it: (name, after, through).
+#:
+#: ⛔ THIS REPOSITORY'S HISTORY SPANS TWO NAMES, and for half a day this file
+#: looked at one. `PACKAGE` was renamed from `aihawk` to `invisible-playwright-mcp`
+#: on 2026-09-23, and the check then compared THIS repository's tags against the
+#: SHIM's release history: about seventy tags reported as never published, which
+#: are published under `aihawk`, and two versions reported as having no release
+#: page, which belong to the shim. It was asking a question with no meaning, and
+#: the only thing hiding that was a transient 404 from the index tripping the
+#: skip branch.
+#:
+#: ⛔ AND THE BOUNDARY CANNOT BE DERIVED FROM A VERSION NUMBER, because the
+#: numbering OVERLAPS: `invisible-playwright-mcp` 0.1.0 through 0.16.0 is a shim
+#: published from an ARCHIVED repository, and seventeen of those versions carry
+#: the same number as one of ours. That is why the boundary is declared rather
+#: than computed.
+DISTRIBUTIONS = (
+    # Everything through 0.69.2 shipped as `aihawk`: 87 versions, 0.1.0 to
+    # 0.69.2, and that project was never anybody else's.
+    ("aihawk", None, "0.69.2"),
+    # From the next version on, the new name. Below the boundary that name
+    # belongs to the shim, not to us.
+    ("invisible-playwright-mcp", "0.69.2", None),
+)
+
+#: The name this repository publishes under TODAY, which is the last of the list:
+#: used in messages and for the question "is this version free".
+PACKAGE = DISTRIBUTIONS[-1][0]
 
 #: What the readers below answer when the index has never heard of the project.
 #:
 #: ⛔ THREE OUTCOMES, NOT TWO, AND THE THIRD ARRIVED AS AN UNHANDLED 404. Both
-#: readers went straight to `json.load`, on the assumption that the project is
-#: on the index - true every day until 2026-09-23, when the owner deleted it to
-#: free a name and the package took a name that had never published anything.
-#: All three tests here then died inside `urllib`, in a job CI runs with
-#: `INVISIBLE_MCP_CHECK_RELEASES=1`, with a traceback about HTTP rather than a sentence
-#: about releases.
+#: readers went straight to `json.load`, on the assumption that the project is on
+#: the index, and on 2026-09-23 the index answered 404 for both of this
+#: repository's distribution names. All three tests here died inside `urllib`, in
+#: a job CI runs with `INVISIBLE_MCP_CHECK_RELEASES=1`, with a traceback about
+#: HTTP rather than a sentence about releases.
+#:
+#: ⛔ AND THAT 404 WAS TRANSIENT, WHICH IS NOT WHAT IT WAS TAKEN FOR. It was
+#: read as the projects having been deleted, and three commit messages said so.
+#: PyPI does not let a deleted name be registered again, so 87 versions and 19
+#: versions could not have come back: they were never gone. The handling below is
+#: right anyway - an unreachable index must not read as a project with no
+#: releases - but it was written for a reason that was not true, and a gate whose
+#: account of itself is wrong teaches the next reader the wrong thing.
 #:
 #: An empty version list and an absent project are NOT the same news: a project
 #: that serves no usable version is the defect this file exists to report, while
@@ -80,14 +116,20 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def _releases_json():
-    """The index's `releases` map, or NOT_ON_THE_INDEX when there is no project.
+def _key(version: str):
+    """A version as a tuple of integers, so boundaries can be compared."""
+    return tuple(int(p) for p in version.split("."))
+
+
+def _releases_json(dist: str):
+    """The index's `releases` map for `dist`, or NOT_ON_THE_INDEX when there is
+    no such project.
 
     Only a 404 is turned into an answer. Any other failure is left to raise:
     an unreachable index must not read as a project with no releases.
     """
     try:
-        with urllib.request.urlopen(f"https://pypi.org/pypi/{PACKAGE}/json", timeout=30) as resp:
+        with urllib.request.urlopen(f"https://pypi.org/pypi/{dist}/json", timeout=30) as resp:
             return json.load(resp)["releases"]
     except urllib.error.HTTPError as failed:
         if failed.code == 404:
@@ -95,20 +137,102 @@ def _releases_json():
         raise
 
 
-def _skip_if_nothing_published(releases):
-    if releases is NOT_ON_THE_INDEX:
-        pytest.skip("the index has no project named %s, so nothing has been "
-                    "published to check tags or release pages against" % PACKAGE)
+def ours(*, yanked_too: bool = False) -> dict:
+    """version -> the distribution that served it, for the versions that are
+    releases of THIS repository.
+
+    ⛔ A version outside its range is not ours, and that is what this file had
+    wrong: `invisible-playwright-mcp` 0.15.1 and 0.15.2 are on the index and
+    belong to the shim, published from an archived repository. Asking for their
+    release page here is asking about work done somewhere else.
+
+    `yanked_too` separates the two questions this file asks. A yank says nobody
+    should install that version, so demanding a release page for it asks the
+    opposite of what the yank said; but a TAG for a yanked version is a release
+    that DID happen, and comparing tags against the live list alone would report
+    every yank as a failed publish.
+    """
+    mine = {}
+    answered = 0
+    for name, after, through in DISTRIBUTIONS:
+        releases = _releases_json(name)
+        if releases is NOT_ON_THE_INDEX:
+            continue
+        answered += 1
+        for v, files in releases.items():
+            if not files:
+                continue
+            if not yanked_too and all(f.get("yanked") for f in files):
+                continue
+            if after is not None and _key(v) <= _key(after):
+                continue
+            if through is not None and _key(v) > _key(through):
+                continue
+            mine[v] = name
+    if not answered:
+        _no_distribution_answered()
+    return mine
+
+
+def _release_tags() -> set:
+    """The version tags on this repository, or an empty set if it has none.
+
+    Read without a token when there is none: this is one call and the
+    unauthenticated limit is enough for it.
+    """
+    headers = {"Accept": "application/vnd.github+json"}
+    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    out, page = set(), 1
+    while True:
+        got = _github(f"tags?per_page=100&page={page}", headers)
+        if not got:
+            break
+        out |= {one["name"][1:] for one in got
+                if re.fullmatch(r"v\d+\.\d+\.\d+", one["name"])}
+        if len(got) < 100:
+            break
+        page += 1
+    return out
+
+
+def _no_distribution_answered():
+    """Every distribution answered 404. Skip only if we never published.
+
+    ⛔ FOUR OUTCOMES, NOT THREE, AND THE FOURTH IS WHY A REAL DEFECT HID FOR
+    HALF A DAY. Published, not published, never-published-anything, and
+    the-index-does-not-know are four different answers, and a 404 was being read
+    as the third. On 2026-09-23 pypi.org answered 404 for both of this
+    repository's names for a while; the check skipped, the `releases` job went
+    green, and what it was skipping over was a version of this file comparing
+    THIS repository's tags against another project's release history.
+
+    The discriminator costs one API call and uses state we already have: if this
+    repository has version TAGS, at least one of its distributions has to exist
+    on the index, so a 404 on all of them is the index not answering rather than
+    nothing having been published. Only a repository that has never tagged a
+    release may skip here.
+    """
+    names = " or ".join(d[0] for d in DISTRIBUTIONS)
+    tags = _release_tags()
+    if not tags:
+        pytest.skip("the index has no project named %s and this repository has no "
+                    "version tag either, so nothing has been published to check "
+                    "tags or release pages against" % names)
+    pytest.fail(
+        "the index answered 404 for every distribution this repository publishes "
+        "under (%s), and yet there are %d version tags here, the newest of which "
+        "is v%s. A repository that has tagged releases has published them, so "
+        "this is the index not answering rather than nothing having been "
+        "published, and skipping on it turns an unreachable index into a green "
+        "gate. Run it again; if it persists, pypi.org is down and this check "
+        "cannot say anything either way."
+        % (names, len(tags), max(tags, key=_key)))
 
 
 def _index_versions():
-    releases = _releases_json()
-    _skip_if_nothing_published(releases)
-    # Yanked versions are skipped: a yank says nobody should install this, and
-    # demanding a release page for it asks for the opposite of what the yank said.
-    live = [v for v, files in releases.items()
-            if files and not all(f.get("yanked") for f in files)]
-    return sorted(live, key=lambda v: tuple(int(p) for p in v.split(".")))
+    return sorted(ours(), key=_key)
 
 
 def test_every_published_version_has_a_release_page():
@@ -174,16 +298,15 @@ PUBLISH_GRACE_MINUTES = 45
 
 
 def _all_index_versions():
-    """Every version the index has ever served, yanked ones included.
+    """Every version this repository has published, yanked ones included, across
+    both of its distribution names.
 
     ⛔ NOT the live list the walk above uses. A yank says nobody should install
     that version; it does not say it was never published, and a tag for a yanked
     version is a release that DID happen. Comparing tags against the live list
     would report every yank as a failed publish.
     """
-    releases = _releases_json()
-    _skip_if_nothing_published(releases)
-    return {v for v, files in releases.items() if files}
+    return set(ours(yanked_too=True))
 
 
 def _github(path, headers):

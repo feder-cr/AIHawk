@@ -198,13 +198,17 @@ def test_the_check_can_tell_a_taken_version_from_a_free_one():
     A check that has only ever said "free" is not a check.
 
     ⛔ AND THE POSITIVE CASE USED TO BE OUR OWN `0.1.0`, ON THE REASONING THAT
-    IT "was published and is not coming back". A published release is not
-    permanent: on 2026-09-23 the owner deleted this project from the index to
-    free a name for it, every version with it, and the instrument's only
-    positive case went red for a reason that had nothing to do with the
-    instrument. A gate must not prove itself against state its own owner can
-    remove - and a brand-new name has nothing published at all, so there was
-    nothing to move the case to.
+    IT "was published and is not coming back". On 2026-09-23 the index answered
+    404 for this project and the instrument's only positive case went red for a
+    reason that had nothing to do with the instrument.
+
+    ⛔ THAT 404 WAS TRANSIENT, AND IT WAS TAKEN FOR A DELETION. It was not one:
+    PyPI does not let a deleted name be registered again, and 87 versions are
+    still served. The change below stands on its own anyway, which is why it was
+    kept after the reading was corrected: a gate that proves itself against ONE
+    release of ONE project fails whenever that project is unreachable, whether
+    the cause is a deletion or a bad minute at the index. What it needs is
+    something that cannot be absent without the package being uninstallable.
 
     ⛔ THEN IT ASKED ABOUT A VERSION THAT WAS INSTALLED, and that was right
     about where published versions come from and wrong about where this test

@@ -16,12 +16,19 @@ module path rather than at a command. Clients that had registered that name
 reached the real package through it, the shim could not follow a rename, and
 so the names it bound were pinned here.
 
-Both names were then deleted from the index by the owner: the old one because
-PyPI has no rename, and the shim's because that was the name the package was
-taking. Neither resolves any more, so the shim cannot be the reason for
-anything. What it used to do, this package now does directly: `uvx
-invisible-playwright-mcp` resolves here, and with no subcommand that is the
-stdio server, which is what those clients were being handed all along.
+⛔ AND AN EARLIER VERSION OF THIS PARAGRAPH SAID BOTH NAMES HAD BEEN DELETED
+FROM THE INDEX. They had not: the index answered 404 for both on 2026-09-23, that
+was read as a deletion, and PyPI does not let a deleted name be registered again,
+so 87 versions under the old name and 19 under the shim's could not have come
+back. Both are still there. The 404 was transient and the conclusion was not
+checked.
+
+What is true is smaller and still the point: the shim's last version is 0.16.0
+and it depends on the old distribution, so a client that registered that name
+gets the pre-rename product until this package publishes a version above it.
+From that release on, `uvx invisible-playwright-mcp` resolves here, and with no
+subcommand that is the stdio server, which is what those clients were being
+handed through the shim all along.
 
 So the three names below stay pinned for the reason they are ACTUALLY used,
 which the old account hid behind the shim: `cli._serve` imports `main` from the
