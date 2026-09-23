@@ -205,9 +205,9 @@ challenge stops the run or goes to a human.
 who also maintains the patched-Firefox engine and this wiki - which is
 exactly the conflict declared in the first line.
 
-**See also:** [Which model to use with invisible_playwright_mcp](which-model-to-use-with-aihawk.md)
+**See also:** [Which model to use with invisible_playwright_mcp](which-model-to-use-with-invisible-playwright-mcp.md)
 for the token-cost side of the decision, and
-[Running invisible_playwright_mcp with Claude Code](running-aihawk-with-claude-code.md) for
+[Running invisible_playwright_mcp with Claude Code](running-invisible-playwright-mcp-with-claude-code.md) for
 the MCP route.
 
 ## Sources

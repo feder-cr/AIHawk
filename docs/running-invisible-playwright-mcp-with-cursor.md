@@ -186,8 +186,8 @@ All retrieved 2026-09-03.
   this repository, for platform support, the real-input-events behavior and
   the shared engine cache.
 
-**See also:** [running invisible_playwright_mcp with Claude Code](running-aihawk-with-claude-code.md),
-[running invisible_playwright_mcp's browser from Claude Desktop](running-aihawk-with-claude-desktop.md),
+**See also:** [running invisible_playwright_mcp with Claude Code](running-invisible-playwright-mcp-with-claude-code.md),
+[running invisible_playwright_mcp's browser from Claude Desktop](running-invisible-playwright-mcp-with-claude-desktop.md),
 [getting an AI agent to fill out forms](ai-agent-fill-out-forms.md), and
 [extracting data to a CSV](how-to-extract-data-to-csv-with-an-ai-agent.md).
 

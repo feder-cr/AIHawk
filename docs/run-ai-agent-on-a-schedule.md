@@ -30,7 +30,7 @@ never built to be driven from outside its own chat box.
 
 **An assistant's own non-interactive mode.** If you have already wired an assistant
 to this browser over MCP, the same one-line attachment
-[Claude Code uses](running-aihawk-with-claude-code.md), most such CLIs offer a way to
+[Claude Code uses](running-invisible-playwright-mcp-with-claude-code.md), most such CLIs offer a way to
 run one prompt and exit instead of opening a chat window. Cron calls that entry
 point; the assistant calls the same browser tools it always does, and the process
 ends when the task is done. Claude Code, for one, says it plainly in its own help
@@ -63,7 +63,7 @@ model, nothing to bill.
 
 Every tick through an assistant's model spends money whether or not a person reads
 the answer. A job you forget about does not forget to charge you. The worked,
-illustrative example on [which model to use](which-model-to-use-with-aihawk.md) puts
+illustrative example on [which model to use](which-model-to-use-with-invisible-playwright-mcp.md) puts
 one 20-turn task at about $0.19 on the default model and about $0.96 on a frontier
 one. A schedule multiplies that by frequency: every five minutes is 288 runs a day,
 roughly $55 on the cheap end and $276 on the frontier one, for a job that may only
@@ -140,7 +140,7 @@ invented just for this.
 
 **See also:** [running the agent on a local model](ai-browser-agent-local-llm.md) if the token bill is what pushed you here, [Monitoring a page for changes with an AI agent](how-to-monitor-a-page-with-an-ai-agent.md),
 [Browser problem or model problem?](browser-problem-or-model-problem.md), and
-[Which model to use with invisible_playwright_mcp](which-model-to-use-with-aihawk.md).
+[Which model to use with invisible_playwright_mcp](which-model-to-use-with-invisible-playwright-mcp.md).
 
 ## Sources
 

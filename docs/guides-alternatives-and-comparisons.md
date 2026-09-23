@@ -29,7 +29,7 @@ another tool covers more, the page says so.
 - [Project Mariner is gone: what replaced it](project-mariner-is-gone.md)
 - [Manus alternatives](manus-alternatives.md)
 - [Gemini computer use vs Claude computer use](gemini-computer-use-vs-claude-computer-use.md)
-- [invisible_playwright_mcp, reviewed honestly by its own wiki](aihawk-review.md)
+- [invisible_playwright_mcp, reviewed honestly by its own wiki](invisible-playwright-mcp-review.md)
 - [AI browser vs AI browser agent: which one do you want?](ai-browser-vs-ai-browser-agent.md)
 - [What is an agentic browser?](what-is-an-agentic-browser.md)
 - [Open-source agentic browsers](agentic-browser-open-source.md)

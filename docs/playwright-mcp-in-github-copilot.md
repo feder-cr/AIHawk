@@ -121,7 +121,7 @@ in the config file. [The MCP server](mcp-server.md) lists which key each client
 expects, including the one that is not JSON.
 
 **See also:** [Playwright MCP best practices](playwright-mcp-best-practices.md),
-[running invisible_playwright_mcp with Claude Code](running-aihawk-with-claude-code.md), and
+[running invisible_playwright_mcp with Claude Code](running-invisible-playwright-mcp-with-claude-code.md), and
 [using an agent to test your own site](ai-agent-to-test-website.md).
 
 ## Sources

@@ -110,12 +110,12 @@ interactive sessions - "open the third FIT and tell me what
 the photos show about the kitchen" - `uvx invisible-playwright-mcp ui` gives you the same
 agent beside a live browser view, and if you already use Claude Code or
 Claude Desktop, the same browser attaches to your assistant instead
-([the setup page](running-aihawk-with-claude-code.md) has the one-liner).
+([the setup page](running-invisible-playwright-mcp-with-claude-code.md) has the one-liner).
 
 Two practical notes from the field. First, listing portals are heavy,
 banner-laden pages; a stronger model earns its cost here more than on
 simple pages, and
-[which model to use with invisible_playwright_mcp](which-model-to-use-with-aihawk.md) covers
+[which model to use with invisible_playwright_mcp](which-model-to-use-with-invisible-playwright-mcp.md) covers
 that trade. Second, keep the geography honest: if you run through a proxy
 for other work, a search "from" the wrong country gets you the wrong
 inventory and prices - plain home connection is the right default for a
@@ -187,7 +187,7 @@ agent](how-to-monitor-a-page-with-an-ai-agent.md) for the recurring-check
 mechanics this page leans on, [extracting data to a CSV with an AI
 agent](how-to-extract-data-to-csv-with-an-ai-agent.md) for turning
 sessions into a tracked spreadsheet, [which model to use with
-invisible_playwright_mcp](which-model-to-use-with-aihawk.md) for the model trade-off on
+invisible_playwright_mcp](which-model-to-use-with-invisible-playwright-mcp.md) for the model trade-off on
 heavy pages, and [why does my AI agent get
 blocked?](why-does-my-ai-agent-get-blocked.md) for when a portal pushes
 back.

@@ -183,8 +183,8 @@ All retrieved 2026-09-03.
   this repository, for the platform support boundary and the shared engine
   cache.
 
-**See also:** [running invisible_playwright_mcp with Claude Code](running-aihawk-with-claude-code.md),
-[running invisible_playwright_mcp's browser from Cursor](running-aihawk-with-cursor.md),
+**See also:** [running invisible_playwright_mcp with Claude Code](running-invisible-playwright-mcp-with-claude-code.md),
+[running invisible_playwright_mcp's browser from Cursor](running-invisible-playwright-mcp-with-cursor.md),
 [browser problem or model problem?](browser-problem-or-model-problem.md), and
 the rest of [Using the Agent](guides-using-the-agent.md).
 

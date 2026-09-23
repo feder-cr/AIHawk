@@ -17,7 +17,8 @@ the same on every machine.
 
 Known-bad: delete the `os.environ["INVISIBLE_MCP_HOME"] = ...` line at the top of
 `tests/conftest.py`. AT_IMPORT below then resolves to the platform's real
-directory - `%APPDATA%/aihawk`, `~/.local/share/aihawk` - and the first
+directory - `%APPDATA%/invisible-playwright-mcp`,
+`~/.local/share/invisible-playwright-mcp` - and the first
 assertion goes red whether or not that directory happens to hold anything
 today.
 """

@@ -203,7 +203,7 @@ else:
 
 
 @pytest.fixture(autouse=True)
-def _aihawk_home_is_disposable(tmp_path, monkeypatch):
+def _the_home_is_disposable(tmp_path, monkeypatch):
     monkeypatch.setenv("INVISIBLE_MCP_HOME", str(tmp_path / "invisible_playwright_mcp-home"))
 
 

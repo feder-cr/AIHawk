@@ -441,7 +441,7 @@ def check_token_has_a_neighbour(rel, text, count):
     accused of it.
 
     ⛔ AND THE ANCHOR IS ONLY THAT, because a looser one accused a healthy
-    paragraph on the first run: `which-model-to-use-with-aihawk.md` says "our
+    paragraph on the first run: `which-model-to-use-with-invisible-playwright-mcp.md` says "our
     own" while talking about a MODEL's context window of 1,310,720 tokens,
     which is a token figure this gate has no business having an opinion about.
     A gate that is red on a correct line teaches people to route around it.

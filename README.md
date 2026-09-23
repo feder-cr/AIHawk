@@ -186,4 +186,4 @@ it.
 <!-- The Official MCP Registry verifies ownership of a PyPI package by finding
      this token in the published description, which is this file. It must match
      the `name` in server.json exactly. -->
-<!-- mcp-name: io.github.feder-cr/aihawk -->
+<!-- mcp-name: io.github.feder-cr/invisible-playwright-mcp -->

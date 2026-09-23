@@ -18,8 +18,8 @@ tools over the same protocol as any other client.
 
 This page is Claude Code specifically. Claude Desktop and Cursor take a config
 file instead of a command, and have their own pages:
-[Claude Desktop](running-aihawk-with-claude-desktop.md) and
-[Cursor](running-aihawk-with-cursor.md). The config blocks themselves live in
+[Claude Desktop](running-invisible-playwright-mcp-with-claude-desktop.md) and
+[Cursor](running-invisible-playwright-mcp-with-cursor.md). The config blocks themselves live in
 the [MCP server page](mcp-server.md),
 which is the one place they are kept current.
 
@@ -189,8 +189,8 @@ All retrieved 2026-09-03.
   the server itself: config blocks for other clients, server-side options, and
   the current tool list.
 
-**See also:** [running invisible_playwright_mcp with Claude Desktop](running-aihawk-with-claude-desktop.md),
-[running invisible_playwright_mcp with Cursor](running-aihawk-with-cursor.md),
+**See also:** [running invisible_playwright_mcp with Claude Desktop](running-invisible-playwright-mcp-with-claude-desktop.md),
+[running invisible_playwright_mcp with Cursor](running-invisible-playwright-mcp-with-cursor.md),
 [how to extract data to CSV with an AI agent](how-to-extract-data-to-csv-with-an-ai-agent.md),
 and [browser problem or model problem?](browser-problem-or-model-problem.md).
 

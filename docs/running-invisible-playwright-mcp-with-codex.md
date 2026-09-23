@@ -1,61 +1,62 @@
 ---
-title: "Running invisible_playwright_mcp's browser from Gemini CLI"
-description: "One command installs the stealth browser in Gemini CLI as an extension, with its MCP server and a setup skill. What happens on first run, which tools Gemini gains, prompts to try first, and what goes wrong."
+title: "Running invisible_playwright_mcp's browser from Codex"
+description: "Two commands install the stealth browser in Codex as a plugin, with its MCP server and a setup skill. What happens on first run, which tools Codex gains, prompts to try first, and what goes wrong."
 parent: "Using the Agent"
-nav_order: 69
+nav_order: 68
 ---
 
 
-# Running invisible_playwright_mcp's browser from Gemini CLI
+# Running invisible_playwright_mcp's browser from Codex
 
-If you already use Gemini CLI, you do not need invisible_playwright_mcp's interface, its CLI, or
-an OpenRouter key. Gemini brings the model; you add the browser to it. The
-browser is the same MCP server invisible_playwright_mcp itself talks to -
+If you already use Codex, you do not need invisible_playwright_mcp's interface, its CLI, or an
+OpenRouter key. Codex brings the model; you add the browser to it. The browser
+is the same MCP server invisible_playwright_mcp itself talks to -
 [the MCP server](mcp-server.md) -
 so anything invisible_playwright_mcp's own interface can do, your assistant can do too, and that
 is by construction: the interface holds no privileged access, it calls the same
 tools over the same protocol as any other client.
 
-This page is Gemini CLI specifically. [Claude Code](running-aihawk-with-claude-code.md)
-and [Codex](running-aihawk-with-codex.md) have their own pages, and the clients
-that take a config file instead of a command have theirs:
-[Claude Desktop](running-aihawk-with-claude-desktop.md),
-[Cursor](running-aihawk-with-cursor.md), [Cline](running-aihawk-with-cline.md).
+This page is Codex specifically. [Claude Code](running-invisible-playwright-mcp-with-claude-code.md)
+and [Gemini CLI](running-invisible-playwright-mcp-with-gemini-cli.md) have their own pages, and the
+clients that take a config file instead of a command have theirs:
+[Claude Desktop](running-invisible-playwright-mcp-with-claude-desktop.md),
+[Cursor](running-invisible-playwright-mcp-with-cursor.md), [Cline](running-invisible-playwright-mcp-with-cline.md).
 The config blocks themselves live in the [MCP server page](mcp-server.md), which
 is the one place they are kept current.
 
-## The one line
+## The two lines
 
 Two prerequisites, same as everywhere in this project: Python 3.11 or newer on
 Windows (x86_64) or Linux (x86_64, arm64) - macOS is not supported, the last
 engine build for it was `firefox-20` - and [uv](https://docs.astral.sh/uv/),
-because the extension runs the server with `uvx`. Then, once:
+because the plugin runs the server with `uvx`. Then, once:
 
 ```bash
-gemini extensions install https://github.com/feder-cr/invisible_playwright_mcp
+codex plugin marketplace add feder-cr/invisible_playwright_mcp
+codex plugin add invisible-playwright-mcp@feder-cr
 ```
 
-Gemini CLI asks you to confirm that the extension comes from a third party,
-then reports it installed and enabled. The extension brings two things: the
-MCP server, started as `uvx invisible-playwright-mcp`, so there is nothing to clone or
-pip-install first; and a `setup` skill that knows about the engine download
-below, so Gemini can walk you through it if `browser_open` reports that the
-download failed. Check with `gemini extensions list`: `invisible_playwright_mcp` is there, with
-the server `invisible_playwright_mcp` under MCP servers and `setup` under agent skills.
+The first line registers the invisible_playwright_mcp repository as a plugin marketplace, which
+it is: the repository carries the marketplace file and is the plugin. The
+second installs `invisible-playwright-mcp` from it. The plugin brings two things: the MCP server,
+started as `uvx invisible-playwright-mcp`, so there is nothing to clone or pip-install first; and
+a `setup` skill that knows about the engine download below, so Codex can walk
+you through it if `browser_open` reports that the download failed. Check with
+`codex mcp list`: the server `invisible_playwright_mcp` is there, enabled, running `uvx invisible-playwright-mcp`.
+Start a fresh Codex session afterwards if one was already open.
 
-The same extension is listed in the
-[Gemini CLI extensions gallery](https://geminicli.com/extensions/), where the
-gallery's own install command is this one. Updates come with
-`gemini extensions update invisible_playwright_mcp`.
+Codex's own Plugins Directory does not list invisible_playwright_mcp, and will not: a listing
+there requires an MCP server reachable over HTTPS, and this one runs on your
+machine by design. The marketplace above is the whole install.
 
 ## First run: the download the server does on its own
 
-Installing the extension does not install the browser. The engine is a patched
+Installing the plugin does not install the browser. The engine is a patched
 Firefox of roughly a quarter of a gigabyte, and the server downloads it the
-first time it starts, from the moment Gemini connects it - so by the time you
+first time it starts, from the moment Codex connects it - so by the time you
 type a first browsing prompt, it is usually there. If it is not yet,
 `browser_open` does not sit there: it answers with how far the download is and
-asks to be called again in a minute, and Gemini does that on its own.
+asks to be called again in a minute, and Codex does that on its own.
 
 To get it over with in a terminal where you can watch the progress, or after a
 download that failed:
@@ -67,11 +68,12 @@ uvx invisible-playwright fetch
 It is cached afterwards and shared by every way into the engine, including
 invisible_playwright_mcp's own interface if you later run that too.
 
-## What Gemini actually gains
+## What Codex actually gains
 
-A set of browser tools from the server `invisible_playwright_mcp`. The authoritative list is
-whatever `/mcp` shows in a session for your installed server version; the
-families, with the names invisible_playwright_mcp's own client code knows them by:
+A set of browser tools under the server's name, `invisible_playwright_mcp`. The authoritative
+list is whatever `codex mcp list` and the session show for your installed
+server version; the families, with the names invisible_playwright_mcp's own client code knows
+them by:
 
 - **Navigation**: `browser_navigate`. A browser drives one page; when you
   need a second, `browser_open` opens the `support` browser beside it rather
@@ -114,11 +116,11 @@ results, and short steps keep its context small and its mistakes cheap.
 
 ## Troubleshooting
 
-- **`invisible_playwright_mcp` is not in `gemini extensions list`.** The install needs `git`
-  on your machine, because Gemini CLI fetches the extension from GitHub; the
-  command says so when it is missing. If `uvx` is not on your PATH, the
-  extension can be installed and its server still fail to start - install uv
-  and try `uvx invisible-playwright-mcp` by hand, which surfaces the real error.
+- **`invisible_playwright_mcp` is not in `codex mcp list`.** Run `codex plugin list` to see
+  whether the plugin is installed and enabled, and whether the marketplace
+  `feder-cr` is registered. If `uvx` is not on your PATH, the plugin can be
+  installed and its server still fail to start - install uv and try
+  `uvx invisible-playwright-mcp` by hand, which surfaces the real error.
 - **The first browsing prompt answers "the engine is downloading".** That is
   the server saying what it is doing, not a fault: ask again in a minute, or
   run the fetch command above in a terminal to watch it finish.
@@ -128,19 +130,20 @@ results, and short steps keep its context small and its mistakes cheap.
   systematic version of that diagnosis, and blocks and challenge pages have
   [their own checklist](why-does-my-ai-agent-get-blocked.md).
 - **You want a proxy, a fixed identity, or a persistent profile.** Those are
-  server-side options, read from the environment Gemini was started in; the
+  server-side options, read from the environment Codex was started in; the
   [MCP server page](mcp-server.md) documents them. This page deliberately
   does not duplicate that reference.
 
 ## Short answers to the questions that lead here
 
-**How do I add invisible_playwright_mcp's browser to Gemini CLI?**
-`gemini extensions install https://github.com/feder-cr/invisible_playwright_mcp`, once, with uv
-installed. New sessions then have the browser tools in `/mcp`.
+**How do I add invisible_playwright_mcp's browser to Codex?**
+`codex plugin marketplace add feder-cr/invisible_playwright_mcp`, then
+`codex plugin add invisible-playwright-mcp@feder-cr`, once, with uv installed. New sessions
+then have the browser tools.
 
 **Do I need an OpenRouter key for this?** No. The key is only for invisible_playwright_mcp's own
-interface and CLI, where invisible_playwright_mcp must bring a model. In Gemini CLI, Gemini is
-the model.
+interface and CLI, where invisible_playwright_mcp must bring a model. In Codex, Codex is the
+model.
 
 **Why does the first browsing request say the engine is downloading?** The
 engine, about a quarter of a gigabyte, is downloaded by the server itself when
@@ -154,30 +157,36 @@ privileged access.
 **Does it work on macOS?** No. The engine ships for Windows and Linux only;
 the last macOS build was `firefox-20`.
 
+**Why not OpenAI's Plugins Directory?** Because a listing there requires the
+MCP server to be reachable at a public HTTPS address, and this server runs on
+your machine, where the browser is.
+
 ## Sources
 
 All retrieved 2026-09-22.
 
 - [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), this repository's
-  README (the verbatim install command, the prerequisites and platforms, the
-  engine download), its `gemini-extension.json` (the manifest Gemini reads)
-  and source: `src/invisible_playwright_mcp/link.py` and `src/invisible_playwright_mcp/web.py` (the interface
-  reaching the browser over MCP as an ordinary client),
-  `src/invisible_playwright_mcp/actions_help.py` (the tool names above).
-- [Gemini CLI extensions](https://geminicli.com/docs/extensions/), the
-  install, list and update commands, and the gallery.
+  README (the verbatim install commands, the prerequisites and platforms, the
+  engine download), its `.codex-plugin/` and `.agents/plugins/` (the plugin
+  manifest and the marketplace file the first command registers) and source:
+  `src/invisible_playwright_mcp/link.py` and `src/invisible_playwright_mcp/web.py` (the interface reaching the
+  browser over MCP as an ordinary client), `src/invisible_playwright_mcp/actions_help.py` (the
+  tool names above).
+- [OpenAI, plugins for ChatGPT and Codex](https://developers.openai.com/plugins),
+  the plugin package layout, and its submission page, which is where the
+  public-HTTPS requirement for directory listings is stated.
 - [The MCP server page](mcp-server.md),
   the server itself: config blocks for other clients, server-side options, and
   the current tool list.
 
-**See also:** [running invisible_playwright_mcp with Claude Code](running-aihawk-with-claude-code.md),
-[running invisible_playwright_mcp with Codex](running-aihawk-with-codex.md),
+**See also:** [running invisible_playwright_mcp with Claude Code](running-invisible-playwright-mcp-with-claude-code.md),
+[running invisible_playwright_mcp with Gemini CLI](running-invisible-playwright-mcp-with-gemini-cli.md),
 [how to extract data to CSV with an AI agent](how-to-extract-data-to-csv-with-an-ai-agent.md),
 and [browser problem or model problem?](browser-problem-or-model-problem.md).
 
 ---
 
-*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. Gemini CLI takes
-the browser as an extension, one command and no config file, and the server
-says "downloading" instead of making you wait, so the first prompt is never a
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. Codex takes the
+browser as a plugin, two commands and no config file, and the server says
+"downloading" instead of making you wait, so the first prompt is never a
 mystery.*

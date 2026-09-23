@@ -24,7 +24,7 @@ as you.
 If the account can delete a listing, cancel a subscription, send a message, or
 move money, an agent signed into it can do all of that without pausing to ask
 whether it should. The login is not a formality, it is a set of permissions,
-and [invisible_playwright_mcp's own review](aihawk-review.md) names this same trade-off as a
+and [invisible_playwright_mcp's own review](invisible-playwright-mcp-review.md) names this same trade-off as a
 declared limit of the project, not a footnote.
 
 ## What can go wrong: the three real risks
@@ -144,7 +144,7 @@ before an instruction becomes an action; a self-hosted agent usually
 carries no such layer, so the caution has to live in your task and profile
 choices instead.
 
-**See also:** [invisible_playwright_mcp, reviewed honestly by its own wiki](aihawk-review.md),
+**See also:** [invisible_playwright_mcp, reviewed honestly by its own wiki](invisible-playwright-mcp-review.md),
 [why does my AI agent get blocked?](why-does-my-ai-agent-get-blocked.md), and
 [getting an AI agent to fill out forms](ai-agent-fill-out-forms.md).
 

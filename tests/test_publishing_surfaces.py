@@ -58,7 +58,7 @@ import tomllib
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
-REGISTRY_NAME = "io.github.feder-cr/aihawk"
+REGISTRY_NAME = "io.github.feder-cr/invisible-playwright-mcp"
 
 
 def _load():

@@ -86,7 +86,7 @@ not ours to make. Used through its own interface, it reaches models through
 OpenRouter with your key, so you can change the model without changing anything
 else, which is exactly the setup the half-hour procedure above wants.
 
-[Which model to use with invisible_playwright_mcp](which-model-to-use-with-aihawk.md) is the
+[Which model to use with invisible_playwright_mcp](which-model-to-use-with-invisible-playwright-mcp.md) is the
 product-specific version of this page.
 
 ## Short answers to the questions that lead here

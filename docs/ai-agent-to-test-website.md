@@ -31,8 +31,8 @@ The working pattern is one instruction, one flow, one report:
 > place the order. At each step, tell me what you saw, anything that looked
 > broken, and any error or validation message that appeared.
 
-Run it through an editor client - [Cursor](running-aihawk-with-cursor.md) or
-[Cline](running-aihawk-with-cline.md), where the same assistant also has your
+Run it through an editor client - [Cursor](running-invisible-playwright-mcp-with-cursor.md) or
+[Cline](running-invisible-playwright-mcp-with-cline.md), where the same assistant also has your
 code open - or from the terminal:
 
 > Open http://localhost:3000 and try to register a new user
@@ -170,8 +170,8 @@ All retrieved 2026-09-03.
   `--seed`, `--profile-dir`, and the agent loop the flakiness section
   describes.
 
-**See also:** [running invisible_playwright_mcp's browser from Cursor](running-aihawk-with-cursor.md),
-[running invisible_playwright_mcp's browser from Cline](running-aihawk-with-cline.md),
+**See also:** [running invisible_playwright_mcp's browser from Cursor](running-invisible-playwright-mcp-with-cursor.md),
+[running invisible_playwright_mcp's browser from Cline](running-invisible-playwright-mcp-with-cline.md),
 [getting an AI agent to fill out forms](ai-agent-fill-out-forms.md), and
 [browser problem or model problem?](browser-problem-or-model-problem.md).
 
