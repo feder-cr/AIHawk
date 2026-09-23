@@ -1,7 +1,7 @@
 """The suite must not be able to see the session the person using invisible_playwright_mcp has.
 
 ⛔ A VERDICT THAT DEPENDS ON WHAT THE DEVELOPER LEFT OPEN IS NOT A VERDICT.
-`tests/conftest.py` has pointed `AIHAWK_HOME` at a temporary directory since
+`tests/conftest.py` has pointed `INVISIBLE_MCP_HOME` at a temporary directory since
 sessions became persistent, and that covered every test BODY - but a fixture
 runs when a test runs, and a module-level line runs when the file is IMPORTED,
 which is earlier. One test module asks the server a question at import time,
@@ -15,7 +15,7 @@ This file is the gate for that, and it is deliberately not a scan for
 module-level calls: it measures the property those calls depend on, which is
 the same on every machine.
 
-Known-bad: delete the `os.environ["AIHAWK_HOME"] = ...` line at the top of
+Known-bad: delete the `os.environ["INVISIBLE_MCP_HOME"] = ...` line at the top of
 `tests/conftest.py`. AT_IMPORT below then resolves to the platform's real
 directory - `%APPDATA%/aihawk`, `~/.local/share/aihawk` - and the first
 assertion goes red whether or not that directory happens to hold anything
@@ -38,12 +38,12 @@ AT_IMPORT = storage.home()
 
 def _the_real_one():
     """Where sessions would be kept with nothing redirecting them."""
-    keep = os.environ.pop("AIHAWK_HOME", None)
+    keep = os.environ.pop("INVISIBLE_MCP_HOME", None)
     try:
         return storage.home()
     finally:
         if keep is not None:
-            os.environ["AIHAWK_HOME"] = keep
+            os.environ["INVISIBLE_MCP_HOME"] = keep
 
 
 def test_importing_a_test_module_cannot_reach_the_real_directory():
@@ -58,29 +58,34 @@ def test_and_neither_can_a_test_body():
     """The fixture's half of the same promise, and the older one."""
     real = _the_real_one()
     assert storage.home() != real
-    assert os.environ.get("AIHAWK_HOME"), "the redirection is not in place"
+    assert os.environ.get("INVISIBLE_MCP_HOME"), "the redirection is not in place"
 
 
-def test_the_real_directory_keeps_the_name_the_data_is_already_under():
-    """⛔ RENAMING THIS DIRECTORY IS DATA LOSS, AND NOTHING ELSE IN THE SUITE
-    CAN SEE IT.
+def test_the_real_directory_is_named_after_the_package():
+    """⛔ NOTHING ELSE IN THE SUITE VISITS THIS BRANCH, WHICH IS WHY IT HAS A
+    TEST OF ITS OWN.
 
-    Every other test runs with `AIHAWK_HOME` pointed at a temporary directory,
-    so the default branch of `storage.home()` is the one piece of the product
-    that the suite never visits - which is why the package rename on
-    2026-09-23 changed this literal to the new name and 781 green tests said
-    nothing. The directory is not a name the code owns: it is where the
-    sessions, profiles and screenshots of everybody who installed the old name
-    ALREADY ARE. Moving the literal does not move them, so the upgrade reads as
-    every login and every saved conversation having vanished, silently.
+    Every other test runs with `INVISIBLE_MCP_HOME` pointed at a temporary
+    directory, so the default branch of `storage.home()` is the one piece of the
+    product the suite never reaches. The package rename on 2026-09-23 changed
+    this literal and 781 green tests said nothing.
 
-    Same reason `AIHAWK_HOME` kept its name. This is the half that had no gate.
+    ⛔ AND THIS TEST SAID THE OPPOSITE FOR A DAY, deliberately: written as
+    `real.name == "aihawk"`, because the directory holds the profiles, logins and
+    saved conversations of everybody who installed the old name, and pointing
+    the process somewhere empty reads as all of it having vanished. The owner
+    then asked for the old name to be abandoned outright. Both things are still
+    true, and `storage.carry_over_the_old_directory` is how: the directory is
+    named after the package, and the data is MOVED rather than left behind.
+    `test_the_old_name_hands_over_its_data.py` is that half. This one is only
+    about the name, because a name is all `home()` decides.
     """
     real = _the_real_one()
-    assert real.name == "aihawk", (
-        "the default session directory is %r. Whatever the package is called, "
-        "the data on disk is under `aihawk`, and pointing the process at an "
-        "empty directory is how an upgrade loses it without saying so." % real.name)
+    assert real.name == storage.DIRECTORY, (
+        "the default session directory is %r and the package declares %r. "
+        "Whichever is wrong, a process looking in one place while the hand-over "
+        "writes to the other loses what was saved."
+        % (real.name, storage.DIRECTORY))
 
 
 def test_the_server_starts_each_test_holding_nothing():

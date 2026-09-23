@@ -38,7 +38,7 @@ class Sessions:
     does not any more: no tool takes one, none can be listed, none can be
     reached from another. So the id can no longer be a value passed over an
     open connection - it has to be which CONNECTION exists at all, and that
-    means one conversation, one spawned server PROCESS, its `AIHAWK_SESSION_ID`
+    means one conversation, one spawned server PROCESS, its `INVISIBLE_MCP_SESSION_ID`
     set at the moment it is started. Two ids would have been easier only in the
     sense that it used to be true; it is not the shape MCP has any more.
 
@@ -116,7 +116,7 @@ class Sessions:
 
         ⛔ SPAWNS ITS OWN SERVER, THE FIRST TIME, because that is now the only
         way one conversation's browsers stay apart from another's: each gets
-        its own process, with `AIHAWK_SESSION_ID` set to this id, so the server
+        its own process, with `INVISIBLE_MCP_SESSION_ID` set to this id, so the server
         inside never has more than the one thing to persist and never anything
         to confuse it with.
         """

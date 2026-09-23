@@ -71,7 +71,7 @@ class _NoBrain:
 @pytest.fixture()
 async def live(tmp_path, monkeypatch):
     """A real conversation with a real server child, and the app around it."""
-    monkeypatch.setenv("AIHAWK_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("INVISIBLE_MCP_HOME", str(tmp_path / "home"))
     monkeypatch.setenv("PYTHONPATH", _SRC + os.pathsep + os.environ.get("PYTHONPATH", ""))
     sessions = Sessions({}, None, _NoBrain, model_label="none")
     await sessions.get(DEFAULT_CHAT_ID)

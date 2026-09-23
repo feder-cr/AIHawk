@@ -24,7 +24,7 @@ back behind the model's back. What is left:
             `close_all()` at the end of the process.
 
 There is exactly one of these per process, because a process serves exactly
-one piece of work; `server.py` builds it from `AIHAWK_SESSION_ID` and every
+one piece of work; `server.py` builds it from `INVISIBLE_MCP_SESSION_ID` and every
 tool goes through it. A test builds its own with a factory that launches no
 browser and installs it in the server's place.
 """

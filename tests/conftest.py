@@ -9,7 +9,7 @@ never opened.
 
 Redirected here rather than in each test for the reason the pollution happened
 at all: the tests that touch this were written by somebody who knew about it,
-and the ones written next year will not be. `AIHAWK_HOME` is the single knob
+and the ones written next year will not be. `INVISIBLE_MCP_HOME` is the single knob
 `store.home()` reads first, so pointing it at a temporary directory for every
 test closes the whole class rather than the two cases somebody remembered.
 
@@ -59,8 +59,8 @@ import pytest
 #: no fixture teardown covers a directory made at import, and by 2026-09-22
 #: this machine held dozens of empty `invisible_playwright_mcp-tests-*` and `invisible_playwright_mcp-no-engine-*`
 #: directories, one pair per run.
-os.environ["AIHAWK_HOME"] = tempfile.mkdtemp(prefix="invisible_playwright_mcp-tests-")
-atexit.register(shutil.rmtree, os.environ["AIHAWK_HOME"], True)
+os.environ["INVISIBLE_MCP_HOME"] = tempfile.mkdtemp(prefix="invisible_playwright_mcp-tests-")
+atexit.register(shutil.rmtree, os.environ["INVISIBLE_MCP_HOME"], True)
 
 
 def _e2e_is_excluded(argv) -> bool:
@@ -204,7 +204,7 @@ else:
 
 @pytest.fixture(autouse=True)
 def _aihawk_home_is_disposable(tmp_path, monkeypatch):
-    monkeypatch.setenv("AIHAWK_HOME", str(tmp_path / "invisible_playwright_mcp-home"))
+    monkeypatch.setenv("INVISIBLE_MCP_HOME", str(tmp_path / "invisible_playwright_mcp-home"))
 
 
 @pytest.fixture(autouse=True)
@@ -251,7 +251,7 @@ def pytest_sessionfinish(session, exitstatus):
     gate deliberately holds to what a `pip install pytest` job has. `os` walks
     it: `shutil` would be one more name on that list for one call.
     """
-    for path in (os.environ.get("AIHAWK_HOME"), _THROWAWAY):
+    for path in (os.environ.get("INVISIBLE_MCP_HOME"), _THROWAWAY):
         if not path or not os.path.isdir(path):
             continue
         for here, dirs, files in os.walk(path, topdown=False):

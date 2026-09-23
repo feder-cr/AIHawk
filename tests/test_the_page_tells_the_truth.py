@@ -13,6 +13,8 @@ from pathlib import Path
 
 from invisible_playwright_mcp.ui import PAGE
 
+from _page import CARRIED
+
 #: ⛔ BOTH COMMENT SYNTAXES. This page explains its own rules in prose
 #: beside the code, so a scan that only strips `/* */` gets accused by the
 #: `<!-- -->` that says why the thing it forbids is forbidden - which is the
@@ -1049,7 +1051,7 @@ def test_the_sessions_panel_puts_the_page_behind_it_out_of_play():
         "const shot = () => ({left: made.left.inert, right: made.right.inert,",
         "  hidden: made.rail.hidden, focus: document.activeElement.id,",
         "  expanded: made.railtab.getAttribute('aria-expanded'),",
-        "  remembered: localStorage.getItem('aihawk.rail')});",
+        "  remembered: localStorage.getItem('invisible-playwright-mcp.rail')});",
         "showRail(true);  const opened = shot();",
         "showRail(false); const closed = shot();",
         "/* somebody else is holding the browser pane: opening and closing this",
@@ -1061,7 +1063,8 @@ def test_the_sessions_panel_puts_the_page_behind_it_out_of_play():
     ]
 
     done = subprocess.run(
-        [node, "-e", owner + chr(10) + panel + chr(10) + chr(10).join(harness)],
+        [node, "-e", CARRIED + chr(10) + owner + chr(10) + panel
+         + chr(10) + chr(10).join(harness)],
         capture_output=True, text=True, encoding="utf-8", timeout=30)
     assert done.returncode == 0, done.stderr
     got = json.loads(done.stdout)

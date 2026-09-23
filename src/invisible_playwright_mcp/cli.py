@@ -7,6 +7,7 @@ import sys
 
 import click
 
+from . import storage
 from .llm import BASE_URL, resolve_key, resolve_model
 from .runner import forget_key
 
@@ -158,6 +159,18 @@ def main(ctx) -> None:
     """
     applied = load_env_file()
     serving = ctx.invoked_subcommand is None
+
+    # ⛔ AFTER `.env`, BEFORE ANYTHING READS A SESSION. The file can be where
+    # the home override is set, and the move must not happen when it is. One
+    # startup edge, once per process: `storage.home()` stays a pure answer to
+    # "where is the directory" and this is the one place that decides about
+    # somebody's data. It says so, because a directory moving under a person
+    # with nothing printed is the same silence as losing it.
+    carried = storage.carry_over_the_old_directory()
+    if carried is not None:
+        click.echo("sessions moved to %s, from the directory the previous name "
+                   "used: nothing was merged and nothing was deleted" % carried,
+                   err=serving)
     if serving:
         # ⛔ A BROWSER SERVER HAS NO USE FOR A MODEL KEY, AND WHATEVER THIS
         # PROCESS HOLDS THE ENGINE INHERITS. This is where 0.68.2 handed it
@@ -205,7 +218,7 @@ def _serve() -> None:
 @click.option("--openrouter-key", default=None,
               help="OpenRouter API key (or env OPENROUTER_API_KEY). Required: "
                    "the interface does not start without a model.")
-@click.option("--model", default=None, help="Model id (or env AIHAWK_MODEL).")
+@click.option("--model", default=None, help="Model id (or env INVISIBLE_MCP_MODEL).")
 @click.option("--host", default="127.0.0.1", show_default=True,
               help="Interface bind address. Leave it on loopback unless you mean it.")
 @click.option("--port", type=int, default=8765, show_default=True)

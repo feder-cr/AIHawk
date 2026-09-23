@@ -33,7 +33,7 @@ def test_both_halves_read_through_the_one_reader(tmp_path, monkeypatch):
     """Known-bad: give either module back its own `json.loads` and its own
     try/except. It passes every test about saved sessions and conversations,
     and fails here."""
-    monkeypatch.setenv("AIHAWK_HOME", str(tmp_path))
+    monkeypatch.setenv("INVISIBLE_MCP_HOME", str(tmp_path))
     asked = []
 
     real = storage.read_json
@@ -52,7 +52,7 @@ def test_both_halves_read_through_the_one_reader(tmp_path, monkeypatch):
 
 def test_both_halves_delete_through_the_one_eraser(tmp_path, monkeypatch):
     """Known-bad: give either module back its own `unlink` and try/except."""
-    monkeypatch.setenv("AIHAWK_HOME", str(tmp_path))
+    monkeypatch.setenv("INVISIBLE_MCP_HOME", str(tmp_path))
     asked = []
 
     real = storage.erase
@@ -82,7 +82,7 @@ def test_erasing_something_that_is_not_there_is_not_a_failure(tmp_path, monkeypa
     Known-bad: let the exception out. Deleting a conversation that another tab
     deleted a second earlier then fails instead of being already done.
     """
-    monkeypatch.setenv("AIHAWK_HOME", str(tmp_path))
+    monkeypatch.setenv("INVISIBLE_MCP_HOME", str(tmp_path))
     assert store.erase("never-existed") is None
     assert chats.erase_chat("never-existed") is None
 
@@ -94,7 +94,7 @@ def test_a_file_that_will_not_parse_reads_as_nothing_saved(tmp_path, monkeypatch
     Known-bad: let `json.JSONDecodeError` out of `read_json`. A server whose
     saved file was truncated by a full disk then cannot start.
     """
-    monkeypatch.setenv("AIHAWK_HOME", str(tmp_path))
+    monkeypatch.setenv("INVISIBLE_MCP_HOME", str(tmp_path))
     store.save("work", {"main": {"seed": 1}}, focus="main")
     chats.save_chat("work", "a name", [], [])
 
@@ -114,7 +114,7 @@ def test_the_saved_session_is_json_an_outside_reader_can_use(tmp_path, monkeypat
     """The file is a join between two PROGRAMS, so its shape is a contract and
     not an implementation detail: the MCP server writes it, the interface reads
     the same directory to know a session exists at all."""
-    monkeypatch.setenv("AIHAWK_HOME", str(tmp_path))
+    monkeypatch.setenv("INVISIBLE_MCP_HOME", str(tmp_path))
     where = store.save("work", {"main": {"seed": 1, "proxy": None}}, focus="main")
 
     got = json.loads(where.read_bytes().decode("utf-8"))

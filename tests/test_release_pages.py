@@ -40,7 +40,7 @@ it is bounded by AGE rather than being forbidden outright: a tag pushed a minute
 ago and not yet on the index is a publish in flight, which is normal, and one
 from an hour ago is a release that silently shipped nothing.
 
-Enabled by AIHAWK_CHECK_RELEASES, which the `releases` CI job sets. It is one API
+Enabled by INVISIBLE_MCP_CHECK_RELEASES, which the `releases` CI job sets. It is one API
 call per version against a network service, so it does not belong in the unit
 suite, and a job that sets the variable itself cannot silently skip.
 """
@@ -65,7 +65,7 @@ REPOSITORY = "feder-cr/invisible_playwright_mcp"
 #: on the index - true every day until 2026-09-23, when the owner deleted it to
 #: free a name and the package took a name that had never published anything.
 #: All three tests here then died inside `urllib`, in a job CI runs with
-#: `AIHAWK_CHECK_RELEASES=1`, with a traceback about HTTP rather than a sentence
+#: `INVISIBLE_MCP_CHECK_RELEASES=1`, with a traceback about HTTP rather than a sentence
 #: about releases.
 #:
 #: An empty version list and an absent project are NOT the same news: a project
@@ -75,8 +75,8 @@ REPOSITORY = "feder-cr/invisible_playwright_mcp"
 NOT_ON_THE_INDEX = None
 
 pytestmark = pytest.mark.skipif(
-    os.environ.get("AIHAWK_CHECK_RELEASES") != "1",
-    reason="set AIHAWK_CHECK_RELEASES=1 to check the index against GitHub releases",
+    os.environ.get("INVISIBLE_MCP_CHECK_RELEASES") != "1",
+    reason="set INVISIBLE_MCP_CHECK_RELEASES=1 to check the index against GitHub releases",
 )
 
 

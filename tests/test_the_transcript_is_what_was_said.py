@@ -51,7 +51,7 @@ def test_a_saved_conversation_carries_no_system_message(tmp_path, monkeypatch):
     """Known-bad: hand `save_chat` the brain's messages unfiltered again. The
     file grows a system message that nothing will ever read, and the suite was
     green through every version that did it."""
-    monkeypatch.setenv("AIHAWK_HOME", str(tmp_path))
+    monkeypatch.setenv("INVISIBLE_MCP_HOME", str(tmp_path))
     service, _ = a_conversation()
     service.save()
 
@@ -74,7 +74,7 @@ def test_a_restored_conversation_leads_with_the_prompt_of_the_build_reading_it(
     carries one - which is the failure that makes the two halves one rule
     rather than two choices.
     """
-    monkeypatch.setenv("AIHAWK_HOME", str(tmp_path))
+    monkeypatch.setenv("INVISIBLE_MCP_HOME", str(tmp_path))
     service, _ = a_conversation()
     service.save()
 
@@ -101,7 +101,7 @@ def test_a_file_an_older_build_wrote_is_read_the_same_way(tmp_path, monkeypatch)
     a prompt from the day it was started, forever, which is the defect that
     filter was written for.
     """
-    monkeypatch.setenv("AIHAWK_HOME", str(tmp_path))
+    monkeypatch.setenv("INVISIBLE_MCP_HOME", str(tmp_path))
     chats.save_chat("old", "written by an older build", [], [
         {"role": "system", "content": "an old instruction, with emoji please"},
         {"role": "user", "content": "find me the price"},

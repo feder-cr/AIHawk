@@ -99,7 +99,7 @@ def test_a_queued_message_dies_with_the_conversation_it_belongs_to():
     does - holding text for something nobody can reach again."""
     harness = [
         "globalThis.here = 'mine';",
-        "const store = {'aihawk.queued.mine':'a', 'aihawk.queued.other':'b'};",
+        "const store = {'invisible-playwright-mcp.queued.mine':'a', 'invisible-playwright-mcp.queued.other':'b'};",
         "globalThis.localStorage = {removeItem(k){ delete store[k]; }};",
         "HERE",
         "dropQueued('other');",
@@ -107,11 +107,16 @@ def test_a_queued_message_dies_with_the_conversation_it_belongs_to():
         "dropQueued();",
         "process.stdout.write(JSON.stringify({afterOther, afterMine: Object.keys(store)}));",
     ]
-    src = (whole("const qkey = (who)", ";" + chr(10))
+    # ⛔ `STORE` IS SLICED IN, NOT RETYPED. `qkey` builds its key from it, so a
+    # harness that defined the prefix itself would keep passing after the page
+    # changed the real one - which is this file's own rule about doubles,
+    # applied to a constant instead of a function.
+    src = (whole("const STORE =", ";" + chr(10))
+           + whole("const qkey = (who)", ";" + chr(10))
            + whole("function dropQueued(", chr(10) + "}"))
     got = run(chr(10).join(harness).replace("HERE", src))
 
-    assert got["afterOther"] == ["aihawk.queued.mine"], (
+    assert got["afterOther"] == ["invisible-playwright-mcp.queued.mine"], (
         "deleting another conversation did not take its queued message with "
         "it: %r" % (got,))
     assert got["afterMine"] == [], (

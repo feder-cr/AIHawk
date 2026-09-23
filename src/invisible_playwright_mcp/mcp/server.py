@@ -4,7 +4,7 @@
 and not the same claim this file made a day earlier when a session held up to
 eight named browsers. This process serves exactly ONE piece of work: the two
 fixed browsers above, and nothing a tool can enumerate, name or reach a SECOND
-one of. `AIHAWK_SESSION_ID`, read once from the environment near the top of
+one of. `INVISIBLE_MCP_SESSION_ID`, read once from the environment near the top of
 this file, decides which saved file that one piece of work persists to - set
 by whoever spawns this process, never by a tool argument, never published in
 a schema, never something a model can read or pass. A model working through
@@ -55,6 +55,7 @@ from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from . import __version__, actions, plan, store
+from .. import env as environment
 from ..engine import Engine
 from ..quiet import swallow
 from .work import DEFAULT_BROWSER_ID, Work
@@ -77,7 +78,7 @@ from .work import MAX_BROWSERS_PER_SESSION, SUPPORT_BROWSER_ID  # noqa: F401
 #: all: `DEFAULT_SESSION_ID`. Two standalone clients on one machine therefore
 #: share a file, which is recorded as an open question in the workbench and
 #: not decided here.
-_SESSION_ID = os.environ.get("AIHAWK_SESSION_ID") or store.DEFAULT_SESSION_ID
+_SESSION_ID = environment.read(environment.SESSION_ID) or store.DEFAULT_SESSION_ID
 
 #: The one piece of work this process serves: its two browsers, where they
 #: were, and the file they are written to. Every tool below goes through it,

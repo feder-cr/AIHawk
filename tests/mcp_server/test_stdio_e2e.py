@@ -152,7 +152,7 @@ async def test_every_tool_reaches_the_wire_with_its_hints():
 async def _open_main(session_id):
     """Spawn a real server told which piece of work it is, open its own
     browser, and hand back what it was declared with."""
-    params = server_params({"AIHAWK_SESSION_ID": session_id})
+    params = server_params({"INVISIBLE_MCP_SESSION_ID": session_id})
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as mcp:
             await mcp.initialize()
@@ -169,14 +169,14 @@ async def _open_main(session_id):
 # engine named, which is where a test that needs one belongs.
 @pytest.mark.e2e
 async def test_two_real_processes_with_two_session_ids_persist_to_two_files():
-    """⛔ THE BLACK-BOX PROOF THAT `AIHAWK_SESSION_ID` ACTUALLY WORKS, with real
+    """⛔ THE BLACK-BOX PROOF THAT `INVISIBLE_MCP_SESSION_ID` ACTUALLY WORKS, with real
     subprocesses rather than a monkeypatched module attribute. This is the
     ONLY place a second session id can still be reached from outside this
     process at all: not a tool argument any MCP client can send, but an
     environment variable whoever SPAWNS the process sets, exactly like
     `STEALTHFOX_SEED` a few lines above it in `mcp/server.py`.
 
-    Known-bad: read `AIHAWK_SESSION_ID` into a name that collides with another
+    Known-bad: read `INVISIBLE_MCP_SESSION_ID` into a name that collides with another
     env var, or key the saved file by anything else. Both files would then be
     the same file, or the wrong one.
     """

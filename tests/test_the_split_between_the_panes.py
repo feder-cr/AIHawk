@@ -24,6 +24,8 @@ import pytest
 
 from invisible_playwright_mcp.ui import PAGE
 
+from _page import CARRIED
+
 NODE = shutil.which("node")
 FIRST = "const SPLITKEY ="
 LAST = "function splitter()"
@@ -71,7 +73,10 @@ TOKENS = {name: re.search(name + r":\s*([\d.]+px)", PAGE).group(1)
 def clamp(asked, width=1920, remember=True):
     """What the page would set the conversation to, asked for `asked` pixels."""
     body = PAGE[PAGE.index(FIRST):PAGE.index(LAST)]
-    js = ((SHIM % json.dumps(TOKENS)) + body
+    # The key is built from the page's one prefix, so what defines it has to
+    # run first: without this node throws `STORE is not defined`, which reads
+    # as the splitter being broken rather than the harness being short a line.
+    js = ((SHIM % json.dumps(TOKENS)) + CARRIED + body
           + "\nwindow.innerWidth = %d;" % width
           + "\nsplitTo(%s, %s);" % (json.dumps(asked), "true" if remember else "false")
           + "\nprocess.stdout.write(JSON.stringify({width: LEFT.style.width,"
@@ -147,7 +152,7 @@ def test_a_drag_is_remembered_and_a_restore_is_not():
 
     Known-bad: ignore the `remember` argument and always write.
     """
-    assert clamp(700, remember=True)["kept"] == {"aihawk.split": "700"}
+    assert clamp(700, remember=True)["kept"] == {"invisible-playwright-mcp.split": "700"}
     assert clamp(700, remember=False)["kept"] == {}
 
 

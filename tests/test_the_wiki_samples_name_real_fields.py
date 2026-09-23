@@ -75,7 +75,7 @@ def samples():
 async def test_every_published_sample_names_fields_the_server_has(tmp_path, monkeypatch):
     """Known-bad, and it is the defect that happened: put `running: false`
     back into a row of the sample, or `limit` back beside `focus`."""
-    monkeypatch.setenv("AIHAWK_HOME", str(tmp_path))
+    monkeypatch.setenv("INVISIBLE_MCP_HOME", str(tmp_path))
     work = Work("sample", factory=lambda **kwargs: _OnePage())
     await work.open("main")
     real = await work.listing()
@@ -107,7 +107,7 @@ async def test_a_sample_of_a_server_that_has_just_started_shows_nothing_open(tmp
     Known-bad: publish a sample with a browser in it beside the words that say
     nothing has been opened.
     """
-    monkeypatch.setenv("AIHAWK_HOME", str(tmp_path))
+    monkeypatch.setenv("INVISIBLE_MCP_HOME", str(tmp_path))
     work = Work("sample", factory=lambda **kwargs: _OnePage())
     fresh = await work.listing()
     assert fresh["browsers"] == [] and fresh["focus"] == ""

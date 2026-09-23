@@ -46,6 +46,7 @@ CSS_FILES = (
 
 #: The script, in execution order.
 JS_FILES = (
+    "00-carried.js",       # what the browser keeps, and the keys it keeps it under
     "01-markdown.js",      # the renderer for an answer
     "02-transcript.js",    # turns, steps, the queued message
     "03-which-session.js", # which conversation this page is in

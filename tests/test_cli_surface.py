@@ -71,7 +71,7 @@ def clean_provider_env(monkeypatch, tmp_path):
     keeps every test in this file honest about a second thing: none of them may
     depend on being run from inside the repository.
     """
-    for name in ("OPENROUTER_API_KEY", "AIHAWK_MODEL", "OPENAI_API_KEY",
+    for name in ("OPENROUTER_API_KEY", "INVISIBLE_MCP_MODEL", "OPENAI_API_KEY",
                  "ANTHROPIC_API_KEY"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.chdir(tmp_path)
@@ -329,7 +329,7 @@ def test_ui_help_names_openrouter_and_the_environment_variables():
     result = run("ui", "--help")
 
     assert result.exit_code == 0, result.output
-    for wanted in ("OPENROUTER_API_KEY", "AIHAWK_MODEL"):
+    for wanted in ("OPENROUTER_API_KEY", "INVISIBLE_MCP_MODEL"):
         assert wanted in result.output, "the help never names %s" % wanted
     for option in DECLARED_OPTIONS:
         assert option in result.output, "the help never names %s" % option

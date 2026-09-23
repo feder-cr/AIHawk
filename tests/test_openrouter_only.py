@@ -29,6 +29,8 @@ import socketserver
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+
+from invisible_playwright_mcp import env as environment
 from urllib.parse import urlparse
 
 import pytest
@@ -55,7 +57,7 @@ FOREIGN_ENV = {
     "ANTHROPIC_API_KEY": "sk-ant-from-env",
     "OPENROUTER_KEY": "near-miss-name",
     "OR_API_KEY": "near-miss-name",
-    "AIHAWK_KEY": "near-miss-name",
+    "INVISIBLE_MCP_KEY": "near-miss-name",
 }
 
 
@@ -66,8 +68,16 @@ def clean_env(monkeypatch):
     Without this, a machine that happens to export OPENAI_API_KEY would give a
     control test a passing result for the wrong reason.
     """
+    # ⛔ THE RETIRED NAMES ARE IN HERE TOO, AND THEY ARE READ FROM `env.RETIRED`
+    # RATHER THAN TYPED. The product still answers to them, so a machine that
+    # exports one would hand a control test a passing result for the wrong
+    # reason - the exact defect this fixture exists to prevent, wearing the
+    # previous brand. Reading the map means the day an entry leaves it, this
+    # stops clearing that name, instead of going stale and clearing it forever.
+    retired = set(environment.RETIRED.values())
     for name in list(os.environ):
-        if name.startswith(("OPENAI_", "OPENROUTER", "AIHAWK_", "ANTHROPIC_")):
+        if name.startswith(("OPENAI_", "OPENROUTER", "INVISIBLE_MCP_", "ANTHROPIC_")) \
+                or name in retired:
             monkeypatch.delenv(name, raising=False)
     return monkeypatch
 
@@ -220,11 +230,29 @@ def test_llm_reads_exactly_two_environment_variables():
     Known-bad: adding ``env.get("OPENAI_API_KEY")`` or an ``os.environ`` read
     anywhere in llm.py. A behavioural test can only catch the names it thought
     to try; this catches any new name at all.
+
+    ⛔ IT COUNTED LITERALS UNTIL 2026-09-23, AND THEN COUNTED ONE. The model's
+    variable moved out of this module into `env.py`, where it is one of a pair of
+    names rather than a string, and a scan for `env.get("...")` stopped seeing
+    it - so the pin would have gone on passing while nothing held the model's
+    name at all. The intent is unchanged and this is it under the new shape: one
+    name read directly, one reached through `env`, nothing else, and still no
+    name typed twice anywhere.
     """
     source = Path(llm.__file__).read_text(encoding="utf-8")
-    names = set(re.findall(r"""env\.get\(\s*["']([A-Za-z_][A-Za-z0-9_]*)["']""", source))
-    assert names == {"OPENROUTER_API_KEY", "AIHAWK_MODEL"}
-    assert "os.environ" not in source
+    direct = set(re.findall(r"""env\.get\(\s*["']([A-Za-z_][A-Za-z0-9_]*)["']""", source))
+    assert direct == {"OPENROUTER_API_KEY"}, (
+        "llm.py reads %r straight out of the mapping; the key is the only thing "
+        "it may, because everything else has a name in env.py" % sorted(direct))
+
+    through = set(re.findall(r"environment\.([A-Z][A-Z_]*)", source))
+    assert through == {"MODEL"}, (
+        "llm.py reaches env.py for %r; the model is the only variable this "
+        "module configures itself from" % sorted(through))
+
+    assert "os.environ" not in source, (
+        "llm.py reads the process environment directly, so a caller that hands "
+        "it a mapping is no longer being obeyed")
     assert "getenv" not in source
 
 
@@ -334,12 +362,12 @@ def test_app_attribution_constants_are_a_url_and_a_name():
 
 def test_model_explicit_wins_over_the_environment():
     """Known-bad: swapping the operands so the environment wins."""
-    assert resolve_model("m-arg", {"AIHAWK_MODEL": "m-env"}) == "m-arg"
+    assert resolve_model("m-arg", {"INVISIBLE_MCP_MODEL": "m-env"}) == "m-arg"
 
 
 def test_model_environment_used_when_no_argument():
-    """Known-bad: dropping the AIHAWK_MODEL lookup."""
-    assert resolve_model(None, {"AIHAWK_MODEL": "m-env"}) == "m-env"
+    """Known-bad: dropping the INVISIBLE_MCP_MODEL lookup."""
+    assert resolve_model(None, {"INVISIBLE_MCP_MODEL": "m-env"}) == "m-env"
 
 
 def test_model_falls_back_to_the_default_constant():
@@ -365,7 +393,7 @@ def test_empty_model_falls_through_to_the_default():
     """Known-bad: ``if explicit is not None``, which would ask OpenRouter for
     the model named "" and get a confusing 404 instead of the default."""
     assert resolve_model("", {}) == DEFAULT_MODEL
-    assert resolve_model(None, {"AIHAWK_MODEL": ""}) == DEFAULT_MODEL
+    assert resolve_model(None, {"INVISIBLE_MCP_MODEL": ""}) == DEFAULT_MODEL
 
 
 # --------------------------------------------------------------------------

@@ -43,7 +43,7 @@ outright rather than guessed at. The outcomes are free, taken-but-unmoved,
 taken-and-moved, and cannot-tell, and only the third is a defect while the
 fourth is a broken bench.
 
-Enabled by AIHAWK_CHECK_VERSION, which the `version` CI job sets itself, so it
+Enabled by INVISIBLE_MCP_CHECK_VERSION, which the `version` CI job sets itself, so it
 cannot silently skip the way it does in a local run.
 """
 from __future__ import annotations
@@ -75,8 +75,8 @@ PREVIOUS_RELEASE_TAG = "v0.5.0"
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("AIHAWK_CHECK_VERSION"),
-    reason="set AIHAWK_CHECK_VERSION=1 to ask the index (one network call)",
+    not os.environ.get("INVISIBLE_MCP_CHECK_VERSION"),
+    reason="set INVISIBLE_MCP_CHECK_VERSION=1 to ask the index (one network call)",
 )
 
 

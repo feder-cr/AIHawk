@@ -40,9 +40,9 @@ def test_child_env_maps_session_id_and_it_is_not_a_stealthfox_name():
     conversation never finds what it saved.
     """
     env = child_env({"session_id": "lavoro"}, {})
-    assert env["AIHAWK_SESSION_ID"] == "lavoro"
+    assert env["INVISIBLE_MCP_SESSION_ID"] == "lavoro"
 
 
 def test_child_env_omits_session_id_when_absent():
     env = child_env({}, {})
-    assert "AIHAWK_SESSION_ID" not in env
+    assert "INVISIBLE_MCP_SESSION_ID" not in env

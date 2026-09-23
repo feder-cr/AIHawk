@@ -96,7 +96,7 @@ jobs:
           python-version: "3.12"
       - name: the index and the tags agree with each other
         env:
-          AIHAWK_CHECK_RELEASES: "1"
+          INVISIBLE_MCP_CHECK_RELEASES: "1"
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           python -m pip install --upgrade pip pytest
@@ -235,7 +235,7 @@ jobs:
           python-version: "3.12"
       - name: the version this change proposes is still free
         env:
-          AIHAWK_CHECK_VERSION: "1"
+          INVISIBLE_MCP_CHECK_VERSION: "1"
         run: |
           python -m pip install --upgrade pip
           pip install pytest

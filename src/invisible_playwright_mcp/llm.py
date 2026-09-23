@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Mapping
 
+from . import env as environment
+
 BASE_URL = "https://openrouter.ai/api/v1"
 DEFAULT_MODEL = "z-ai/glm-5.3-flash"
 
@@ -25,7 +27,7 @@ def resolve_key(explicit: str | None, env: Mapping[str, str]) -> str:
 
 
 def resolve_model(explicit: str | None, env: Mapping[str, str]) -> str:
-    return explicit or env.get("AIHAWK_MODEL") or DEFAULT_MODEL
+    return explicit or environment.read(environment.MODEL, env) or DEFAULT_MODEL
 
 
 def make_client(key: str):

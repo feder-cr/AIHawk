@@ -12,7 +12,7 @@ invisible_playwright_mcp brings the browser and you bring the model, from
 [OpenRouter](https://openrouter.ai) and nowhere else. If you set nothing, you get
 `z-ai/glm-5.3-flash`: that is the default written into the source, and it sits at
 the cheap-and-fast end of the catalog rather than the flagship end. You override it
-with `--model` on `invisible-playwright-mcp ui`, or the `AIHAWK_MODEL` environment variable, and
+with `--model` on `invisible-playwright-mcp ui`, or the `INVISIBLE_MCP_MODEL` environment variable, and
 any model id OpenRouter serves is legal. So the real question is not "which model
 does invisible_playwright_mcp support" - all of them - but which one is worth paying for on this
 kind of work, and that has a less obvious answer than the price sheet suggests.
@@ -152,7 +152,7 @@ criteria above do not.
 ## Short answers to the questions that lead here
 
 **What model does invisible_playwright_mcp use by default?** `z-ai/glm-5.3-flash`, via OpenRouter. Set
-`--model` or `AIHAWK_MODEL` to use anything else OpenRouter serves.
+`--model` or `INVISIBLE_MCP_MODEL` to use anything else OpenRouter serves.
 
 **Do I need an OpenRouter account?** For invisible_playwright_mcp's own interface, yes - the
 model comes from OpenRouter and nowhere else in the current source, and since

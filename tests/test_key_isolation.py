@@ -83,7 +83,7 @@ def test_the_key_string_appears_in_no_value_at_all():
     satisfies a name-only assertion in some shapes and, more importantly, any
     future change that copies the key into a second variable for the child.
     """
-    base = {"PATH": "/x", "HOME": "/home/u", KEY_NAME: KEY, "AIHAWK_MODEL": "z-ai/glm-4.6"}
+    base = {"PATH": "/x", "HOME": "/home/u", KEY_NAME: KEY, "INVISIBLE_MCP_MODEL": "z-ai/glm-4.6"}
     env = child_env({"proxy": "http://h:1", "seed": 7, "binary": "C:/ff.exe"}, base)
     assert values_carrying(env, KEY) == []
 

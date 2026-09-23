@@ -24,7 +24,7 @@ async def test_server_registers_expected_tools():
         "browser_open", "browser_close", "browser_list",
         # ⛔ RENAMED ON 2026-09-11, WHEN MCP STOPPED HAVING A SESSION CONCEPT AT
         # ALL: this process serves exactly one piece of work, told which by
-        # `AIHAWK_SESSION_ID` at spawn time, never by a tool argument - so the
+        # `INVISIBLE_MCP_SESSION_ID` at spawn time, never by a tool argument - so the
         # tools that used to say "session" now say "browser", because there is
         # no second one here to distinguish it from.
         #

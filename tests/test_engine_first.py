@@ -110,7 +110,7 @@ def test_a_failed_download_is_one_line_and_an_exit_and_names_the_fetch_by_hand()
 
 @pytest.fixture(autouse=True)
 def _no_key_from_the_machine(monkeypatch, tmp_path):
-    for name in ("OPENROUTER_API_KEY", "AIHAWK_MODEL"):
+    for name in ("OPENROUTER_API_KEY", "INVISIBLE_MCP_MODEL"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.chdir(tmp_path)
 

@@ -3,13 +3,7 @@
    time the page loads is a panel that ignores what you told it. Per browser
    rather than per conversation - which panels you keep open is a habit, not a
    property of the work. */
-// The key keeps the name the data is already stored under. Renaming it
-// does not move what is in localStorage, it just stops finding it: the
-// origin is the same 127.0.0.1 before and after, so the old entries are
-// still there, and a reader pointed at a new name reads nothing. Same
-// reason `AIHAWK_HOME` and the session directory kept theirs when the
-// package was renamed on 2026-09-23.
-const RAILKEY = 'aihawk.rail';
+const RAILKEY = STORE + 'rail';
 
 /* The panel's own line, for what the panel itself failed to do. Emptied by the
    next `drawChats`, so nothing has to remember to clear it. */
@@ -92,7 +86,7 @@ addEventListener('pointerdown', (e) => {
   showRail(false);
 }, true);
 
-try { showRail(localStorage.getItem(RAILKEY) === '1'); } catch(err){ showRail(false); }
+showRail(carried(RAILKEY) === '1');
 
 async function renameChat(btn, id, was){
   /* ⛔ IN THE ROW, NOT IN A NATIVE PROMPT. See `confirms` for why no dialog on

@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from typing import Any, Mapping, Optional
 
+from . import env as environment
+
 
 #: The one name the key is expected under. Compared case-insensitively, because
 #: on POSIX `openrouter_api_key` is a different variable to the shell and the
@@ -136,5 +138,5 @@ def child_env(opts: Mapping[str, Any], base_env: Mapping[str, str],
         # server per conversation; a client that never sets it - `uvx invisible-playwright-mcp`
         # in Claude Desktop - lands on the one name every caller landed on
         # before this had a name at all.
-        env["AIHAWK_SESSION_ID"] = str(opts["session_id"])
+        env[environment.SESSION_ID] = str(opts["session_id"])
     return env

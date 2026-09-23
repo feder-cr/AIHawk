@@ -92,7 +92,7 @@ It drives the page the way a person would: the pointer moves, keys are pressed.
 ## Options: proxy, profile, seed
 
 - **`--openrouter-key`** Your key, or the `OPENROUTER_API_KEY` variable.
-- **`--model`** An OpenRouter model id, or `AIHAWK_MODEL`. Defaults to `z-ai/glm-5.3-flash`.
+- **`--model`** An OpenRouter model id, or `INVISIBLE_MCP_MODEL`. Defaults to `z-ai/glm-5.3-flash`.
 - **`--proxy`** Optional. `http://user:pass@proxy.example.com:8080` or
   `socks5://proxy.example.com:1080`. Host and port are both required. The
   timezone, locale and egress follow it.
@@ -172,7 +172,7 @@ leaves your computer, and to whom:
   shows, your IP address.
 
 Nothing else is collected and nothing is sent to the author. Sessions,
-profiles and screenshots are stored locally, under `AIHAWK_HOME` if set and
+profiles and screenshots are stored locally, under `INVISIBLE_MCP_HOME` if set and
 otherwise in the application-data directory of your system, and are yours to
 delete; nothing is retained anywhere else. Questions go to the
 [issues](https://github.com/feder-cr/invisible_playwright_mcp/issues).

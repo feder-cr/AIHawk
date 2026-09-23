@@ -28,6 +28,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+from . import env as environment
 from .quiet import swallow
 
 #: The id of the session a process serves when nobody names one.
@@ -39,38 +40,78 @@ from .quiet import swallow
 DEFAULT_SESSION_ID = "default"
 
 
+#: The directory this package keeps sessions in, under the place each system
+#: expects. `RETIRED_DIRECTORY` is what it was called until 2026-09-23, and
+#: `carry_over_the_old_directory` is what stops that rename from being data loss.
+DIRECTORY = "invisible-playwright-mcp"
+RETIRED_DIRECTORY = "aihawk"
+
+
+def _base() -> Path:
+    """The system directory applications keep their data under."""
+    if sys.platform == "win32":
+        return Path(os.environ.get("APPDATA") or (Path.home() / "AppData" / "Roaming"))
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Application Support"
+    return Path(os.environ.get("XDG_DATA_HOME") or (Path.home() / ".local" / "share"))
+
+
 def home() -> Path:
     """Where sessions are kept.
 
-    `AIHAWK_HOME` wins, which is what the tests use and what lets somebody put
-    this on another disk. Otherwise the place each system expects, so a person
-    finds it where they would look for it rather than in a dotfile invented
-    here.
+    `INVISIBLE_MCP_HOME` wins, which is what the tests use and what lets
+    somebody put this on another disk. Otherwise the place each system expects,
+    so a person finds it where they would look for it rather than in a dotfile
+    invented here.
 
-    ⛔ THE DIRECTORY IS STILL CALLED `aihawk`, AND RENAMING IT IS DATA LOSS.
-    The package, the command and the module were renamed; this was not, because
-    it is not a name the code owns - it is where sessions, profiles and
-    screenshots ALREADY ARE on the disk of everybody who installed the old
-    name. Changing the literal does not move them: it makes the process look
-    somewhere empty, so an upgrade reads as every login, every cookie and every
-    saved conversation having vanished, with nothing printed.
-
-    It is the same reason `AIHAWK_HOME` kept its name one line above, and the
-    rename's own rule list said so about the VARIABLE while missing the
-    DIRECTORY THE VARIABLE POINTS AT. Caught 2026-09-23 by reading the diff of
-    every string literal in `src/`, not by a test: no test can see it, because
-    a test sets `AIHAWK_HOME` and never visits the default at all.
+    ⛔ IT IS A PURE FUNCTION AND IT MOVES NOTHING. Every part of the product
+    calls it, several times per request, and the rename below needs a decision
+    about somebody's data: that belongs at a startup edge that runs once and can
+    say what it did, not inside the answer to "where is the directory".
     """
-    override = os.environ.get("AIHAWK_HOME")
+    override = environment.read(environment.HOME)
     if override:
         return Path(override).expanduser()
-    if sys.platform == "win32":
-        base = os.environ.get("APPDATA") or (Path.home() / "AppData" / "Roaming")
-        return Path(base) / "aihawk"
-    if sys.platform == "darwin":
-        return Path.home() / "Library" / "Application Support" / "aihawk"
-    base = os.environ.get("XDG_DATA_HOME") or (Path.home() / ".local" / "share")
-    return Path(base) / "aihawk"
+    return _base() / DIRECTORY
+
+
+def carry_over_the_old_directory() -> Optional[Path]:
+    """Move the sessions of the old name onto the new one, once. Says where to.
+
+    ⛔ WITHOUT THIS, RENAMING THE DIRECTORY IS DATA LOSS AND NOTHING PRINTS. It
+    holds the profiles, the logins and the saved conversations of everybody who
+    installed the old name. Changing the literal does not move them: it points
+    the process at somewhere empty, so an upgrade reads as all of it having
+    vanished. The package, the command and the module were renamed on
+    2026-09-23 and this was deliberately NOT, on that reasoning; the owner then
+    asked for the old name to be abandoned outright, and carrying the data is
+    what makes those two things compatible.
+
+    Three cases, and only the first touches anything:
+
+    * the new directory is absent and the old one is there: renamed onto the new
+      name. One `os.replace` of the directory itself, inside one parent, so
+      there is no copy to be interrupted half way and no merge to get wrong.
+    * both are there: nothing. The new one is the live one, and folding an older
+      tree into it would have to decide which copy of a session wins - a
+      decision with no right answer that nobody asked for.
+    * the override is set: nothing. The caller pointed somewhere explicitly, and
+      moving a directory they did not name is not this function's business.
+
+    Returns the directory that was moved onto, or None when nothing was.
+    """
+    if environment.read(environment.HOME):
+        return None
+    new = _base() / DIRECTORY
+    old = _base() / RETIRED_DIRECTORY
+    if new.exists() or not old.is_dir():
+        return None
+    with swallow("a directory that will not move is not worth refusing to start "
+                 "over: the sessions stay readable under the old name, and the "
+                 "next run tries again"):
+        os.replace(old, new)
+        return new
+    return None
 
 
 def safe_name(session_id: str) -> str:

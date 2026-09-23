@@ -268,5 +268,5 @@ def image_of(result) -> "tuple[bytes, str] | None":
 # takes one - so the only way left to keep two conversations apart is the one
 # this always should have been: two conversations, two CONNECTIONS, each its
 # own spawned server told at birth which saved file is its own
-# (`AIHAWK_SESSION_ID`, in `Sessions.get`). A plain `Link` is what every
+# (`INVISIBLE_MCP_SESSION_ID`, in `Sessions.get`). A plain `Link` is what every
 # conversation holds now; there is no second class to wrap it in.
