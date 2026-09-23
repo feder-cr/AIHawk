@@ -12,8 +12,8 @@ from __future__ import annotations
 import pytest
 from invisible_playwright.async_api import TargetClosedError
 
-from aihawk.mcp import GONE, NOT_OPEN, actions, server, store
-from aihawk.mcp.work import REMEMBERED, Work
+from invisible_playwright_mcp.mcp import GONE, NOT_OPEN, actions, server, store
+from invisible_playwright_mcp.mcp.work import REMEMBERED, Work
 
 
 class _Recording:

@@ -1,11 +1,11 @@
 {
   "name": "feder-cr",
   "interface": {
-    "displayName": "AIHawk"
+    "displayName": "invisible_playwright_mcp"
   },
   "plugins": [
     {
-      "name": "aihawk",
+      "name": "invisible-playwright-mcp",
       "source": {
         "source": "local",
         "path": "./"

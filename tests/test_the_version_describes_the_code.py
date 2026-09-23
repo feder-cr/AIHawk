@@ -1,7 +1,7 @@
 """The version this package reports describes the code, not the install record.
 
 ⛔ THE DEFECT THESE HOLD. `__version__` came from
-`importlib.metadata.version("aihawk")`, which answers about the DISTRIBUTION the
+`importlib.metadata.version("invisible_playwright_mcp")`, which answers about the DISTRIBUTION the
 installer put there. An editable install writes that metadata once and the code
 keeps moving, so on the machine this is developed on the record said 0.54.0
 while the tree it points at said 0.68.8. The tree was fully up to date at the
@@ -31,7 +31,7 @@ from pathlib import Path
 
 import pytest
 
-from aihawk._version import EDITABLE, declared_by, source_tree, versions
+from invisible_playwright_mcp._version import EDITABLE, declared_by, source_tree, versions
 
 PKG = "tinydist"
 
@@ -91,7 +91,7 @@ ASK = """
 import json, sys
 sys.path.insert(0, %r)
 import importlib.metadata as md
-from aihawk._version import versions
+from invisible_playwright_mcp._version import versions
 print(json.dumps({"record": md.version(%r), "versions": versions(%r)}))
 """
 
@@ -209,31 +209,31 @@ def test_a_tree_that_declares_nothing_readable_falls_back(tmp_path):
 
 
 def test_this_package_reports_one_version_from_one_place():
-    """⛔ THE FACT IS KNOWN IN ONE PLACE. `aihawk.mcp` used to run its own
+    """⛔ THE FACT IS KNOWN IN ONE PLACE. `invisible_playwright_mcp.mcp` used to run its own
     `importlib.metadata` lookup beside the parent's: two computations of one
     fact, free to disagree the day one of them changes, which is the shape the
     comment above them was already complaining about."""
-    import aihawk
-    import aihawk.mcp
+    import invisible_playwright_mcp
+    import invisible_playwright_mcp.mcp
 
-    assert aihawk.mcp.__version__ is aihawk.__version__
-    assert aihawk.__version__
+    assert invisible_playwright_mcp.mcp.__version__ is invisible_playwright_mcp.__version__
+    assert invisible_playwright_mcp.__version__
 
 
 def test_the_running_install_is_described_by_what_it_reports():
     """Whatever mode this suite is running in, the report has to match it. The
     CI runs `pip install -e`, so the editable branch is the one under the
     suite; a wheel run takes the other."""
-    import aihawk
+    import invisible_playwright_mcp
     from importlib.metadata import distribution
 
-    dist = distribution("aihawk")
+    dist = distribution("invisible_playwright_mcp")
     tree = source_tree(dist)
     if tree is None:
-        assert aihawk.__version__ == dist.version
-        assert EDITABLE not in aihawk.__version__
+        assert invisible_playwright_mcp.__version__ == dist.version
+        assert EDITABLE not in invisible_playwright_mcp.__version__
     else:
         declared = declared_by(tree)
         assert declared is not None, (
             "this tree is installed editable and declares no readable version")
-        assert aihawk.__version__ == declared + EDITABLE
+        assert invisible_playwright_mcp.__version__ == declared + EDITABLE

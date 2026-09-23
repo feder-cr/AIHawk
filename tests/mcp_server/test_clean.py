@@ -8,7 +8,7 @@ time - the other four all shipped a plausible number.
 
 import pytest
 
-from aihawk.mcp import clean
+from invisible_playwright_mcp.mcp import clean
 from selectolax.lexbor import LexborHTMLParser
 
 
@@ -311,11 +311,11 @@ def test_the_package_version_is_derived_not_typed():
     import re
     from pathlib import Path
 
-    import aihawk
-    import aihawk.mcp as pkg
-    from aihawk._version import versions
+    import invisible_playwright_mcp
+    import invisible_playwright_mcp.mcp as pkg
+    from invisible_playwright_mcp._version import versions
 
-    typed = [p.name for p in Path(aihawk.__file__).parent.rglob("*.py")
+    typed = [p.name for p in Path(invisible_playwright_mcp.__file__).parent.rglob("*.py")
              if re.search(r'__version__\s*=\s*["\']\d+\.\d+',
                           p.read_text(encoding="utf-8"))]
     assert not typed, "a version literal is back in %s" % typed
@@ -324,5 +324,5 @@ def test_the_package_version_is_derived_not_typed():
     # this module ran its own `importlib.metadata` lookup beside the parent's:
     # two computations of a single fact, which is the defect the docstring above
     # is about, in a politer shape.
-    assert pkg.__version__ is aihawk.__version__
-    assert aihawk.__version__ == versions()[0]
+    assert pkg.__version__ is invisible_playwright_mcp.__version__
+    assert invisible_playwright_mcp.__version__ == versions()[0]

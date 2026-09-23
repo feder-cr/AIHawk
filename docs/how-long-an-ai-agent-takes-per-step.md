@@ -44,7 +44,7 @@ Fit a line through those and you get **about one second of fixed cost plus about
 with five such fields is a minute of wall clock before the model has done
 anything at all.
 
-![Three measured points plotted against the number of characters typed into one field: 1.87 seconds for three characters, 3.93 for twelve, 12.63 for forty-three. A dashed line through them shows the model, about 1.06 seconds of fixed cost plus 269 milliseconds per character, and the line does not pass through the origin.](https://raw.githubusercontent.com/feder-cr/aihawk_mcp_server/main/docs/img/how-long-an-ai-agent-takes-per-step.png)
+![Three measured points plotted against the number of characters typed into one field: 1.87 seconds for three characters, 3.93 for twelve, 12.63 for forty-three. A dashed line through them shows the model, about 1.06 seconds of fixed cost plus 269 milliseconds per character, and the line does not pass through the origin.](https://raw.githubusercontent.com/feder-cr/invisible_playwright_mcp/main/docs/img/how-long-an-ai-agent-takes-per-step.png)
 
 The line not passing through the origin is the part worth seeing: there is a
 per-field cost that exists before the first keystroke, which is why a form of

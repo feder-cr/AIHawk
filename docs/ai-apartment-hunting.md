@@ -18,7 +18,7 @@ real browser is good at, and precisely the shape a scripted scraper is bad
 at, because the facts live in free text and photos, not in stable fields.
 
 This page covers what the agent genuinely does for a search like this, a
-concrete workflow with the `aihawk` CLI, and the boundaries stated up
+concrete workflow with the `invisible_playwright_mcp` CLI, and the boundaries stated up
 front rather than in the fine print - because listing portals have terms
 too, and an agent does not exempt you from them.
 
@@ -82,7 +82,7 @@ minutes is a bill and a signature.
 ## The workflow, concretely
 
 Reading listings against criteria is judgment work, so it runs where the
-model is: `uvx aihawk ui`, or your assistant with AIHawk's browser attached.
+model is: `uvx invisible-playwright-mcp ui`, or your assistant with invisible_playwright_mcp's browser attached.
 A worked instruction to paste, with the portal URL being whatever
 search-results page you have already set up by hand:
 
@@ -107,15 +107,15 @@ scheduled script on the same engine captures the listing count or the newest
 title each morning, and when that signal moves you bring the judgment prompt
 above to the agent. Once a day, or twice in a genuinely fast market. For
 interactive sessions - "open the third FIT and tell me what
-the photos show about the kitchen" - `uvx aihawk ui` gives you the same
+the photos show about the kitchen" - `uvx invisible-playwright-mcp ui` gives you the same
 agent beside a live browser view, and if you already use Claude Code or
 Claude Desktop, the same browser attaches to your assistant instead
-([the setup page](running-aihawk-with-claude-code.md) has the one-liner).
+([the setup page](running-invisible-playwright-mcp-with-claude-code.md) has the one-liner).
 
 Two practical notes from the field. First, listing portals are heavy,
 banner-laden pages; a stronger model earns its cost here more than on
 simple pages, and
-[which model to use with AIHawk](which-model-to-use-with-aihawk.md) covers
+[which model to use with invisible_playwright_mcp](which-model-to-use-with-invisible-playwright-mcp.md) covers
 that trade. Second, keep the geography honest: if you run through a proxy
 for other work, a search "from" the wrong country gets you the wrong
 inventory and prices - plain home connection is the right default for a
@@ -171,9 +171,9 @@ binding, human reviews and submits. See
 
 All retrieved 2026-09-03.
 
-- The [AIHawk README](https://github.com/feder-cr/aihawk_mcp_server#readme), for the
-  `uvx aihawk ui` command, the MCP path for assistants, and the profile and
-  proxy behavior (updated for aihawk 0.3.0, which removed the `do`
+- The [invisible_playwright_mcp README](https://github.com/feder-cr/invisible_playwright_mcp#readme), for the
+  `uvx invisible-playwright-mcp ui` command, the MCP path for assistants, and the profile and
+  proxy behavior (updated for invisible_playwright_mcp 0.3.0, which removed the `do`
   subcommand).
 - [Rightmove's terms-of-use page](https://www.rightmove.co.uk/this-site/terms-of-use.html),
   for its stated prohibition on scraping its content, cited as the
@@ -187,13 +187,13 @@ agent](how-to-monitor-a-page-with-an-ai-agent.md) for the recurring-check
 mechanics this page leans on, [extracting data to a CSV with an AI
 agent](how-to-extract-data-to-csv-with-an-ai-agent.md) for turning
 sessions into a tracked spreadsheet, [which model to use with
-AIHawk](which-model-to-use-with-aihawk.md) for the model trade-off on
+invisible_playwright_mcp](which-model-to-use-with-invisible-playwright-mcp.md) for the model trade-off on
 heavy pages, and [why does my AI agent get
 blocked?](why-does-my-ai-agent-get-blocked.md) for when a portal pushes
 back.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The agent
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The agent
 reads the listings; you still take the viewing - and the flat with the
 suspiciously wide-angle photos is still small.*

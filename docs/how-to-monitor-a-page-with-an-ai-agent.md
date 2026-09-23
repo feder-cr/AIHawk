@@ -67,13 +67,13 @@ roughly a minute of wall clock. Daily is comfortable; every five minutes is a
 bill and, as covered below, a signature. The scheduled capture itself, as the
 next section shows, costs no model at all.
 
-## Scheduling it: a script, as of aihawk 0.3.0
+## Scheduling it: a script, as of invisible_playwright_mcp 0.3.0
 
-Since 0.3.0 AIHawk itself is interactive-only (`uvx aihawk ui`): there is no
+Since 0.3.0 invisible_playwright_mcp itself is interactive-only (`uvx invisible-playwright-mcp ui`): there is no
 headless subcommand to put in cron anymore. That is less of a loss than it
 sounds, because the scheduled half of monitoring is deliberately mechanical -
 fetch the page, extract one signal, save it - and mechanical work belongs in
-code, not in model turns. The same stealth engine AIHawk drives is on PyPI as
+code, not in model turns. The same stealth engine invisible_playwright_mcp drives is on PyPI as
 a Python library with Playwright's API, so the check is a short script. This
 one runs as shown, against the public scraping sandbox:
 
@@ -110,7 +110,7 @@ A real crontab line, deliberately not on the hour:
 17 8 * * *  python $HOME/hawk-mon/check_page.py >> $HOME/hawk-mon/$(date +\%F).txt 2>&1
 ```
 
-The interface (`uvx aihawk ui`) has no scheduler; the recurring path is this
+The interface (`uvx invisible-playwright-mcp ui`) has no scheduler; the recurring path is this
 script plus whatever scheduler your system already has.
 
 ## What to store between runs
@@ -138,7 +138,7 @@ means the memory of the monitor is yours to keep. Two files do it:
 
 - **The dated archive.** Keep every line with its timestamp. When the diff
   fires and the question becomes "does this change MATTER", that is the
-  judgment half - open `uvx aihawk ui` (or your assistant with this browser
+  judgment half - open `uvx invisible-playwright-mcp ui` (or your assistant with this browser
   attached) and ask exactly that, with the two saved lines pasted in. The
   agent earns its per-session cost only on the days something actually moved,
   which is the whole economics of the hybrid this page keeps arguing for.
@@ -188,7 +188,7 @@ yes, by orders of magnitude on cost and latency. It stops being overkill when
 the check requires reading: meaningful-change questions, prose thresholds,
 summarized deltas.
 
-**How do I schedule AIHawk to check a page every day?** Cron (or any
+**How do I schedule invisible_playwright_mcp to check a page every day?** Cron (or any
 scheduler) plus the `check_page.py` script above on the same engine: `seed`
 for a stable identity, `profile_dir` for a persistent profile, and stdout
 redirected somewhere dated. There is no built-in scheduler; a script that
@@ -217,10 +217,10 @@ All retrieved 2026-09-03.
 - [dgtlmoon/changedetection.io](https://github.com/dgtlmoon/changedetection.io),
   the self-hosted diff-based monitor referenced as the plain-tool baseline,
   including its scheduling and notification features.
-- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README and
+- [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), plus its README and
   source in this repository: the interface entrypoint and the
   open-run-close session behavior in
-  [`src/aihawk/runner.py`](https://github.com/feder-cr/aihawk_mcp_server/blob/main/src/aihawk/runner.py).
+  [`src/invisible_playwright_mcp/runner.py`](https://github.com/feder-cr/invisible_playwright_mcp/blob/main/src/invisible_playwright_mcp/runner.py).
 - [invisible_playwright](https://github.com/feder-cr/invisible_playwright),
   the engine as a Python library, whose Playwright API the scheduled script
   uses; the script above was executed against books.toscrape.com on
@@ -229,11 +229,11 @@ All retrieved 2026-09-03.
 **See also:** [extracting data to a CSV](how-to-extract-data-to-csv-with-an-ai-agent.md),
 [agent retry loops and rate limits](agent-retry-loops-rate-limits.md),
 [the timing signal AI agents give off](ai-agent-timing-signal.md), and
-[which model to use with AIHawk](which-model-to-use-with-aihawk.md) for keeping
+[which model to use with invisible_playwright_mcp](which-model-to-use-with-invisible-playwright-mcp.md) for keeping
 per-check cost down.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The maintainer runs
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The maintainer runs
 the two-stage version: a free diff watching always, the agent woken only to
 answer "does this matter", which is the only question worth paying it for.*

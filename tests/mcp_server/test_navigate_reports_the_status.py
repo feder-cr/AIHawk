@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import pytest
 
-from aihawk.mcp import actions
+from invisible_playwright_mcp.mcp import actions
 
 
 class _Response:
@@ -179,7 +179,7 @@ async def test_the_status_is_real_and_not_just_a_fake_objects_attribute():
     import socket
     import threading
 
-    from aihawk.mcp.session import StealthSession
+    from invisible_playwright_mcp.mcp.session import StealthSession
 
     PAGE = b"<!doctype html><html><head><title>local</title></head><body>hi</body></html>"
 

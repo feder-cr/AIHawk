@@ -26,12 +26,12 @@ import os
 
 import pytest
 
-from aihawk import cli
+from invisible_playwright_mcp import cli
 
 
 @pytest.fixture(autouse=True)
 def _clean_environment(monkeypatch):
-    for name in ("AIHAWK_TEST_KEY", "OPENROUTER_API_KEY", "STEALTHFOX_BINARY"):
+    for name in ("INVISIBLE_MCP_TEST_KEY", "OPENROUTER_API_KEY", "STEALTHFOX_BINARY"):
         monkeypatch.delenv(name, raising=False)
 
 

@@ -17,7 +17,7 @@ page maps the open-source projects in the screenshot-and-click category, verifie
 against their own repositories on 2026-09-03, and is honest about when the category
 is the right one, which is less often than the demos suggest.
 
-Disclosure, as on every comparison page here: this is AIHawk's wiki, and AIHawk is a
+Disclosure, as on every comparison page here: this is invisible_playwright_mcp's wiki, and invisible_playwright_mcp is a
 browser agent, not a computer-use agent. The category difference below is real and
 cuts both ways.
 
@@ -116,7 +116,7 @@ The decision is about the task surface, not the project quality.
 
 - **Everything happens in web pages:** use a browser agent. The structured view is
   more precise, cheaper per step, and its failures are diagnosable. The options are
-  on [the browser-agent page](ai-browser-agent-open-source.md); AIHawk is one of
+  on [the browser-agent page](ai-browser-agent-open-source.md); invisible_playwright_mcp is one of
   them, and that sentence carries this wiki's standing disclosure.
 - **The task touches desktop applications, or a UI with no readable structure:**
   computer-use is the only category that reaches it. Take the sandbox seriously.
@@ -159,7 +159,7 @@ computer-use agents. This page covers open-source ones; for the hosted compariso
 see [OpenAI Operator vs Claude computer use](openai-operator-vs-claude-computer-use.md)
 and [open-source Operator-style agents](openai-operator-open-source.md).
 
-**Is AIHawk a computer-use agent?** No. It is a browser agent: it reads page
+**Is invisible_playwright_mcp a computer-use agent?** No. It is a browser agent: it reads page
 structure through MCP tools and drives a patched Firefox. If your task leaves the
 browser, use one of the projects on this page instead.
 
@@ -180,6 +180,6 @@ All retrieved 2026-09-03, from each project's own repository.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. AIHawk sits in the
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. invisible_playwright_mcp sits in the
 other category, the browser agents, which is exactly why this page spends its words
 on when pixels beat structure and not the reverse.*

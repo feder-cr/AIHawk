@@ -1,6 +1,6 @@
 # Articles
 
-Guides on using AIHawk, with worked examples.
+Guides on using invisible_playwright_mcp, with worked examples.
 
 - [Extracting a category to CSV](extracting-a-category-to-csv/) - a 32-book
   category over two pages, driven over MCP, with the wrong turn left in.

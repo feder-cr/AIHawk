@@ -16,7 +16,7 @@ the reasonable default, and nothing below changes that.
 
 This page is for people who do have a specific reason. It goes through the
 reasons that are real and verifiable, then the alternatives, one of which is
-ours: this wiki belongs to [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), so
+ours: this wiki belongs to [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), so
 read the comparison knowing who wrote it. No claim here about browser-use goes
 beyond what its own repository and configuration surface show.
 
@@ -96,9 +96,9 @@ operates the whole desktop, reporting 72.6% on OSWorld. If your automation
 keeps leaving the browser for spreadsheets and dialogs, this is the switch
 that actually addresses it.
 
-**AIHawk** ([repo](https://github.com/feder-cr/aihawk_mcp_server), ~30k stars, MIT) -
+**invisible_playwright_mcp** ([repo](https://github.com/feder-cr/invisible_playwright_mcp), ~30k stars, MIT) -
 ours. The differentiator against browser-use is the browser, not the agent
-loop: AIHawk drives a Firefox patched at the C++ level (the
+loop: invisible_playwright_mcp drives a Firefox patched at the C++ level (the
 invisible_playwright engine), a real browser presenting a normal desktop
 fingerprint, rather than a stock automation build driven over CDP. Identity is
 derived from a seed, so a failing run replays exactly. It plugs into an MCP
@@ -122,7 +122,7 @@ rather than asking you to believe a claim.
 - **Layouts keep breaking your flows:** Skyvern.
 - **The task leaves the browser:** Agent S3.
 - **The browser itself is what gets recognized, or you want the agent inside
-  your MCP assistant, or you need runs to replay deterministically:** AIHawk,
+  your MCP assistant, or you need runs to replay deterministically:** invisible_playwright_mcp,
   conflict of interest noted.
 - **You want a hosted service:** Browser Use Cloud or Skyvern's cloud - both
   vendors' own material describes them; we did not test either.
@@ -130,7 +130,7 @@ rather than asking you to believe a claim.
 ## Short answers to the questions that lead here
 
 **What is the best alternative to browser-use?** Wrong axis. Skyvern changes
-the perception approach, Agent S3 changes the scope, AIHawk changes the
+the perception approach, Agent S3 changes the scope, invisible_playwright_mcp changes the
 browser. Pick by which of those three is your actual problem.
 
 **Does browser-use work with Firefox?** Its configuration expects a
@@ -145,7 +145,7 @@ Attribute first, switch second.
 **Is browser-use free?** The MIT core is. Model tokens cost whatever your
 provider charges, and the cloud is a paid product.
 
-**Is AIHawk better than browser-use?** Not in general, and this is our own
+**Is invisible_playwright_mcp better than browser-use?** Not in general, and this is our own
 wiki saying so. It is better specifically where a real-fingerprint Firefox
 and reproducible identity matter, and worse on ecosystem size, macOS, and
 managed hosting.
@@ -163,11 +163,11 @@ for whether you need an agent at all.
 - [browser-use.com](https://browser-use.com/), retrieved 2026-09-03, for the two commercial products named above.
 - [SiliconANGLE: Browser Use raises $17M](https://siliconangle.com/2025/03/23/browser-use-raises-17m-help-steer-ai-agents-internet/), surfaced via search 2026-09-03.
 - [browser-use getting blocked: what you can and cannot change](browser-use-getting-blocked.md), this wiki's own analysis, which reads `BrowserProfile`'s fields from browser-use's source.
-- The [Skyvern](https://github.com/Skyvern-AI/skyvern), [Agent-S](https://github.com/simular-ai/Agent-S) and [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) repositories, retrieved 2026-09-03.
+- The [Skyvern](https://github.com/Skyvern-AI/skyvern), [Agent-S](https://github.com/simular-ai/Agent-S) and [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) repositories, retrieved 2026-09-03.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), a
+*Written while maintaining [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), a
 direct competitor to the tool this page is about. That is why the first
 section praises browser-use, the second tells you how to stay on it, and every
 critical claim points at its own repository.*

@@ -1,14 +1,14 @@
-"""Where `aihawk ui` is stopped inside a test, and the proof that it stopped.
+"""Where `invisible-playwright-mcp ui` is stopped inside a test, and the proof that it stopped.
 
 ⛔ ONE PLACE, BECAUSE TWO COST FOUR CI PUSHES AND A DAY OF RUNNER TIME.
 `cli.ui` does not import `Link`. It builds a `Sessions` registry and asks it
 for a conversation, and `Sessions._spawn_link` is where `Link(...)` is actually
 called, bound there by `sessions.py`'s own `from .link import Link` at import
-time. So the seam is `aihawk.sessions.Link` and nothing else: patching
-`aihawk.link.Link` rebinds a name the command never reads.
+time. So the seam is `invisible_playwright_mcp.sessions.Link` and nothing else: patching
+`invisible_playwright_mcp.link.Link` rebinds a name the command never reads.
 
 That was worked out once and written down in `test_cli_surface.py`, and the
-file next door went on patching `aihawk.link.Link` anyway - the same fact in
+file next door went on patching `invisible_playwright_mcp.link.Link` anyway - the same fact in
 two places, corrected in one. Measured 2026-09-11: the brake reached nothing,
 the command ran on, and uvicorn served the interface with no end inside a unit
 test. Every CI matrix job hung to GitHub's six-hour ceiling on four pushes, and
@@ -29,8 +29,8 @@ from __future__ import annotations
 
 from click.testing import CliRunner
 
-import aihawk.cli as climod
-import aihawk.sessions as sessions_mod
+import invisible_playwright_mcp.cli as climod
+import invisible_playwright_mcp.sessions as sessions_mod
 
 #: 203.0.113.0/24 is TEST-NET-3, reserved by RFC 5737 and routed nowhere, so
 #: the bind fails on every platform. Nothing here is about the address: it is

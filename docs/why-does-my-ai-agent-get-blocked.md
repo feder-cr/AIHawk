@@ -40,7 +40,7 @@ an automation build.
 **Can the framework fix it? Yes.** This is the one layer that is entirely the
 tooling's job, because the fingerprint is a property of the browser the agent
 ships. It is also where agent frameworks differ most: an agent driving a stock
-automation browser inherits that browser's tells. AIHawk's browser is a real
+automation browser inherits that browser's tells. invisible_playwright_mcp's browser is a real
 Firefox patched at the C++ level (the invisible_playwright engine), built so that
 what both kinds of reading see is a consistent, ordinary Firefox, and that is its
 honest advantage on exactly this layer. Stated just as plainly: it does nothing for
@@ -60,7 +60,7 @@ operator matters more than the individual address, is on the wiki:
 
 **Can the framework fix it? No, and be suspicious of anything claiming to.** The
 exit address is supplied by you: your machine's connection, or a proxy you
-configure. What a good framework does is honor the choice cleanly; AIHawk's
+configure. What a good framework does is honor the choice cleanly; invisible_playwright_mcp's
 `--proxy` option, for instance, routes egress through the proxy you give it and
 aligns timezone and locale to the exit so the browser does not contradict its own
 address. Choosing an exit worth using, an address that is not a datacenter range
@@ -94,7 +94,7 @@ and no reputation database, just timestamps. The full anatomy is on
 [the timing-signal page](ai-agent-timing-signal.md).
 
 **Can the framework fix it? Partly, and honestly only partly.** The browser layer
-can make individual actions human-shaped; AIHawk's engine, for example, moves the
+can make individual actions human-shaped; invisible_playwright_mcp's engine, for example, moves the
 pointer along curved paths rather than teleporting it, and the agent acts through
 real input events rather than setting values from JavaScript, because pages can
 tell the difference. What no browser can supply is the cadence between actions,
@@ -155,7 +155,7 @@ browser fingerprint, with the agent's own volume and rhythm next. Work through t
 order above before swapping anything.
 
 **Does a stealth browser make my agent unblockable?** No, and distrust the word.
-It addresses one layer of four. A patched real Firefox like AIHawk's fixes what
+It addresses one layer of four. A patched real Firefox like invisible_playwright_mcp's fixes what
 the site reads from the browser; the IP, the volume and the pacing are untouched
 by it, and any of the three can block you alone.
 
@@ -174,7 +174,7 @@ correlate strongly with one: automation fingerprints and machine-regular action
 timing. The rhythm signal is the agent-specific tell, covered on
 [the timing-signal page](ai-agent-timing-signal.md).
 
-**Which layer does AIHawk actually fix?** The fingerprint layer, because its
+**Which layer does invisible_playwright_mcp actually fix?** The fingerprint layer, because its
 browser is a real Firefox patched at the C++ level rather than a stock automation
 build, plus human-shaped individual actions. It does not fix IP reputation, volume
 or the loop's cadence, and this wiki says so on every page that touches the
@@ -190,8 +190,8 @@ All retrieved 2026-09-03.
   for the network side of layer 1.
 - [ASN and IP reputation in bot detection](https://github.com/feder-cr/invisible_playwright/wiki/asn-and-ip-reputation-in-bot-detection),
   for layer 2.
-- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README in this
-  repository, for the engine, proxy and input-event claims about AIHawk.
+- [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), plus its README in this
+  repository, for the engine, proxy and input-event claims about invisible_playwright_mcp.
 
 **See also:** [the timing signal AI agents give off](ai-agent-timing-signal.md),
 [agent retry loops and rate limits](agent-retry-loops-rate-limits.md),
@@ -200,6 +200,6 @@ All retrieved 2026-09-03.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. AIHawk's engine exists
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. invisible_playwright_mcp's engine exists
 for layer 1, which is why this page could afford to be blunt about the other three:
 they are yours, whatever agent you run.*

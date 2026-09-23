@@ -80,13 +80,13 @@ so hold it constant when you compare them.
 
 ## In this project
 
-[AIHawk](https://github.com/feder-cr/aihawk_mcp_server) is model-agnostic by design. Used
+[invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) is model-agnostic by design. Used
 as an MCP server, the model is whatever your assistant runs, and the choice is
 not ours to make. Used through its own interface, it reaches models through
 OpenRouter with your key, so you can change the model without changing anything
 else, which is exactly the setup the half-hour procedure above wants.
 
-[Which model to use with AIHawk](which-model-to-use-with-aihawk.md) is the
+[Which model to use with invisible_playwright_mcp](which-model-to-use-with-invisible-playwright-mcp.md) is the
 product-specific version of this page.
 
 ## Short answers to the questions that lead here

@@ -34,7 +34,7 @@ import sys
 
 import pytest
 
-from aihawk.mcp import GONE, NOT_OPEN, server
+from invisible_playwright_mcp.mcp import GONE, NOT_OPEN, server
 
 BINARY = os.environ.get("STEALTHFOX_BINARY")
 

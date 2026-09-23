@@ -66,8 +66,8 @@ Three lines, and each is a different kind of risk:
 
 Rows come from pages an organization already published to be read: a
 company's own about or contact page, a business directory, a conference's
-exhibitor list. Typed into `uvx aihawk ui`, or handed to your assistant with
-AIHawk's browser attached:
+exhibitor list. Typed into `uvx invisible-playwright-mcp ui`, or handed to your assistant with
+invisible_playwright_mcp's browser attached:
 
 > Go to `<the exhibitor list page>`. For each exhibitor, open its entry and
 > its own site if linked. Collect: company name, sector as the directory
@@ -152,12 +152,12 @@ generally on
 
 Retrieved 2026-09-05.
 
-- [AIHawk README](https://github.com/feder-cr/aihawk_mcp_server#readme), for the
-  `uvx aihawk ui` interface and the MCP path for assistants that can already
+- [invisible_playwright_mcp README](https://github.com/feder-cr/invisible_playwright_mcp#readme), for the
+  `uvx invisible-playwright-mcp ui` interface and the MCP path for assistants that can already
   run tools.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The agent reads
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The agent reads
 the public page; deciding who to email, and what to promise them, is still
 yours.*

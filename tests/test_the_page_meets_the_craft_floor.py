@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import re
 
-from aihawk.ui import PAGE
+from invisible_playwright_mcp.ui import PAGE
 
 #: The page without its comments: every rule here is about what SHIPS, and a
 #: comment explaining why something is not done must not read as doing it.

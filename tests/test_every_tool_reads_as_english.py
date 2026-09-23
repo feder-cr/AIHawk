@@ -22,7 +22,7 @@ import re
 
 
 def _verbs_in_the_page() -> dict:
-    from aihawk.ui import PAGE
+    from invisible_playwright_mcp.ui import PAGE
 
     match = re.search(r"const VERB = \{(.*?)\};", PAGE, re.S)
     assert match, "the VERB table is gone from the page, or has been renamed"
@@ -48,7 +48,7 @@ def test_every_tool_the_server_offers_has_a_verb():
     """
     import asyncio
 
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
 
     offered = {t.name for t in asyncio.run(server.mcp.list_tools())}
     assert offered, "the server registered no tools at all"
@@ -67,7 +67,7 @@ def test_the_table_names_no_tool_that_does_not_exist():
     """
     import asyncio
 
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
 
     offered = {t.name for t in asyncio.run(server.mcp.list_tools())}
     stale = sorted(set(_verbs_in_the_page()) - offered)

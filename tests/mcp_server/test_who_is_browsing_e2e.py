@@ -77,7 +77,7 @@ def _server():
     mutations that validated this file would have gone uncaught.
 
     The fix moved into `_stdio_helpers.server_params` on 2026-09-11, shared
-    with every other file that spawns `python -m aihawk` as a subprocess,
+    with every other file that spawns `python -m invisible_playwright_mcp` as a subprocess,
     rather than kept here as the one place that had it right.
     """
     return server_params({"STEALTHFOX_HEADLESS": os.environ.get("STEALTHFOX_HEADLESS", "1")})

@@ -88,7 +88,7 @@ If you want to try this with no bill at all beyond a model:
   changes, and it is not free of cost either: it is free of bills and expensive
   in hardware and patience.
 
-[AIHawk](https://github.com/feder-cr/aihawk_mcp_server) is MIT and the engine downloads
+[invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) is MIT and the engine downloads
 from a public release, so the software side is genuinely nothing. The model is
 yours, through your assistant or through your own key, and we do not resell it.
 

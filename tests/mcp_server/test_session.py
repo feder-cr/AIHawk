@@ -2,7 +2,7 @@
 its context, with no bookkeeping of its own."""
 import pytest
 
-from aihawk.mcp.session import StealthSession
+from invisible_playwright_mcp.mcp.session import StealthSession
 
 
 class _FakePage:

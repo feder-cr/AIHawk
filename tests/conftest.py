@@ -1,15 +1,15 @@
-"""No test reads or writes the real machine's aihawk directory.
+"""No test reads or writes the real machine's invisible_playwright_mcp directory.
 
 ⛔ MEASURED, BY DOING IT. Sessions became persistent on 2026-09-08, and the
 first run of the tests that exercise them wrote three real files into
-`%APPDATA%\\aihawk\\sessions` on the developer's machine - and then the next
+`%APPDATA%\\invisible_playwright_mcp\\sessions` on the developer's machine - and then the next
 test read them back, so tests began contaminating each other through a
 directory none of them had mentioned. One of them failed with six browsers it
 never opened.
 
 Redirected here rather than in each test for the reason the pollution happened
 at all: the tests that touch this were written by somebody who knew about it,
-and the ones written next year will not be. `AIHAWK_HOME` is the single knob
+and the ones written next year will not be. `INVISIBLE_MCP_HOME` is the single knob
 `store.home()` reads first, so pointing it at a temporary directory for every
 test closes the whole class rather than the two cases somebody remembered.
 
@@ -18,7 +18,7 @@ DEFECT BACK IN THROUGH THE DOOR NEXT TO IT. A fixture runs when a test runs; a
 module-level line runs when the file is IMPORTED, which is before any fixture
 exists. `test_asking_who_you_are.py` asks the server one question at import
 time, and that question reads the saved session - so on a machine where
-somebody actually uses AIHawk, collection alone loaded the real one. Measured
+somebody actually uses invisible_playwright_mcp, collection alone loaded the real one. Measured
 on this machine: two tests in `test_addressing.py` went red because the
 developer's live session had its focus on a browser called `b-kw-pharmacist`,
 and the server module carried that, plus eight real URLs, into every test that
@@ -57,10 +57,10 @@ import pytest
 #: question. `mkdtemp` and not `tmp_path`, which is a fixture and does not exist
 #: yet at this point - and removed at exit for the same reason it is made here:
 #: no fixture teardown covers a directory made at import, and by 2026-09-22
-#: this machine held dozens of empty `aihawk-tests-*` and `aihawk-no-engine-*`
+#: this machine held dozens of empty `invisible_playwright_mcp-tests-*` and `invisible_playwright_mcp-no-engine-*`
 #: directories, one pair per run.
-os.environ["AIHAWK_HOME"] = tempfile.mkdtemp(prefix="aihawk-tests-")
-atexit.register(shutil.rmtree, os.environ["AIHAWK_HOME"], True)
+os.environ["INVISIBLE_MCP_HOME"] = tempfile.mkdtemp(prefix="invisible_playwright_mcp-tests-")
+atexit.register(shutil.rmtree, os.environ["INVISIBLE_MCP_HOME"], True)
 
 
 def _e2e_is_excluded(argv) -> bool:
@@ -188,7 +188,7 @@ def _local_seal_beside(cache_dir: str):
 
 if _e2e_is_excluded(sys.argv):
     os.environ["INVISIBLE_PLAYWRIGHT_CACHE_DIR"] = _THROWAWAY = tempfile.mkdtemp(
-        prefix="aihawk-no-engine-")
+        prefix="invisible_playwright_mcp-no-engine-")
     os.environ["INVISIBLE_DOWNLOAD_DEADLINE"] = "1"
     _NO_ENGINE_SEAL = _local_seal_beside(_THROWAWAY)
     if _NO_ENGINE_SEAL:
@@ -203,8 +203,8 @@ else:
 
 
 @pytest.fixture(autouse=True)
-def _aihawk_home_is_disposable(tmp_path, monkeypatch):
-    monkeypatch.setenv("AIHAWK_HOME", str(tmp_path / "aihawk-home"))
+def _the_home_is_disposable(tmp_path, monkeypatch):
+    monkeypatch.setenv("INVISIBLE_MCP_HOME", str(tmp_path / "invisible_playwright_mcp-home"))
 
 
 @pytest.fixture(autouse=True)
@@ -226,7 +226,7 @@ def _the_server_remembers_nothing_from_the_last_test():
     be dirty if something imported the module, so if it is not there, there is
     nothing to clear.
     """
-    server = sys.modules.get("aihawk.mcp.server")
+    server = sys.modules.get("invisible_playwright_mcp.mcp.server")
     if server is not None and hasattr(server, "Work"):
         # ⛔ ONE OBJECT, WHERE THIS CLEARED FOUR GLOBALS BY NAME. The server
         # holds its whole piece of work - registry, restored flag, pages seen
@@ -251,7 +251,7 @@ def pytest_sessionfinish(session, exitstatus):
     gate deliberately holds to what a `pip install pytest` job has. `os` walks
     it: `shutil` would be one more name on that list for one call.
     """
-    for path in (os.environ.get("AIHAWK_HOME"), _THROWAWAY):
+    for path in (os.environ.get("INVISIBLE_MCP_HOME"), _THROWAWAY):
         if not path or not os.path.isdir(path):
             continue
         for here, dirs, files in os.walk(path, topdown=False):

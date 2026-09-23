@@ -52,7 +52,7 @@ lumpy and unplanned.
 Now the agent. Each loop turn sends the page state to a model: on a complex page, an
 observation is thousands to tens of thousands of tokens. A realistic multi-step
 task, navigate, search, open results, extract, takes ten to twenty turns with
-history accumulating in the context. Using the pricing of GLM-5.3-Flash, AIHawk's
+history accumulating in the context. Using the pricing of GLM-5.3-Flash, invisible_playwright_mcp's
 default model and one of the cheaper options in the catalog, at $0.071 to $0.388
 per million input tokens and $0.237 to $1.358 per million output on OpenRouter
 depending which of its two dozen providers serves the request: a task moving
@@ -154,7 +154,7 @@ request volume and the pacing. A scraper on a datacenter IP and an agent with a
 stock automation browser are both visible, each for different reasons. That whole
 topic has its own cluster, starting at
 [why does my AI agent get blocked](why-does-my-ai-agent-get-blocked.md). For the
-agent side, AIHawk's browser being a patched real Firefox addresses the fingerprint
+agent side, invisible_playwright_mcp's browser being a patched real Firefox addresses the fingerprint
 part of that list specifically, and, as that page spells out, none of the other
 parts.
 
@@ -200,8 +200,8 @@ All retrieved 2026-09-03, except the OpenRouter pricing, retrieved 2026-09-08.
   per-token prices used in the cost arithmetic.
 - [WebArena paper abstract (arXiv:2307.13854)](https://arxiv.org/abs/2307.13854),
   for the 14.41% versus 78.24% end-to-end success figures.
-- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README in this
-  repository, for AIHawk's default model and engine claims.
+- [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), plus its README in this
+  repository, for invisible_playwright_mcp's default model and engine claims.
 
 **See also:** [what is an AI web agent?](ai-web-agent-explained.md),
 [open-source AI browser agents](ai-browser-agent-open-source.md),
@@ -210,6 +210,6 @@ All retrieved 2026-09-03, except the OpenRouter pricing, retrieved 2026-09-08.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. AIHawk is an agent, so
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. invisible_playwright_mcp is an agent, so
 note what this page did not claim: that agents beat scrapers. Past a few hundred
 uniform pages a day, write the script.*

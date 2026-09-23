@@ -18,10 +18,10 @@ import re
 
 import pytest
 
-from aihawk.link import text_of
-from aihawk.routes import build_app
-from aihawk.sessions import Sessions
-from aihawk.ui import PAGE
+from invisible_playwright_mcp.link import text_of
+from invisible_playwright_mcp.routes import build_app
+from invisible_playwright_mcp.sessions import Sessions
+from invisible_playwright_mcp.ui import PAGE
 
 pytestmark = [pytest.mark.filterwarnings("ignore")]
 

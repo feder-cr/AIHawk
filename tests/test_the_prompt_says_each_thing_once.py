@@ -22,8 +22,8 @@ from __future__ import annotations
 
 import asyncio
 
-from aihawk.agent import SYSTEM_PROMPT, system_message
-from aihawk.mcp import server
+from invisible_playwright_mcp.agent import SYSTEM_PROMPT, system_message
+from invisible_playwright_mcp.mcp import server
 
 
 def descriptions() -> dict:

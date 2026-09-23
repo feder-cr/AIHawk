@@ -20,7 +20,7 @@ import asyncio
 
 from mcp.types import Tool, ToolAnnotations
 
-from aihawk.mcp import server
+from invisible_playwright_mcp.mcp import server
 
 
 def findings(tools):

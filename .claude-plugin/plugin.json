@@ -1,14 +1,14 @@
 {
-  "name": "aihawk",
-  "displayName": "AIHawk",
+  "name": "invisible-playwright-mcp",
+  "displayName": "invisible-playwright-mcp",
   "version": "1.0.1",
   "description": "AI browser agent: browses, clicks, types, and reads real web pages from plain-English instructions.",
   "author": {
     "name": "feder-cr",
     "url": "https://github.com/feder-cr"
   },
-  "homepage": "https://github.com/feder-cr/aihawk_mcp_server/wiki/mcp-server",
-  "repository": "https://github.com/feder-cr/aihawk_mcp_server",
+  "homepage": "https://github.com/feder-cr/invisible_playwright_mcp/wiki/mcp-server",
+  "repository": "https://github.com/feder-cr/invisible_playwright_mcp",
   "license": "MIT",
   "keywords": ["browser", "browser-agent", "web-automation", "playwright", "firefox", "computer-use"]
 }

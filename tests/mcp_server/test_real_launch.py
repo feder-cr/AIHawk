@@ -14,7 +14,7 @@ import tempfile
 
 import pytest
 
-from aihawk.mcp.session import StealthSession
+from invisible_playwright_mcp.mcp.session import StealthSession
 
 BINARY = os.environ.get("STEALTHFOX_BINARY")
 

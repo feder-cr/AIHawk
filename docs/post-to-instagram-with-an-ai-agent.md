@@ -13,7 +13,7 @@ here is the summary up front. If you have a professional account, an official
 publishing API exists and is the right tool. If you have a personal account,
 no API exists - and the browser route has a hard limit that most pages on
 this subject quietly skip: an Instagram post requires media, attaching media
-in a browser means a file picker, and AIHawk's agent has no file-upload tool.
+in a browser means a file picker, and invisible_playwright_mcp's agent has no file-upload tool.
 Verified against the source, not the marketing, on 2026-09-03. What remains
 is a narrower, honest slot, described below without inflation.
 
@@ -56,13 +56,13 @@ web interface, and the web interface is where the claim you came to verify
 falls apart, so here it is with its evidence.
 
 Posting on instagram.com starts with a file: the create flow's first real
-step is "select from computer", an OS file picker. AIHawk's agent operates
+step is "select from computer", an OS file picker. invisible_playwright_mcp's agent operates
 the browser through a fixed set of tools - navigate, read, click, type,
 screenshot, and their session-management siblings - and that set contains no
 file-upload action. This is checked against the tool server's source, not
 inferred from a failed attempt. The agent can log in with your saved
 session, open the create dialog and write a caption, but it cannot hand a
-file to the picker. Since a feed post cannot exist without media, **AIHawk
+file to the picker. Since a feed post cannot exist without media, **invisible_playwright_mcp
 cannot post to Instagram end to end, and this page will not pretend
 otherwise.** What each of those tools returns, and why the ladder between them
 stops where it does, is
@@ -74,7 +74,7 @@ What works instead is a division of labor that is honest about who does
 what. Run headed, so the browser is a normal window on your desktop:
 
 ```bash
-uvx aihawk ui --profile-dir ~/.aihawk-instagram --headed
+uvx invisible-playwright-mcp ui --profile-dir ~/.invisible_playwright_mcp-instagram --headed
 ```
 
 Log in yourself once; the profile directory keeps the session for later
@@ -86,7 +86,7 @@ is worth a running agent for your posting volume is a fair question, and
 for many people the answer is "post it by hand, it is faster". A tool page
 that cannot say that sentence is selling something.
 
-The final click stays yours either way. AIHawk's stated rule for every
+The final click stays yours either way. invisible_playwright_mcp's stated rule for every
 surface applies verbatim here: do not submit anything a human has not read.
 [The forms page](ai-agent-fill-out-forms.md) states the same rule and shows
 what it costs to follow, since a form that rejects a submission puts the agent
@@ -124,10 +124,10 @@ session, your media click, your review, single posts at human frequency.
 **Can an AI agent post to Instagram for me?** With a professional account,
 use the official API instead: two documented calls, 100 API-published posts
 per 24 hours, JPEG media at a public URL. With a personal account there is
-no API, and AIHawk specifically cannot complete a browser post alone,
+no API, and invisible_playwright_mcp specifically cannot complete a browser post alone,
 because posting requires media and its toolset has no file-upload action.
 
-**Can AIHawk upload an image to Instagram?** No. The agent's tool
+**Can invisible_playwright_mcp upload an image to Instagram?** No. The agent's tool
 vocabulary has no file-upload action, so it cannot operate the file picker
 that Instagram's create flow starts with. It can handle navigation and the
 caption around a media selection you make yourself in a headed session.
@@ -159,7 +159,7 @@ All retrieved 2026-09-03.
   3.2, quoted verbatim above.
 - [Instagram Terms of Use](https://help.instagram.com/581066165581870),
   cited by reference; not readable by plain fetch this session, as noted.
-- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its source and
+- [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), plus its source and
   the tool server's source in this repository's family, for the exact tool
   vocabulary and the absence of a file-upload action.
 
@@ -171,6 +171,6 @@ rest of [Using the Agent](guides-using-the-agent.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The paragraph
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The paragraph
 admitting the agent cannot finish this task is the most useful one on the
 page, which is exactly why it is here.*

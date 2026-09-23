@@ -1,6 +1,6 @@
 ---
 title: "Open-source Operator-style agents"
-description: "The open-source agents that do what Operator did, repo by repo: browser-use, Skyvern, Agent S3, AIHawk, and the two unrelated projects both called open-operator, with stars and activity as found."
+description: "The open-source agents that do what Operator did, repo by repo: browser-use, Skyvern, Agent S3, invisible_playwright_mcp, and the two unrelated projects both called open-operator, with stars and activity as found."
 parent: "Alternatives and Comparisons"
 nav_order: 2
 ---
@@ -17,7 +17,7 @@ happened to Operator itself, are on
 [Is OpenAI Operator still available?](is-openai-operator-still-available.md);
 this page does not repeat them.
 
-Disclosure first: this wiki belongs to AIHawk, one of the projects below. Star
+Disclosure first: this wiki belongs to invisible_playwright_mcp, one of the projects below. Star
 counts and descriptions were read from each repository this session, and the
 projects that are bigger, older, or broader than ours are described as exactly
 that.
@@ -74,9 +74,9 @@ is heavier per action than a browser-native one, and
 [reading the DOM versus reading pixels](https://github.com/feder-cr/invisible_playwright/wiki/dom-reading-vs-screenshot-agents)
 is a real architectural fork, not a detail.
 
-### AIHawk - ours, with the browser as the differentiator
+### invisible_playwright_mcp - ours, with the browser as the differentiator
 
-[github.com/feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server). About 30k
+[github.com/feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp). About 30k
 stars, MIT (distributions before 2 September 2026 remain AGPL-3.0). The stars
 predate the current shape: the project began as a job-application bot and is
 becoming a general web agent, which its own description says plainly.
@@ -114,14 +114,14 @@ if you wanted software to run.
 | Repo | Stars (2026-09-03) | License | Scope | Status |
 |---|---|---|---|---|
 | browser-use | ~112k | MIT | Browser agent | Active |
-| AIHawk | ~30k | MIT | Browser agent | Active |
+| invisible_playwright_mcp | ~30k | MIT | Browser agent | Active |
 | Skyvern | ~23k | AGPL-3.0 | Browser workflows | Active |
 | Agent-S | ~12k | Apache-2.0 | Desktop computer use | Active |
 | browserbase/open-operator | ~2k | MIT | Template | Archived 2026-05-20 |
 | All-Hands-AI/open-operator | ~428 | MIT | Resource list | Maintained |
 
 Two cautions about this table, because a table flattens things. Stars measure
-attention, not fitness for your task, and part of AIHawk's count is heritage
+attention, not fitness for your task, and part of invisible_playwright_mcp's count is heritage
 from its job-bot era. And "active" was judged from commit and issue activity
 visible on the repo pages this session, which is a snapshot, not a guarantee.
 
@@ -132,7 +132,7 @@ visible on the repo pages this session, which is a snapshot, not a guarantee.
   the AGPL.
 - **Tasks that span desktop apps:** Agent S3.
 - **Sites that inspect the browser, or you want the agent inside your
-  existing MCP assistant:** AIHawk, with our conflict of interest noted and
+  existing MCP assistant:** invisible_playwright_mcp, with our conflict of interest noted and
   the macOS gap admitted.
 - **You want to survey the space first:** the All-Hands resource list, then
   come back.
@@ -145,7 +145,7 @@ this list existing.
 
 **Is there an open-source version of OpenAI Operator?** Not a clone of the
 product, but several open agents do what it did: browser-use, Skyvern, Agent
-S3, and AIHawk are the ones this page verified.
+S3, and invisible_playwright_mcp are the ones this page verified.
 
 **Which open-source browser agent has the most stars?** browser-use, at
 roughly 112k when read on 2026-09-03.
@@ -155,7 +155,7 @@ template and an OpenHands resource list. Neither is a maintained agent
 product.
 
 **Do these need an OpenAI or Anthropic subscription?** No. They take API keys
-(or, for AIHawk's MCP route, ride the assistant you already run). Model usage
+(or, for invisible_playwright_mcp's MCP route, ride the assistant you already run). Model usage
 is pay-per-token to whichever provider you choose.
 
 **Are open agents as good as the hosted ones were?** On desktop benchmarks
@@ -179,7 +179,7 @@ framework above the level of any one repo.
   [Agent-S](https://github.com/simular-ai/Agent-S),
   [browserbase/open-operator](https://github.com/browserbase/open-operator),
   [All-Hands-AI/open-operator](https://github.com/All-Hands-AI/open-operator)
-  and [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) repositories, all retrieved
+  and [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) repositories, all retrieved
   2026-09-03; stars, licenses, descriptions and archive status as shown there
   that day.
 - [OpenAI computer use guide](https://platform.openai.com/docs/guides/tools-computer-use),
@@ -187,6 +187,6 @@ framework above the level of any one repo.
 
 ---
 
-*Maintained alongside [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), one of the
+*Maintained alongside [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), one of the
 repositories on this list. The star counts that beat ours are printed anyway,
 because a survey that hides the bigger projects is an ad, not a survey.*

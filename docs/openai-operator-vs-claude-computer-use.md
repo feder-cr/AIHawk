@@ -16,7 +16,7 @@ of the two architectures, because the architectural fork they represent is
 still the fork every current tool sits on.
 
 Disclosure: this page is on the wiki of
-[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source agent that
+[invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), an open-source agent that
 appears in the closing section. Claims about OpenAI trace to their pages and
 mainstream reporting; claims about Anthropic trace to their live
 documentation, all retrieved 2026-09-03.
@@ -128,7 +128,7 @@ the one that changes the decision: you do not have to choose between a vendor
 product and building a computer-use loop from scratch. Open-source agents ship
 the loop already built, run on your machine, and take your model key -
 browser-use and Skyvern drive Chromium-family browsers, Agent S3 does the
-whole desktop, and our own AIHawk pairs the agent with a Firefox patched at
+whole desktop, and our own invisible_playwright_mcp pairs the agent with a Firefox patched at
 the C++ level so the browser itself presents a normal desktop fingerprint
 instead of a reference container's. None of them, ours included, guarantees a
 site will not push back - [that boundary is documented, not waved
@@ -177,7 +177,7 @@ for the screenshot-loop architecture in open source.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an
+*Written while maintaining [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), an
 open-source agent that competes with both approaches described here. That is
 exactly why the quotes come from the vendors' own pages: grade our homework
 against their material, not our summary of it.*

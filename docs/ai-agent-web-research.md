@@ -71,13 +71,13 @@ The test that sorts every case: could a person answer this with search
 results alone, without ever touching a page's controls? If yes, pipeline. If
 they would need to click, log in, or turn pages, browser.
 
-## Running browser-grade research on AIHawk
+## Running browser-grade research on invisible_playwright_mcp
 
 Two ways in, matching the two ways into everything here. Through an MCP
-client - [Claude Code](running-aihawk-with-claude-code.md),
-[Claude Desktop](running-aihawk-with-claude-desktop.md),
-[Cursor](running-aihawk-with-cursor.md) or
-[Cline](running-aihawk-with-cline.md) - your assistant does the reading and
+client - [Claude Code](running-invisible-playwright-mcp-with-claude-code.md),
+[Claude Desktop](running-invisible-playwright-mcp-with-claude-desktop.md),
+[Cursor](running-invisible-playwright-mcp-with-cursor.md) or
+[Cline](running-invisible-playwright-mcp-with-cline.md) - your assistant does the reading and
 synthesis while the browser does the driving, which suits research well: the
 conversation holds the accumulating picture, and you can steer mid-walk. Or
 scripted, one question per run:
@@ -87,8 +87,8 @@ scripted, one question per run:
 > the three most common price bands you observe. Ground every number in what
 > the pages show; do not estimate.
 
-(Typed into `uvx aihawk ui`, or handed to your assistant with AIHawk's
-browser attached - research is judgment work, and since aihawk 0.3.0 the
+(Typed into `uvx invisible-playwright-mcp ui`, or handed to your assistant with invisible_playwright_mcp's
+browser attached - research is judgment work, and since invisible_playwright_mcp 0.3.0 the
 judgment paths are those two.)
 
 Prompt habits that separate usable research from confident noise:
@@ -150,7 +150,7 @@ minutes and forty cents for twenty-plus sources, are an economics a
 sequential browser cannot match. It cannot log in as you, render
 interaction-gated content, or walk an archive in order. Different machine.
 
-**Can AIHawk do deep research?** It does the browser half well: driven
+**Can invisible_playwright_mcp do deep research?** It does the browser half well: driven
 reading of hard sources, in its own interface or through an MCP client where
 your assistant synthesizes. It does not fan out
 across twenty sources in parallel, and this page does not pretend otherwise.
@@ -178,23 +178,23 @@ All retrieved 2026-09-03.
   for the star count, the planner-executor-publisher architecture, the
   search-API approach, and the per-run time and cost figures quoted from its
   README.
-- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README and
+- [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), plus its README and
   source in this repository, for the agent loop, the grounding line in its
   system prompt this page's cost notes describe.
 
 A complete run of this page's worked example, with the agent's counts checked
 against a model-free script on the same pages (they matched, 24 to 24), is in
 the repository:
-[web research, audited](https://github.com/feder-cr/aihawk_mcp_server/tree/main/articles/web-research-audited).
+[web research, audited](https://github.com/feder-cr/invisible_playwright_mcp/tree/main/articles/web-research-audited).
 
 **See also:** [what is an AI web agent?](ai-web-agent-explained.md),
 [AI browser agents vs traditional scraping](ai-browser-agents-vs-traditional-scraping.md),
 [extracting data to a CSV](how-to-extract-data-to-csv-with-an-ai-agent.md),
-and [which model to use with AIHawk](which-model-to-use-with-aihawk.md) for
+and [which model to use with invisible_playwright_mcp](which-model-to-use-with-invisible-playwright-mcp.md) for
 the cost half of the equation.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki, which just spent
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki, which just spent
 its second section telling you when not to use its own product. That is the
 register the rest of the page earns its claims in.*

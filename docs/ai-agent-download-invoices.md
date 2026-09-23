@@ -37,7 +37,7 @@ tolerance is the whole game.
 
 ## What "download" honestly means here
 
-Now the part to get straight before building anything. AIHawk's browser is
+Now the part to get straight before building anything. invisible_playwright_mcp's browser is
 driven through a fixed set of tools - navigate, read, click, type, screenshot,
 and their session-management siblings, the full list in the
 [MCP server page](mcp-server.md) - and
@@ -77,7 +77,7 @@ its materials say it "supports multiple authentication flows including
 standard username/password combinations, two-factor authentication, and
 CAPTCHA solving." Those are Skyvern's claims about Skyvern's product, quoted
 here because they define what the commercial end of this market promises.
-AIHawk makes no such claims: if a portal raises a challenge, that is your
+invisible_playwright_mcp makes no such claims: if a portal raises a challenge, that is your
 session to complete by hand, and the boundary is stated rather than blurred.
 
 ## The monthly workflow, concretely
@@ -88,7 +88,7 @@ What runs well today, per portal:
    persistent profile and a visible window:
 
    ```bash
-   uvx aihawk ui --headed --profile-dir ~/.hawk-invoices
+   uvx invisible-playwright-mcp ui --headed --profile-dir ~/.hawk-invoices
    ```
 
    Ask the agent to open the portal's login page, then sign in yourself in
@@ -97,8 +97,8 @@ What runs well today, per portal:
    anything in the prompt travels through the model provider. The profile
    directory keeps the session.
 
-2. **Extract on a rhythm, honestly.** Since aihawk 0.3.0 there is no headless
-   aihawk command to put in cron, and this page will not pretend a scheduler
+2. **Extract on a rhythm, honestly.** Since invisible_playwright_mcp 0.3.0 there is no headless
+   invisible_playwright_mcp command to put in cron, and this page will not pretend a scheduler
    is doing work a person starts. The monthly run is a five-minute ritual:
    open the same session (the profile still holds the login), paste the same
    instruction - "Find the most recent invoice. Reply with CSV only:
@@ -109,7 +109,7 @@ What runs well today, per portal:
 
    If a portal of yours is stable enough that finding the newest invoice is
    the same three clicks every month, that is no longer judgment work: the
-   engine behind AIHawk is on PyPI as a Python library with Playwright's API,
+   engine behind invisible_playwright_mcp is on PyPI as a Python library with Playwright's API,
    and a short script with your portal's selectors plus `profile_dir` makes
    the run schedulable for real - the pattern, with an executed example, is
    on [the monitoring page](how-to-monitor-a-page-with-an-ai-agent.md). This
@@ -146,7 +146,7 @@ where the downside is a broken run, not a frozen account.
 
 **Can an AI agent download my invoices automatically?** It can log in via a
 saved profile, navigate to the invoice, and extract its data as text rows;
-what it cannot do today in AIHawk is save the PDF itself, because the tool
+what it cannot do today in invisible_playwright_mcp is save the PDF itself, because the tool
 set has no download tool. Data extraction runs unattended; the PDF click is
 yours, in a headed session the agent drove to the right page.
 
@@ -156,7 +156,7 @@ across runs. Expect to refresh it when portals expire sessions; a run that
 reports a login page is telling you it is time.
 
 **Can it get past two-factor prompts or captchas?** No claim of that is made
-here. Vendors like Skyvern advertise handling both; on AIHawk a challenge
+here. Vendors like Skyvern advertise handling both; on invisible_playwright_mcp a challenge
 ends the unattended run and waits for you. Complete it by hand in a headed
 session and the profile carries the result forward.
 
@@ -181,7 +181,7 @@ All retrieved 2026-09-03.
   authentication flows, quoted attributively.
 - [The MCP server page](mcp-server.md), for the complete tool list this page's "no download
   tool" statement is checked against.
-- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README and
+- [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), plus its README and
   source in this repository, for `--profile-dir`, `--seed`, `--headed` and
   the key-in-environment guidance.
 
@@ -192,6 +192,6 @@ and [getting an AI agent to fill out forms](ai-agent-fill-out-forms.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The "no download
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The "no download
 tool" paragraph is the page: everything else here works because that limit is
 stated instead of papered over.*

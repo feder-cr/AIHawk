@@ -23,8 +23,8 @@ from __future__ import annotations
 import ast
 import pathlib
 
-from aihawk import storage
-from aihawk.mcp import store
+from invisible_playwright_mcp import storage
+from invisible_playwright_mcp.mcp import store
 
 #: The rule's own words. Held as the phrase rather than as an idea, because a
 #: phrase is what gets copied.

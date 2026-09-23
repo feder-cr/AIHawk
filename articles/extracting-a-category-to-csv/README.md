@@ -1,6 +1,6 @@
 # Extracting a category to CSV
 
-A complete run, reproduced as it happened: an AI assistant with AIHawk's
+A complete run, reproduced as it happened: an AI assistant with invisible_playwright_mcp's
 browser attached over MCP reads a 32-book category spread over two pages and
 produces a CSV. The site is `books.toscrape.com`, which exists to be scraped
 and says so in its own banner.
@@ -84,11 +84,11 @@ Attach the browser to your assistant (from the
 [README](../../README.md#1-from-your-assistant-over-mcp)):
 
 ```bash
-claude plugin marketplace add feder-cr/aihawk_mcp_server
-claude plugin install aihawk@feder-cr
+claude plugin marketplace add feder-cr/invisible_playwright_mcp
+claude plugin install invisible-playwright-mcp@feder-cr
 ```
 
 Then paste the prompt. The reading companion for this task shape, including
 when a plain diff tool beats an agent and what the failure modes look like,
-is [extracting data to a CSV with an AI agent](https://github.com/feder-cr/aihawk_mcp_server/wiki/how-to-extract-data-to-csv-with-an-ai-agent)
+is [extracting data to a CSV with an AI agent](https://github.com/feder-cr/invisible_playwright_mcp/wiki/how-to-extract-data-to-csv-with-an-ai-agent)
 on the wiki.

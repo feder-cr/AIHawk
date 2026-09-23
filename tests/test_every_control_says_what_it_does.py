@@ -22,7 +22,7 @@ import subprocess
 
 import pytest
 
-from aihawk.ui import PAGE
+from invisible_playwright_mcp.ui import PAGE
 
 NODE = shutil.which("node")
 CODE = re.sub(r"/\*.*?\*/|<!--.*?-->", "", PAGE, flags=re.S)

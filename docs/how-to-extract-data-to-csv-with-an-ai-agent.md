@@ -22,8 +22,8 @@ on a page you serve yourself; the mechanics transfer, the risk does not.
 
 ## What you actually say
 
-A working instruction, typed into the AIHawk interface or handed to your
-assistant with AIHawk's browser attached:
+A working instruction, typed into the invisible_playwright_mcp interface or handed to your
+assistant with invisible_playwright_mcp's browser attached:
 
 > Go to https://books.toscrape.com/. For each book on the first two pages,
 > extract the title and the price. Reply with CSV only: a header line
@@ -68,7 +68,7 @@ nine still in the context. A 20-page walk is not twenty times the cost of one
 page; it is worse, because the pages ride along. The comparison page
 [runs the actual numbers](ai-browser-agents-vs-traditional-scraping.md).
 
-Two hard limits in AIHawk's own loop, taken from its source, bound one run:
+Two hard limits in invisible_playwright_mcp's own loop, taken from its source, bound one run:
 
 - **Tool results are clipped at 8,000 characters** before the model sees them.
   A 20-item page fits comfortably; a page listing hundreds of items may not.
@@ -164,7 +164,7 @@ Never trust an extraction unseen. The checks are cheap and mechanical:
    column drift.
 4. **Run it twice if it matters.** Two runs that agree do not prove
    correctness, but two runs that disagree prove one of them is wrong.
-   (AIHawk's `--seed` pins the browser's identity across runs, not the model's
+   (invisible_playwright_mcp's `--seed` pins the browser's identity across runs, not the model's
    choices, so agreement is evidence, not a guarantee.)
 
 The checks are the price of using a stochastic reader for a deterministic job,
@@ -209,17 +209,17 @@ All retrieved 2026-09-03, except the loop's own bounds, re-read 2026-09-08.
 - [books.toscrape.com](https://books.toscrape.com/), the scraping sandbox used
   as the running example: 1,000 fictional items, 20 per page, with the site's
   own disclaimer that prices and ratings are randomly assigned.
-- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README and
+- [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), plus its README and
   source in this repository: the loop, its lack of a turn ceiling, the
   8,000-character tool-result clip and the reply ceiling are in
-  [`src/aihawk/agent.py`](https://github.com/feder-cr/aihawk_mcp_server/blob/main/src/aihawk/agent.py),
+  [`src/invisible_playwright_mcp/agent.py`](https://github.com/feder-cr/invisible_playwright_mcp/blob/main/src/invisible_playwright_mcp/agent.py),
   and the CLI surface in
-  [`src/aihawk/cli.py`](https://github.com/feder-cr/aihawk_mcp_server/blob/main/src/aihawk/cli.py).
+  [`src/invisible_playwright_mcp/cli.py`](https://github.com/feder-cr/invisible_playwright_mcp/blob/main/src/invisible_playwright_mcp/cli.py).
 
 A complete worked run of this task shape, with the real transcript, the two
 screenshots the session returned and the 32-row CSV it produced, is in the
 repository:
-[extracting a category to CSV](https://github.com/feder-cr/aihawk_mcp_server/tree/main/articles/extracting-a-category-to-csv).
+[extracting a category to CSV](https://github.com/feder-cr/invisible_playwright_mcp/tree/main/articles/extracting-a-category-to-csv).
 
 **See also:** [AI browser agents vs traditional scraping](ai-browser-agents-vs-traditional-scraping.md),
 [monitoring a page for changes](how-to-monitor-a-page-with-an-ai-agent.md),
@@ -228,6 +228,6 @@ repository:
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The verification
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The verification
 section is not boilerplate: the maintainer counts the rows every time, because
 the unchecked extraction is the one that ships wrong.*

@@ -38,7 +38,7 @@ decision.
 **After:**
 > Go to news.ycombinator.com and give me the top five titles.
 
-The "after" version is close to verbatim from AIHawk's own README: one URL,
+The "after" version is close to verbatim from invisible_playwright_mcp's own README: one URL,
 one bounded ask. The "before" version leaves the agent to pick a search
 engine, a query, and which result counts as news, three extra decisions
 before it reaches the content you wanted.
@@ -90,7 +90,7 @@ before landing on the wrong day.
 **Before:**
 > Find me a cheap flight from Milan to Lisbon next month.
 
-**After (adapted from AIHawk's own README):**
+**After (adapted from invisible_playwright_mcp's own README):**
 > Go to `<paste the URL>`. One way, Milan to Lisbon, economy, one checked
 > bag, one adult. Check every date from the 12th to the 16th of next month,
 > one at a time, and read the cheapest fare for each day. The date field is
@@ -159,13 +159,13 @@ chose.
 
 All retrieved 2026-09-05.
 
-- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), this repository's
+- [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), this repository's
   README, for the Hacker News and flight-fare example prompts, both read in
   the working tree 2026-09-05.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. Every
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. Every
 before/after pair above follows the same shape the project's own README
 uses in its worked example: name the page, name the finish line, name the
 shape of the answer.*

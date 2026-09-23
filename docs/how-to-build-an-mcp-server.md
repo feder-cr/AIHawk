@@ -33,7 +33,7 @@ schema per tool, and count it with a tokenizer:
 import json
 
 import tiktoken
-from aihawk.mcp.server import mcp  # your own FastMCP instance
+from invisible_playwright_mcp.mcp.server import mcp  # your own FastMCP instance
 
 enc = tiktoken.get_encoding("o200k_base")
 total = 0

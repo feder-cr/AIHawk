@@ -15,7 +15,7 @@ browser-use is an agent someone already built. Almost everything else on
 this page is a consequence of that line.
 
 Disclosure: this wiki belongs to
-[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source agent that
+[invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), an open-source agent that
 competes in the same space as both tools. Neither subject of this page is
 ours, which is what makes it a referee page; our own tool appears exactly
 once, near the end, clearly labeled. All facts were retrieved 2026-09-03
@@ -131,7 +131,7 @@ One labeled aside, and the disclosure from the top applies. Both subjects
 of this page assume you want to assemble or adopt an agent loop around a
 Chromium browser. If what you actually want is to hand browsing tasks to an
 assistant you already run, our own
-[AIHawk](https://github.com/feder-cr/aihawk_mcp_server) (roughly 30k stars, MIT) is an
+[invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) (roughly 30k stars, MIT) is an
 agent that plugs into MCP assistants (Claude Code, Claude Desktop, Cursor)
 and differs from both at the browser layer, driving a Firefox patched at
 the C++ level rather than an automation-build Chromium. It is not an SDK,
@@ -192,7 +192,7 @@ the full decision framework.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server),
+*Written while maintaining [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp),
 which competes with both tools compared here - reason enough to keep our
 own tool out of the verdict and every load-bearing claim quoted from the
 vendors' own material.*

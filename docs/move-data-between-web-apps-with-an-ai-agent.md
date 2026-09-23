@@ -32,7 +32,7 @@ The fix costs one more step per row. After the write, have the agent reload the 
 
 ## Batching and pacing
 
-Batch the run and stop between batches; do not ask for the whole migration in one instruction. AIHawk's own loop has no turn ceiling, so "all of them" will not be cut off part way - it will simply run on, and that is the problem rather than the reassurance it sounds like. One full read-transform-write-confirm cycle is several turns, every turn resends the whole transcript, so the cost per row climbs the longer the batch runs; and a long unattended run is the one where a bad mapping writes forty wrong rows before anyone looks. "The next twenty rows, then stop" is short enough to read the log before the next twenty start.
+Batch the run and stop between batches; do not ask for the whole migration in one instruction. invisible_playwright_mcp's own loop has no turn ceiling, so "all of them" will not be cut off part way - it will simply run on, and that is the problem rather than the reassurance it sounds like. One full read-transform-write-confirm cycle is several turns, every turn resends the whole transcript, so the cost per row climbs the longer the batch runs; and a long unattended run is the one where a bad mapping writes forty wrong rows before anyone looks. "The next twenty rows, then stop" is short enough to read the log before the next twenty start.
 
 Writing dozens of rows back to back is also the kind of steady, gap-free rhythm that gets a session rate-limited or logged out mid-batch. The order-of-checks for a session that stops responding is on [why does my AI agent get blocked](why-does-my-ai-agent-get-blocked.md), and a short pause between batches, not only within one, is the cheapest fix; [agent retry loops and rate limits](agent-retry-loops-rate-limits.md) covers what happens when a failed write gets retried instead of paused.
 
@@ -60,8 +60,8 @@ A plain text or CSV log next to the moved data turns "trust the agent ran" into 
 
 ## Sources
 
-- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its source in this repository (`src/aihawk/agent.py`), retrieved 2026-09-05 and the loop re-read 2026-09-08, for what the batching section above rests on: a loop with no turn ceiling, and the whole transcript resent on every turn.
+- [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), plus its source in this repository (`src/invisible_playwright_mcp/agent.py`), retrieved 2026-09-05 and the loop re-read 2026-09-08, for what the batching section above rests on: a loop with no turn ceiling, and the whole transcript resent on every turn.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. A success message and a correctly saved row are two different facts, and the read-back-to-confirm step exists because only one of them is worth trusting.*
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. A success message and a correctly saved row are two different facts, and the read-back-to-confirm step exists because only one of them is worth trusting.*

@@ -2,13 +2,13 @@ import json
 
 
 def test_small_object_returns_normal_json():
-    from aihawk.mcp.actions import json_capped
+    from invisible_playwright_mcp.mcp.actions import json_capped
     s = json_capped({"a": 1})
     assert json.loads(s) == {"a": 1}
 
 
 def test_large_object_returns_valid_truncated_json():
-    from aihawk.mcp.actions import json_capped
+    from invisible_playwright_mcp.mcp.actions import json_capped
     big = {"data": "x" * 20000}
     s = json_capped(big, limit=6000)
     parsed = json.loads(s)  # must not raise: slicing raw JSON breaks this
@@ -44,13 +44,13 @@ class _Session:
 async def test_short_text_comes_back_whole_and_unmarked():
     """The case that must NOT fire: text under the cap carries no marker, so the
     marker's absence is itself information."""
-    from aihawk.mcp import actions
+    from invisible_playwright_mcp.mcp import actions
     out = await actions.read_text(_Session("hello"), "body", 6000)
     assert out == "hello"
 
 
 async def test_text_over_the_cap_says_it_was_cut():
-    from aihawk.mcp import actions
+    from invisible_playwright_mcp.mcp import actions
     out = await actions.read_text(_Session("x" * 20000), "body", 6000)
 
     assert "cut after" in out, "the text was truncated silently"
@@ -61,7 +61,7 @@ async def test_text_over_the_cap_says_it_was_cut():
 
 
 async def test_a_missing_element_is_not_reported_as_truncation():
-    from aihawk.mcp import actions
+    from invisible_playwright_mcp.mcp import actions
     out = await actions.read_text(_Session(None), "#nope", 6000)
     assert "no element matches" in out and "cut after" not in out
 
@@ -77,7 +77,7 @@ def test_the_two_readers_do_not_pretend_to_share_a_cap():
     """
     import asyncio
 
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
 
     tools = {t.name: t for t in asyncio.run(server.mcp.list_tools())}
     text = (tools["browser_read_text"].description or "").lower()

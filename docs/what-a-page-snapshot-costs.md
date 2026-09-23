@@ -23,7 +23,7 @@ Fit a line through the snapshot column and it is about **100 bytes per
 interactive element**, on a base of under a hundred. The relationship is linear
 and it does not involve the page's prose at all.
 
-![Two lines against the number of interactive elements on the page. browser_snapshot climbs steadily from 96 bytes at zero controls to 6,081 bytes at sixty, about a hundred bytes per control. browser_read_text stays almost flat, from 8 bytes to 179, because the four pages differ only in how many text inputs they carry and not in how much they say.](https://raw.githubusercontent.com/feder-cr/aihawk_mcp_server/main/docs/img/what-a-page-snapshot-costs.png)
+![Two lines against the number of interactive elements on the page. browser_snapshot climbs steadily from 96 bytes at zero controls to 6,081 bytes at sixty, about a hundred bytes per control. browser_read_text stays almost flat, from 8 bytes to 179, because the four pages differ only in how many text inputs they carry and not in how much they say.](https://raw.githubusercontent.com/feder-cr/invisible_playwright_mcp/main/docs/img/what-a-page-snapshot-costs.png)
 
 The gap between the two lines is the whole point: one of them is answering a
 question about the page's controls and the other about its words, and only the

@@ -63,7 +63,7 @@ it, from experience:
 - **Date pickers** are the classic. Some accept typed dates; many demand clicks
   through a calendar widget, and month navigation is where agents wander. If a
   date field accepts typing, expect success; if it is click-only, expect more
-  steps and more chances to end up in the wrong month. AIHawk's own README uses
+  steps and more chances to end up in the wrong month. invisible_playwright_mcp's own README uses
   exactly this case in its example prompt, with the instruction to click the days
   rather than type, because saying so raises the success rate.
 - **File uploads** need the file to exist on the machine the browser runs on, and
@@ -72,7 +72,7 @@ it, from experience:
 
 One mechanical note that matters for how the filling happens: a page can
 distinguish a value typed through real input events from a value injected into
-the field by script. AIHawk fills forms through actual key presses and clicks and
+the field by script. invisible_playwright_mcp fills forms through actual key presses and clicks and
 refuses the script shortcut even where it would be faster; whatever agent you
 use, that behavior is worth confirming, both because injected values can skip the
 page's own event handlers (breaking forms that compute things as you type) and
@@ -118,7 +118,7 @@ everything above happens per step. The specific new failures:
   checkpoint and yours: it is the one place the whole submission is visible at
   once.
 
-The rule that keeps all of this safe, and it is AIHawk's own stated position on
+The rule that keeps all of this safe, and it is invisible_playwright_mcp's own stated position on
 responsible use: do not let anything be submitted that a person has not read.
 Have the agent fill and stop, review the completed form or the review page
 yourself, and make submission the human's click wherever the stakes are real.
@@ -184,7 +184,7 @@ typing" in the instruction genuinely helps.
 
 **Should I let the agent submit?** Not unattended where stakes are real. Let it
 fill, review the result yourself, and keep the submit click human. That is also
-AIHawk's stated position for its own users.
+invisible_playwright_mcp's stated position for its own users.
 
 **Do forms detect agents?** Forms are where detection concentrates, and filling
 speed and rhythm are part of what gets read. A form filled in under a second
@@ -198,7 +198,7 @@ All retrieved 2026-09-03.
 - [MDN: Client-side form validation](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms/Form_validation),
   for the built-in constraint attributes and how browsers block submission and
   surface messages.
-- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README in this
+- [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), plus its README in this
   repository, for the real-input-events behavior, the calendar-widget example
   prompt, and the responsible-use position quoted above.
 
@@ -208,6 +208,6 @@ rest of [Using the Agent](guides-using-the-agent.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki, written from
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki, written from
 transcripts of its agent doing exactly this. The advice to keep the submit click
 human is not a disclaimer, it is how the maintainer runs it.*

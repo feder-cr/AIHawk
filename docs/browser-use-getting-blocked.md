@@ -118,7 +118,7 @@ goes further: it ships a Firefox patched at the C++ level as the engine behind i
 tools, so an MCP-speaking assistant - Claude Code, Claude Desktop, Cursor - drives a
 browser whose fingerprint is set in its own source. Disclosure: that server and
 this wiki have the same maintainer, and it is the route
-[AIHawk](https://github.com/feder-cr/aihawk_mcp_server) is built on.
+[invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) is built on.
 
 State the trade fairly, because it is a real one: going to MCP means leaving
 browser-use's agent loop and using an MCP-capable agent instead. Which side of the
@@ -185,7 +185,7 @@ for the wider landscape.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), which runs
+*Written while maintaining [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), which runs
 on the patched-Firefox engine described above. This page says that engine does not
 fit browser-use, because it does not, and a guide claiming otherwise would waste
 your afternoon.*

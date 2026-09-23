@@ -162,7 +162,7 @@ site, and that automated inauthentic activity can lead to temporary or
 permanent restriction. That is the platform's own description of the risk, not
 this wiki's estimate.
 
-**Why is there no AIHawk guide for posting to LinkedIn?** Because an honest
+**Why is there no invisible_playwright_mcp guide for posting to LinkedIn?** Because an honest
 one would open by saying the terms prohibit the approach, and we choose not to
 teach what the terms prohibit. The neighboring platforms have pages; this one
 has this page instead.
@@ -191,6 +191,6 @@ the rest of [Using the Agent](guides-using-the-agent.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The social series
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The social series
 has a page per platform; this is the platform where the honest page is the one
 that tells you why there is no walkthrough.*

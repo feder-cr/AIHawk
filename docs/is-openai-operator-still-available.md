@@ -20,7 +20,7 @@ because the churn confused a lot of people, and then the practical part: what
 someone who wants that capability today can actually use.
 
 A note on who is telling you this: this page lives on the wiki of
-[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source agent in the same
+[invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), an open-source agent in the same
 space, which appears once in the alternatives section below with that conflict
 declared.
 
@@ -86,7 +86,7 @@ already have. The architectural comparison with Operator's approach is on
 **The open-source route.** Several maintained open projects do the
 describe-a-task, watch-the-browser-work loop on your own machine with your own
 model key: browser-use (~112k stars), Skyvern (~23k), Agent S3 (~12k) for
-whole-desktop tasks, and AIHawk (~30k), our own, whose particular bet is
+whole-desktop tasks, and invisible_playwright_mcp (~30k), our own, whose particular bet is
 driving a Firefox patched at the source level so the browser reads as a normal
 desktop machine rather than an automation build. The repo-by-repo survey with
 licenses and trade-offs is
@@ -155,7 +155,7 @@ replacement that will not need replacing.
 
 ---
 
-*Kept current by the maintainers of [AIHawk](https://github.com/feder-cr/aihawk_mcp_server),
+*Kept current by the maintainers of [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp),
 an open-source AI web agent. We have an interest in the answer being "no", so
 every date above traces to OpenAI's own pages or mainstream reporting rather
 than to us.*

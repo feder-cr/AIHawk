@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from aihawk.mcp import plan
+from invisible_playwright_mcp.mcp import plan
 
 
 def test_an_empty_environment_still_produces_a_launchable_session():

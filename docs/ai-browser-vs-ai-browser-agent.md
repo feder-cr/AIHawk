@@ -19,7 +19,7 @@ actually exists on each side as of September 2026, and gives you the
 test.
 
 Disclosure, as on every comparison here: this wiki belongs to
-[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source project on
+[invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), an open-source project on
 the agent side of the line. Product statuses below were verified against
 vendors' pages and coverage on 2026-09-03.
 
@@ -79,7 +79,7 @@ The shapes it comes in:
   [Manus alternatives](manus-alternatives.md) maps that shelf and its
   ownership turbulence.
 - **Open-source agents you run** - browser-use, Skyvern, Agent S, and
-  our own AIHawk - live on your machine with your model key. The
+  our own invisible_playwright_mcp - live on your machine with your model key. The
   directory pages are
   [Open-source AI browser agents](ai-browser-agent-open-source.md) and
   [Open-source computer-use agents](computer-use-agent-open-source.md).
@@ -161,7 +161,7 @@ every vendor gates sensitive actions behind confirmations. The same
 category of risk applies to agents, where you choose the guardrails.
 
 **Do I need an AI browser to use an AI browser agent?** No. Agents
-bring their own browser - AIHawk ships its own patched Firefox, others
+bring their own browser - invisible_playwright_mcp ships its own patched Firefox, others
 drive Chromium builds - and run alongside whatever you browse with.
 
 **Can one product do both?** Chrome with auto browse is the closest
@@ -184,7 +184,7 @@ agents that sit above both categories.
 
 ---
 
-*From the maintainers of [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an
+*From the maintainers of [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), an
 open-source AI browser agent - the side of this page's line we live on,
 which is why the browser side above is described entirely in its vendors'
 own verified terms.*

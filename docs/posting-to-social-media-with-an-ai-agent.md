@@ -82,7 +82,7 @@ Hunter, etc..." and sitting at roughly 35 thousand GitHub stars as of this
 writing. If you want scheduling without a SaaS subscription, that is the
 shape of thing to evaluate.
 
-To be clear about what this wiki's own tool is not: AIHawk is not a
+To be clear about what this wiki's own tool is not: invisible_playwright_mcp is not a
 scheduler. It has no calendar, no queue, no per-platform account connections
 and no analytics. If the previous paragraph described your problem, close
 this tab and go set one up. Conflict of interest declared once for the whole
@@ -91,7 +91,7 @@ why the comparison spends most of its words recommending the other routes.
 
 ## Route three: an AI web agent, and the slot it honestly fills
 
-An agent like AIHawk drives a real browser through your own logged-in
+An agent like invisible_playwright_mcp drives a real browser through your own logged-in
 session, doing what you would do by hand: open the site, click the composer,
 type the post, and - if you follow the rule this wiki repeats everywhere -
 stop before submitting so you can read what is about to go out. That
@@ -110,7 +110,7 @@ And the honest costs, stated with the same bluntness: an agent spends model
 tokens and minutes where an API spends a fraction of a cent and milliseconds.
 Web composers are exactly the custom widgets
 [the forms page](ai-agent-fill-out-forms.md) warns about. Media is a hard
-boundary today: AIHawk's toolset has no file-upload action, so a post that
+boundary today: invisible_playwright_mcp's toolset has no file-upload action, so a post that
 needs a photo or video attached needs your hands for that step - the
 platform pages spell out what that means per site. And an agent posting at
 volume is indistinguishable from the behavior platforms ban, which is why
@@ -153,14 +153,14 @@ The register matters: your own content on your own account with human review
 is the defensible end of the spectrum; scaled engagement automation is the
 banned end. Account risk is yours either way, and the pages say so plainly.
 
-**Can the agent attach images to posts?** Not by itself today: AIHawk's tool
+**Can the agent attach images to posts?** Not by itself today: invisible_playwright_mcp's tool
 vocabulary has no file-upload action. Text and link posts are within reach;
 media posts need your hands for the file-picker step. The Instagram page
 covers the hardest version of this, since Instagram posts require media.
 
-**Is AIHawk a Buffer alternative?** No. AIHawk is a browser agent, not a
+**Is invisible_playwright_mcp a Buffer alternative?** No. invisible_playwright_mcp is a browser agent, not a
 scheduler: no calendar, no queue, no account connections. If you want an
-open-source Buffer-class tool, Postiz is that category; AIHawk is for tasks
+open-source Buffer-class tool, Postiz is that category; invisible_playwright_mcp is for tasks
 that need a real browser and a person in the loop.
 
 ## Sources
@@ -192,7 +192,7 @@ rest of [Using the Agent](guides-using-the-agent.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The maintainer
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The maintainer
 posts release announcements through the platforms' own tools and reads
 everything before it ships; the agent earns its keep on the surfaces that
 never got an API.*

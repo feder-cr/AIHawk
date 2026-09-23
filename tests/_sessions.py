@@ -3,8 +3,8 @@
 ⛔ THIS WAS `Sessions.around`, A CLASSMETHOD IN THE PRODUCT WITH NO PRODUCT
 CALLER. Eleven call sites, all in two test modules; zero in `src`. Its docstring
 offered "and so would anything embedding this", which is a use nobody has: this
-is an application, not a library, and the only importer of `aihawk.sessions` is
-`aihawk.cli`.
+is an application, not a library, and the only importer of `invisible_playwright_mcp.sessions` is
+`invisible_playwright_mcp.cli`.
 
 The argument it was written for survives untouched and is worth restating,
 because it is the reason this is a move and not a deletion: a test that drives
@@ -20,7 +20,7 @@ built that way by a test.
 """
 from __future__ import annotations
 
-from aihawk.sessions import Sessions
+from invisible_playwright_mcp.sessions import Sessions
 
 
 def around(service) -> Sessions:

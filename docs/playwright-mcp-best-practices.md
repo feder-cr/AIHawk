@@ -104,7 +104,7 @@ more often than a browser question:
 
 ## What this project does differently, and what it costs
 
-[AIHawk](https://github.com/feder-cr/aihawk_mcp_server) makes two of these decisions
+[invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) makes two of these decisions
 structural rather than optional. A server is one identity for its whole life, so
 practice 2 has no shared profile to get wrong. Identity is derived from a seed,
 so a session that failed can be replayed as the same browser, which turns "it

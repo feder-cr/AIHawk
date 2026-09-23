@@ -32,7 +32,7 @@ from __future__ import annotations
 
 import pytest
 
-from aihawk.mcp import actions
+from invisible_playwright_mcp.mcp import actions
 
 PAGE = b"""<!doctype html>
 <html><head><title>reading</title>
@@ -103,8 +103,8 @@ def read():
     """
     import asyncio
 
-    from aihawk.mcp.plan import plan_session
-    from aihawk.mcp.session import StealthSession
+    from invisible_playwright_mcp.mcp.plan import plan_session
+    from invisible_playwright_mcp.mcp.session import StealthSession
 
     srv, url = _serve()
 

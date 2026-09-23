@@ -1,7 +1,7 @@
-"""The suite must not be able to see the session the person using AIHawk has.
+"""The suite must not be able to see the session the person using invisible_playwright_mcp has.
 
 ⛔ A VERDICT THAT DEPENDS ON WHAT THE DEVELOPER LEFT OPEN IS NOT A VERDICT.
-`tests/conftest.py` has pointed `AIHAWK_HOME` at a temporary directory since
+`tests/conftest.py` has pointed `INVISIBLE_MCP_HOME` at a temporary directory since
 sessions became persistent, and that covered every test BODY - but a fixture
 runs when a test runs, and a module-level line runs when the file is IMPORTED,
 which is earlier. One test module asks the server a question at import time,
@@ -15,9 +15,10 @@ This file is the gate for that, and it is deliberately not a scan for
 module-level calls: it measures the property those calls depend on, which is
 the same on every machine.
 
-Known-bad: delete the `os.environ["AIHAWK_HOME"] = ...` line at the top of
+Known-bad: delete the `os.environ["INVISIBLE_MCP_HOME"] = ...` line at the top of
 `tests/conftest.py`. AT_IMPORT below then resolves to the platform's real
-directory - `%APPDATA%/aihawk`, `~/.local/share/aihawk` - and the first
+directory - `%APPDATA%/invisible-playwright-mcp`,
+`~/.local/share/invisible-playwright-mcp` - and the first
 assertion goes red whether or not that directory happens to hold anything
 today.
 """
@@ -25,10 +26,10 @@ from __future__ import annotations
 
 import os
 
-#: Read from `aihawk.storage`, which is where `home()` lives. It used to be
-#: reached through `aihawk.mcp.store`, which re-exported it - so this test
+#: Read from `invisible_playwright_mcp.storage`, which is where `home()` lives. It used to be
+#: reached through `invisible_playwright_mcp.mcp.store`, which re-exported it - so this test
 #: proved its property through a name that was only forwarding.
-from aihawk import storage
+from invisible_playwright_mcp import storage
 
 #: What a line running at import time sees. Captured HERE, at module level, on
 #: purpose: read inside a test it would show the per-test directory and prove
@@ -38,19 +39,19 @@ AT_IMPORT = storage.home()
 
 def _the_real_one():
     """Where sessions would be kept with nothing redirecting them."""
-    keep = os.environ.pop("AIHAWK_HOME", None)
+    keep = os.environ.pop("INVISIBLE_MCP_HOME", None)
     try:
         return storage.home()
     finally:
         if keep is not None:
-            os.environ["AIHAWK_HOME"] = keep
+            os.environ["INVISIBLE_MCP_HOME"] = keep
 
 
 def test_importing_a_test_module_cannot_reach_the_real_directory():
     real = _the_real_one()
     assert AT_IMPORT != real, (
         "at import time the tests read %s, which is where the person using "
-        "AIHawk keeps their sessions: collecting the suite loads whatever they "
+        "invisible_playwright_mcp keeps their sessions: collecting the suite loads whatever they "
         "left open, and the run reports on that as much as on the product" % real)
 
 
@@ -58,7 +59,34 @@ def test_and_neither_can_a_test_body():
     """The fixture's half of the same promise, and the older one."""
     real = _the_real_one()
     assert storage.home() != real
-    assert os.environ.get("AIHAWK_HOME"), "the redirection is not in place"
+    assert os.environ.get("INVISIBLE_MCP_HOME"), "the redirection is not in place"
+
+
+def test_the_real_directory_is_named_after_the_package():
+    """⛔ NOTHING ELSE IN THE SUITE VISITS THIS BRANCH, WHICH IS WHY IT HAS A
+    TEST OF ITS OWN.
+
+    Every other test runs with `INVISIBLE_MCP_HOME` pointed at a temporary
+    directory, so the default branch of `storage.home()` is the one piece of the
+    product the suite never reaches. The package rename on 2026-09-23 changed
+    this literal and 781 green tests said nothing.
+
+    ⛔ AND THIS TEST SAID THE OPPOSITE FOR A DAY, deliberately: written as
+    `real.name == "aihawk"`, because the directory holds the profiles, logins and
+    saved conversations of everybody who installed the old name, and pointing
+    the process somewhere empty reads as all of it having vanished. The owner
+    then asked for the old name to be abandoned outright. Both things are still
+    true, and `storage.carry_over_the_old_directory` is how: the directory is
+    named after the package, and the data is MOVED rather than left behind.
+    `test_the_old_name_hands_over_its_data.py` is that half. This one is only
+    about the name, because a name is all `home()` decides.
+    """
+    real = _the_real_one()
+    assert real.name == storage.DIRECTORY, (
+        "the default session directory is %r and the package declares %r. "
+        "Whichever is wrong, a process looking in one place while the hand-over "
+        "writes to the other loses what was saved."
+        % (real.name, storage.DIRECTORY))
 
 
 def test_the_server_starts_each_test_holding_nothing():
@@ -71,7 +99,7 @@ def test_the_server_starts_each_test_holding_nothing():
     `Work` holds nothing and has restored nothing when a test begins, and any
     test may rely on that.
     """
-    from aihawk.mcp import server
+    from invisible_playwright_mcp.mcp import server
 
     assert server.work.roles() == [], (
         "server.work arrived at this test holding %r" % server.work.roles())
@@ -82,7 +110,7 @@ def test_the_conftest_imports_nothing_the_light_jobs_do_not_have():
     it imports becomes a dependency of every test - including the ones in jobs
     that deliberately install almost nothing.
 
-    Measured on 2026-09-08: the fixture next door imported `aihawk.mcp.server`
+    Measured on 2026-09-08: the fixture next door imported `invisible_playwright_mcp.mcp.server`
     to clear four dicts, and the `version` and `releases` jobs, which run
     `pip install pytest` and nothing else because what they check is a version
     number and a set of release pages, both went red with `ModuleNotFoundError:
@@ -92,7 +120,7 @@ def test_the_conftest_imports_nothing_the_light_jobs_do_not_have():
     The state can only be dirty if something imported the module, so
     `sys.modules.get` answers the question without creating the dependency.
 
-    Known-bad: put `from aihawk.mcp import server` back in the fixture. Costs a
+    Known-bad: put `from invisible_playwright_mcp.mcp import server` back in the fixture. Costs a
     CI round trip to find out otherwise.
     """
     import pathlib
@@ -155,7 +183,7 @@ def test_a_run_that_did_not_ask_for_an_engine_cannot_reach_one():
         "the fast selection can download an engine and nobody will know until "
         "a CI job stops answering")
     where = pathlib.Path(cache)
-    assert where.name.startswith("aihawk-no-engine-"), (
+    assert where.name.startswith("invisible_playwright_mcp-no-engine-"), (
         "the cache points at %r, which is not the throwaway the conftest makes"
         % cache)
     assert os.environ.get("INVISIBLE_DOWNLOAD_DEADLINE") == "1", (
@@ -226,12 +254,12 @@ def test_the_guard_arms_exactly_when_the_engine_tests_are_deselected():
 
 
 def test_only_one_place_knows_where_the_interface_is_stopped():
-    """⛔ A TEST THAT DRIVES `aihawk ui` CAN SERVE FOREVER, AND ON 2026-09-11
+    """⛔ A TEST THAT DRIVES `invisible-playwright-mcp ui` CAN SERVE FOREVER, AND ON 2026-09-11
     one did.
 
     `cli.ui` builds a `Sessions` registry and asks it for a conversation, so
-    the only name worth patching is `aihawk.sessions.Link`. A test that
-    patched `aihawk.link.Link` instead stopped nothing: the command ran on,
+    the only name worth patching is `invisible_playwright_mcp.sessions.Link`. A test that
+    patched `invisible_playwright_mcp.link.Link` instead stopped nothing: the command ran on,
     uvicorn served the interface with no end, and all six CI matrix jobs hung
     to GitHub's six-hour ceiling on four pushes while reporting `in_progress`
     rather than failing. It was green on the developer machine only because
@@ -294,8 +322,8 @@ def test_the_brake_module_still_carries_all_three_defences():
     the reserved address from the runner. Both are invisible to a substring
     and both fail here.
     """
-    import aihawk.cli as climod
-    import aihawk.sessions as sessions_mod
+    import invisible_playwright_mcp.cli as climod
+    import invisible_playwright_mcp.sessions as sessions_mod
 
     import _cli_brake
 

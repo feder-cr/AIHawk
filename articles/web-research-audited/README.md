@@ -12,7 +12,7 @@ replaced with a measurement.
 ## The prompt
 
 The same instruction the
-[web research page](https://github.com/feder-cr/aihawk_mcp_server/wiki/ai-agent-web-research)
+[web research page](https://github.com/feder-cr/invisible_playwright_mcp/wiki/ai-agent-web-research)
 uses as its worked example:
 
 > Go to https://books.toscrape.com/. Walk the first three pages
@@ -96,5 +96,5 @@ Attach the browser to your assistant
 paste the prompt, then run `python ground_truth.py` (needs
 `pip install invisible-playwright`) and compare. The reading companion for
 this task shape is
-[AI agents for web research](https://github.com/feder-cr/aihawk_mcp_server/wiki/ai-agent-web-research)
+[AI agents for web research](https://github.com/feder-cr/invisible_playwright_mcp/wiki/ai-agent-web-research)
 on the wiki.

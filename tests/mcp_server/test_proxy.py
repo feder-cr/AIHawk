@@ -1,5 +1,5 @@
 import pytest
-from aihawk.mcp.proxy import proxy_from_url
+from invisible_playwright_mcp.mcp.proxy import proxy_from_url
 
 
 def test_none_and_empty_return_none():

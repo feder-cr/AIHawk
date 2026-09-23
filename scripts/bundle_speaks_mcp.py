@@ -2,7 +2,7 @@
 
 ⛔ WHY THIS EXISTS: THE CI RAN `--help` AND CALLED IT PROOF. The `bundle` job
 packed the archive, unpacked it and ran
-`uv run --directory <unpacked> python -m aihawk --help`, which prints click's
+`uv run --directory <unpacked> python -m invisible_playwright_mcp --help`, which prints click's
 help text. A bundle whose server could not start, could not complete
 `initialize`, or answered `tools/list` with nothing would have been green all
 the way to a directory review, because `--help` never reaches any of that.

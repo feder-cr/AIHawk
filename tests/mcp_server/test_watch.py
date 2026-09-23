@@ -23,7 +23,7 @@ import sys
 
 import pytest
 
-from aihawk.mcp.session import StealthSession
+from invisible_playwright_mcp.mcp.session import StealthSession
 
 
 class _FakeScreencast:
@@ -271,14 +271,14 @@ async def test_the_frame_comes_back_after_the_window_was_minimised():
     await s.start()
     try:
         await s.new_page()
-        await s.page().goto("data:text/html,<title>aihawk-minimise-probe</title>"
+        await s.page().goto("data:text/html,<title>invisible_playwright_mcp-minimise-probe</title>"
                             "<body style='background:%23fff'>before</body>")
         # The native window takes its title from the document a moment after
         # `goto` returns; on a build with the capture heartbeat it was not there
         # yet on the first look. Waited for, not assumed.
         hwnd = 0
         for _ in range(50):
-            hwnd = _window_titled("aihawk-minimise-probe")
+            hwnd = _window_titled("invisible_playwright_mcp-minimise-probe")
             if hwnd:
                 break
             await asyncio.sleep(0.1)
@@ -288,7 +288,7 @@ async def test_the_frame_comes_back_after_the_window_was_minimised():
         assert user32.ShowWindow(hwnd, 6)              # SW_MINIMIZE
         await asyncio.sleep(2.0)
         assert user32.ShowWindow(hwnd, 9)              # SW_RESTORE
-        await s.page().goto("data:text/html,<title>aihawk-minimise-probe</title>"
+        await s.page().goto("data:text/html,<title>invisible_playwright_mcp-minimise-probe</title>"
                             "<body style='background:%23000;color:%23fff'>after</body>")
 
         deadline = asyncio.get_running_loop().time() + 15.0

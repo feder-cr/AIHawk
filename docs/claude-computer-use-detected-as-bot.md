@@ -99,9 +99,9 @@ them. This is the general agent-timing problem, and it has
    is set in its own source. The second route exists today over MCP: instead of
    screenshotting a whole desktop, Claude Code, Claude Desktop or Cursor can drive a
    Firefox patched at the C++ level as a set of tools, via
-   [the MCP server](mcp-server.md) that ships with AIHawk -
-   a plugin for Claude Code: `claude plugin install aihawk@feder-cr`, once
-   the repository is added as a marketplace. Disclosure: that server and this wiki have the same maintainer, and it is the route AIHawk's own interface uses. For staying with the screenshot loop instead, the engine wiki shows
+   [the MCP server](mcp-server.md) that ships with invisible_playwright_mcp -
+   a plugin for Claude Code: `claude plugin install invisible-playwright-mcp@feder-cr`, once
+   the repository is added as a marketplace. Disclosure: that server and this wiki have the same maintainer, and it is the route invisible_playwright_mcp's own interface uses. For staying with the screenshot loop instead, the engine wiki shows
    [how to back a computer-use agent with a real browser engine](https://github.com/feder-cr/invisible_playwright/wiki/back-computer-use-agent-real-browser).
 2. **Fix the exit.** A clean, residential-quality address, with the browser's
    timezone and locale agreeing with it. A perfect machine on a distrusted address
@@ -178,7 +178,7 @@ full sort.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an AI agent
+*Written while maintaining [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), an AI agent
 on a Firefox patched at the C++ level. The pattern in this page - clean automation
 layer, guilty machine - is the single most common thing behind "my agent got
 detected", whoever's agent it is.*

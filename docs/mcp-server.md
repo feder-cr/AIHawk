@@ -1,6 +1,6 @@
 ---
 title: "The MCP server"
-description: "The stealth Firefox as an MCP server, shipped inside aihawk: the config block for every client that takes a file, the STEALTHFOX_* settings, and the tools with what each one returns."
+description: "The stealth Firefox as an MCP server, shipped inside invisible_playwright_mcp: the config block for every client that takes a file, the STEALTHFOX_* settings, and the tools with what each one returns."
 parent: "Using the Agent"
 nav_order: 29
 ---
@@ -19,25 +19,25 @@ library call, the price is the thing to weigh and it is a recurring one:
 server's per-turn bill measured.
 
 The engine is [`invisible-playwright`](https://github.com/feder-cr/invisible_playwright),
-a Firefox patched at the C++ source. The server ships inside the `aihawk`
-package and is what `aihawk` runs with no subcommand: `uvx aihawk` is what a
-client registers, `python -m aihawk` is what the interface spawns. Every tool
-below is a thin wrapper over the engine, and the interface (`aihawk ui`) is a
+a Firefox patched at the C++ source. The server ships inside the `invisible_playwright_mcp`
+package and is what `invisible_playwright_mcp` runs with no subcommand: `uvx invisible-playwright-mcp` is what a
+client registers, `python -m invisible_playwright_mcp` is what the interface spawns. Every tool
+below is a thin wrapper over the engine, and the interface (`invisible-playwright-mcp ui`) is a
 client of it like any other.
 
 **How to install this, and the two ways to use it, are in
-[AIHawk's README](https://github.com/feder-cr/aihawk_mcp_server#readme).** This page keeps
+[invisible_playwright_mcp's README](https://github.com/feder-cr/invisible_playwright_mcp#readme).** This page keeps
 what the server itself owns: the config block for clients that take a file, the
 settings, and the tools.
 
 ## Adding it to your client
 
 Claude Code and Codex install it as a plugin, Gemini CLI as an extension, and
-all three are in AIHawk's README. The rest take a config
+all three are in invisible_playwright_mcp's README. The rest take a config
 file, and the file is not the same
 everywhere: **three different top-level keys, and one of them is not even
 JSON.** Find yours below. The block only tells the client how to start the
-server; installing `uv` comes first, as AIHawk's README shows. The engine, the
+server; installing `uv` comes first, as invisible_playwright_mcp's README shows. The engine, the
 server downloads on its own the first time it starts, and `browser_open`
 reports the progress until it is there.
 
@@ -50,7 +50,7 @@ reports the progress until it is there.
   "mcpServers": {
     "stealth": {
       "command": "uvx",
-      "args": ["aihawk"]
+      "args": ["invisible-playwright-mcp"]
     }
   }
 }
@@ -72,7 +72,7 @@ reports the progress until it is there.
   "context_servers": {
     "stealth": {
       "command": "uvx",
-      "args": ["aihawk"]
+      "args": ["invisible-playwright-mcp"]
     }
   }
 }
@@ -86,7 +86,7 @@ reports the progress until it is there.
     "stealth": {
       "type": "stdio",
       "command": "uvx",
-      "args": ["aihawk"]
+      "args": ["invisible-playwright-mcp"]
     }
   }
 }
@@ -97,7 +97,7 @@ reports the progress until it is there.
 ```toml
 [mcp_servers.stealth]
 command = "uvx"
-args = ["aihawk"]
+args = ["invisible-playwright-mcp"]
 ```
 
 **Continue** uses YAML with its own block format, which changed recently enough
@@ -115,7 +115,7 @@ whatever shape your client uses:
   "mcpServers": {
     "stealth": {
       "command": "uvx",
-      "args": ["aihawk"],
+      "args": ["invisible-playwright-mcp"],
       "env": {
         "STEALTHFOX_PROXY": "http://user:pass@proxy.example.com:8080",
         "STEALTHFOX_SEED": "4242"
@@ -153,8 +153,8 @@ between what the browser says it is and where it appears to be.
 | `STEALTHFOX_HEADLESS` | `0` to run headed; headless by default. Decided by each launch: a saved session never records it, so a browser reopened by a headless server stays hidden even if it was last used headed. |
 | `STEALTHFOX_MCP_TRANSPORT` | `http` to serve over streamable HTTP instead of stdio. Default is stdio, which is what MCP clients expect. What else changes when you flip it, including the one thing that changes silently: [local or remote](local-vs-remote-mcp-server.md). |
 | `STEALTHFOX_MCP_HOST` | Bind address for the HTTP transport. Default `127.0.0.1`. |
-| `STEALTHFOX_MCP_PORT` | Port for the HTTP transport. Default `8766`. It used to be `8765`, the AIHawk interface's own default, so running both meant a bind error with nothing to explain it. |
-| `AIHAWK_HOME` | Where saved sessions are kept. Defaults to `%APPDATA%/aihawk` on Windows, `~/Library/Application Support/aihawk` on macOS and `$XDG_DATA_HOME/aihawk` on Linux. Set it to put them on another disk. |
+| `STEALTHFOX_MCP_PORT` | Port for the HTTP transport. Default `8766`. It used to be `8765`, the invisible_playwright_mcp interface's own default, so running both meant a bind error with nothing to explain it. |
+| `INVISIBLE_MCP_HOME` | Where saved sessions are kept. Defaults to `%APPDATA%/invisible-playwright-mcp` on Windows, `~/Library/Application Support/invisible-playwright-mcp` on macOS and `$XDG_DATA_HOME/invisible-playwright-mcp` on Linux. A directory left by the previous name is moved onto this one the first time the command runs, once, and the move is printed. Set it to put them on another disk. |
 
 Anything a tool call says wins over these. `browser_open` can pick another
 seed, another exit or another profile for one browser; the variables are what
@@ -211,8 +211,8 @@ always will.
 exactly one - the two browsers below, and nothing else - so there is nothing
 here to list, name, or reach a second one of: no tool takes an id for one, and
 none can ask about one that is not its own. Which piece of work this is comes
-from how the server was STARTED, never from a tool call. `uvx aihawk` and a
-checkout run directly always land on the same one; the AIHawk interface starts
+from how the server was STARTED, never from a tool call. `uvx invisible-playwright-mcp` and a
+checkout run directly always land on the same one; the invisible_playwright_mcp interface starts
 a separate server **per conversation** and tells each which one it is the
 moment it starts it, so two conversations are two processes with two saved
 files, never one server juggling several behind your back.
@@ -258,7 +258,7 @@ browser that is already up replaces it rather than adding a third, which is
 why there are only ever two.
 
 **The interface's conversation column and this server's saved identity are the
-same idea, one layer up.** A conversation in `aihawk ui` spawns its own server
+same idea, one layer up.** A conversation in `invisible-playwright-mcp ui` spawns its own server
 and tells it, at the moment it starts, which conversation it is - never a tool
 argument, because this server has no way to be asked about a second one. A
 standalone client that names none of that, and a checkout run directly, both
@@ -394,13 +394,13 @@ server, so a second client can attach to the browser the first one left open,
 and closing a client no longer kills the browser.
 
 ```bash
-STEALTHFOX_MCP_TRANSPORT=http uvx aihawk        # Linux
+STEALTHFOX_MCP_TRANSPORT=http uvx invisible-playwright-mcp        # Linux
 ```
 ```powershell
-$env:STEALTHFOX_MCP_TRANSPORT = "http"; uvx aihawk   # Windows
+$env:STEALTHFOX_MCP_TRANSPORT = "http"; uvx invisible-playwright-mcp   # Windows
 ```
 
-To SEE the browser rather than share it, [AIHawk](https://github.com/feder-cr/aihawk_mcp_server)
+To SEE the browser rather than share it, [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp)
 shows the live page beside the conversation.
 
 ## Notes
@@ -412,5 +412,5 @@ shows the live page beside the conversation.
 
 ## License
 
-[MIT](https://github.com/feder-cr/aihawk_mcp_server/blob/main/LICENSE),
+[MIT](https://github.com/feder-cr/invisible_playwright_mcp/blob/main/LICENSE),
 the same as the engine it wraps.

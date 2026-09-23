@@ -69,7 +69,7 @@ Camoufox, nodriver and Patchright that expose those engines over MCP.
 them, including the part where several of them advertise capabilities we could
 not verify.
 
-**AIHawk** - ours - is an MCP server whose browser is a Firefox patched at the
+**invisible_playwright_mcp** - ours - is an MCP server whose browser is a Firefox patched at the
 C++ source rather than a stock build with a script on top. MIT. That is the
 whole differentiator and it is narrow: it changes what the browser looks like,
 not how well the agent thinks. [The MCP server](mcp-server.md) has the config
@@ -98,7 +98,7 @@ free thing and the paid thing have the same name.
   keep breaking you (Skyvern) or the task leaves the browser (Agent S3).
 - **You want your assistant to be able to open a page today:** playwright-mcp.
 - **The browser itself is what gets recognised:** that is the narrow case where
-  the engine matters, and the stealth-oriented servers and AIHawk are the row
+  the engine matters, and the stealth-oriented servers and invisible_playwright_mcp are the row
   that addresses it. It does not repair an IP's reputation or robotic pacing.
 
 ## Short answers to the questions that lead here
@@ -133,7 +133,7 @@ here after something stopped working.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), which
+*Written while maintaining [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), which
 appears in layer 3. It is listed where it belongs rather than first, and the
 sentence describing what it does not fix is the same one we would want from
 somebody else's page.*

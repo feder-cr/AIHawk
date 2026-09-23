@@ -1,10 +1,10 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.feder-cr/aihawk",
-  "title": "AIHawk",
+  "name": "io.github.feder-cr/invisible-playwright-mcp",
+  "title": "invisible_playwright_mcp",
   "description": "AI browser agent: browses, clicks, types, and reads real web pages from plain-English instructions.",
   "repository": {
-    "url": "https://github.com/feder-cr/aihawk_mcp_server",
+    "url": "https://github.com/feder-cr/invisible_playwright_mcp",
     "source": "github"
   },
   "version": "0.69.2",
@@ -12,7 +12,7 @@
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
-      "identifier": "aihawk",
+      "identifier": "invisible-playwright-mcp",
       "version": "0.69.2",
       "runtimeHint": "uvx",
       "transport": {

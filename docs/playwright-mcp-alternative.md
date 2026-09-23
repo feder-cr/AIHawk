@@ -31,7 +31,7 @@ a distinct `--user-data-dir` per client. Both are documented options.
 **When a switch is warranted:** if your client only lets you register a bare
 command with no arguments, you may not be able to pass either flag, and a server
 that has no shared profile to fight over saves you the fight.
-[AIHawk](https://github.com/feder-cr/aihawk_mcp_server) is one: a server is one identity
+[invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) is one: a server is one identity
 for its whole life, so two registered servers are two browsers by construction
 rather than two clients racing for one directory.
 
@@ -90,7 +90,7 @@ layer.
 Address complaint 3 only. Younger and smaller than Microsoft's, so check push
 dates.
 
-**AIHawk** (ours, MIT). A Firefox patched at the C++ source, identity derived
+**invisible_playwright_mcp** (ours, MIT). A Firefox patched at the C++ source, identity derived
 from a seed so a failing run replays exactly, one identity per server with a
 helper browser that shares nothing with it, and the agent interface in the same
 package. Addresses complaints 1 and 3. It does

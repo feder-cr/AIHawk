@@ -15,7 +15,7 @@ the axes, a short decision path, and the cluster of detailed comparisons
 around it.
 
 The conflict of interest, up front: this is the wiki of
-[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source agent that
+[invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), an open-source agent that
 appears below as one of the candidates. Every claim about another tool on this
 page and its siblings traces to that tool's own site, repository or
 documentation, retrieved 2026-09-03, and the pages say so where a competitor
@@ -32,7 +32,7 @@ and the capability lives at the vendor's pleasure - the Operator-to-agent-to-
 removal churn of 2025-2026 is the cautionary tale, told with dates on
 [Is OpenAI Operator still available?](is-openai-operator-still-available.md).
 
-**You bring a key.** browser-use, Skyvern, Agent S3 and AIHawk take an API
+**You bring a key.** browser-use, Skyvern, Agent S3 and invisible_playwright_mcp take an API
 key and let you choose the model. You pay per token, you can switch providers,
 and the agent keeps working when a vendor reorganizes a product line.
 
@@ -57,7 +57,7 @@ decides what a website sees when it looks back.
 - **A screenshot loop over a whole desktop** (Agent S3, Claude computer use):
   most general, heaviest per action -
   [DOM reading versus pixel reading is a real fork](https://github.com/feder-cr/invisible_playwright/wiki/dom-reading-vs-screenshot-agents).
-- **A browser modified at the source level** (AIHawk's engine): a Firefox
+- **A browser modified at the source level** (invisible_playwright_mcp's engine): a Firefox
   patched in C++ to present a normal desktop fingerprint, with identity
   derived from a seed so runs replay. This is our approach, and the axis where
   we have something the others do not; the mechanics live on the
@@ -82,7 +82,7 @@ Be clear about what is whose: the browser's fingerprint and build are the
 tool's responsibility; the IP's reputation, the account's standing, and the
 pacing of requests are yours, whatever tool you run. No agent on this page,
 ours included, guarantees passage anywhere, and a tool that promises you will
-never be blocked is describing a world with no defenders in it. AIHawk's
+never be blocked is describing a world with no defenders in it. invisible_playwright_mcp's
 position on this axis is a hardened, real-fingerprint browser plus documented
 limits, not a guarantee. The sorting of blame - and what to actually do -
 is [why an agent gets blocked](why-does-my-ai-agent-get-blocked.md), and
@@ -106,7 +106,7 @@ not the tool's.
 5. **Layouts churn and break flows?** Skyvern's vision-first approach.
 6. **The browser itself is being recognized, you need runs to replay, or you
    want the agent inside Claude Code / Claude Desktop / Cursor via MCP?**
-   AIHawk - noting we are the ones saying it, and that it is Windows/Linux
+   invisible_playwright_mcp - noting we are the ones saying it, and that it is Windows/Linux
    only.
 7. **Still tied?** Run the finalists on your real task for an afternoon each.
    Every open tool here installs in one command; the trial costs less than
@@ -161,14 +161,14 @@ material, and the disclosure is at the top instead of the bottom.
 
 ## Sources
 
-- The [browser-use](https://github.com/browser-use/browser-use), [Skyvern](https://github.com/Skyvern-AI/skyvern), [Agent-S](https://github.com/simular-ai/Agent-S) and [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) repositories, retrieved 2026-09-03.
+- The [browser-use](https://github.com/browser-use/browser-use), [Skyvern](https://github.com/Skyvern-AI/skyvern), [Agent-S](https://github.com/simular-ai/Agent-S) and [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) repositories, retrieved 2026-09-03.
 - [Anthropic: computer use tool documentation](https://platform.claude.com/docs/en/agents-and-tools/tool-use/computer-use-tool), retrieved 2026-09-03, and coverage of Claude in Chrome's general availability surfaced via search the same day.
 - [Wikipedia: OpenAI Operator](https://en.wikipedia.org/wiki/OpenAI_Operator), retrieved 2026-09-03, and [OpenAI help: Evolving Atlas into ChatGPT](https://help.openai.com/en/articles/20001371-evolving-atlas-into-chatgpt-for-browser-based-agentic-work), surfaced via search 2026-09-03, for the vendor-churn timeline the first axis leans on.
 - [OpenAI computer use guide](https://platform.openai.com/docs/guides/tools-computer-use), surfaced via search 2026-09-03.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an
+*Written while maintaining [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), an
 open-source AI web agent with an obvious stake in step 6 of the decision path.
 The guide above is the one we would want handed to us, which is why steps 1
 through 5 point somewhere else.*

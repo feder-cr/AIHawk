@@ -1,7 +1,7 @@
 """The version a change proposes must not already be on the index, unless
 nothing that ships has moved since it was published.
 
-⛔ MEASURED 2026-09-04, AND NOTHING SAW IT. `aihawk 0.4.0` was published at
+⛔ MEASURED 2026-09-04, AND NOTHING SAW IT. `invisible_playwright_mcp 0.4.0` was published at
 23:47. Over the following hours main gained two more changes - verbs for the
 session tools, and a `.env` plus a raised dependency floor - while `pyproject`
 still said `0.4.0`. So main carried content that was not the content of the
@@ -12,7 +12,7 @@ habit. `publish.yml` asks the index first and treats an already-present version
 as a deliberate no-op:
 
     200) present=yes
-         "aihawk $VERSION is already on the index. No-op, not a failure."
+         "invisible-playwright-mcp $VERSION is already on the index. No-op, not a failure."
 
 That is correct for a re-pushed or backfilled tag, and it cannot tell that case
 apart from somebody forgetting to bump. So the release would have reported
@@ -43,20 +43,21 @@ outright rather than guessed at. The outcomes are free, taken-but-unmoved,
 taken-and-moved, and cannot-tell, and only the third is a defect while the
 fourth is a broken bench.
 
-Enabled by AIHAWK_CHECK_VERSION, which the `version` CI job sets itself, so it
+Enabled by INVISIBLE_MCP_CHECK_VERSION, which the `version` CI job sets itself, so it
 cannot silently skip the way it does in a local run.
 """
 from __future__ import annotations
 
 import os
 import pathlib
+import re
 import subprocess
 import urllib.error
 import urllib.request
 
 import pytest
 
-PACKAGE = "aihawk"
+PACKAGE = "invisible-playwright-mcp"
 
 #: A tag far enough back that the package has certainly moved since, which
 #: makes it the live known-bad for the diff half: a check that has only ever
@@ -74,8 +75,8 @@ PREVIOUS_RELEASE_TAG = "v0.5.0"
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("AIHAWK_CHECK_VERSION"),
-    reason="set AIHAWK_CHECK_VERSION=1 to ask the index (one network call)",
+    not os.environ.get("INVISIBLE_MCP_CHECK_VERSION"),
+    reason="set INVISIBLE_MCP_CHECK_VERSION=1 to ask the index (one network call)",
 )
 
 
@@ -121,14 +122,39 @@ def _changed_since(tag: str):
     return [line.strip() for line in out.splitlines() if line.strip()]
 
 
-def _on_the_index(version: str):
+#: `name>=X.Y.Z` at the head of a requirement, which is a version somebody
+#: published. A two-part floor (`mcp>=1.8`) is deliberately not matched: the
+#: index has `1.8.0`, and asking it about `1.8` gets a 404 that means nothing.
+FLOOR = re.compile(r"^([A-Za-z0-9._-]+)\s*>=\s*(\d+\.\d+\.\d+)\s*(?:,|$)")
+
+
+def _declared_floors():
+    """(project, version) for every dependency floor this package declares.
+
+    A project cannot depend on a version that was never on the index, and a
+    floor that vanished from it is a package that can no longer be installed.
+    So every one of these is a version the index must have, read from
+    `pyproject.toml` rather than typed.
+    """
+    p = _pyproject()["project"]
+    deps = list(p.get("dependencies") or [])
+    for extra in (p.get("optional-dependencies") or {}).values():
+        deps += list(extra)
+    return [(m.group(1), m.group(2)) for m in (FLOOR.match(d) for d in deps) if m]
+
+
+def _on_the_index(version: str, project: str = PACKAGE):
     """`True`, `False`, or None when the index would not say.
 
     ⛔ Three outcomes, not two. A network error is neither present nor absent,
     and scoring it as absent turns an unreachable index into a green gate -
     which is the failure this file exists to prevent, wearing a different hat.
+
+    `project` is a parameter for one reason, and it is the known-bad below: the
+    positive case has to ask about something that is certainly published, and
+    this project is not that thing.
     """
-    url = "https://pypi.org/pypi/%s/%s/json" % (PACKAGE, version)
+    url = "https://pypi.org/pypi/%s/%s/json" % (project, version)
     try:
         with urllib.request.urlopen(url, timeout=20) as answer:
             return answer.status == 200
@@ -169,12 +195,43 @@ def test_the_declared_version_is_not_already_published():
 def test_the_check_can_tell_a_taken_version_from_a_free_one():
     """⛔ The known-bad input, run against the live index rather than a mock.
 
-    A check that has only ever said "free" is not a check. `0.1.0` was
-    published and is not coming back, so it is a stable stand-in for the thing
-    this gate must catch, and a version far past anything real stands in for
-    the state it must allow.
+    A check that has only ever said "free" is not a check.
+
+    ⛔ AND THE POSITIVE CASE USED TO BE OUR OWN `0.1.0`, ON THE REASONING THAT
+    IT "was published and is not coming back". A published release is not
+    permanent: on 2026-09-23 the owner deleted this project from the index to
+    free a name for it, every version with it, and the instrument's only
+    positive case went red for a reason that had nothing to do with the
+    instrument. A gate must not prove itself against state its own owner can
+    remove - and a brand-new name has nothing published at all, so there was
+    nothing to move the case to.
+
+    ⛔ THEN IT ASKED ABOUT A VERSION THAT WAS INSTALLED, and that was right
+    about where published versions come from and wrong about where this test
+    runs: the `version` CI job installs `pytest` and nothing else, so the
+    metadata lookup raised `PackageNotFoundError` and the gate went red on its
+    own instrument. One stale assumption replaced by an assumption about the
+    environment.
+
+    It now asks about the DECLARED dependency floors, which need nothing
+    installed and are read from `pyproject.toml`. Every one of them is a version
+    somebody published, the first the index confirms is the one that counts, and
+    no single project's disappearance can turn this gate red by itself. The
+    negative case stays ours, because a version far past anything real is free
+    whether or not the project exists.
     """
-    taken = _on_the_index("0.1.0")
+    floors = _declared_floors()
+    assert floors, (
+        "no dependency declares a three-part floor, so the positive case has "
+        "nothing to ask the index about and this check cannot prove itself")
+
+    answers = []
+    for project, version in floors:
+        answers.append(_on_the_index(version, project=project))
+        if answers[-1] is True:
+            break
+    taken = True if any(a is True for a in answers) else (
+        None if all(a is None for a in answers) else False)
     free = _on_the_index("99.99.99")
 
     if taken is None or free is None:

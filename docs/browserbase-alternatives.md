@@ -16,7 +16,7 @@ the famous name in the space is an infrastructure company, and what you
 actually need is an agent, at which point the infrastructure bill is optional.
 
 This page answers both, with the disclosure up front: it lives on the wiki of
-[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source local agent that
+[invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), an open-source local agent that
 appears in the second half. Every claim about Browserbase and the other
 vendors below was read from their own sites, pricing pages and repositories
 on 2026-09-03.
@@ -93,7 +93,7 @@ version relevant here:
   fleet is. If your usage of Browserbase is "I like Stagehand", the code is
   open. How Stagehand compares to the agent frameworks is its own page:
   [Stagehand vs browser-use](stagehand-vs-browser-use.md).
-- **AIHawk** (MIT, ~30k stars) - ours, disclosure above. It runs locally and
+- **invisible_playwright_mcp** (MIT, ~30k stars) - ours, disclosure above. It runs locally and
   ships its own browser: a Firefox patched at the C++ level rather than a
   stock Chromium build, driven through an MCP server from an assistant you
   already run (Claude Code, Claude Desktop, Cursor) or from its own UI with
@@ -101,7 +101,7 @@ version relevant here:
 
 And the concessions, because this half is where our interest lives:
 a local agent gives you no fleet, no concurrency beyond your machine, no
-session cloud, no CI story, and AIHawk specifically is Windows and Linux
+session cloud, no CI story, and invisible_playwright_mcp specifically is Windows and Linux
 only. A hardened browser changes what a page reads from the browser; it does
 not change your IP, your pacing, or a site's limits, and nothing here
 promises otherwise -
@@ -118,7 +118,7 @@ half.
   BrowserStation if you are Kubernetes-native and early-adopter tolerant;
   Browserless only after reading the SSPL.
 - **You want an agent for your own tasks on your own machine:** the agent
-  field above; the infra bill disappears. AIHawk is our entry in it,
+  field above; the infra bill disappears. invisible_playwright_mcp is our entry in it,
   conflict of interest noted.
 - **You mainly want Stagehand:** it is MIT; you can use it without the
   cloud, and [Stagehand vs browser-use](stagehand-vs-browser-use.md) maps
@@ -143,7 +143,7 @@ self-host equivalents are Steel and BrowserStation.
 **Do I need Browserbase to run an AI browser agent?** No. Every major
 open-source agent runs on your own machine. The cloud earns its cost at
 fleet scale, in CI, or inside products; for personal and single-machine use,
-a local agent (AIHawk among them, disclosure above) has no infra cost at
+a local agent (invisible_playwright_mcp among them, disclosure above) has no infra cost at
 all.
 
 **Is Browserbase open source?** The platform is not; Stagehand (MIT) and
@@ -176,7 +176,7 @@ vendor's own page on that date and will drift.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server),
+*Written while maintaining [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp),
 which competes with exactly one half of this page. That is why the other
 half opens with what Browserbase gets right and sends you to Steel, not to
 us.*

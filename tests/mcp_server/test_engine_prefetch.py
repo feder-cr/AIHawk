@@ -12,9 +12,9 @@ import time
 
 import pytest
 
-from aihawk.engine import Engine
-from aihawk.mcp import server
-from aihawk.mcp.work import Work
+from invisible_playwright_mcp.engine import Engine
+from invisible_playwright_mcp.mcp import server
+from invisible_playwright_mcp.mcp.work import Work
 
 
 class _Built:

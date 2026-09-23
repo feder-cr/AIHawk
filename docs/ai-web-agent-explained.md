@@ -73,7 +73,7 @@ This is the section vendors skip, so it gets the detail here.
   agent spend forty steps on a six-step task is a rite of passage. Caps on steps and
   spend are not optional.
 - **Cost per task.** Every observation of a complex page is thousands of tokens.
-  Multiply by steps and by retries. Concretely: AIHawk's default model,
+  Multiply by steps and by retries. Concretely: invisible_playwright_mcp's default model,
   GLM-5.3-Flash, is priced on OpenRouter between $0.071 and $0.388 per million
   input tokens and between $0.237 and $1.358 per million output, depending which
   provider serves the request, which is cheap even for the cheap end of the class;
@@ -115,12 +115,12 @@ local agent runs the browser on your machine with your keys. The model itself is
 usually still a hosted API in both cases; fully local models work through tools
 like Ollama, at a real capability cost on long tasks.
 
-Where this project sits, stated once and with its boundary: AIHawk is a local,
+Where this project sits, stated once and with its boundary: invisible_playwright_mcp is a local,
 open-source, structure-reading agent whose browser is a Firefox patched at the C++
 level rather than a stock automation build, which addresses the fingerprint layer
 of blocking and does nothing for the IP, volume or pacing layers. Two ways in, an
-MCP server for assistants like Claude Code, or `uvx aihawk ui` with an OpenRouter
-key. This is AIHawk's wiki, so weigh that paragraph as a maintainer describing his
+MCP server for assistants like Claude Code, or `uvx invisible-playwright-mcp ui` with an OpenRouter
+key. This is invisible_playwright_mcp's wiki, so weigh that paragraph as a maintainer describing his
 own tool.
 
 ## Where to go from here
@@ -182,9 +182,9 @@ All retrieved 2026-09-03, except the OpenRouter pricing, retrieved 2026-09-08.
 - [browser-use/browser-use](https://github.com/browser-use/browser-use), as the
   reference example of a DOM-plus-screenshot observation design.
 - [GLM-5.3-Flash on OpenRouter](https://openrouter.ai/z-ai/glm-5.3-flash), for
-  current per-token pricing of AIHawk's default model.
-- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), plus its README in this
-  repository, for the claims about AIHawk itself.
+  current per-token pricing of invisible_playwright_mcp's default model.
+- [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), plus its README in this
+  repository, for the claims about invisible_playwright_mcp itself.
 
 **See also:** [open-source AI browser agents](ai-browser-agent-open-source.md),
 [agents vs traditional scraping](ai-browser-agents-vs-traditional-scraping.md), and
@@ -192,6 +192,6 @@ All retrieved 2026-09-03, except the OpenRouter pricing, retrieved 2026-09-08.
 
 ---
 
-*Maintained alongside [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source
+*Maintained alongside [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), an open-source
 web agent with a real patched Firefox underneath. The loop described above is the
 one it runs, which is how its failure modes ended up documented this specifically.*

@@ -18,7 +18,7 @@ clicks the wrong button, and both spend money to change nothing.
 
 There is an unusually clean way to split the two, and it costs nothing in
 model tokens: replay the failing step on the same engine with no model in the
-loop at all. The stealth Firefox that AIHawk drives is on PyPI as a plain
+loop at all. The stealth Firefox that invisible_playwright_mcp drives is on PyPI as a plain
 Python library (`pip install invisible-playwright`, Playwright's API), so a
 model-free replay is a few lines in a Python shell. Whatever happens in that
 replay happened without a model, so it cannot be a model problem. That is the
@@ -65,7 +65,7 @@ These appear with any model, and with no model:
   acted, no model change can touch it - work through
   [why does my AI agent get blocked?](why-does-my-ai-agent-get-blocked.md),
   which separates fingerprint, IP reputation, volume and rhythm.
-- **It works by hand in your normal browser, but not through AIHawk, on the
+- **It works by hand in your normal browser, but not through invisible_playwright_mcp, on the
   same network.** That narrows it to the agent's exit or identity rather than
   the site being down. The blocked page's checklist is the map.
 - **The action happened and hit the wrong element.** This is its own family and
@@ -131,7 +131,7 @@ handles fine:
    `--seed` both times so the browser identity is constant and the model is
    the only thing you moved. One model failing where another succeeds, on the
    same page and identity, is the clean model-side verdict - and the moment to
-   read [which model to use](which-model-to-use-with-aihawk.md).
+   read [which model to use](which-model-to-use-with-invisible-playwright-mcp.md).
 4. **Change one thing at a time.** Swapping model and proxy together tells you
    nothing whichever way it goes. This is the same discipline as the blocked
    checklist, because it is the same trap.
@@ -191,10 +191,10 @@ which is a certainty no model-driven run gives you.
 
 All retrieved 2026-09-03, except the loop itself, re-read 2026-09-08.
 
-- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), this repository's
-  source: `src/aihawk/agent.py` (the shared loop, which runs until the model
+- [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), this repository's
+  source: `src/invisible_playwright_mcp/agent.py` (the shared loop, which runs until the model
   stops calling tools and has no turn ceiling, and the invalid-arguments
-  retry), `src/aihawk/web.py` (the task handle, the stop button and the cancel
+  retry), `src/invisible_playwright_mcp/web.py` (the task handle, the stop button and the cancel
   that lands at the next tool call), and the README (the engine download and
   prefetch command).
 - [invisible_playwright](https://github.com/feder-cr/invisible_playwright),
@@ -202,12 +202,12 @@ All retrieved 2026-09-03, except the loop itself, re-read 2026-09-08.
   books.toscrape.com on 2026-09-03 and printed the line quoted.
 
 **See also:** [why does my AI agent get blocked?](why-does-my-ai-agent-get-blocked.md),
-[which model to use with AIHawk](which-model-to-use-with-aihawk.md), and
+[which model to use with invisible_playwright_mcp](which-model-to-use-with-invisible-playwright-mcp.md), and
 [agent retry loops and rate limits](agent-retry-loops-rate-limits.md).
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The model-free
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The model-free
 replay is how the maintainer runs this exact split while debugging; the wrong
 first version of the snippet above is left described because that is how it
 went.*

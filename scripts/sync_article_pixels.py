@@ -261,7 +261,7 @@ def selftest() -> int:
         ("a page with no pixel fails",
          {"a-page.md": "# T\n\nbody\n"}, 1),
         ("a pixel for another repo fails",
-         {"a-page.md": "# T\n\n" + pixel_tag("feder-cr/aihawk_mcp_server", "a-page")}, 1),
+         {"a-page.md": "# T\n\n" + pixel_tag("feder-cr/invisible_playwright_mcp", "a-page")}, 1),
         ("a pixel naming another page fails",
          {"a-page.md": "# T\n\n" + pixel_tag(repo, "other-page")}, 1),
         ("two pixels on one page fail",

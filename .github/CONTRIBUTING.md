@@ -1,15 +1,15 @@
-# Contributing to AIHawk
+# Contributing to invisible_playwright_mcp
 
 Thanks for being here. This page says what this repository is, so you can tell in
 one minute whether your change belongs here or in one of the packages below.
 
 ## What lives here
 
-The `aihawk` package: the two-pane interface, the loop that turns a sentence into
-browser actions, the command line around both, and, under `aihawk.mcp`, the MCP server the interface drives. If you are changing what a
+The `invisible_playwright_mcp` package: the two-pane interface, the loop that turns a sentence into
+browser actions, the command line around both, and, under `invisible_playwright_mcp.mcp`, the MCP server the interface drives. If you are changing what a
 person sees, or how the model decides what to do next, it is here.
 
-What is NOT here is the browser engine. AIHawk does not drive Firefox directly - it
+What is NOT here is the browser engine. invisible_playwright_mcp does not drive Firefox directly - it
 talks to an MCP server over MCP, using the same tools any other client
 gets. That is deliberate and it is the thing to understand before changing
 anything: this interface has no privileged path to the page, so a browser
@@ -22,14 +22,14 @@ only documentation. The package moved in the same day.
 
 | Repository | What it holds |
 |---|---|
-| **this one** | the interface, the agent loop, the CLI, and the MCP server (`src/aihawk/mcp`: the tools, and nothing with a face) |
+| **this one** | the interface, the agent loop, the CLI, and the MCP server (`src/invisible_playwright_mcp/mcp`: the tools, and nothing with a face) |
 | [invisible_playwright](https://github.com/feder-cr/invisible_playwright) | the Python wrapper, the launcher, and the patched browser it pins |
 | [invisible_core](https://github.com/feder-cr/invisible_core) | seed to fingerprint to preferences, proxy and geolocation |
 
 Where things go:
 
 - the page, the conversation, the step list, the model's behaviour: **here**
-- a tool that returns the wrong thing, or a click that does not land: **the MCP server, `src/aihawk/mcp` here**
+- a tool that returns the wrong thing, or a click that does not land: **the MCP server, `src/invisible_playwright_mcp/mcp` here**
 - the browser failing to start, a proxy not used, a timezone that does not match
   the exit country: **the wrapper or the core**
 - a detector spotting the browser: almost always the engine, not this repository
@@ -39,14 +39,14 @@ If you are not sure, open the issue here and it will be moved.
 ## Development setup
 
 ```bash
-git clone https://github.com/feder-cr/aihawk_mcp_server.git
-cd AIHawk
+git clone https://github.com/feder-cr/invisible_playwright_mcp.git
+cd invisible_playwright_mcp
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -e ".[test]"
 ```
 
-Python 3.11 or newer, Windows or Linux. No key is needed to work on it: `aihawk
+Python 3.11 or newer, Windows or Linux. No key is needed to work on it: `invisible_playwright_mcp
 ui` without one runs the literal-command placeholder, which drives the real
 browser through the real server and is how most of this was tested.
 
@@ -80,7 +80,7 @@ picture was the only thing that noticed.
 
 ## Opening an issue
 
-Use one of the [templates](https://github.com/feder-cr/aihawk_mcp_server/issues/new/choose).
+Use one of the [templates](https://github.com/feder-cr/invisible_playwright_mcp/issues/new/choose).
 Before you do, search the open and closed issues.
 
 For a bug, the two things that decide how fast it can be answered are the exact

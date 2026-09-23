@@ -125,7 +125,7 @@ tempo.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), which
+*Written while maintaining [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), which
 competes with the project this page is about. That is why the repository's own
 link is the first thing on the page and why the section on what its
 configuration cannot reach ends by saying the same limit applies to every

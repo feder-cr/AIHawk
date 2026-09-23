@@ -16,7 +16,7 @@ No browser, no model and no server: `Sessions` is built with an `open_link`
 seam that hands back one `FakeLink` per conversation id instead of spawning a
 real process, so what a conversation did is observable as the calls its OWN
 double recorded - and, critically, NOT recorded on any other conversation's.
-The brain answers without thinking, and `AIHAWK_HOME` points at a temporary
+The brain answers without thinking, and `INVISIBLE_MCP_HOME` points at a temporary
 directory for every test (see `tests/conftest.py`), so what a conversation
 wrote is observable as the files it left behind.
 """
@@ -25,12 +25,14 @@ from __future__ import annotations
 
 import pytest
 
-from aihawk import chats
-from aihawk.mcp import store
-from aihawk.chat import DEFAULT_CHAT_ID, UNNAMED
-from aihawk.routes import build_app
-from aihawk.sessions import Sessions
-from aihawk.ui import PAGE
+from invisible_playwright_mcp import chats
+from invisible_playwright_mcp.mcp import store
+from invisible_playwright_mcp.chat import DEFAULT_CHAT_ID, UNNAMED
+from invisible_playwright_mcp.routes import build_app
+from invisible_playwright_mcp.sessions import Sessions
+from invisible_playwright_mcp.ui import PAGE
+
+from _page import CARRIED
 
 
 class FakeLink:
@@ -133,8 +135,8 @@ async def test_a_page_that_names_nothing_is_in_the_conversation_it_always_was():
     import ast
     import inspect
 
-    from aihawk import chat
-    from aihawk.mcp import store
+    from invisible_playwright_mcp import chat
+    from invisible_playwright_mcp.mcp import store
 
     assert DEFAULT_CHAT_ID == store.DEFAULT_SESSION_ID
     declared = [n for n in ast.parse(inspect.getsource(chat)).body
@@ -515,7 +517,7 @@ async def test_every_request_the_page_makes_carries_the_conversation():
     """
     import re
 
-    from aihawk.ui import PAGE
+    from invisible_playwright_mcp.ui import PAGE
 
     script = PAGE[PAGE.index("<script"):]
     # Every fetch of a route that reads `?s=` must go through `at()`. The three
@@ -555,7 +557,7 @@ async def test_a_queued_message_is_not_lost_when_the_page_goes_away():
     """
     import re
 
-    from aihawk.ui import PAGE
+    from invisible_playwright_mcp.ui import PAGE
 
     script = PAGE[PAGE.index("<script"):]
     code = re.sub(r"/\*.*?\*/", "", script, flags=re.S)
@@ -570,9 +572,13 @@ async def test_a_queued_message_is_not_lost_when_the_page_goes_away():
     assert "if(queued) localStorage.setItem(qkey(), queued);" in code, (
         "the queued message is not written down where it can be read back, so "
         "a reload loses it")
-    assert "localStorage.getItem(qkey())" in code, (
+    # ⛔ READ THROUGH `carried`, WHICH IS ALSO WHAT MOVES A DRAFT SAVED UNDER
+    # THE RETIRED KEY. A plain `getItem` here would be correct and would lose
+    # the text of anybody upgrading, silently, which is what the read looked
+    # like until 2026-09-23.
+    assert "carried(qkey())" in code, (
         "nothing reads the queued message back, so saving it changes nothing")
-    assert "'aihawk.queued.' + (who || here)" in code, (
+    assert "STORE + 'queued.' + (who || here)" in code, (
         "the queue is not kept per conversation, so switching sessions carries "
         "somebody's pending sentence into another chat")
     # ⛔ AND IT DIES WITH THE CONVERSATION IT BELONGS TO. Deleting one erased
@@ -826,7 +832,8 @@ def test_the_panel_closes_the_three_ways_a_person_tries():
         "out.theSpineStillCloses = made.rail.hidden;",
         "process.stdout.write(JSON.stringify(out));",
     ]
-    js = chr(10).join(harness).replace("HERE", owner + chr(10) + panel)
+    js = chr(10).join(harness).replace("HERE", CARRIED + chr(10) + owner
+                                      + chr(10) + panel)
 
     done = subprocess.run([node, "-e", js], capture_output=True, text=True,
                           encoding="utf-8", timeout=30)
@@ -934,7 +941,7 @@ def test_renaming_happens_in_the_row_and_escape_belongs_to_the_edit():
 
     import pytest
 
-    from aihawk.ui import PAGE
+    from invisible_playwright_mcp.ui import PAGE
 
     node = shutil.which("node")
     if not node:
@@ -1012,7 +1019,7 @@ def test_deleting_a_conversation_takes_two_presses_and_no_dialog():
     """
     import re
 
-    from aihawk.ui import PAGE
+    from invisible_playwright_mcp.ui import PAGE
 
     code = re.sub(r"/\*.*?\*/", "", PAGE, flags=re.S)
     assert "confirm(" not in code and "prompt(" not in code, (
@@ -1044,7 +1051,7 @@ def test_the_column_is_not_rebuilt_where_nobody_can_see_it():
     """
     import re
 
-    from aihawk.ui import PAGE
+    from invisible_playwright_mcp.ui import PAGE
 
     code = re.sub(r"/\*.*?\*/", "", PAGE, flags=re.S)
     turn = code[code.index("case 'busy':"):]

@@ -1,20 +1,11 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/feder-cr/aihawk_mcp_server/main/assets/aihawk-logo-dark.png">
-  <img alt="AIHawk" src="https://raw.githubusercontent.com/feder-cr/aihawk_mcp_server/main/assets/aihawk-logo-light.png" width="380">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/feder-cr/invisible_playwright_mcp/main/assets/masks-dark.png">
+  <img alt="invisible_playwright_mcp" src="https://raw.githubusercontent.com/feder-cr/invisible_playwright_mcp/main/assets/masks-light.png" width="150">
 </picture>
 
-**AIHawk is an anti detect browser and web browsing agent, open source, with an MCP server for coding agents: undetected, no captchas, no blocks. Tell it what you want in plain language.**
-
-<sub>FEATURED IN</sub><br>
-[**Business Insider**](https://www.businessinsider.com/aihawk-applies-jobs-for-you-linkedin-risks-inaccuracies-mistakes-2024-11) ·
-[**TechCrunch**](https://techcrunch.com/2024/10/10/a-reporter-used-ai-to-apply-to-2843-jobs/) ·
-[**Semafor**](https://www.semafor.com/article/09/12/2024/linkedins-have-nots-and-have-bots) ·
-[**Wired**](https://www.wired.it/article/aihawk-come-automatizzare-ricerca-lavoro/) ·
-[**The Verge**](https://www.theverge.com/2024/10/10/24266898/ai-is-enabling-job-seekers-to-think-like-spammers) ·
-[**Vanity Fair**](https://www.vanityfair.it/article/intelligenza-artificiale-candidature-di-lavoro) ·
-[**404 Media**](https://www.404media.co/i-applied-to-2-843-roles-the-rise-of-ai-powered-job-application-bots/)
+**An anti detect browser and web browsing agent, open source, with an MCP server for coding agents: undetected, no captchas, no blocks. Tell it what you want in plain language.**
 
 </div>
 
@@ -43,21 +34,21 @@ Then install it in your assistant.
 **Claude Code:**
 
 ```bash
-claude plugin marketplace add feder-cr/aihawk_mcp_server
-claude plugin install aihawk@feder-cr
+claude plugin marketplace add feder-cr/invisible_playwright_mcp
+claude plugin install invisible-playwright-mcp@feder-cr
 ```
 
 **Codex:**
 
 ```bash
-codex plugin marketplace add feder-cr/aihawk_mcp_server
-codex plugin add aihawk@feder-cr
+codex plugin marketplace add feder-cr/invisible_playwright_mcp
+codex plugin add invisible-playwright-mcp@feder-cr
 ```
 
 **Gemini CLI:**
 
 ```bash
-gemini extensions install https://github.com/feder-cr/aihawk_mcp_server
+gemini extensions install https://github.com/feder-cr/invisible_playwright_mcp
 ```
 
 ### 2. Standalone: the web UI
@@ -70,7 +61,7 @@ Windows, in PowerShell:
 ```powershell
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 $env:Path = "$env:USERPROFILE\.local\bin;$env:Path"
-uvx aihawk ui --openrouter-key sk-or-...
+uvx invisible-playwright-mcp ui --openrouter-key sk-or-...
 ```
 
 Linux:
@@ -78,7 +69,7 @@ Linux:
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source $HOME/.local/bin/env
-uvx aihawk ui --openrouter-key sk-or-...
+uvx invisible-playwright-mcp ui --openrouter-key sk-or-...
 ```
 
 Then open **http://127.0.0.1:8765** and type the same thing.
@@ -101,7 +92,7 @@ It drives the page the way a person would: the pointer moves, keys are pressed.
 ## Options: proxy, profile, seed
 
 - **`--openrouter-key`** Your key, or the `OPENROUTER_API_KEY` variable.
-- **`--model`** An OpenRouter model id, or `AIHAWK_MODEL`. Defaults to `z-ai/glm-5.3-flash`.
+- **`--model`** An OpenRouter model id, or `INVISIBLE_MCP_MODEL`. Defaults to `z-ai/glm-5.3-flash`.
 - **`--proxy`** Optional. `http://user:pass@proxy.example.com:8080` or
   `socks5://proxy.example.com:1080`. Host and port are both required. The
   timezone, locale and egress follow it.
@@ -137,20 +128,20 @@ both.
 ## The wiki: AI browser-agent guides
 
 The reading room around the agent lives in the
-[wiki](https://github.com/feder-cr/aihawk_mcp_server/wiki): the
+[wiki](https://github.com/feder-cr/invisible_playwright_mcp/wiki): the
 [AI browser-agent landscape: browser-use, Operator-style and
-computer-use agents compared](https://github.com/feder-cr/aihawk_mcp_server/wiki/guides-alternatives-and-comparisons),
-[what to check when an agent gets blocked](https://github.com/feder-cr/aihawk_mcp_server/wiki/why-does-my-ai-agent-get-blocked),
-and [what happened to OpenAI Operator](https://github.com/feder-cr/aihawk_mcp_server/wiki/is-openai-operator-still-available),
+computer-use agents compared](https://github.com/feder-cr/invisible_playwright_mcp/wiki/guides-alternatives-and-comparisons),
+[what to check when an agent gets blocked](https://github.com/feder-cr/invisible_playwright_mcp/wiki/why-does-my-ai-agent-get-blocked),
+and [what happened to OpenAI Operator](https://github.com/feder-cr/invisible_playwright_mcp/wiki/is-openai-operator-still-available),
 among others. Worked examples, transcripts and their outputs live in
-[articles/](https://github.com/feder-cr/aihawk_mcp_server/tree/main/articles).
+[articles/](https://github.com/feder-cr/invisible_playwright_mcp/tree/main/articles).
 
 ## The rest of the family: engine, core
 
-The MCP server from option 1 ships inside this package: `aihawk` with no
-subcommand is the server, `aihawk ui` the interface. Its config blocks for
+The MCP server from option 1 ships inside this package: `invisible_playwright_mcp` with no
+subcommand is the server, `invisible-playwright-mcp ui` the interface. Its config blocks for
 clients that take a file, its settings and its tools are on the wiki page
-[The MCP server](https://github.com/feder-cr/aihawk_mcp_server/wiki/mcp-server).
+[The MCP server](https://github.com/feder-cr/invisible_playwright_mcp/wiki/mcp-server).
 
 - **[invisible_playwright](https://github.com/feder-cr/invisible_playwright)**
   The engine, as a Python library, for writing code instead of prompts. The API
@@ -166,8 +157,8 @@ not read.
 
 ## Privacy Policy
 
-AIHawk runs on your machine and has no server of its own. What leaves your
-computer, and to whom:
+This browser agent runs on your machine and has no server of its own. What
+leaves your computer, and to whom:
 
 - **The sites you visit** see the browser, as they would any Firefox.
 - **Your model provider.** The web UI sends the conversation and what the agent
@@ -181,18 +172,18 @@ computer, and to whom:
   shows, your IP address.
 
 Nothing else is collected and nothing is sent to the author. Sessions,
-profiles and screenshots are stored locally, under `AIHAWK_HOME` if set and
+profiles and screenshots are stored locally, under `INVISIBLE_MCP_HOME` if set and
 otherwise in the application-data directory of your system, and are yours to
 delete; nothing is retained anywhere else. Questions go to the
-[issues](https://github.com/feder-cr/aihawk_mcp_server/issues).
+[issues](https://github.com/feder-cr/invisible_playwright_mcp/issues).
 
 ## License
 
-[MIT](https://github.com/feder-cr/aihawk_mcp_server/blob/main/LICENSE). Everything
+[MIT](https://github.com/feder-cr/invisible_playwright_mcp/blob/main/LICENSE). Everything
 distributed before 2 September 2026 was released under AGPL-3.0 and stays under
 it.
 
 <!-- The Official MCP Registry verifies ownership of a PyPI package by finding
      this token in the published description, which is this file. It must match
      the `name` in server.json exactly. -->
-<!-- mcp-name: io.github.feder-cr/aihawk -->
+<!-- mcp-name: io.github.feder-cr/invisible-playwright-mcp -->

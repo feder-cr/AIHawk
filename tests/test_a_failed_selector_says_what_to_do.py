@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import pytest
 
-from aihawk.mcp import actions
+from invisible_playwright_mcp.mcp import actions
 
 
 class _Page:

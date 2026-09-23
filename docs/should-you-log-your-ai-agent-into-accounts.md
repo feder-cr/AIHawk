@@ -24,7 +24,7 @@ as you.
 If the account can delete a listing, cancel a subscription, send a message, or
 move money, an agent signed into it can do all of that without pausing to ask
 whether it should. The login is not a formality, it is a set of permissions,
-and [AIHawk's own review](aihawk-review.md) names this same trade-off as a
+and [invisible_playwright_mcp's own review](invisible-playwright-mcp-review.md) names this same trade-off as a
 declared limit of the project, not a footnote.
 
 ## What can go wrong: the three real risks
@@ -85,7 +85,7 @@ log in.
 None of the above argues against ever logging an agent in. It argues for
 doing it deliberately, the way you would hand a new employee access.
 
-- **A separate profile directory per task.** AIHawk's `--profile-dir` flag
+- **A separate profile directory per task.** invisible_playwright_mcp's `--profile-dir` flag
   keeps logins and cookies in one folder, so a research task and a task on a
   paid account never share a session.
 - **Never the profile that holds your highest-value accounts.** Bank logins,
@@ -144,7 +144,7 @@ before an instruction becomes an action; a self-hosted agent usually
 carries no such layer, so the caution has to live in your task and profile
 choices instead.
 
-**See also:** [AIHawk, reviewed honestly by its own wiki](aihawk-review.md),
+**See also:** [invisible_playwright_mcp, reviewed honestly by its own wiki](invisible-playwright-mcp-review.md),
 [why does my AI agent get blocked?](why-does-my-ai-agent-get-blocked.md), and
 [getting an AI agent to fill out forms](ai-agent-fill-out-forms.md).
 
@@ -152,7 +152,7 @@ choices instead.
 
 All retrieved 2026-09-05 unless noted.
 
-- [feder-cr/aihawk_mcp_server](https://github.com/feder-cr/aihawk_mcp_server), this repository's
+- [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), this repository's
   README, for the `--profile-dir` option and the "Using it responsibly"
   section, read in the working tree 2026-09-05.
 - OWASP GenAI Security Project, "LLM01:2025 Prompt Injection",
@@ -163,6 +163,6 @@ All retrieved 2026-09-05 unless noted.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. The mitigations
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. The mitigations
 above match the project's own README: read the terms, respect rate limits,
 and do not submit anything a human has not read.*

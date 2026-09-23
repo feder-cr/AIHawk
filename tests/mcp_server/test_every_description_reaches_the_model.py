@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import asyncio
 
-from aihawk.agent import mcp_tools_to_openai
-from aihawk.mcp import server
+from invisible_playwright_mcp.agent import mcp_tools_to_openai
+from invisible_playwright_mcp.mcp import server
 
 #: The API's ceiling, and the loop's cut. Written once here and once in the
 #: loop, and this file is the one that says why.

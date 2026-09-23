@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "aihawk"
+name = "invisible-playwright-mcp"
 version = "0.69.2"
 description = "Anti detect browser and web browsing agent: undetected, no captchas, no blocks"
 readme = "README.md"
@@ -24,8 +24,8 @@ classifiers = [
 authors = [{ name = "feder-cr", email = "85809106+feder-cr@users.noreply.github.com" }]
 dependencies = [
     # The MCP server is part of this package since 0.10.0, and since 0.11.0 it
-    # is what `aihawk` runs with no subcommand: `uvx aihawk` for a client,
-    # `python -m aihawk` from a checkout. It was the separate package
+    # is what `invisible_playwright_mcp` runs with no subcommand: `uvx invisible-playwright-mcp` for a client,
+    # `python -m invisible_playwright_mcp` from a checkout. It was the separate package
     # invisible-playwright-mcp until 0.15.2; that name lives on as a shim
     # that depends on this one, so every registered client keeps working.
     # >=1.8, because main() offers the streamable HTTP transport and the SDK
@@ -79,7 +79,7 @@ dependencies = [
     # `mcp/server.py` says `from pydantic import Field` to build the tool
     # parameter types, and nothing declared pydantic: it arrived through `mcp`,
     # which requires >=2.11,<3. So the day mcp stops needing it, or moves to a
-    # major this cannot use, `import aihawk` fails for everybody with a
+    # major this cannot use, `import invisible_playwright_mcp` fails for everybody with a
     # traceback naming pydantic and a cause nowhere near it - and no test could
     # see it first, because every environment that has mcp has pydantic.
     #
@@ -126,10 +126,10 @@ target-version = "py311"
 select = ["F"]
 
 [project.scripts]
-aihawk = "aihawk.cli:main"
+invisible-playwright-mcp = "invisible_playwright_mcp.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/aihawk"]
+packages = ["src/invisible_playwright_mcp"]
 
 [tool.pytest.ini_options]
 # ⛔ SO A CHECKOUT GATES ITSELF. Without this, pytest imports whatever the

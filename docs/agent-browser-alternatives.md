@@ -1,6 +1,6 @@
 ---
 title: "Vercel agent-browser alternatives, compared honestly"
-description: "Vercel's agent-browser is a Rust CLI that gives AI agents a browser. How browser-use, Playwright MCP, Stagehand and AIHawk compare on checkable facts."
+description: "Vercel's agent-browser is a Rust CLI that gives AI agents a browser. How browser-use, Playwright MCP, Stagehand and invisible_playwright_mcp compare on checkable facts."
 parent: "Alternatives and Comparisons"
 nav_order: 23
 ---
@@ -10,11 +10,11 @@ nav_order: 23
 Vercel's agent-browser is a native Rust command-line tool that gives an AI
 agent a browser to drive, published under Apache-2.0. The alternatives doing
 the same job are browser-use, Microsoft's Playwright MCP server, Stagehand
-and AIHawk, and they differ less in what they automate than in how the agent
+and invisible_playwright_mcp, and they differ less in what they automate than in how the agent
 talks to them and which browser ends up running.
 
 One disclosure before the comparison: this wiki is maintained by the people
-behind AIHawk, one of the tools below. Read our row with that in mind. The
+behind invisible_playwright_mcp, one of the tools below. Read our row with that in mind. The
 picks at the end name two other tools before they name ours.
 
 ## What Vercel's agent-browser actually is
@@ -49,7 +49,7 @@ one.
 | browser-use | MIT | Chromium family, through Playwright | Python library; the agent loop decides each action | Python 3.11+ |
 | Playwright MCP | Apache-2.0 | Chromium, Firefox or WebKit | MCP server; any MCP client calls its tools | Node.js 18+ |
 | Stagehand | MIT | Chromium, through Playwright | Library with act, observe and extract calls beside raw Playwright | TypeScript, Python or Go |
-| AIHawk (ours) | MIT | Firefox, patched at the source level rather than a stock automation build | MCP server, or a local two-pane UI | Python 3.11+ |
+| invisible_playwright_mcp (ours) | MIT | Firefox, patched at the source level rather than a stock automation build | MCP server, or a local two-pane UI | Python 3.11+ |
 
 Three honest notes on that table. Playwright MCP reads the page's
 accessibility snapshot instead of screenshots, which keeps each step cheap
@@ -68,7 +68,7 @@ is in-process, which is simpler to debug and easier to bring down.
 
 **Who decides the next action.** browser-use and Stagehand put a model in
 the loop by design. Playwright MCP and agent-browser expose actions and let
-whatever assistant you already run do the deciding. AIHawk does both,
+whatever assistant you already run do the deciding. invisible_playwright_mcp does both,
 depending on which of its two entry points you use.
 
 **Language.** This is the boring criterion that decides most real adoptions.
@@ -87,7 +87,7 @@ any missing feature.
 - **You want a compiled binary with no runtime to install and a daemon that
   holds sessions:** agent-browser.
 - **You care that the browser presents as an ordinary desktop browser, and
-  you want a run to repeat identically:** AIHawk, ours, conflict noted.
+  you want a run to repeat identically:** invisible_playwright_mcp, ours, conflict noted.
 
 ## Short answers to the questions that lead here
 
@@ -136,6 +136,6 @@ framework these picks come from.
 
 ---
 
-*From the [AIHawk](https://github.com/feder-cr/aihawk_mcp_server) wiki. AIHawk is one row
+*From the [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) wiki. invisible_playwright_mcp is one row
 in the table above, not the first, and the picks name two other tools before
 they name ours.*

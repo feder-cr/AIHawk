@@ -13,7 +13,7 @@ import ast
 import asyncio
 import inspect
 
-from aihawk.mcp import server
+from invisible_playwright_mcp.mcp import server
 
 #: The tools that act on the piece of work rather than on a page: they call
 #: `work.open`, `work.close`, `work.listing`, `work.status`.

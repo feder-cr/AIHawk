@@ -16,7 +16,7 @@ import json
 
 import pytest
 
-from aihawk.mcp import actions
+from invisible_playwright_mcp.mcp import actions
 
 HEAD = {"title": "list", "url": "https://example.com/"}
 

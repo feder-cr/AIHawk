@@ -16,7 +16,7 @@ question the vendor pages skip, which is whether your setup needs the layer at
 all.
 
 Disclosure before anything else: this wiki belongs to
-[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source agent that ships
+[invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), an open-source agent that ships
 its own browser and runs locally, which is one of the two answers to that last
 question. Our interest runs against the category, so read the closing section
 knowing that, and read the vendor descriptions knowing that every fact in them
@@ -168,8 +168,8 @@ the license caveat) Browserless on the other.
 
 You do not need it when the agent is yours, personal, and local. One person
 running one agent for their own tasks has no fleet, no CI, and no burst; the
-laptop that is already on is the infrastructure. This is AIHawk's route, and
-the disclosure from the top applies in full: AIHawk ships its own browser, a
+laptop that is already on is the infrastructure. This is invisible_playwright_mcp's route, and
+the disclosure from the top applies in full: invisible_playwright_mcp ships its own browser, a
 Firefox patched at the C++ level rather than a hosted Chromium, runs it on
 your machine, and there is no per-hour or per-credit bill because there is no
 vendor in the loop. Model tokens are the only metered cost. The trade is
@@ -203,7 +203,7 @@ which is source-available, not OSI open source.
 
 **Do I need cloud browsers to run an AI agent?** No. Every major open-source
 agent runs on your own machine, and a local agent that ships its own browser
-(AIHawk is one, disclosure above) has no infra bill at all. The layer earns
+(invisible_playwright_mcp is one, disclosure above) has no infra bill at all. The layer earns
 its cost at fleet scale, in CI, or inside products.
 
 **How much does it cost?** Entry tiers are cheap ($0 to $99/mo across the
@@ -238,7 +238,7 @@ each project's own page on that date and will drift.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server), a
+*Written while maintaining [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), a
 local agent that exists so its users do not need this layer. That bias is
 stated because it is real; the vendor facts above are theirs, checked against
 their own pages.*

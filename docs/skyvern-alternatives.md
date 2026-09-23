@@ -18,7 +18,7 @@ search that brought you here is usually not "is Skyvern good" - it is - but
 "which half of that sentence is a problem for me, and what answers it".
 
 Disclosure before anything else: this wiki belongs to
-[AIHawk](https://github.com/feder-cr/aihawk_mcp_server), an open-source agent that
+[invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), an open-source agent that
 competes with Skyvern and appears below as one of the alternatives. Every
 claim about Skyvern here traces to its own repository, and where Skyvern is
 the better tool this page says so.
@@ -105,12 +105,12 @@ inference costs, research-grade edges - but if your read on Skyvern was
 platform around it. Context in
 [open-source computer-use agents](computer-use-agent-open-source.md).
 
-### AIHawk: the hard part ships in the product - ours
+### invisible_playwright_mcp: the hard part ships in the product - ours
 
 Roughly 30k stars, MIT, and the conflict of interest from the top of the
 page applies to this section. The contrast maps directly onto Skyvern's
 sentence: where Skyvern's README places its anti-bot measures in the managed
-cloud, AIHawk's equivalent hard part is the browser itself - a Firefox
+cloud, invisible_playwright_mcp's equivalent hard part is the browser itself - a Firefox
 patched at the C++ level (the invisible_playwright engine) that presents a
 normal desktop fingerprint - and it ships inside the open-source product,
 running on your machine. That is a different placement of the same problem,
@@ -118,7 +118,7 @@ not magic: we make no promise of non-detection anywhere, sites remain free
 to challenge any visitor, and the engine wiki documents
 [how to test the difference yourself](https://github.com/feder-cr/invisible_playwright/wiki/how-to-test-bot-detection)
 rather than asking you to take a claim on faith. The interaction model is
-also different in kind: AIHawk is a conversational agent that plugs into an
+also different in kind: invisible_playwright_mcp is a conversational agent that plugs into an
 MCP assistant you already run (Claude Code, Claude Desktop, Cursor) or its
 own local UI, not a vision-workflow engine, and it runs on Windows and Linux
 only.
@@ -129,7 +129,7 @@ Fairness requires its own section. The vision-workflow model is the most
 resilient approach on this page to layout churn, and none of the
 alternatives replaces it like for like: browser-use gives you an agent, not
 rerunnable parameterized workflows; Stagehand gives you primitives, not a
-workflow engine; AIHawk gives you a different browser and a conversational
+workflow engine; invisible_playwright_mcp gives you a different browser and a conversational
 loop, not structured pipelines. Skyvern also has a hosted option for teams
 that want managed scale, a straightforward pip and Docker story, and the
 rare virtue of a README that tells you its own limits. If neither the
@@ -156,7 +156,7 @@ standard Playwright Chromium, and outcomes mostly track the machine and
 network facts covered in
 [why an agent gets blocked](why-does-my-ai-agent-get-blocked.md).
 
-**Is AIHawk better than Skyvern?** Not in general, and this is our own wiki
+**Is invisible_playwright_mcp better than Skyvern?** Not in general, and this is our own wiki
 saying so. It differs where the browser itself or the AGPL is your problem;
 Skyvern is better where workflow authoring, vision resilience to layout
 change, or a hosted option matter.
@@ -182,7 +182,7 @@ full decision framework.
 
 ---
 
-*Written while maintaining [AIHawk](https://github.com/feder-cr/aihawk_mcp_server),
+*Written while maintaining [invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp),
 which competes with Skyvern. That is why the page opens by crediting
 Skyvern's honesty, closes its survey with where Skyvern wins, and quotes the
 README instead of paraphrasing it.*

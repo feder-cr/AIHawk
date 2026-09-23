@@ -73,7 +73,7 @@ servers are for, and it is the pattern most working setups actually use.
 
 ## What this project does, and does not
 
-[AIHawk](https://github.com/feder-cr/aihawk_mcp_server) drives a Firefox patched at the C++
+[invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp) drives a Firefox patched at the C++
 source. That changes what a page can observe about the browser, which is one of
 four inputs above, and the third by weight. **It does not solve captchas, and we
 do not claim non-detection.**

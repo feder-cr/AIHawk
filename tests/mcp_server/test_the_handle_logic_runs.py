@@ -34,7 +34,7 @@ import subprocess
 
 import pytest
 
-from aihawk.mcp import actions
+from invisible_playwright_mcp.mcp import actions
 
 NODE = shutil.which("node")
 pytestmark = pytest.mark.skipif(not NODE, reason="needs node to EXECUTE the handle logic")
