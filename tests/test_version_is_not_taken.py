@@ -202,10 +202,10 @@ def test_the_check_can_tell_a_taken_version_from_a_free_one():
     404 for this project and the instrument's only positive case went red for a
     reason that had nothing to do with the instrument.
 
-    ⛔ THAT 404 WAS TRANSIENT, AND IT WAS TAKEN FOR A DELETION. It was not one:
-    PyPI does not let a deleted name be registered again, and 87 versions are
-    still served. The change below stands on its own anyway, which is why it was
-    kept after the reading was corrected: a gate that proves itself against ONE
+    ⛔ THAT 404 WAS THE DELETION, which for a few hours was taken for a
+    transient: the owner deleted the old distribution that day to free the new
+    name, and it propagated unevenly. The change below stands whichever it was,
+    which is why it survived both readings: a gate that proves itself against ONE
     release of ONE project fails whenever that project is unreachable, whether
     the cause is a deletion or a bad minute at the index. What it needs is
     something that cannot be absent without the package being uninstallable.

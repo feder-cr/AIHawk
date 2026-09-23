@@ -70,18 +70,30 @@ REPOSITORY = "feder-cr/invisible_playwright_mcp"
 #: skip branch.
 #:
 #: ⛔ AND THE BOUNDARY CANNOT BE DERIVED FROM A VERSION NUMBER, because the
-#: numbering OVERLAPS: `invisible-playwright-mcp` 0.1.0 through 0.16.0 is a shim
-#: published from an ARCHIVED repository, and seventeen of those versions carry
+#: numbering OVERLAPS: `invisible-playwright-mcp` 0.1.0 through 0.16.0 was a shim
+#: published from an ARCHIVED repository, and seventeen of those versions carried
 #: the same number as one of ours. That is why the boundary is declared rather
 #: than computed.
+#:
+#: The fourth field is the day the owner DELETED that project from the index, or
+#: None while it is live. A deleted project answers 404, and so does an index
+#: having a bad minute: nothing the index says can tell the two apart, so the
+#: deletion is declared, like the boundary, and checked in the one direction the
+#: index CAN answer - a project declared gone that answers 200 is a false
+#: declaration and fails (`test_a_project_declared_deleted_is_not_served`).
 DISTRIBUTIONS = (
     # Everything through 0.69.2 shipped as `aihawk`: 87 versions, 0.1.0 to
-    # 0.69.2, and that project was never anybody else's.
-    ("aihawk", None, "0.69.2"),
+    # 0.69.2. Deleted by the owner on 2026-09-23, together with the shim, to
+    # free the new name; PyPI lets a deleted name be registered again, which is
+    # what made the rename possible.
+    ("aihawk", None, "0.69.2", "2026-09-23"),
     # From the next version on, the new name. Below the boundary that name
-    # belongs to the shim, not to us.
-    ("invisible-playwright-mcp", "0.69.2", None),
+    # belonged to the shim, which is gone too.
+    ("invisible-playwright-mcp", "0.69.2", None, None),
 )
+
+#: The distributions still on the index: the only ones asked anything.
+LIVE = tuple(d for d in DISTRIBUTIONS if d[3] is None)
 
 #: The name this repository publishes under TODAY, which is the last of the list:
 #: used in messages and for the question "is this version free".
@@ -96,13 +108,14 @@ PACKAGE = DISTRIBUTIONS[-1][0]
 #: a job CI runs with `INVISIBLE_MCP_CHECK_RELEASES=1`, with a traceback about
 #: HTTP rather than a sentence about releases.
 #:
-#: ⛔ AND THAT 404 WAS TRANSIENT, WHICH IS NOT WHAT IT WAS TAKEN FOR. It was
-#: read as the projects having been deleted, and three commit messages said so.
-#: PyPI does not let a deleted name be registered again, so 87 versions and 19
-#: versions could not have come back: they were never gone. The handling below is
-#: right anyway - an unreachable index must not read as a project with no
-#: releases - but it was written for a reason that was not true, and a gate whose
-#: account of itself is wrong teaches the next reader the wrong thing.
+#: ⛔ AND THAT 404 WAS READ BOTH WAYS IN ONE DAY, BOTH TIMES FROM TOO LITTLE.
+#: First as a deletion, then - after the index served 87 and 19 versions for a
+#: while - as a transient, on the false premise that PyPI does not let a deleted
+#: name be registered again. The deletion was real and propagated unevenly: four
+#: endpoints (JSON, simple, RSS, the file host) answered 404 together later that
+#: day, and PyPI accepted a pending publisher for the new name, which it does only
+#: for a name that does not exist. The lesson is the field above: a 404 cannot
+#: say which it is, so the answer is declared, not read.
 #:
 #: An empty version list and an absent project are NOT the same news: a project
 #: that serves no usable version is the defect this file exists to report, while
@@ -154,7 +167,7 @@ def ours(*, yanked_too: bool = False) -> dict:
     """
     mine = {}
     answered = 0
-    for name, after, through in DISTRIBUTIONS:
+    for name, after, through, _gone in LIVE:
         releases = _releases_json(name)
         if releases is NOT_ON_THE_INDEX:
             continue
@@ -197,8 +210,20 @@ def _release_tags() -> set:
     return out
 
 
+def _in_a_range(version: str, dists) -> bool:
+    """Whether `version` falls in the range of one of `dists`."""
+    for _name, after, through, _gone in dists:
+        if after is not None and _key(version) <= _key(after):
+            continue
+        if through is not None and _key(version) > _key(through):
+            continue
+        return True
+    return False
+
+
 def _no_distribution_answered():
-    """Every distribution answered 404. Skip only if we never published.
+    """Every LIVE distribution answered 404. Skip only if none of our tags
+    belongs to one of them.
 
     ⛔ FOUR OUTCOMES, NOT THREE, AND THE FOURTH IS WHY A REAL DEFECT HID FOR
     HALF A DAY. Published, not published, never-published-anything, and
@@ -208,26 +233,29 @@ def _no_distribution_answered():
     green, and what it was skipping over was a version of this file comparing
     THIS repository's tags against another project's release history.
 
-    The discriminator costs one API call and uses state we already have: if this
-    repository has version TAGS, at least one of its distributions has to exist
-    on the index, so a 404 on all of them is the index not answering rather than
-    nothing having been published. Only a repository that has never tagged a
-    release may skip here.
+    The discriminator costs one API call and uses state we already have: a TAG
+    in the range of a live distribution is a release published under it, so a
+    404 on all of them is the index not answering rather than nothing having
+    been published. Tags in the range of a DELETED distribution are not that
+    evidence - they were published and then removed on purpose - so only a
+    repository with no tag in a live range may skip here, which is the state
+    between deleting the old names and the first release under the new one.
     """
-    names = " or ".join(d[0] for d in DISTRIBUTIONS)
-    tags = _release_tags()
+    names = " or ".join(d[0] for d in LIVE)
+    tags = {t for t in _release_tags() if _in_a_range(t, LIVE)}
     if not tags:
-        pytest.skip("the index has no project named %s and this repository has no "
-                    "version tag either, so nothing has been published to check "
-                    "tags or release pages against" % names)
+        pytest.skip("the index has no project named %s and no version tag here "
+                    "falls in its range, so nothing has been published under it "
+                    "yet to check tags or release pages against" % names)
     pytest.fail(
-        "the index answered 404 for every distribution this repository publishes "
-        "under (%s), and yet there are %d version tags here, the newest of which "
-        "is v%s. A repository that has tagged releases has published them, so "
-        "this is the index not answering rather than nothing having been "
-        "published, and skipping on it turns an unreachable index into a green "
-        "gate. Run it again; if it persists, pypi.org is down and this check "
-        "cannot say anything either way."
+        "the index answered 404 for every live distribution this repository "
+        "publishes under (%s), and yet %d version tags here belong to it, the "
+        "newest of which is v%s. A tagged release has been published, so this is "
+        "the index not answering rather than nothing having been published, and "
+        "skipping on it turns an unreachable index into a green gate. Run it "
+        "again; if it persists, pypi.org is down and this check cannot say "
+        "anything either way. If the project was deleted on purpose, declare it "
+        "in DISTRIBUTIONS."
         % (names, len(tags), max(tags, key=_key)))
 
 
@@ -350,9 +378,12 @@ def test_every_tag_older_than_the_grace_reached_the_index():
 
     assert tags, "no version tag was found at all, so this walk is watching nothing"
 
+    # A tag in the range of a DELETED distribution was published and then
+    # removed on purpose: not a suspect, and not something the index can
+    # confirm any more.
     published = _all_index_versions()
-    suspects = sorted(set(tags) - published,
-                      key=lambda v: tuple(int(p) for p in v.split(".")))
+    suspects = sorted({t for t in tags if _in_a_range(t, LIVE)} - published,
+                      key=_key)
 
     now = datetime.datetime.now(datetime.timezone.utc)
     stale = []
@@ -375,11 +406,36 @@ def test_the_walk_covers_more_than_the_latest_version():
     """A guard on the guard.
 
     The defect this file inherits was not a missing check, it was a check that
-    looked at one version and claimed to look at all of them. If the index ever
-    serves a single version this test is vacuous, and it says so rather than
-    passing quietly.
+    looked at one version and claimed to look at all of them. With a single
+    version on the index that cannot be told apart, and this test says so.
+
+    ⛔ AS A SKIP, NOT A FAILURE, since 2026-09-23. The old names were deleted
+    that day, so the first release under the new one is the only version the
+    index holds: a count of one is then the whole truth, and a failure would go
+    red on every pull request until a second release, for nothing wrong. A tag
+    the index does not serve is the walk above's job, not this one's.
     """
     versions = _index_versions()
-    assert len(versions) > 1, (
-        "only one version on the index, so the walk above proves nothing about "
-        "older releases; revisit when a second version ships")
+    if len(versions) < 2:
+        pytest.skip("the index serves %d version under %s, so the walk above "
+                    "proves nothing about older releases yet"
+                    % (len(versions), PACKAGE))
+
+
+def test_a_project_declared_deleted_is_not_served():
+    """The deletion field is a declaration, so it is checked where it can be.
+
+    A 404 cannot tell a deleted project from an index having a bad minute, which
+    is why the deletion is declared. But a 200 CAN say the declaration is false:
+    a project declared gone that serves versions means this file has stopped
+    asking about releases that exist.
+    """
+    wrong = []
+    for name, _after, _through, gone in DISTRIBUTIONS:
+        if gone is None:
+            continue
+        if _releases_json(name) is not NOT_ON_THE_INDEX:
+            wrong.append("%s (declared deleted on %s)" % (name, gone))
+    assert not wrong, (
+        "the index serves %s, so the declaration is false and the releases "
+        "under that name are going unchecked" % ", ".join(wrong))
