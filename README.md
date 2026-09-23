@@ -5,7 +5,7 @@
   <img alt="invisible_playwright_mcp" src="https://raw.githubusercontent.com/feder-cr/invisible_playwright_mcp/main/assets/masks-light.png" width="150">
 </picture>
 
-**Tell it what you want in plain language and it drives a real browser for you, clicking and typing like a person on an engine built not to be detected, so it gets no captchas and does not get blocked.**
+**Other AI browser agents get captchas. This one is invisible to anti-bots.**
 
 </div>
 
