@@ -1,12 +1,12 @@
 ---
-title: "Running invisible_playwright_mcp's browser from Claude Code"
+title: "How to use a Playwright MCP server with Claude Code"
 description: "Two commands install the stealth browser in Claude Code as a plugin, with its MCP server and a setup skill. What happens on first run, which tools Claude gains, prompts to try first, and the two things that go wrong."
 parent: "Using the Agent"
 nav_order: 4
 ---
 
 
-# Running invisible_playwright_mcp's browser from Claude Code
+# How to use a Playwright MCP server with Claude Code
 
 If you already use Claude Code, you do not need invisible_playwright_mcp's interface, its CLI, or
 an OpenRouter key. Claude Code brings the model; you add the browser to it. The
@@ -18,8 +18,8 @@ tools over the same protocol as any other client.
 
 This page is Claude Code specifically. Claude Desktop and Cursor take a config
 file instead of a command, and have their own pages:
-[Claude Desktop](running-invisible-playwright-mcp-with-claude-desktop.md) and
-[Cursor](running-invisible-playwright-mcp-with-cursor.md). The config blocks themselves live in
+[Claude Desktop](how-to-let-claude-desktop-control-a-browser.md) and
+[Cursor](how-to-add-a-browser-to-cursor-as-an-mcp-server.md). The config blocks themselves live in
 the [MCP server page](mcp-server.md),
 which is the one place they are kept current.
 
@@ -189,8 +189,8 @@ All retrieved 2026-09-03.
   the server itself: config blocks for other clients, server-side options, and
   the current tool list.
 
-**See also:** [running invisible_playwright_mcp with Claude Desktop](running-invisible-playwright-mcp-with-claude-desktop.md),
-[running invisible_playwright_mcp with Cursor](running-invisible-playwright-mcp-with-cursor.md),
+**See also:** [running invisible_playwright_mcp with Claude Desktop](how-to-let-claude-desktop-control-a-browser.md),
+[running invisible_playwright_mcp with Cursor](how-to-add-a-browser-to-cursor-as-an-mcp-server.md),
 [how to extract data to CSV with an AI agent](how-to-extract-data-to-csv-with-an-ai-agent.md),
 and [browser problem or model problem?](browser-problem-or-model-problem.md).
 

@@ -74,10 +74,10 @@ they would need to click, log in, or turn pages, browser.
 ## Running browser-grade research on invisible_playwright_mcp
 
 Two ways in, matching the two ways into everything here. Through an MCP
-client - [Claude Code](running-invisible-playwright-mcp-with-claude-code.md),
-[Claude Desktop](running-invisible-playwright-mcp-with-claude-desktop.md),
-[Cursor](running-invisible-playwright-mcp-with-cursor.md) or
-[Cline](running-invisible-playwright-mcp-with-cline.md) - your assistant does the reading and
+client - [Claude Code](how-to-use-a-playwright-mcp-server-with-claude-code.md),
+[Claude Desktop](how-to-let-claude-desktop-control-a-browser.md),
+[Cursor](how-to-add-a-browser-to-cursor-as-an-mcp-server.md) or
+[Cline](how-to-add-a-browser-to-cline-as-an-mcp-server.md) - your assistant does the reading and
 synthesis while the browser does the driving, which suits research well: the
 conversation holds the accumulating picture, and you can steer mid-walk. Or
 scripted, one question per run:
@@ -190,7 +190,7 @@ the repository:
 **See also:** [what is an AI web agent?](ai-web-agent-explained.md),
 [AI browser agents vs traditional scraping](ai-browser-agents-vs-traditional-scraping.md),
 [extracting data to a CSV](how-to-extract-data-to-csv-with-an-ai-agent.md),
-and [which model to use with invisible_playwright_mcp](which-model-to-use-with-invisible-playwright-mcp.md) for
+and [which model to use with invisible_playwright_mcp](best-model-for-an-mcp-browser-agent.md) for
 the cost half of the equation.
 
 ---

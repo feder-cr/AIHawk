@@ -88,7 +88,7 @@ your servers expose together.
 
 **See also:** [how to choose among MCP servers](best-mcp-servers.md),
 [MCP on GitHub](mcp-servers-on-github.md) for judging one before installing it,
-and [running invisible_playwright_mcp's browser from Claude Code](running-invisible-playwright-mcp-with-claude-code.md).
+and [running invisible_playwright_mcp's browser from Claude Code](how-to-use-a-playwright-mcp-server-with-claude-code.md).
 
 ## Sources
 

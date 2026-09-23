@@ -1,12 +1,12 @@
 ---
-title: "Running invisible_playwright_mcp's browser from Cursor"
+title: "How to add a browser to Cursor as an MCP server"
 description: "Adding the stealth browser to Cursor via mcp.json - what a real browser adds to an editor workflow, project vs global config, first prompts, and the first-run issues."
 parent: "Using the Agent"
 nav_order: 9
 ---
 
 
-# Running invisible_playwright_mcp's browser from Cursor
+# How to add a browser to Cursor as an MCP server
 
 Cursor reads MCP servers from a JSON file, at one of two levels its docs
 define: `.cursor/mcp.json` inside a project, for tools scoped to that project,
@@ -186,8 +186,8 @@ All retrieved 2026-09-03.
   this repository, for platform support, the real-input-events behavior and
   the shared engine cache.
 
-**See also:** [running invisible_playwright_mcp with Claude Code](running-invisible-playwright-mcp-with-claude-code.md),
-[running invisible_playwright_mcp's browser from Claude Desktop](running-invisible-playwright-mcp-with-claude-desktop.md),
+**See also:** [running invisible_playwright_mcp with Claude Code](how-to-use-a-playwright-mcp-server-with-claude-code.md),
+[running invisible_playwright_mcp's browser from Claude Desktop](how-to-let-claude-desktop-control-a-browser.md),
 [getting an AI agent to fill out forms](ai-agent-fill-out-forms.md), and
 [extracting data to a CSV](how-to-extract-data-to-csv-with-an-ai-agent.md).
 

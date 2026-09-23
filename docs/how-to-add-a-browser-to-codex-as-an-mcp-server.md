@@ -1,12 +1,12 @@
 ---
-title: "Running invisible_playwright_mcp's browser from Codex"
+title: "How to add a browser to Codex as an MCP server"
 description: "Two commands install the stealth browser in Codex as a plugin, with its MCP server and a setup skill. What happens on first run, which tools Codex gains, prompts to try first, and what goes wrong."
 parent: "Using the Agent"
 nav_order: 68
 ---
 
 
-# Running invisible_playwright_mcp's browser from Codex
+# How to add a browser to Codex as an MCP server
 
 If you already use Codex, you do not need invisible_playwright_mcp's interface, its CLI, or an
 OpenRouter key. Codex brings the model; you add the browser to it. The browser
@@ -16,11 +16,11 @@ so anything invisible_playwright_mcp's own interface can do, your assistant can 
 is by construction: the interface holds no privileged access, it calls the same
 tools over the same protocol as any other client.
 
-This page is Codex specifically. [Claude Code](running-invisible-playwright-mcp-with-claude-code.md)
-and [Gemini CLI](running-invisible-playwright-mcp-with-gemini-cli.md) have their own pages, and the
+This page is Codex specifically. [Claude Code](how-to-use-a-playwright-mcp-server-with-claude-code.md)
+and [Gemini CLI](how-to-let-gemini-cli-use-a-browser.md) have their own pages, and the
 clients that take a config file instead of a command have theirs:
-[Claude Desktop](running-invisible-playwright-mcp-with-claude-desktop.md),
-[Cursor](running-invisible-playwright-mcp-with-cursor.md), [Cline](running-invisible-playwright-mcp-with-cline.md).
+[Claude Desktop](how-to-let-claude-desktop-control-a-browser.md),
+[Cursor](how-to-add-a-browser-to-cursor-as-an-mcp-server.md), [Cline](how-to-add-a-browser-to-cline-as-an-mcp-server.md).
 The config blocks themselves live in the [MCP server page](mcp-server.md), which
 is the one place they are kept current.
 
@@ -179,8 +179,8 @@ All retrieved 2026-09-22.
   the server itself: config blocks for other clients, server-side options, and
   the current tool list.
 
-**See also:** [running invisible_playwright_mcp with Claude Code](running-invisible-playwright-mcp-with-claude-code.md),
-[running invisible_playwright_mcp with Gemini CLI](running-invisible-playwright-mcp-with-gemini-cli.md),
+**See also:** [running invisible_playwright_mcp with Claude Code](how-to-use-a-playwright-mcp-server-with-claude-code.md),
+[running invisible_playwright_mcp with Gemini CLI](how-to-let-gemini-cli-use-a-browser.md),
 [how to extract data to CSV with an AI agent](how-to-extract-data-to-csv-with-an-ai-agent.md),
 and [browser problem or model problem?](browser-problem-or-model-problem.md).
 

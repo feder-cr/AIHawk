@@ -1,12 +1,12 @@
 ---
-title: "Which model to use with invisible_playwright_mcp"
+title: "The best model for an MCP browser agent, and what it really costs"
 description: "The default model, what browser-agent work actually demands from an LLM, real OpenRouter prices, and why cost is turns times context rather than a price-sheet number."
 parent: "Using the Agent"
 nav_order: 2
 ---
 
 
-# Which model to use with invisible_playwright_mcp
+# The best model for an MCP browser agent, and what it really costs
 
 invisible_playwright_mcp brings the browser and you bring the model, from
 [OpenRouter](https://openrouter.ai) and nowhere else. If you set nothing, you get

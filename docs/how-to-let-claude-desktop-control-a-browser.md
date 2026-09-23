@@ -1,12 +1,12 @@
 ---
-title: "Running invisible_playwright_mcp's browser from Claude Desktop"
+title: "How to let Claude Desktop control a browser"
 description: "Adding the stealth browser to Claude Desktop via its JSON config - what changes in the app, first prompts to try, what tool calls and approvals look like, and the first-run issues."
 parent: "Using the Agent"
 nav_order: 8
 ---
 
 
-# Running invisible_playwright_mcp's browser from Claude Desktop
+# How to let Claude Desktop control a browser
 
 Claude Desktop does not take the one-line command that Claude Code does; it
 reads its MCP servers from a JSON settings file. The exact block to paste and
@@ -183,8 +183,8 @@ All retrieved 2026-09-03.
   this repository, for the platform support boundary and the shared engine
   cache.
 
-**See also:** [running invisible_playwright_mcp with Claude Code](running-invisible-playwright-mcp-with-claude-code.md),
-[running invisible_playwright_mcp's browser from Cursor](running-invisible-playwright-mcp-with-cursor.md),
+**See also:** [running invisible_playwright_mcp with Claude Code](how-to-use-a-playwright-mcp-server-with-claude-code.md),
+[running invisible_playwright_mcp's browser from Cursor](how-to-add-a-browser-to-cursor-as-an-mcp-server.md),
 [browser problem or model problem?](browser-problem-or-model-problem.md), and
 the rest of [Using the Agent](guides-using-the-agent.md).
 

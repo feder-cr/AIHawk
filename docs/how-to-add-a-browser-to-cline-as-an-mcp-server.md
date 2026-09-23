@@ -1,12 +1,12 @@
 ---
-title: "Running invisible_playwright_mcp's browser from Cline"
+title: "How to add a browser to Cline as an MCP server"
 description: "Adding the stealth browser to Cline via its MCP settings JSON - the Configure tab route, approvals and autoApprove, first prompts, and the first-run issues."
 parent: "Using the Agent"
 nav_order: 15
 ---
 
 
-# Running invisible_playwright_mcp's browser from Cline
+# How to add a browser to Cline as an MCP server
 
 Cline, the open-source coding agent that lives in VS Code, takes its MCP
 servers as JSON entries under an `mcpServers` key, edited from inside the
@@ -17,7 +17,7 @@ MCP documentation. The block to paste is the same one every JSON-configured
 client uses and it lives in the
 [MCP server page](mcp-server.md),
 which this page links rather than copies, for the reason the
-[Claude Desktop page](running-invisible-playwright-mcp-with-claude-desktop.md) gives: a config duplicated across two pages is a config that rots in one of the two places.
+[Claude Desktop page](how-to-let-claude-desktop-control-a-browser.md) gives: a config duplicated across two pages is a config that rots in one of the two places.
 
 The platform boundary, stated before you spend time: invisible_playwright_mcp's engine ships
 for Windows (x86_64) and Linux (x86_64, arm64), with no macOS build. VS Code
@@ -56,7 +56,7 @@ page.
 ## What the browser is for inside Cline
 
 Cline's center of gravity is your codebase, so the browser earns its place
-the same way it does [in Cursor](running-invisible-playwright-mcp-with-cursor.md): testing
+the same way it does [in Cursor](how-to-add-a-browser-to-cursor-as-an-mcp-server.md): testing
 your own app through a realistic browser, in the same conversation as the
 agent that has your code open. "Open the local dev server, walk the signup
 flow, then look at the handler and explain the 500" is one request here.
@@ -178,9 +178,9 @@ All retrieved 2026-09-03.
 - [feder-cr/invisible_playwright_mcp](https://github.com/feder-cr/invisible_playwright_mcp), plus its README in
   this repository, for the platform boundary and the shared engine cache.
 
-**See also:** [running invisible_playwright_mcp with Claude Code](running-invisible-playwright-mcp-with-claude-code.md),
-[running invisible_playwright_mcp's browser from Claude Desktop](running-invisible-playwright-mcp-with-claude-desktop.md),
-[running invisible_playwright_mcp's browser from Cursor](running-invisible-playwright-mcp-with-cursor.md), and
+**See also:** [running invisible_playwright_mcp with Claude Code](how-to-use-a-playwright-mcp-server-with-claude-code.md),
+[running invisible_playwright_mcp's browser from Claude Desktop](how-to-let-claude-desktop-control-a-browser.md),
+[running invisible_playwright_mcp's browser from Cursor](how-to-add-a-browser-to-cursor-as-an-mcp-server.md), and
 [using an AI agent to test your own website](ai-agent-to-test-website.md).
 
 ---

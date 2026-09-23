@@ -1,11 +1,11 @@
 ---
-title: "invisible_playwright_mcp, reviewed honestly by its own wiki"
+title: "A stealth browser MCP, reviewed honestly by its own wiki"
 description: "What invisible_playwright_mcp does well, what it does not do at all, the real risks of running it, and its AGPL-to-MIT license history - written by the people who maintain it, with the conflict stated in the first line."
 parent: "Alternatives and Comparisons"
 nav_order: 19
 ---
 
-# invisible_playwright_mcp, reviewed honestly by its own wiki
+# A stealth browser MCP, reviewed honestly by its own wiki
 
 This page is the project reviewing itself: it lives on invisible_playwright_mcp's wiki and is
 written by invisible_playwright_mcp's maintainers, so it is the most conflicted review of
@@ -205,9 +205,9 @@ challenge stops the run or goes to a human.
 who also maintains the patched-Firefox engine and this wiki - which is
 exactly the conflict declared in the first line.
 
-**See also:** [Which model to use with invisible_playwright_mcp](which-model-to-use-with-invisible-playwright-mcp.md)
+**See also:** [The best model for an MCP browser agent, and what it really costs](best-model-for-an-mcp-browser-agent.md)
 for the token-cost side of the decision, and
-[Running invisible_playwright_mcp with Claude Code](running-invisible-playwright-mcp-with-claude-code.md) for
+[Running invisible_playwright_mcp with Claude Code](how-to-use-a-playwright-mcp-server-with-claude-code.md) for
 the MCP route.
 
 ## Sources

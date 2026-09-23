@@ -131,7 +131,7 @@ handles fine:
    `--seed` both times so the browser identity is constant and the model is
    the only thing you moved. One model failing where another succeeds, on the
    same page and identity, is the clean model-side verdict - and the moment to
-   read [which model to use](which-model-to-use-with-invisible-playwright-mcp.md).
+   read [which model to use](best-model-for-an-mcp-browser-agent.md).
 4. **Change one thing at a time.** Swapping model and proxy together tells you
    nothing whichever way it goes. This is the same discipline as the blocked
    checklist, because it is the same trap.
@@ -202,7 +202,7 @@ All retrieved 2026-09-03, except the loop itself, re-read 2026-09-08.
   books.toscrape.com on 2026-09-03 and printed the line quoted.
 
 **See also:** [why does my AI agent get blocked?](why-does-my-ai-agent-get-blocked.md),
-[which model to use with invisible_playwright_mcp](which-model-to-use-with-invisible-playwright-mcp.md), and
+[which model to use with invisible_playwright_mcp](best-model-for-an-mcp-browser-agent.md), and
 [agent retry loops and rate limits](agent-retry-loops-rate-limits.md).
 
 ---

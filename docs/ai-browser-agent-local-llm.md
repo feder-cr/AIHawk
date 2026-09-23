@@ -37,7 +37,7 @@ around it.
 ## Adding the browser to a client that already has its model sorted
 
 The attachment mechanics do not change based on where the model lives. The
-[Claude Code walkthrough](running-invisible-playwright-mcp-with-claude-code.md) documents the exact
+[Claude Code walkthrough](how-to-use-a-playwright-mcp-server-with-claude-code.md) documents the exact
 shape, even though Claude Code's own model is hosted rather than local:
 
 ```bash
@@ -55,7 +55,7 @@ only ever sees tool calls.
 
 ## What browser driving specifically demands from a model
 
-[Which model to use with invisible_playwright_mcp](which-model-to-use-with-invisible-playwright-mcp.md) lays out what
+[The best model for an MCP browser agent, and what it really costs](best-model-for-an-mcp-browser-agent.md) lays out what
 this task actually exercises: well-formed tool calls on every turn, instructions
 followed closely enough to know when a task is actually done, and long, messy context
 made mostly of extracted page text. Every word of that applies to a local model, and
@@ -136,9 +136,9 @@ reliably here.
 step with no model against the library: if it reproduces, the browser side is at
 fault regardless of any model; if not, the model was the variable.
 
-**See also:** [running an agent unattended on a schedule](run-ai-agent-on-a-schedule.md) for the other half of the running question, [Which model to use with invisible_playwright_mcp](which-model-to-use-with-invisible-playwright-mcp.md),
+**See also:** [running an agent unattended on a schedule](run-ai-agent-on-a-schedule.md) for the other half of the running question, [The best model for an MCP browser agent, and what it really costs](best-model-for-an-mcp-browser-agent.md),
 [Browser problem or model problem?](browser-problem-or-model-problem.md), and
-[Running invisible_playwright_mcp's browser from Claude Code](running-invisible-playwright-mcp-with-claude-code.md).
+[How to use a Playwright MCP server with Claude Code](how-to-use-a-playwright-mcp-server-with-claude-code.md).
 
 ## Sources
 

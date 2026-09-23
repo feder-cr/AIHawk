@@ -229,7 +229,7 @@ All retrieved 2026-09-03.
 **See also:** [extracting data to a CSV](how-to-extract-data-to-csv-with-an-ai-agent.md),
 [agent retry loops and rate limits](agent-retry-loops-rate-limits.md),
 [the timing signal AI agents give off](ai-agent-timing-signal.md), and
-[which model to use with invisible_playwright_mcp](which-model-to-use-with-invisible-playwright-mcp.md) for keeping
+[which model to use with invisible_playwright_mcp](best-model-for-an-mcp-browser-agent.md) for keeping
 per-check cost down.
 
 ---
