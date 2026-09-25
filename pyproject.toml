@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "invisible-playwright-mcp"
-version = "0.70.1"
+version = "0.70.2"
 description = "Anti detect browser and web browsing agent: undetected, no captchas, no blocks"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -62,7 +62,12 @@ dependencies = [
     # started from there (14001), so the first `browser_open` of every session
     # failed. Fixed in invisible-core 34.30.0, which 0.25.6 pins. A cached uvx
     # environment keeps what it resolved; only a floor makes it resolve again.
-    "invisible-playwright>=0.25.6",
+    #
+    # And to 0.25.7 the same day: `browser_navigate` to YouTube, Reddit or
+    # any page that replaces itself from script while it loads waited 45 s
+    # for a navigation that was gone, and the browser froze in a long
+    # session once Firefox had written a pipe buffer of output.
+    "invisible-playwright>=0.25.7",
     # HTML parsing for browser_read_html. Chosen over lxml by measurement: on
     # six real pages both found byte-identical sets of interactive elements,
     # so correctness did not separate them, and selectolax then parsed 3-5x
@@ -112,7 +117,7 @@ dependencies = [
 # `test_the_suite_declares_everything_it_imports` caught this on the first run
 # against the published stack, which is what it is for.
 test = ["pytest>=8", "pytest-asyncio>=0.23", "httpx>=0.27",
-        "invisible-core>=34.30.0"]
+        "invisible-core>=34.31.0"]
 
 # ⛔ NARROW ON PURPOSE, AND IT IS HERE SO THE CI JOB AND A DEVELOPER RUN THE
 # SAME THING. `F` is pyflakes: a name that is not defined, an import nobody
