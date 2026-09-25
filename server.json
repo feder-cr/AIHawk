@@ -7,13 +7,13 @@
     "url": "https://github.com/feder-cr/invisible_playwright_mcp",
     "source": "github"
   },
-  "version": "0.70.0",
+  "version": "0.70.1",
   "packages": [
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "invisible-playwright-mcp",
-      "version": "0.70.0",
+      "version": "0.70.1",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"
