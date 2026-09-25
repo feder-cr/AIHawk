@@ -214,13 +214,19 @@ class ChatService:
         """
         return self._busy.locked()
 
-    def start(self, text: str) -> None:
+    def start(self, text: str) -> bool:
         """Run an instruction detached, keeping the handle so it can be stopped.
 
         The task is held for exactly that reason. Firing and forgetting is one
-        line shorter and makes the stop button a decoration.
+        line shorter and makes the stop button a decoration. Refuse a second
+        start while that handle is live: two tabs can post before either sees
+        the busy event, and replacing the handle would make Stop cancel the
+        waiting turn while the run already driving the browser carries on.
         """
+        if self._task is not None and not self._task.done():
+            return False
         self._task = asyncio.create_task(self.send(text))
+        return True
 
     def stop(self) -> bool:
         t = self._task
