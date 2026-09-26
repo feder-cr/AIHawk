@@ -33,8 +33,10 @@ settings, and the tools.
 ## Adding it to your client
 
 Claude Code and Codex install it as a plugin, Gemini CLI as an extension, and
-all three are in invisible_playwright_mcp's README. The rest take a config
-file, and the file is not the same
+all three are in invisible_playwright_mcp's README. AdaL registers it with one
+slash command typed inside a running session, so there is no file to open, and
+[its page](how-to-let-adal-cli-use-a-browser.md) carries the line. The
+rest take a config file, and the file is not the same
 everywhere: **three different top-level keys, and one of them is not even
 JSON.** Find yours below. The block only tells the client how to start the
 server; installing `uv` comes first, as invisible_playwright_mcp's README shows. The engine, the

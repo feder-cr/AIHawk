@@ -87,6 +87,7 @@ Task-shaped guides for putting an AI agent to work on real websites.
 - [How to add a browser to Cline as an MCP server](how-to-add-a-browser-to-cline-as-an-mcp-server.md)
 - [How to add a browser to Codex as an MCP server](how-to-add-a-browser-to-codex-as-an-mcp-server.md)
 - [How to let Gemini CLI use a browser](how-to-let-gemini-cli-use-a-browser.md)
+- [How to let the AdaL CLI use a browser](how-to-let-adal-cli-use-a-browser.md)
 - [The MCP server: config blocks, settings, tools](mcp-server.md)
 - [How the tools are shaped, and why](mcp-tool-design.md)
 
